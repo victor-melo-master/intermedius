@@ -1,0 +1,73 @@
+<?php
+
+namespace App\Http\Resources;
+
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
+
+class OperacionResource extends JsonResource
+{
+    public function toArray(Request $request): array
+    {
+        return [
+            'id'                    => $this->id,
+            'fecha'                 => $this->fecha?->toIso8601String(),
+            'estatus'               => $this->estatus,
+            'origen'                => $this->origen,
+            'origen_referencia'     => $this->origen_referencia,
+            'referencia'            => $this->referencia,
+            'descripcion'           => $this->descripcion,
+
+            'tasa_aplicada'         => (string) $this->tasa_aplicada,
+            'tasa_mercado_snapshot' => (string) $this->tasa_mercado_snapshot,
+            'fuente_tasa_mercado'   => $this->fuente_tasa_mercado,
+
+            'tasa_sugerida'          => (string) $this->tasa_sugerida,
+            'tasa_diaria_id'         => $this->tasa_diaria_id,
+            'sin_tasa_referencia'    => (bool) $this->sin_tasa_referencia,
+
+            'ganancia'              => [
+                'bruta_usd'   => (string) $this->ganancia_bruta_usd,
+                'bruta_ves'   => (string) $this->ganancia_bruta_ves,
+                'real_usd'    => $this->ganancia_real_usd !== null ? (string) $this->ganancia_real_usd : null,
+                'real_ves'    => $this->ganancia_real_ves !== null ? (string) $this->ganancia_real_ves : null,
+                'neta_usd'    => (string) $this->ganancia_neta_usd,
+                'neta_ves'    => (string) $this->ganancia_neta_ves,
+            ],
+
+            'comisiones_total'       => [
+                'usd' => (string) $this->total_comisiones_usd,
+                'ves' => (string) $this->total_comisiones_ves,
+            ],
+
+            'verificado_at'         => $this->verificado_at?->toIso8601String(),
+
+            'tipo_operacion'        => $this->whenLoaded('tipoOperacion', fn () => [
+                'id'     => $this->tipoOperacion->id,
+                'codigo' => $this->tipoOperacion->codigo,
+                'nombre' => $this->tipoOperacion->nombre,
+            ]),
+            'cliente'               => $this->whenLoaded('cliente', fn () => $this->cliente ? [
+                'id'     => $this->cliente->id,
+                'nombre' => $this->cliente->nombre,
+                'alias'  => $this->cliente->alias,
+            ] : null),
+            'categoria_gasto'       => $this->whenLoaded('categoriaGasto', fn () => $this->categoriaGasto ? [
+                'id'     => $this->categoriaGasto->id,
+                'nombre' => $this->categoriaGasto->nombre,
+            ] : null),
+            'operador'              => $this->whenLoaded('operador', fn () => [
+                'id'   => $this->operador->id,
+                'name' => $this->operador->name,
+            ]),
+            'verificado_por'        => $this->whenLoaded('verificadoPor', fn () => $this->verificadoPor ? [
+                'id'   => $this->verificadoPor->id,
+                'name' => $this->verificadoPor->name,
+            ] : null),
+            'movimientos'           => MovimientoResource::collection($this->whenLoaded('movimientos')),
+
+            'created_at'            => $this->created_at?->toIso8601String(),
+            'updated_at'            => $this->updated_at?->toIso8601String(),
+        ];
+    }
+}

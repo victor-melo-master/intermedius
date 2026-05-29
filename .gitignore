@@ -1,0 +1,52 @@
+# Laravel / PHP
+/api/vendor/
+/api/node_modules/
+/api/public/hot
+/api/public/storage
+/api/storage/*.key
+/api/.env
+/api/.env.backup
+/api/.env.production
+/api/.phpunit.result.cache
+/api/Homestead.json
+/api/Homestead.yaml
+/api/auth.json
+/api/npm-debug.log
+/api/yarn-error.log
+
+# Vue / Node
+/frontend/node_modules/
+/frontend/dist/
+/frontend/.env
+/frontend/.env.local
+/frontend/.env.*.local
+/frontend/npm-debug.log*
+/frontend/yarn-debug.log*
+/frontend/yarn-error.log*
+/frontend/pnpm-debug.log*
+
+# Flutter / Dart
+/app/.dart_tool/
+/app/.packages
+/app/build/
+/app/.flutter-plugins
+/app/.flutter-plugins-dependencies
+/app/.metadata
+/app/pubspec.lock
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Misc
+*.log
+*.tmp
+*.temp
+*.lock
+
+# Documentos temporales de Office
+~$*

@@ -1,0 +1,39 @@
+name: Frontend Build & Deploy
+
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'frontend/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Build
+        working-directory: ./frontend
+        run: npm run build
+
+      - name: Deploy to VPS (SFTP)
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASS }}
+          port: 22
+          source: "frontend/dist/*"
+          target: "${{ secrets.VPS_FRONTEND_PATH }}"
+          strip_components: 2
+          overwrite: true
