@@ -37,6 +37,7 @@ export const useTasasStore = defineStore('tasas', () => {
     try {
       const { data } = await api.get('/monedas')
       monedas.value = Array.isArray(data) ? data : (data.data || [])
+      console.log('Monedas cargadas:', monedas.value)
     } catch (err) {
       console.error('Error al cargar monedas:', err)
       error.value = err.response?.data?.message || err.message
