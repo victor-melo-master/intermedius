@@ -90,8 +90,8 @@ const saving = ref(false)
 const formError = ref('')
 
 async function openForm() {
-  showForm.value = true
   await tasas.fetchMonedas()
+  showForm.value = true
 }
 
 const tasaForm = reactive({
