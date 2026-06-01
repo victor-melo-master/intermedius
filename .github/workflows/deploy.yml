@@ -7,9 +7,9 @@ on:
 
 jobs:
   deploy:
-    name: Deploy to Server
+    name: Deploy to Production
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Deploy via SSH
       uses: appleboy/ssh-action@v1.0.3
@@ -19,7 +19,8 @@ jobs:
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         port: ${{ secrets.SSH_PORT }}
         script: |
-          cd /var/www/vhosts/crececrm.com/intermedius.crececrm.com
+          echo "🚀 Desplegando backend..."
+          cd /www/wwwroot/api.intermediusg.com
           git pull origin main
           cd api
           composer install --no-dev --optimize-autoloader --no-interaction
@@ -28,4 +29,11 @@ jobs:
           php artisan route:cache
           php artisan view:cache
           chmod -R 775 storage bootstrap/cache
-          echo "✅ Deploy completado exitosamente"
+          echo "✅ Backend desplegado"
+
+          echo "🚀 Desplegando frontend..."
+          cd /www/wwwroot/admin.intermediusg.com
+          git pull origin main
+          npm install --production
+          npm run build
+          echo "✅ Frontend desplegado"
