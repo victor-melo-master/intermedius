@@ -116,6 +116,7 @@ async function submitTasa() {
       tasa_compra: parseFloat(tasaForm.tasa_compra),
       tasa_venta: parseFloat(tasaForm.tasa_venta),
       ...(tasaForm.notas ? { notas: tasaForm.notas } : {}),
+      fecha: new Date().toISOString().split('T')[0],
     })
     showForm.value = false
     tasas.fetchVigentes()
