@@ -19,9 +19,11 @@ jobs:
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         port: ${{ secrets.SSH_PORT }}
         script: |
-          echo "🚀 Desplegando backend..."
-          cd /www/wwwroot/api.intermediusg.com
+          git config --global --add safe.directory /www/wwwroot/api.intermediusg.com/backend
+          cd /www/wwwroot/api.intermediusg.com/backend
+          git stash
           git pull origin main
+          git stash pop
           cd api
           composer install --no-dev --optimize-autoloader --no-interaction
           php artisan migrate --force
@@ -29,11 +31,4 @@ jobs:
           php artisan route:cache
           php artisan view:cache
           chmod -R 775 storage bootstrap/cache
-          echo "✅ Backend desplegado"
-
-          echo "🚀 Desplegando frontend..."
-          cd /www/wwwroot/admin.intermediusg.com
-          git pull origin main
-          npm install --production
-          npm run build
-          echo "✅ Frontend desplegado"
+          echo "✅ Backend desplegado correctamente"
