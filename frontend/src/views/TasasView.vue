@@ -4,7 +4,7 @@
       <h2 class="text-xl font-bold text-gray-800">Tasas del día</h2>
       <div class="flex gap-2">
         <button @click="tasas.fetchVigentes()" class="px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm hover:bg-gray-50">🔄 Actualizar</button>
-        <button v-if="auth.isAdmin" @click="showForm = true" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">+ Publicar tasa</button>
+        <button v-if="auth.isAdmin" @click="openForm" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">+ Publicar tasa</button>
       </div>
     </div>
 
@@ -88,6 +88,11 @@ const auth = useAuthStore()
 const showForm = ref(false)
 const saving = ref(false)
 const formError = ref('')
+
+async function openForm() {
+  showForm.value = true
+  await tasas.fetchMonedas()
+}
 
 const tasaForm = reactive({
   moneda_base_id: '',
