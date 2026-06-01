@@ -34,6 +34,7 @@ export const useOperacionesStore = defineStore('operaciones', () => {
 
   async function create(body) {
     const { data } = await api.post('/operaciones', body)
+    list.value = []
     return data
   }
 

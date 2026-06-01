@@ -36,8 +36,10 @@ export const useTasasStore = defineStore('tasas', () => {
   async function fetchMonedas() {
     try {
       const { data } = await api.get('/monedas')
-      monedas.value = data.data || []
-    } catch {}
+      monedas.value = Array.isArray(data) ? data : (data.data || [])
+    } catch (err) {
+      error.value = err.response?.data?.message || err.message
+    }
   }
 
   async function publicar(body) {
