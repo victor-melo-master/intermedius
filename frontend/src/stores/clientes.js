@@ -10,9 +10,9 @@ export const useClientesStore = defineStore('clientes', () => {
   async function fetchAll(search = '') {
     loading.value = true
     try {
-      const params = search ? { search } : {}
+      const params = search ? { q: search } : {}
       const { data } = await api.get('/clientes', { params })
-      list.value = data.data || []
+      list.value = Array.isArray(data) ? data : (data.data || [])
     } catch (err) {
       error.value = err.response?.data?.message || err.message
     } finally {

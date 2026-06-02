@@ -22,7 +22,7 @@ class OperacionController extends Controller
 
         $perPage = min((int) $request->get('per_page', 25), 100);
 
-        $query = Operacion::with(['tipoOperacion', 'cliente', 'operador'])
+        $query = Operacion::with(['tipoOperacion', 'cliente', 'operador', 'movimientos.moneda'])
             ->when($request->filled('fecha_desde'), fn ($q) => $q->where('fecha', '>=', $request->fecha_desde))
             ->when($request->filled('fecha_hasta'), fn ($q) => $q->where('fecha', '<=', $request->fecha_hasta))
             ->when($request->filled('tipo_codigo'),  fn ($q) => $q->whereHas('tipoOperacion', fn ($t) => $t->where('codigo', $request->tipo_codigo)))
