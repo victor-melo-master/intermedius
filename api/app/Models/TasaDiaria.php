@@ -22,7 +22,9 @@ class TasaDiaria extends Model
         'moneda_base_id',
         'moneda_cotizada_id',
         'tasa_compra',
+        'tasa_compra_minima',
         'tasa_venta',
+        'tasa_venta_minima',
         'definida_por_id',
         'notas',
         'vigente_desde',
@@ -32,20 +34,42 @@ class TasaDiaria extends Model
     protected function casts(): array
     {
         return [
-            'fecha'         => 'date',
-            'tasa_compra'   => 'decimal:8',
-            'tasa_venta'    => 'decimal:8',
-            'vigente_desde' => 'datetime',
-            'vigente_hasta' => 'datetime',
+            'fecha'               => 'date',
+            'tasa_compra'         => 'decimal:8',
+            'tasa_compra_minima'  => 'decimal:8',
+            'tasa_venta'          => 'decimal:8',
+            'tasa_venta_minima'   => 'decimal:8',
+            'vigente_desde'       => 'datetime',
+            'vigente_hasta'       => 'datetime',
         ];
     }
 
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['tasa_compra', 'tasa_venta', 'vigente_desde', 'vigente_hasta'])
+            ->logOnly(['tasa_compra', 'tasa_compra_minima', 'tasa_venta', 'tasa_venta_minima', 'vigente_desde', 'vigente_hasta'])
             ->logOnlyDirty()
             ->setDescriptionForEvent(fn (string $eventName) => "TasaDiaria {$eventName}");
+    }
+
+    /**
+     * Indica si una tasa efectiva es desfavorable para la casa respecto al mínimo configurado.
+     *
+     * - Compra : desfavorable si tasaEfectiva > tasa_compra_minima (la casa paga más del mínimo permitido).
+     * - Venta  : desfavorable si tasaEfectiva < tasa_venta_minima  (la casa recibe menos del mínimo permitido).
+     * - Si el mínimo correspondiente es null (sin límite configurado): retorna false.
+     *
+     * @param  string $direccion  'compra' | 'venta'
+     */
+    public function esDesfavorableParaLaCasa(float $tasaEfectiva, string $direccion): bool
+    {
+        return match ($direccion) {
+            'compra' => $this->tasa_compra_minima !== null
+                && $tasaEfectiva > (float) $this->tasa_compra_minima,
+            'venta'  => $this->tasa_venta_minima !== null
+                && $tasaEfectiva < (float) $this->tasa_venta_minima,
+            default  => throw new \InvalidArgumentException("Dirección debe ser 'compra' o 'venta'."),
+        };
     }
 
     public function monedaBase(): BelongsTo

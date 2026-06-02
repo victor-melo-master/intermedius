@@ -48,10 +48,12 @@ class TasaDiariaController extends Controller
             ->orderBy('moneda_base_id')
             ->get()
             ->map(fn (TasaDiaria $t) => [
-                'id'            => $t->id,
-                'par'           => "{$t->monedaBase->codigo}/{$t->monedaCotizada->codigo}",
-                'tasa_compra'   => (string) $t->tasa_compra,
-                'tasa_venta'    => (string) $t->tasa_venta,
+                'id'                 => $t->id,
+                'par'                => "{$t->monedaBase->codigo}/{$t->monedaCotizada->codigo}",
+                'tasa_compra'        => (string) $t->tasa_compra,
+                'tasa_compra_minima' => $t->tasa_compra_minima !== null ? (string) $t->tasa_compra_minima : null,
+                'tasa_venta'         => (string) $t->tasa_venta,
+                'tasa_venta_minima'  => $t->tasa_venta_minima !== null ? (string) $t->tasa_venta_minima : null,
                 'definida_a_las'=> $t->vigente_desde?->toIso8601String(),
                 'definida_por'  => $t->definidaPor?->name,
                 'moneda_base_id'    => $t->moneda_base_id,

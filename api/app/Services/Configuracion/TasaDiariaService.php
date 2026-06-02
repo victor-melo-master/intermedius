@@ -45,7 +45,9 @@ class TasaDiariaService
                 'moneda_base_id'     => $payload['moneda_base_id'],
                 'moneda_cotizada_id' => $payload['moneda_cotizada_id'],
                 'tasa_compra'        => $tasaCompra,
+                'tasa_compra_minima' => $payload['tasa_compra_minima'] ?? null,
                 'tasa_venta'         => $tasaVenta,
+                'tasa_venta_minima'  => $payload['tasa_venta_minima'] ?? null,
                 'definida_por_id'    => $admin->id,
                 'notas'              => $payload['notas'] ?? null,
                 'vigente_desde'      => $ahora,
@@ -84,20 +86,37 @@ class TasaDiariaService
     }
 
     /**
-     * Valida si la tasa efectiva del operador es favorable a la casa.
+     * Evalúa la tasa efectiva del operador contra los mínimos configurados.
      *
-     * Para venta : tasaEfectiva >= sugerida->tasa_venta  (la casa cobra más → favorable).
-     * Para compra: tasaEfectiva <= sugerida->tasa_compra (la casa paga menos → favorable).
+     * Usa TasaDiaria::esDesfavorableParaLaCasa(). Si no hay mínimo configurado
+     * para la dirección, la tasa siempre es válida y no requiere justificación.
      *
      * @param  string $direccion  'venta' | 'compra'
+     * @return array{es_valida: bool, es_desfavorable: bool, requiere_justificacion: bool, mensaje: ?string}
      */
-    public function validarTasaEfectiva(TasaDiaria $sugerida, float $tasaEfectiva, string $direccion): bool
+    public function validarTasaEfectiva(TasaDiaria $sugerida, float $tasaEfectiva, string $direccion): array
     {
-        return match ($direccion) {
-            'venta'  => $tasaEfectiva >= (float) $sugerida->tasa_venta,
-            'compra' => $tasaEfectiva <= (float) $sugerida->tasa_compra,
-            default  => throw new \InvalidArgumentException("Dirección debe ser 'venta' o 'compra'."),
-        };
+        $esDesfavorable = $sugerida->esDesfavorableParaLaCasa($tasaEfectiva, $direccion);
+
+        if (! $esDesfavorable) {
+            return [
+                'es_valida'              => true,
+                'es_desfavorable'        => false,
+                'requiere_justificacion' => false,
+                'mensaje'                => null,
+            ];
+        }
+
+        $mensaje = $direccion === 'venta'
+            ? sprintf('La tasa está por debajo del mínimo de venta (%s). Debe agregar una justificación en notas.', $sugerida->tasa_venta_minima)
+            : sprintf('La tasa está por encima del mínimo de compra (%s). Debe agregar una justificación en notas.', $sugerida->tasa_compra_minima);
+
+        return [
+            'es_valida'              => false,
+            'es_desfavorable'        => true,
+            'requiere_justificacion' => true,
+            'mensaje'                => $mensaje,
+        ];
     }
 
     /**

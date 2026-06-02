@@ -124,11 +124,26 @@ class TasaDiariaServiceTest extends TestCase
     // ─────────────────────────────────────────────────────────────────────────
     public function test_validar_tasa_efectiva_venta(): void
     {
+        // Mínimo de venta = 36.50 → por debajo es desfavorable.
+        $tasa = $this->service->publicar($this->payload(['tasa_venta_minima' => 36.50]), $this->admin);
+
+        $this->assertTrue($this->service->validarTasaEfectiva($tasa, 36.50, 'venta')['es_valida']);  // igual ✓
+        $this->assertTrue($this->service->validarTasaEfectiva($tasa, 37.00, 'venta')['es_valida']);  // mayor ✓
+
+        $resultado = $this->service->validarTasaEfectiva($tasa, 36.00, 'venta');                     // menor ✗
+        $this->assertFalse($resultado['es_valida']);
+        $this->assertTrue($resultado['es_desfavorable']);
+        $this->assertTrue($resultado['requiere_justificacion']);
+        $this->assertNotNull($resultado['mensaje']);
+    }
+
+    public function test_validar_tasa_efectiva_sin_minimo_siempre_valida(): void
+    {
+        // Sin mínimos configurados → nunca desfavorable.
         $tasa = $this->service->publicar($this->payload(), $this->admin);
 
-        $this->assertTrue($this->service->validarTasaEfectiva($tasa, 36.50, 'venta'));  // igual ✓
-        $this->assertTrue($this->service->validarTasaEfectiva($tasa, 37.00, 'venta'));  // mayor ✓
-        $this->assertFalse($this->service->validarTasaEfectiva($tasa, 36.00, 'venta')); // menor ✗
+        $this->assertTrue($this->service->validarTasaEfectiva($tasa, 1.00, 'venta')['es_valida']);
+        $this->assertTrue($this->service->validarTasaEfectiva($tasa, 9999.0, 'compra')['es_valida']);
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -136,11 +151,16 @@ class TasaDiariaServiceTest extends TestCase
     // ─────────────────────────────────────────────────────────────────────────
     public function test_validar_tasa_efectiva_compra(): void
     {
-        $tasa = $this->service->publicar($this->payload(), $this->admin);
+        // Mínimo de compra = 36.20 → por encima es desfavorable (la casa paga más).
+        $tasa = $this->service->publicar($this->payload(['tasa_compra_minima' => 36.20]), $this->admin);
 
-        $this->assertTrue($this->service->validarTasaEfectiva($tasa, 36.20, 'compra'));  // igual ✓
-        $this->assertTrue($this->service->validarTasaEfectiva($tasa, 36.00, 'compra'));  // menor (paga menos) ✓
-        $this->assertFalse($this->service->validarTasaEfectiva($tasa, 36.50, 'compra')); // mayor (paga más) ✗
+        $this->assertTrue($this->service->validarTasaEfectiva($tasa, 36.20, 'compra')['es_valida']);  // igual ✓
+        $this->assertTrue($this->service->validarTasaEfectiva($tasa, 36.00, 'compra')['es_valida']);  // menor (paga menos) ✓
+
+        $resultado = $this->service->validarTasaEfectiva($tasa, 36.50, 'compra');                     // mayor ✗
+        $this->assertFalse($resultado['es_valida']);
+        $this->assertTrue($resultado['es_desfavorable']);
+        $this->assertTrue($resultado['requiere_justificacion']);
     }
 
     // ─────────────────────────────────────────────────────────────────────────

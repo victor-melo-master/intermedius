@@ -20,7 +20,9 @@ class StoreTasaDiariaRequest extends FormRequest
             'moneda_base_id'     => ['required', 'integer', 'exists:monedas,id'],
             'moneda_cotizada_id' => ['required', 'integer', 'exists:monedas,id', 'different:moneda_base_id'],
             'tasa_compra'        => ['required', 'numeric', 'gt:0'],
+            'tasa_compra_minima' => ['nullable', 'numeric', 'gt:0'],
             'tasa_venta'         => ['required', 'numeric', 'gt:0'],
+            'tasa_venta_minima'  => ['nullable', 'numeric', 'gt:0'],
             'notas'              => ['nullable', 'string', 'max:500'],
         ];
     }

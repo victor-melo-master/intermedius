@@ -193,11 +193,13 @@ class RegistroOperacionService
             ? (float) $payload['tasa_aplicada']
             : $tasaSugerida;
 
-        if (isset($payload['tasa_aplicada']) && (float) $payload['tasa_aplicada'] !== $tasaSugerida) {
-            if (! $this->tasaService->validarTasaEfectiva($tasaDiaria, $tasaEfectiva, $direccion)) {
-                $tipo_texto = $direccion === 'venta' ? 'venta (debe ser ≥' : 'compra (debe ser ≤';
+        // Tasa desfavorable respecto al mínimo configurado: requiere justificación.
+        // La justificación se toma del campo descripcion (las operaciones no tienen campo notas dedicado).
+        if ($tasaDiaria->esDesfavorableParaLaCasa($tasaEfectiva, $direccion)) {
+            $justificacion = trim((string) ($payload['descripcion'] ?? ''));
+            if ($justificacion === '') {
                 throw ValidationException::withMessages([
-                    'tasa_aplicada' => "La tasa efectiva {$tasaEfectiva} no es favorable para la casa en {$tipo_texto} {$tasaSugerida}).",
+                    'tasa_aplicada' => 'Esta tasa es desfavorable para la casa. Debe agregar una justificación en el campo notas.',
                 ]);
             }
         }
