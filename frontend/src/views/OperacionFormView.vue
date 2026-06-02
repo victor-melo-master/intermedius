@@ -377,7 +377,7 @@ async function submit() {
     const body = {
       fecha: form.fecha,
       tipo_codigo: tipoCodigo.value,
-      operador_id: auth.user.id,
+      operador_id: Number(auth.user.id),
       tasa_aplicada: parseFloat(form.tasa),
       descripcion: descripcionFinal,
       movimientos: buildMovimientos(),

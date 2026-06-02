@@ -249,7 +249,7 @@ function applyFilters() {
   if (filters.estatus) params.estatus = filters.estatus
   if (filters.fecha_desde) params.fecha_desde = filters.fecha_desde
   if (filters.fecha_hasta) params.fecha_hasta = filters.fecha_hasta
-  if (filters.cliente_id) params.cliente_id = filters.cliente_id
+  if (filters.cliente_id) params.cliente_id = Number(filters.cliente_id)
   if (filters.moneda) params.moneda = filters.moneda
   ops.fetchAll(params)
   showFilter.value = false
