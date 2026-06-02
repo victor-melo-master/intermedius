@@ -44,6 +44,21 @@ class RegistroOperacionService
     {
         $tipo = TipoOperacion::where('codigo', $payload['tipo_codigo'])->firstOrFail();
 
+        // Auto-calcular tasa_a_usd si no viene en el payload
+        $tasaAplicada = (float) ($payload['tasa_aplicada'] ?? 1);
+        $payload['movimientos'] = array_map(function ($mov) use ($tasaAplicada) {
+            if (!empty($mov['tasa_a_usd'])) {
+                return $mov;
+            }
+            $cuenta = Cuenta::with('moneda')->find($mov['cuenta_id']);
+            $codigo = $cuenta?->moneda?->codigo;
+            $mov['tasa_a_usd'] = match ($codigo) {
+                'USD', 'USDT' => 1.0,
+                default       => $tasaAplicada > 0 ? round(1 / $tasaAplicada, 8) : 1.0,
+            };
+            return $mov;
+        }, $payload['movimientos']);
+
         $this->validarMovimientos($payload['movimientos'], $tipo);
 
         // ── Resolver tasa diaria y validar tasa efectiva ──────────────────────

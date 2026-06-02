@@ -96,7 +96,7 @@
               <button type="button" v-if="form.movimientos.length > 1" @click="removeMovimiento(i)"
                 class="text-xs text-red-400 hover:text-red-600 font-medium">✕ Quitar</button>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <div>
                 <label class="block text-xs text-gray-500 mb-1">Cuenta *</label>
                 <select v-model="mov.cuenta_id" required
@@ -110,11 +110,6 @@
               <div>
                 <label class="block text-xs text-gray-500 mb-1">Monto *</label>
                 <input v-model="mov.monto" type="number" step="0.01" required placeholder="-100.00"
-                  class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-              </div>
-              <div>
-                <label class="block text-xs text-gray-500 mb-1">Tasa a USD *</label>
-                <input v-model="mov.tasa_a_usd" type="number" step="0.0001" required placeholder="1.0000"
                   class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
               </div>
             </div>
@@ -162,11 +157,11 @@ const form = reactive({
   tasa_aplicada: '',
   referencia: '',
   descripcion: '',
-  movimientos: [{ cuenta_id: '', monto: '', tasa_a_usd: '' }],
+  movimientos: [{ cuenta_id: '', monto: '' }],
 })
 
 function addMovimiento() {
-  form.movimientos.push({ cuenta_id: '', monto: '', tasa_a_usd: '' })
+  form.movimientos.push({ cuenta_id: '', monto: '' })
 }
 
 function removeMovimiento(i) {
@@ -184,7 +179,6 @@ async function submit() {
       movimientos: form.movimientos.map(m => ({
         cuenta_id: Number(m.cuenta_id),
         monto: parseFloat(m.monto),
-        tasa_a_usd: parseFloat(m.tasa_a_usd),
       })),
     }
     if (form.cliente_id) body.cliente_id = Number(form.cliente_id)

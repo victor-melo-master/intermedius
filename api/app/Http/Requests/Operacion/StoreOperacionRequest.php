@@ -30,7 +30,7 @@ class StoreOperacionRequest extends FormRequest
             'movimientos'                => ['required', 'array', 'min:1'],
             'movimientos.*.cuenta_id'    => ['required', 'integer', 'exists:cuentas,id'],
             'movimientos.*.monto'        => ['required', 'numeric', 'not_in:0'],
-            'movimientos.*.tasa_a_usd'   => ['required', 'numeric', 'gt:0'],
+            'movimientos.*.tasa_a_usd'   => ['nullable', 'numeric', 'gt:0'],
         ];
     }
 
