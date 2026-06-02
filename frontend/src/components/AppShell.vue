@@ -62,7 +62,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth.js'
 
@@ -70,7 +70,7 @@ const router = useRouter()
 const auth = useAuthStore()
 const drawer = ref(false)
 
-const nav = [
+const baseNav = [
   { path: '/dashboard', label: 'Dashboard', icon: '📊' },
   { path: '/operaciones', label: 'Operaciones', icon: '📄' },
   { path: '/tasas', label: 'Tasas', icon: '📈' },
@@ -78,6 +78,14 @@ const nav = [
   { path: '/cuentas', label: 'Cuentas', icon: '🏦' },
   { path: '/reportes', label: 'Reportes', icon: '📉' },
 ]
+
+const nav = computed(() => {
+  const items = [...baseNav]
+  if (auth.isSuperAdmin) {
+    items.push({ path: '/usuarios', label: 'Usuarios', icon: '🔑' })
+  }
+  return items
+})
 
 function logout() {
   auth.logout()

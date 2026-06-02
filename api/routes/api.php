@@ -9,6 +9,7 @@ use App\Http\Controllers\MonedaController;
 use App\Http\Controllers\TitularController;
 use App\Http\Controllers\Api\V1\GastoController;
 use App\Http\Controllers\Api\V1\OperacionController;
+use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\ReporteComisionesController;
 use App\Http\Controllers\Api\V1\Configuracion\TasaDiariaController;
@@ -85,6 +86,11 @@ Route::prefix('v1')->group(function () {
             Route::get('reportes/comisiones-operadores',              [ReporteComisionesController::class, 'index']);
             Route::post('reportes/comisiones-operadores/exportar',    [ReporteComisionesController::class, 'exportar']);
             Route::get('reportes/comisiones-operadores/historico',    [ReporteComisionesController::class, 'historico']);
+        });
+
+        // ── Gestión de usuarios (solo admin|super_admin) ─────────────────────
+        Route::middleware('role:admin|super_admin')->group(function () {
+            Route::apiResource('usuarios', UserController::class);
         });
 
         // ── Bitácora (solo super_admin) ───────────────────────────────────────
