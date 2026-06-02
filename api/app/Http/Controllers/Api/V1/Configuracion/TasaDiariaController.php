@@ -55,6 +55,7 @@ class TasaDiariaController extends Controller
                 'tasa_venta'         => (string) $t->tasa_venta,
                 'tasa_venta_minima'  => $t->tasa_venta_minima !== null ? (string) $t->tasa_venta_minima : null,
                 'definida_a_las'=> $t->vigente_desde?->toIso8601String(),
+                'vigente_desde' => $t->vigente_desde?->toIso8601String(),
                 'definida_por'  => $t->definidaPor?->name,
                 'moneda_base_id'    => $t->moneda_base_id,
                 'moneda_cotizada_id'=> $t->moneda_cotizada_id,

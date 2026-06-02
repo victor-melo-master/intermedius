@@ -4,7 +4,7 @@
       <h2 class="text-xl font-bold text-gray-800">Tasas del día</h2>
       <div class="flex gap-2">
         <button @click="tasas.fetchVigentes()" class="px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm hover:bg-gray-50">🔄 Actualizar</button>
-        <button v-if="auth.isAdmin" @click="openForm" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">+ Publicar tasa</button>
+        <button v-if="auth.isAdmin" @click="openNew" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">+ Publicar tasa</button>
       </div>
     </div>
 
@@ -15,113 +15,268 @@
       {{ tasas.error }}
       <button @click="tasas.fetchVigentes()" class="underline ml-2">Reintentar</button>
     </div>
-    <div v-else-if="tasas.vigentes.length === 0" class="text-center py-16">
-      <span class="text-5xl block mb-4">📈</span>
-      <p class="text-gray-500">No hay tasas publicadas hoy</p>
-      <p v-if="auth.isAdmin" class="text-sm text-gray-400 mt-1">Usa + para publicar la tasa del día</p>
-    </div>
-    <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div v-for="t in tasas.vigentes" :key="t.id" class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-        <div class="flex items-center justify-between mb-4">
-          <span class="bg-blue-50 text-blue-700 text-xs font-bold px-3 py-1 rounded-full">{{ t.moneda_base?.codigo }}/{{ t.moneda_cotizada?.codigo }}</span>
-          <span v-if="!t.vigente_hasta" class="bg-green-50 text-green-700 text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">
-            <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span> Vigente
-          </span>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <p class="text-xs text-gray-500 mb-1">Compra</p>
-            <p class="text-xl font-bold text-teal-600">{{ format(t.tasa_compra) }}</p>
-          </div>
-          <div>
-            <p class="text-xs text-gray-500 mb-1">Venta</p>
-            <p class="text-xl font-bold text-blue-600">{{ format(t.tasa_venta) }}</p>
-          </div>
-        </div>
-        <p v-if="t.notas" class="text-xs text-gray-400 mt-3 pt-3 border-t border-gray-100">{{ t.notas }}</p>
-        <p class="text-[11px] text-gray-400 mt-2">Desde: {{ t.vigente_desde }}</p>
+    <template v-else>
+      <!-- Alerta sin tasas hoy -->
+      <div v-if="!hayTasasHoy" class="bg-amber-50 border border-amber-200 text-amber-700 p-4 rounded-xl text-sm">
+        ⚠️ No hay tasas publicadas para hoy
+        <span v-if="auth.isAdmin"> — usa <strong>+ Publicar tasa</strong> para crearlas.</span>
       </div>
-    </div>
 
-    <!-- Publicar tasa modal -->
+      <!-- Grupos por moneda base -->
+      <div v-for="grupo in grupos" :key="grupo.baseId" class="space-y-2">
+        <div class="flex items-center gap-2">
+          <span class="text-lg">{{ iconoMoneda(grupo.baseCodigo) }}</span>
+          <h3 class="font-semibold text-gray-700">{{ grupo.baseCodigo }}</h3>
+          <span class="text-xs text-gray-400">{{ grupo.items.length }} {{ grupo.items.length === 1 ? 'par' : 'pares' }}</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div v-for="t in grupo.items" :key="t.id" class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+            <div class="flex items-center justify-between mb-3">
+              <span class="bg-blue-50 text-blue-700 text-xs font-bold px-3 py-1 rounded-full">{{ t.par }}</span>
+              <button v-if="auth.isAdmin" @click="openEdit(t)" class="text-sm text-gray-400 hover:text-blue-600" title="Editar">✏️ Editar</button>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <p class="text-xs text-gray-500 mb-0.5">Compra sugerida</p>
+                <p class="text-xl font-bold text-teal-600">{{ format(t.tasa_compra) }}</p>
+                <p v-if="t.tasa_compra_minima" class="text-[11px] text-gray-400 mt-0.5">Mín: {{ format(t.tasa_compra_minima) }}</p>
+              </div>
+              <div>
+                <p class="text-xs text-gray-500 mb-0.5">Venta sugerida</p>
+                <p class="text-xl font-bold text-blue-600">{{ format(t.tasa_venta) }}</p>
+                <p v-if="t.tasa_venta_minima" class="text-[11px] text-gray-400 mt-0.5">Mín: {{ format(t.tasa_venta_minima) }}</p>
+              </div>
+            </div>
+            <p class="text-[11px] text-gray-400 mt-3 pt-2 border-t border-gray-100">{{ publicada(t.vigente_desde) }}</p>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <!-- Modal publicar / editar -->
     <div v-if="showForm" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center" @click.self="showForm = false">
       <div class="absolute inset-0 bg-black/40"></div>
-      <div class="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-md p-6 relative z-10">
+      <div class="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-lg p-6 relative z-10 max-h-[92vh] overflow-y-auto">
         <div class="flex items-center justify-between mb-4">
-          <h3 class="font-bold text-lg">Publicar tasa del día</h3>
+          <h3 class="font-bold text-lg">{{ isEdit ? 'Editar tasa' : 'Publicar tasa del día' }}</h3>
           <button @click="showForm = false" class="text-gray-400 hover:text-gray-600">✕</button>
         </div>
-        <form @submit.prevent="submitTasa" class="space-y-3">
-          <div class="grid grid-cols-2 gap-3">
-            <select v-model="tasaForm.moneda_base_id" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-              <option value="">Base</option>
-              <option v-for="m in tasas.monedas" :key="m.id" :value="m.id">{{ m.codigo }}</option>
-            </select>
-            <select v-model="tasaForm.moneda_cotizada_id" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-              <option value="">Cotizada</option>
-              <option v-for="m in tasas.monedas" :key="m.id" :value="m.id">{{ m.codigo }}</option>
-            </select>
-          </div>
-          <div class="grid grid-cols-2 gap-3">
-            <input v-model="tasaForm.tasa_compra" type="number" step="0.0001" required placeholder="Tasa compra" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-            <input v-model="tasaForm.tasa_venta" type="number" step="0.0001" required placeholder="Tasa venta" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-          </div>
-          <input v-model="tasaForm.notas" placeholder="Notas (opcional)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-          <div v-if="formError" class="bg-red-50 text-red-600 text-sm p-3 rounded-lg">{{ formError }}</div>
-          <button type="submit" :disabled="saving" class="w-full bg-blue-600 text-white font-semibold py-2.5 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition flex items-center justify-center gap-2">
-            <span v-if="saving" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-            {{ saving ? 'Publicando...' : 'Publicar tasa' }}
+
+        <!-- Paso 1: moneda base -->
+        <p class="text-sm font-medium text-gray-600 mb-2">1. Moneda base</p>
+        <div class="grid grid-cols-4 gap-2 mb-5">
+          <button v-for="m in baseOptions" :key="m.id" type="button" @click="selectBase(m.id)"
+            class="py-3 rounded-xl border-2 text-center transition"
+            :class="selectedBaseId === m.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'">
+            <span class="block text-xl">{{ iconoMoneda(m.codigo) }}</span>
+            <span class="block text-xs font-semibold mt-0.5" :class="selectedBaseId === m.id ? 'text-blue-700' : 'text-gray-600'">{{ m.codigo }}</span>
           </button>
-        </form>
+        </div>
+
+        <!-- Paso 2: pares -->
+        <template v-if="selectedBaseId">
+          <p class="text-sm font-medium text-gray-600 mb-2">2. Configurar pares</p>
+          <div class="space-y-3">
+            <div v-for="ref in referenceMonedas" :key="ref.id" class="border border-gray-200 rounded-xl p-3"
+              :class="pairs[ref.id]?.active ? 'bg-white' : 'bg-gray-50'">
+              <label class="flex items-center justify-between cursor-pointer">
+                <span class="font-semibold text-sm text-gray-700">{{ baseCodigo }} / {{ ref.codigo }}</span>
+                <input type="checkbox" v-model="pairs[ref.id].active" class="accent-blue-600 w-5 h-5" />
+              </label>
+              <div v-if="pairs[ref.id]?.active" class="grid grid-cols-2 gap-2 mt-3">
+                <div>
+                  <label class="block text-[11px] text-gray-500 mb-1">Tasa compra *</label>
+                  <input v-model="pairs[ref.id].tasa_compra" type="number" step="0.00000001" inputmode="decimal" placeholder="0.00"
+                    class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+                </div>
+                <div>
+                  <label class="block text-[11px] text-gray-500 mb-1">Mín. compra</label>
+                  <input v-model="pairs[ref.id].tasa_compra_minima" type="number" step="0.00000001" inputmode="decimal" placeholder="opcional"
+                    class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+                </div>
+                <div>
+                  <label class="block text-[11px] text-gray-500 mb-1">Tasa venta *</label>
+                  <input v-model="pairs[ref.id].tasa_venta" type="number" step="0.00000001" inputmode="decimal" placeholder="0.00"
+                    class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+                </div>
+                <div>
+                  <label class="block text-[11px] text-gray-500 mb-1">Mín. venta</label>
+                  <input v-model="pairs[ref.id].tasa_venta_minima" type="number" step="0.00000001" inputmode="decimal" placeholder="opcional"
+                    class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <div v-if="formError" class="bg-red-50 text-red-600 text-sm p-3 rounded-lg mt-4 whitespace-pre-line">{{ formError }}</div>
+
+        <button type="button" @click="submit" :disabled="saving || !puedeGuardar"
+          class="w-full mt-5 bg-blue-600 text-white font-semibold py-2.5 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition flex items-center justify-center gap-2">
+          <span v-if="saving" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+          {{ saving ? 'Guardando...' : (isEdit ? 'Actualizar' : 'Publicar') }}
+        </button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useTasasStore } from '../stores/tasas.js'
 import { useAuthStore } from '../stores/auth.js'
 
 const tasas = useTasasStore()
 const auth = useAuthStore()
+
 const showForm = ref(false)
+const isEdit = ref(false)
 const saving = ref(false)
 const formError = ref('')
+const selectedBaseId = ref('')
+const pairs = reactive({})
 
-async function openForm() {
+const LOCAL = 'VES'
+const ICONOS = { USD: '💵', USDT: '₮', EUR: '€', COP: '$', VES: 'Bs' }
+function iconoMoneda(codigo) { return ICONOS[codigo] || '💱' }
+
+// ── Mapas y opciones ──
+const monedaById = computed(() => Object.fromEntries(tasas.monedas.map(m => [m.id, m])))
+
+// Base: todas menos la moneda local (VES siempre es cotizada)
+const baseOptions = computed(() => tasas.monedas.filter(m => m.codigo !== LOCAL))
+
+const baseCodigo = computed(() => monedaById.value[selectedBaseId.value]?.codigo || '')
+
+// Referencias: todas las monedas excepto la base seleccionada
+const referenceMonedas = computed(() =>
+  tasas.monedas.filter(m => m.id !== selectedBaseId.value)
+)
+
+// ── Lista agrupada por base ──
+function baseCodigoDe(t) {
+  return monedaById.value[t.moneda_base_id]?.codigo || (t.par || '').split('/')[0] || '?'
+}
+
+const grupos = computed(() => {
+  const map = {}
+  for (const t of tasas.vigentes) {
+    const baseId = t.moneda_base_id
+    if (!map[baseId]) map[baseId] = { baseId, baseCodigo: baseCodigoDe(t), items: [] }
+    map[baseId].items.push(t)
+  }
+  return Object.values(map)
+})
+
+const hayTasasHoy = computed(() => tasas.vigentes.some(t => esHoy(t.vigente_desde)))
+
+const puedeGuardar = computed(() =>
+  selectedBaseId.value && Object.values(pairs).some(p => p?.active)
+)
+
+// ── Helpers ──
+function format(n) {
+  return new Intl.NumberFormat('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 4 }).format(parseFloat(n) || 0)
+}
+
+function esHoy(iso) {
+  if (!iso) return false
+  const d = new Date(iso)
+  const h = new Date()
+  return d.toDateString() === h.toDateString()
+}
+
+function publicada(iso) {
+  if (!iso) return ''
+  const d = new Date(iso)
+  const hora = d.toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' })
+  if (esHoy(iso)) return `Publicada hoy ${hora}`
+  return `Publicada ${d.toLocaleDateString('es-VE', { day: '2-digit', month: '2-digit' })} ${hora}`
+}
+
+// ── Modal ──
+function emptyPair() {
+  return { active: false, tasa_compra: '', tasa_compra_minima: '', tasa_venta: '', tasa_venta_minima: '' }
+}
+
+function buildPairs(baseId, { prefill = false } = {}) {
+  Object.keys(pairs).forEach(k => delete pairs[k])
+  for (const ref of tasas.monedas.filter(m => m.id !== baseId)) {
+    pairs[ref.id] = emptyPair()
+  }
+  if (prefill) {
+    for (const t of tasas.vigentes.filter(v => v.moneda_base_id === baseId)) {
+      const p = pairs[t.moneda_cotizada_id]
+      if (!p) continue
+      p.active = true
+      p.tasa_compra = t.tasa_compra ?? ''
+      p.tasa_compra_minima = t.tasa_compra_minima ?? ''
+      p.tasa_venta = t.tasa_venta ?? ''
+      p.tasa_venta_minima = t.tasa_venta_minima ?? ''
+    }
+  }
+}
+
+function selectBase(id) {
+  selectedBaseId.value = id
+  buildPairs(id, { prefill: true })
+}
+
+async function openNew() {
   await tasas.fetchMonedas()
+  isEdit.value = false
+  formError.value = ''
+  selectedBaseId.value = ''
+  Object.keys(pairs).forEach(k => delete pairs[k])
   showForm.value = true
 }
 
-const tasaForm = reactive({
-  moneda_base_id: '',
-  moneda_cotizada_id: '',
-  tasa_compra: '',
-  tasa_venta: '',
-  notas: '',
-})
-
-function format(n) {
-  return new Intl.NumberFormat('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 4 }).format(n)
+async function openEdit(t) {
+  await tasas.fetchMonedas()
+  isEdit.value = true
+  formError.value = ''
+  showForm.value = true
+  selectBase(t.moneda_base_id)
 }
 
-async function submitTasa() {
+async function submit() {
   formError.value = ''
+  const activos = Object.entries(pairs).filter(([, p]) => p.active)
+
+  if (!activos.length) {
+    formError.value = 'Activa al menos un par para guardar.'
+    return
+  }
+  for (const [cotId, p] of activos) {
+    if (!p.tasa_compra || !p.tasa_venta) {
+      formError.value = `Completa tasa compra y venta del par ${baseCodigo.value}/${monedaById.value[cotId]?.codigo}.`
+      return
+    }
+  }
+
   saving.value = true
+  const fecha = new Date().toISOString().split('T')[0]
   try {
-    await tasas.publicar({
-      moneda_base_id: Number(tasaForm.moneda_base_id),
-      moneda_cotizada_id: Number(tasaForm.moneda_cotizada_id),
-      tasa_compra: parseFloat(tasaForm.tasa_compra),
-      tasa_venta: parseFloat(tasaForm.tasa_venta),
-      ...(tasaForm.notas ? { notas: tasaForm.notas } : {}),
-      fecha: new Date().toISOString().split('T')[0],
-    })
+    for (const [cotId, p] of activos) {
+      const body = {
+        fecha,
+        moneda_base_id: Number(selectedBaseId.value),
+        moneda_cotizada_id: Number(cotId),
+        tasa_compra: parseFloat(p.tasa_compra),
+        tasa_venta: parseFloat(p.tasa_venta),
+        notas: 'Tasa del día',
+      }
+      if (p.tasa_compra_minima !== '' && p.tasa_compra_minima != null) body.tasa_compra_minima = parseFloat(p.tasa_compra_minima)
+      if (p.tasa_venta_minima !== '' && p.tasa_venta_minima != null) body.tasa_venta_minima = parseFloat(p.tasa_venta_minima)
+      await tasas.publicar(body)
+    }
     showForm.value = false
-    tasas.fetchVigentes()
+    await tasas.fetchVigentes()
   } catch (err) {
-    formError.value = err.response?.data?.message || err.message
+    const data = err.response?.data
+    formError.value = data?.errors
+      ? Object.values(data.errors).flat().join('\n')
+      : (data?.message || err.message)
   } finally {
     saving.value = false
   }
