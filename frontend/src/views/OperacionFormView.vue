@@ -2,7 +2,7 @@
   <div class="max-w-2xl mx-auto space-y-4 pb-10">
     <div class="flex items-center gap-3 mb-2">
       <button @click="$router.back()" class="p-2 hover:bg-gray-100 rounded-lg text-gray-500">←</button>
-      <h2 class="text-xl font-bold text-gray-800">Nueva Operación</h2>
+      <h2 class="text-xl font-bold text-gray-800">{{ titulo }}</h2>
     </div>
 
     <!-- Éxito -->
@@ -23,14 +23,14 @@
           <button type="button" @click="setTipo('compra')"
             class="py-3 rounded-xl border-2 font-semibold text-sm transition"
             :class="form.tipo === 'compra' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 text-gray-500 hover:border-gray-300'">
-            Compra de USD
-            <span class="block text-[11px] font-normal mt-0.5">La casa compra USD, paga Bs.</span>
+            Compra de {{ monedaSel }}
+            <span class="block text-[11px] font-normal mt-0.5">La casa compra {{ monedaSel }}, paga {{ quoteSimbolo }}.</span>
           </button>
           <button type="button" @click="setTipo('venta')"
             class="py-3 rounded-xl border-2 font-semibold text-sm transition"
             :class="form.tipo === 'venta' ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-200 text-gray-500 hover:border-gray-300'">
-            Venta de USD
-            <span class="block text-[11px] font-normal mt-0.5">La casa vende USD, recibe Bs.</span>
+            Venta de {{ monedaSel }}
+            <span class="block text-[11px] font-normal mt-0.5">La casa vende {{ monedaSel }}, recibe {{ quoteSimbolo }}.</span>
           </button>
         </div>
         <div>
@@ -69,25 +69,25 @@
         <h3 class="font-semibold text-gray-700">Monto y tasa</h3>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label class="block text-sm text-gray-600 mb-1">Monto USD *</label>
+            <label class="block text-sm text-gray-600 mb-1">Monto {{ monedaSel }} *</label>
             <input v-model="form.monto_usd" type="number" step="0.01" inputmode="decimal" required placeholder="100.00"
               class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" />
           </div>
           <div>
-            <label class="block text-sm text-gray-600 mb-1">Tasa {{ form.tipo === 'venta' ? 'de venta' : 'de compra' }} *</label>
+            <label class="block text-sm text-gray-600 mb-1">Tasa {{ form.tipo === 'venta' ? 'de venta' : 'de compra' }} ({{ parStr }}) *</label>
             <input v-model="form.tasa" type="number" step="0.0001" inputmode="decimal" required placeholder="36.5000"
               class="w-full px-4 py-2.5 border rounded-xl focus:ring-2 outline-none"
               :class="tasaDesfavorable ? 'border-amber-400 focus:ring-amber-400' : 'border-gray-300 focus:ring-blue-500'" />
             <p v-if="tasaSugerida" class="text-xs text-gray-400 mt-1">Sugerida del día: <span class="font-medium text-gray-600">{{ tasaSugerida }}</span></p>
-            <p v-else class="text-xs text-amber-500 mt-1">No hay tasa USD/VES publicada hoy.</p>
+            <p v-else class="text-xs text-amber-500 mt-1">No hay tasa {{ parStr }} publicada hoy.</p>
           </div>
         </div>
         <div v-if="tasaDesfavorable" class="bg-amber-50 border border-amber-200 text-amber-700 text-sm p-3 rounded-lg">
           ⚠️ La tasa es desfavorable para la casa (sugerida {{ form.tipo === 'venta' ? '≥' : '≤' }} {{ tasaSugerida }}). El backend podría rechazarla salvo aprobación especial.
         </div>
         <div class="bg-gray-50 rounded-lg p-3 flex items-center justify-between">
-          <span class="text-sm text-gray-500">Bolívares {{ form.tipo === 'venta' ? 'a recibir' : 'a pagar' }}</span>
-          <span class="text-lg font-bold text-gray-800">Bs. {{ formatMoney(bolivares) }}</span>
+          <span class="text-sm text-gray-500">{{ quoteNombre }} {{ form.tipo === 'venta' ? 'a recibir' : 'a pagar' }}</span>
+          <span class="text-lg font-bold text-gray-800">{{ quoteSimbolo }} {{ formatMoney(bolivares) }}</span>
         </div>
       </div>
 
@@ -96,30 +96,31 @@
         <h3 class="font-semibold text-gray-700">Cuentas involucradas</h3>
         <div v-if="loadingCuentas" class="text-center py-4 text-gray-400 text-sm">Cargando cuentas...</div>
         <div v-else-if="cuentas.length === 0" class="bg-amber-50 border border-amber-200 text-amber-700 text-sm p-4 rounded-lg">
-          ⚠️ No hay cuentas configuradas. Crea al menos una cuenta USD y una VES en <strong>Cuentas</strong>.
+          ⚠️ No hay cuentas configuradas. Crea al menos una cuenta {{ monedaSel }} y una {{ quoteCodigo }} en <strong>Cuentas</strong>.
         </div>
         <template v-else>
           <div>
             <label class="block text-sm text-gray-600 mb-1">
-              {{ form.tipo === 'venta' ? 'Cuenta USD desde donde entregas' : 'Cuenta USD donde recibes' }} *
+              {{ form.tipo === 'venta' ? `Cuenta ${monedaSel} desde donde entregas` : `Cuenta ${monedaSel} donde recibes` }}
+              <span v-if="!cuentaForeignRequerida" class="text-gray-400 font-normal">(opcional para efectivo)</span>
             </label>
-            <select v-model="form.cuenta_usd_id" required
+            <select v-model="form.cuenta_usd_id" :required="cuentaForeignRequerida"
               class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none bg-white">
-              <option value="">Seleccionar cuenta USD</option>
-              <option v-for="c in cuentasUsd" :key="c.id" :value="c.id">{{ cuentaLabel(c) }}</option>
+              <option value="">Seleccionar cuenta {{ monedaSel }}</option>
+              <option v-for="c in cuentasForeign" :key="c.id" :value="c.id">{{ cuentaLabel(c) }}</option>
             </select>
-            <p v-if="cuentasUsd.length === 0" class="text-xs text-amber-500 mt-1">No hay cuentas en USD/USDT.</p>
+            <p v-if="cuentasForeign.length === 0" class="text-xs text-amber-500 mt-1">No hay cuentas en {{ monedaSel }}.</p>
           </div>
           <div>
             <label class="block text-sm text-gray-600 mb-1">
-              {{ form.tipo === 'venta' ? 'Cuenta Bs. donde recibes' : 'Cuenta Bs. desde donde pagas' }} *
+              {{ form.tipo === 'venta' ? `Cuenta ${quoteCodigo} donde recibes` : `Cuenta ${quoteCodigo} desde donde pagas` }} *
             </label>
             <select v-model="form.cuenta_ves_id" required
               class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none bg-white">
-              <option value="">Seleccionar cuenta Bs.</option>
-              <option v-for="c in cuentasVes" :key="c.id" :value="c.id">{{ cuentaLabel(c) }}</option>
+              <option value="">Seleccionar cuenta {{ quoteCodigo }}</option>
+              <option v-for="c in cuentasQuote" :key="c.id" :value="c.id">{{ cuentaLabel(c) }}</option>
             </select>
-            <p v-if="cuentasVes.length === 0" class="text-xs text-amber-500 mt-1">No hay cuentas en VES.</p>
+            <p v-if="cuentasQuote.length === 0" class="text-xs text-amber-500 mt-1">No hay cuentas en {{ quoteCodigo }}.</p>
           </div>
           <div>
             <label class="block text-sm text-gray-600 mb-1">Estado de entrega</label>
@@ -150,13 +151,13 @@
       <!-- Resumen -->
       <div v-if="resumenVisible" class="bg-slate-50 border border-slate-200 rounded-xl p-5 space-y-2 text-sm">
         <h3 class="font-semibold text-gray-700 mb-2">Resumen</h3>
-        <div class="flex justify-between"><span class="text-gray-500">Tipo</span><span class="font-medium">{{ form.tipo === 'venta' ? 'Venta de USD' : 'Compra de USD' }}</span></div>
+        <div class="flex justify-between"><span class="text-gray-500">Tipo</span><span class="font-medium">{{ form.tipo === 'venta' ? `Venta de ${monedaSel}` : `Compra de ${monedaSel}` }}</span></div>
         <div class="flex justify-between"><span class="text-gray-500">Cliente</span><span class="font-medium">{{ form.cliente_nombre || 'Sin cliente' }}</span></div>
-        <div class="flex justify-between"><span class="text-gray-500">Monto USD</span><span class="font-medium">$ {{ formatMoney(form.monto_usd) }}</span></div>
+        <div class="flex justify-between"><span class="text-gray-500">Monto {{ monedaSel }}</span><span class="font-medium">{{ simbolo }} {{ formatMoney(form.monto_usd) }}</span></div>
         <div class="flex justify-between"><span class="text-gray-500">Tasa</span><span class="font-medium">{{ form.tasa }}</span></div>
-        <div class="flex justify-between"><span class="text-gray-500">Bolívares</span><span class="font-medium">Bs. {{ formatMoney(bolivares) }}</span></div>
-        <div class="flex justify-between"><span class="text-gray-500">Cuenta USD</span><span class="font-medium">{{ cuentaAlias(form.cuenta_usd_id) }}</span></div>
-        <div class="flex justify-between"><span class="text-gray-500">Cuenta Bs.</span><span class="font-medium">{{ cuentaAlias(form.cuenta_ves_id) }}</span></div>
+        <div class="flex justify-between"><span class="text-gray-500">{{ quoteNombre }}</span><span class="font-medium">{{ quoteSimbolo }} {{ formatMoney(bolivares) }}</span></div>
+        <div v-if="form.cuenta_usd_id" class="flex justify-between"><span class="text-gray-500">Cuenta {{ monedaSel }}</span><span class="font-medium">{{ cuentaAlias(form.cuenta_usd_id) }}</span></div>
+        <div class="flex justify-between"><span class="text-gray-500">Cuenta {{ quoteCodigo }}</span><span class="font-medium">{{ cuentaAlias(form.cuenta_ves_id) }}</span></div>
         <div class="flex justify-between"><span class="text-gray-500">Entrega</span><span class="font-medium">{{ estadoEntregaLabel }}</span></div>
       </div>
 
@@ -172,12 +173,14 @@
 </template>
 
 <script setup>
-import { reactive, ref, computed, onMounted } from 'vue'
+import { reactive, ref, computed, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { useTasasStore } from '../stores/tasas.js'
 import { useAuthStore } from '../stores/auth.js'
 import { useOperacionesStore } from '../stores/operaciones.js'
 import api from '../api/axios.js'
 
+const route = useRoute()
 const tasas = useTasasStore()
 const auth = useAuthStore()
 const ops = useOperacionesStore()
@@ -196,6 +199,18 @@ let clienteDebounce = null
 
 const today = new Date().toISOString().split('T')[0]
 
+// ── Moneda y cotización dinámicas ──
+const SIMBOLOS = { USD: '$', USDT: '₮', EUR: '€', COP: '$', VES: 'Bs.' }
+const NOMBRES = { USD: 'Dólar', USDT: 'Tether', EUR: 'Euro', COP: 'Peso', VES: 'Bolívar' }
+
+const monedaSel = computed(() => route.params.moneda || 'USD')
+const quoteCodigo = computed(() => monedaSel.value === 'USD' ? 'VES' : 'USD')
+const parStr = computed(() => `${monedaSel.value}/${quoteCodigo.value}`)
+
+const simbolo = computed(() => SIMBOLOS[monedaSel.value] || '$')
+const quoteSimbolo = computed(() => SIMBOLOS[quoteCodigo.value] || 'Bs.')
+const quoteNombre = computed(() => NOMBRES[quoteCodigo.value] || 'moneda cotizada')
+
 const form = reactive({
   tipo: 'compra',
   fecha: today,
@@ -210,16 +225,26 @@ const form = reactive({
   descripcion: '',
 })
 
+// ── Cuenta extranjera opcional para efectivo ──
+const cuentaForeignRequerida = computed(() => {
+  return !form.estado_entrega.startsWith('efectivo')
+})
+
 // ── Computeds ─────────────────────────────────────────────
 const tipoCodigo = computed(() => (form.tipo === 'venta' ? 'venta_usd' : 'compra_usd'))
 
-const tasaUsdVes = computed(() =>
-  tasas.vigentes.find(t => t.par === 'USD/VES') || null
+const titulo = computed(() => {
+  const accion = form.tipo === 'venta' ? 'Venta' : 'Compra'
+  return `Nueva ${accion} ${monedaSel.value}`
+})
+
+const tasaPar = computed(() =>
+  tasas.vigentes.find(t => t.par === parStr.value) || null
 )
 
 const tasaSugerida = computed(() => {
-  if (!tasaUsdVes.value) return null
-  return form.tipo === 'venta' ? tasaUsdVes.value.tasa_venta : tasaUsdVes.value.tasa_compra
+  if (!tasaPar.value) return null
+  return form.tipo === 'venta' ? tasaPar.value.tasa_venta : tasaPar.value.tasa_compra
 })
 
 const bolivares = computed(() => {
@@ -236,8 +261,8 @@ const tasaDesfavorable = computed(() => {
   return form.tipo === 'compra' ? t > sug : t < sug
 })
 
-const cuentasUsd = computed(() => cuentas.value.filter(c => ['USD', 'USDT'].includes(c.moneda?.codigo)))
-const cuentasVes = computed(() => cuentas.value.filter(c => c.moneda?.codigo === 'VES'))
+const cuentasForeign = computed(() => cuentas.value.filter(c => c.moneda?.codigo === monedaSel.value))
+const cuentasQuote = computed(() => cuentas.value.filter(c => c.moneda?.codigo === quoteCodigo.value))
 
 const estadoEntregaLabel = computed(() => ({
   digital: `Digital - ya ${form.tipo === 'venta' ? 'enviado' : 'recibido'}`,
@@ -246,7 +271,7 @@ const estadoEntregaLabel = computed(() => ({
 }[form.estado_entrega]))
 
 const resumenVisible = computed(() =>
-  form.monto_usd && form.tasa && form.cuenta_usd_id && form.cuenta_ves_id
+  form.monto_usd && form.tasa && form.cuenta_ves_id && (cuentaForeignRequerida.value ? form.cuenta_usd_id : true)
 )
 
 // ── Helpers ───────────────────────────────────────────────
@@ -266,9 +291,20 @@ function cuentaAlias(id) {
 
 function setTipo(tipo) {
   form.tipo = tipo
-  // Precargar tasa sugerida al cambiar de tipo
   if (tasaSugerida.value) form.tasa = tasaSugerida.value
 }
+
+// ── Watcher para resetear al cambiar moneda ──
+watch(monedaSel, () => {
+  form.monto_usd = ''
+  form.tasa = tasaSugerida.value || ''
+  form.cuenta_usd_id = ''
+  form.cuenta_ves_id = ''
+  form.estado_entrega = 'digital'
+  form.referencia = ''
+  form.descripcion = ''
+  tasas.fetchVigentes()
+}, { immediate: false })
 
 // ── Cliente autocomplete ──────────────────────────────────
 function onClienteSearch() {
@@ -314,20 +350,21 @@ async function crearClienteInline() {
 
 // ── Submit ────────────────────────────────────────────────
 function buildMovimientos() {
-  const montoUsd = parseFloat(form.monto_usd)
-  const bs = bolivares.value
-  if (form.tipo === 'compra') {
-    // Casa recibe USD (+) y paga Bs (-)
-    return [
-      { cuenta_id: Number(form.cuenta_usd_id), monto: montoUsd },
-      { cuenta_id: Number(form.cuenta_ves_id), monto: -bs },
-    ]
+  const montoForeign = parseFloat(form.monto_usd)
+  const montoQuote = bolivares.value
+  const movimientos = []
+
+  // Pata de moneda cotizada (siempre requerida)
+  if (form.cuenta_ves_id) {
+    movimientos.push({ cuenta_id: Number(form.cuenta_ves_id), monto: form.tipo === 'compra' ? -montoQuote : montoQuote })
   }
-  // Venta: casa entrega USD (-) y recibe Bs (+)
-  return [
-    { cuenta_id: Number(form.cuenta_usd_id), monto: -montoUsd },
-    { cuenta_id: Number(form.cuenta_ves_id), monto: bs },
-  ]
+
+  // Pata de moneda extranjera (opcional para efectivo)
+  if (form.cuenta_usd_id) {
+    movimientos.push({ cuenta_id: Number(form.cuenta_usd_id), monto: form.tipo === 'compra' ? montoForeign : -montoForeign })
+  }
+
+  return movimientos
 }
 
 async function submit() {
@@ -370,6 +407,7 @@ function registrarOtra() {
     cliente_id: '', cliente_nombre: '', monto_usd: '', tasa: tasaSugerida.value || '',
     cuenta_usd_id: '', cuenta_ves_id: '', estado_entrega: 'digital', referencia: '', descripcion: '',
   })
+  tasas.fetchVigentes()
 }
 
 onMounted(async () => {

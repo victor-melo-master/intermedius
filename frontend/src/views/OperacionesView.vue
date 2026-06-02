@@ -87,6 +87,17 @@
               <input v-model="filters.fecha_hasta" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
             </div>
           </div>
+          <!-- Moneda -->
+          <div>
+            <label class="block text-sm font-medium text-gray-600 mb-1">Moneda</label>
+            <select v-model="filters.moneda" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white">
+              <option value="">Todas</option>
+              <option value="USD">USD</option>
+              <option value="USDT">USDT</option>
+              <option value="EUR">EUR</option>
+              <option value="COP">COP</option>
+            </select>
+          </div>
           <!-- Cliente -->
           <div class="relative">
             <label class="block text-sm font-medium text-gray-600 mb-1">Cliente</label>
@@ -131,12 +142,13 @@ const filters = reactive({
   fecha_hasta: '',
   cliente_id: '',
   cliente_nombre: '',
+  moneda: '',
 })
 
 const params = reactive({})
 
 const activeFilterCount = computed(() =>
-  ['tipo_codigo', 'estatus', 'fecha_desde', 'fecha_hasta', 'cliente_id'].filter(k => filters[k]).length
+  ['tipo_codigo', 'estatus', 'fecha_desde', 'fecha_hasta', 'cliente_id', 'moneda'].filter(k => filters[k]).length
 )
 
 // ── Cliente autocomplete en filtro ──
@@ -173,12 +185,24 @@ function clearClienteFilter() {
 // ── Badges ──
 function tipoBadge(op) {
   const codigo = op.tipo_operacion?.codigo
+  const moneda = monedaDeOperacion(op)
+  const baseLabel = {
+    compra_usd: 'Compra',
+    venta_usd:  'Venta',
+    cambio:     'Intermediada',
+  }[codigo] || (op.tipo_operacion?.nombre || 'Operación')
+  const label = moneda ? `${baseLabel} ${moneda}` : baseLabel
   const map = {
-    compra_usd: { label: 'Compra', class: 'bg-blue-100 text-blue-700' },
-    venta_usd:  { label: 'Venta',  class: 'bg-green-100 text-green-700' },
-    cambio:     { label: 'Intermediada', class: 'bg-orange-100 text-orange-700' },
+    compra_usd: { label, class: 'bg-blue-100 text-blue-700' },
+    venta_usd:  { label, class: 'bg-green-100 text-green-700' },
+    cambio:     { label, class: 'bg-orange-100 text-orange-700' },
   }
-  return map[codigo] || { label: op.tipo_operacion?.nombre || 'Operación', class: 'bg-gray-100 text-gray-600' }
+  return map[codigo] || { label, class: 'bg-gray-100 text-gray-600' }
+}
+
+function monedaDeOperacion(op) {
+  const mov = (op.movimientos || []).find(m => m.moneda?.codigo !== 'VES')
+  return mov?.moneda?.codigo || ''
 }
 
 function estatusBadge(op) {
@@ -226,12 +250,13 @@ function applyFilters() {
   if (filters.fecha_desde) params.fecha_desde = filters.fecha_desde
   if (filters.fecha_hasta) params.fecha_hasta = filters.fecha_hasta
   if (filters.cliente_id) params.cliente_id = filters.cliente_id
+  if (filters.moneda) params.moneda = filters.moneda
   ops.fetchAll(params)
   showFilter.value = false
 }
 
 function clearFilters() {
-  Object.assign(filters, { tipo_codigo: '', estatus: '', fecha_desde: '', fecha_hasta: '', cliente_id: '', cliente_nombre: '' })
+  Object.assign(filters, { tipo_codigo: '', estatus: '', fecha_desde: '', fecha_hasta: '', cliente_id: '', cliente_nombre: '', moneda: '' })
   Object.keys(params).forEach(k => delete params[k])
   ops.fetchAll(params)
   showFilter.value = false
