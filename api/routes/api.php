@@ -118,5 +118,7 @@ Route::prefix('v1')->group(function () {
 
         // ── Dashboard general ─────────────────────────────────────────────────
         Route::get('dashboard/general', [DashboardController::class, 'general']);
+        Route::get('dashboard/tasas-referencia', [DashboardController::class, 'tasasReferencia']);
+        Route::get('dashboard/resumen', [DashboardController::class, 'resumen']);
     });
 });

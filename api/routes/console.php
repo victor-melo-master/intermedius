@@ -3,6 +3,7 @@
 use App\Jobs\AlertarTasasFaltantesJob;
 use App\Jobs\GenerarReporteMensualComisionesJob;
 use App\Jobs\SincronizarTasasJob;
+use App\Jobs\SincronizarTasasReferenciaJob;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -15,6 +16,10 @@ Schedule::job(new SincronizarTasasJob())
     ->everyTenMinutes()
     ->withoutOverlapping()
     ->name('sincronizar-tasas');
+
+Schedule::job(new SincronizarTasasReferenciaJob())
+    ->everyFifteenMinutes()
+    ->name('sincronizar-tasas-referencia');
 
 Schedule::job(new AlertarTasasFaltantesJob())
     ->dailyAt('08:00')
