@@ -74,6 +74,8 @@ const nav = [
   { path: '/dashboard', label: 'Dashboard', icon: '📊' },
   { path: '/operaciones', label: 'Operaciones', icon: '📄' },
   { path: '/tasas', label: 'Tasas', icon: '📈' },
+  { path: '/titulares', label: 'Titulares', icon: '👤' },
+  { path: '/bancos', label: 'Bancos', icon: '🏛️' },
   { path: '/clientes', label: 'Clientes', icon: '👥' },
   { path: '/cuentas', label: 'Cuentas', icon: '🏦' },
   { path: '/reportes', label: 'Reportes', icon: '📉' },
