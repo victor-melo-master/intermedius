@@ -27,7 +27,7 @@ class ClientePolicy
 
     public function create(User $user): bool
     {
-        return $user->hasRole(['admin', 'operador']);
+        return $user->hasRole('admin');
     }
 
     public function update(User $user, Cliente $cliente): bool

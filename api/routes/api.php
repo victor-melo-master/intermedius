@@ -37,6 +37,7 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('monedas',          MonedaController::class);
         Route::apiResource('cuentas',          CuentaController::class);
         Route::apiResource('clientes',         ClienteController::class);
+        Route::get('clientes/{cliente}/cuentas', [ClienteController::class, 'cuentas']);
         Route::apiResource('categorias-gasto', CategoriaGastoController::class)
             ->parameters(['categorias-gasto' => 'categoria_gasto']);
 

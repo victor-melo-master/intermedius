@@ -14,8 +14,9 @@ class CuentaController extends Controller
     {
         $this->authorize('viewAny', Cuenta::class);
 
-        $cuentas = Cuenta::with(['titular', 'banco', 'moneda'])
+        $cuentas = Cuenta::with(['titular', 'cliente', 'banco', 'moneda'])
             ->when($request->filled('titular_id'), fn ($q) => $q->where('titular_id', $request->titular_id))
+            ->when($request->filled('cliente_id'), fn ($q) => $q->where('cliente_id', $request->cliente_id))
             ->when($request->filled('moneda_id'),  fn ($q) => $q->where('moneda_id', $request->moneda_id))
             ->orderBy('alias')
             ->get();
@@ -27,21 +28,21 @@ class CuentaController extends Controller
     {
         $cuenta = Cuenta::create($request->validated());
 
-        return response()->json($cuenta->load(['titular', 'banco', 'moneda']), 201);
+        return response()->json($cuenta->load(['titular', 'cliente', 'banco', 'moneda']), 201);
     }
 
     public function show(Cuenta $cuenta): JsonResponse
     {
         $this->authorize('view', $cuenta);
 
-        return response()->json($cuenta->load(['titular', 'banco', 'moneda']));
+        return response()->json($cuenta->load(['titular', 'cliente', 'banco', 'moneda']));
     }
 
     public function update(UpdateCuentaRequest $request, Cuenta $cuenta): JsonResponse
     {
         $cuenta->update($request->validated());
 
-        return response()->json($cuenta->fresh()->load(['titular', 'banco', 'moneda']));
+        return response()->json($cuenta->fresh()->load(['titular', 'cliente', 'banco', 'moneda']));
     }
 
     public function destroy(Cuenta $cuenta): JsonResponse

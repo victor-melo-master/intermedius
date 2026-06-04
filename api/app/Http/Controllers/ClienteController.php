@@ -25,6 +25,8 @@ class ClienteController extends Controller
 
     public function store(StoreClienteRequest $request): JsonResponse
     {
+        $this->authorize('create', Cliente::class);
+
         $cliente = Cliente::create($request->validated());
 
         return response()->json($cliente, 201);
@@ -34,7 +36,16 @@ class ClienteController extends Controller
     {
         $this->authorize('view', $cliente);
 
-        return response()->json($cliente);
+        return response()->json($cliente->load(['cuentas.banco', 'cuentas.moneda']));
+    }
+
+    public function cuentas(Cliente $cliente): JsonResponse
+    {
+        $this->authorize('view', $cliente);
+
+        return response()->json(
+            $cliente->cuentas()->with(['banco', 'moneda'])->orderBy('alias')->get()
+        );
     }
 
     public function update(UpdateClienteRequest $request, Cliente $cliente): JsonResponse
