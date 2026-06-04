@@ -64,13 +64,13 @@
     <!-- Modal detalle del cliente -->
     <div v-if="showDetail" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center" @click.self="showDetail = false">
       <div class="absolute inset-0 bg-black/40"></div>
-      <div class="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-md p-6 relative z-10 max-h-[90vh] overflow-y-auto">
+      <div class="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-md p-6 relative z-10 max-h-[90vh] overflow-y-auto flex flex-col">
         <div class="flex items-center justify-between mb-4">
           <h3 class="font-bold text-lg">{{ detailCliente?.nombre }}</h3>
           <button @click="showDetail = false" class="text-gray-400 hover:text-gray-600">✕</button>
         </div>
 
-        <div class="space-y-3 mb-6">
+        <div class="space-y-3 mb-8">
           <p v-if="detailCliente?.alias" class="text-sm text-gray-500"><span class="font-medium text-gray-700">Alias:</span> {{ detailCliente.alias }}</p>
           <p v-if="detailCliente?.telefono" class="text-sm text-gray-500"><span class="font-medium text-gray-700">Teléfono:</span> {{ detailCliente.telefono }}</p>
           <p v-if="detailCliente?.email" class="text-sm text-gray-500"><span class="font-medium text-gray-700">Email:</span> {{ detailCliente.email }}</p>
@@ -78,16 +78,18 @@
           <p class="text-sm text-gray-500"><span class="font-medium text-gray-700">Saldo:</span> <span :class="(detailCliente?.saldo_cache_usd || 0) >= 0 ? 'text-green-600' : 'text-red-600'">${{ format(detailCliente?.saldo_cache_usd) }}</span></p>
         </div>
 
+        <p class="text-red-500 text-xs mb-2">DEBUG: sección cuentas</p>
+
         <!-- Cuentas bancarias -->
-        <div class="border-t border-gray-200 pt-4">
-          <div class="flex items-center justify-between mb-3">
-            <h4 class="font-semibold text-gray-700">Cuentas bancarias</h4>
+        <div class="border-t-2 border-gray-300 pt-6 pb-2">
+          <div class="flex items-center justify-between mb-4">
+            <h4 class="font-semibold text-gray-800 text-base">Cuentas bancarias</h4>
             <button v-if="auth.user?.roles?.includes('admin') || auth.user?.roles?.includes('super_admin')" @click="openCuentaForm" class="text-xs bg-blue-600 text-white px-2 py-1 rounded-lg hover:bg-blue-700">+ Agregar cuenta</button>
           </div>
 
           <div v-if="loadingCuentas" class="text-center py-4 text-gray-400 text-sm">Cargando cuentas...</div>
-          <div v-else-if="clienteCuentas.length === 0" class="text-sm text-gray-400 py-2">No hay cuentas registradas.</div>
-          <div v-else class="space-y-2">
+          <div v-else-if="clienteCuentas.length === 0" class="text-sm text-gray-500 py-3 bg-gray-50 rounded-lg px-3">No hay cuentas registradas.</div>
+          <div v-else class="space-y-3">
             <div v-for="cu in clienteCuentas" :key="cu.id" class="bg-gray-50 border border-gray-200 rounded-lg p-3">
               <p class="font-medium text-sm">{{ cu.alias }}</p>
               <p class="text-xs text-gray-500">{{ cu.banco?.nombre }} — {{ cu.moneda?.codigo }}</p>
