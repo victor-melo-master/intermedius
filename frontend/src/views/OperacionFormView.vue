@@ -115,12 +115,18 @@
             <label class="block text-sm text-gray-600 mb-1">
               {{ form.tipo === 'venta' ? `Cuenta ${quoteCodigo} donde recibes` : `Cuenta ${quoteCodigo} desde donde pagas` }} *
             </label>
-            <select v-model="form.cuenta_ves_id" required
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none bg-white">
-              <option value="">Seleccionar cuenta {{ quoteCodigo }}</option>
-              <option v-for="c in cuentasQuote" :key="c.id" :value="c.id">{{ cuentaLabel(c) }}</option>
-            </select>
-            <p v-if="cuentasQuote.length === 0" class="text-xs text-amber-500 mt-1">No hay cuentas en {{ quoteCodigo }}.</p>
+            <div v-if="form.cliente_id && loadingClienteCuentas" class="text-xs text-gray-400 py-2">Cargando cuentas del cliente...</div>
+            <div v-else-if="form.cliente_id && !loadingClienteCuentas && cuentasQuote.length === 0" class="bg-amber-50 border border-amber-200 text-amber-700 text-sm p-3 rounded-lg">
+              Este cliente no tiene cuentas registradas. Agrégalas en el módulo de Clientes.
+            </div>
+            <template v-else>
+              <select v-model="form.cuenta_ves_id" required
+                class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                <option value="">Seleccionar cuenta {{ quoteCodigo }}</option>
+                <option v-for="c in cuentasQuote" :key="c.id" :value="c.id">{{ cuentaLabel(c) }}</option>
+              </select>
+              <p v-if="!form.cliente_id && cuentasQuote.length === 0" class="text-xs text-amber-500 mt-1">No hay cuentas en {{ quoteCodigo }}.</p>
+            </template>
           </div>
           <div>
             <label class="block text-sm text-gray-600 mb-1">Estado de entrega</label>
@@ -190,6 +196,8 @@ const error = ref('')
 const successRef = ref('')
 const cuentas = ref([])
 const loadingCuentas = ref(true)
+const clienteCuentas = ref([])
+const loadingClienteCuentas = ref(false)
 
 // Cliente autocomplete
 const clienteSearch = ref('')
@@ -262,7 +270,10 @@ const tasaDesfavorable = computed(() => {
 })
 
 const cuentasForeign = computed(() => cuentas.value.filter(c => c.moneda?.codigo === monedaSel.value))
-const cuentasQuote = computed(() => cuentas.value.filter(c => c.moneda?.codigo === quoteCodigo.value))
+const cuentasQuote = computed(() => {
+  const pool = form.cliente_id ? clienteCuentas.value : cuentas.value
+  return pool.filter(c => c.moneda?.codigo === quoteCodigo.value)
+})
 
 const estadoEntregaLabel = computed(() => ({
   digital: `Digital - ya ${form.tipo === 'venta' ? 'enviado' : 'recibido'}`,
@@ -334,7 +345,31 @@ function selectCliente(c) {
 function clearCliente() {
   form.cliente_id = ''
   form.cliente_nombre = ''
+  clienteCuentas.value = []
+  form.cuenta_ves_id = ''
 }
+
+async function fetchClienteCuentas(clienteId) {
+  if (!clienteId) { clienteCuentas.value = []; return }
+  loadingClienteCuentas.value = true
+  try {
+    const { data } = await api.get(`/clientes/${clienteId}/cuentas`)
+    clienteCuentas.value = Array.isArray(data) ? data : (data.data || [])
+  } catch {
+    clienteCuentas.value = []
+  } finally {
+    loadingClienteCuentas.value = false
+  }
+}
+
+watch(() => form.cliente_id, (newId) => {
+  if (newId) {
+    fetchClienteCuentas(newId)
+    form.cuenta_ves_id = ''
+  } else {
+    clienteCuentas.value = []
+  }
+})
 
 async function crearClienteInline() {
   const nombre = clienteSearch.value.trim()

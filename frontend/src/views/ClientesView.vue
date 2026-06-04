@@ -2,7 +2,7 @@
   <div class="space-y-4">
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
       <h2 class="text-xl font-bold text-gray-800">Clientes</h2>
-      <button @click="showForm = true" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-1">
+      <button v-if="auth.user?.roles?.includes('admin') || auth.user?.roles?.includes('super_admin')" @click="openCreate" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-1">
         <span>+</span> Nuevo cliente
       </button>
     </div>
@@ -23,26 +23,27 @@
       <p class="text-gray-500">{{ search ? 'Sin resultados' : 'No hay clientes' }}</p>
     </div>
     <div v-else class="space-y-2">
-      <div v-for="c in clientes.list" :key="c.id" class="bg-white border border-gray-200 rounded-xl p-4 flex items-center gap-3">
+      <div v-for="c in clientes.list" :key="c.id" @click="openDetail(c)" class="bg-white border border-gray-200 rounded-xl p-4 flex items-center gap-3 cursor-pointer hover:shadow-md transition">
         <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-700 font-bold text-sm">{{ c.nombre.charAt(0).toUpperCase() }}</div>
         <div class="flex-1 min-w-0">
           <p class="font-semibold text-sm truncate">{{ c.nombre }}</p>
           <p v-if="c.alias" class="text-xs text-gray-500 truncate">{{ c.alias }}</p>
           <p v-if="c.telefono" class="text-xs text-gray-400">{{ c.telefono }}</p>
         </div>
-        <div class="text-right">
+        <div class="text-right shrink-0">
           <p class="text-sm font-bold" :class="(c.saldo_cache_usd || 0) >= 0 ? 'text-green-600' : 'text-red-600'">${{ format(c.saldo_cache_usd) }}</p>
           <span v-if="!c.activo" class="text-[10px] bg-red-50 text-red-600 px-2 py-0.5 rounded-full">Inactivo</span>
+          <button v-if="auth.user?.roles?.includes('admin') || auth.user?.roles?.includes('super_admin')" @click.stop="openEdit(c)" class="mt-1 text-xs text-blue-600 hover:text-blue-800 underline">✏️ Editar</button>
         </div>
       </div>
     </div>
 
-    <!-- Modal nuevo cliente -->
+    <!-- Modal crear/editar cliente -->
     <div v-if="showForm" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center" @click.self="showForm = false">
       <div class="absolute inset-0 bg-black/40"></div>
-      <div class="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-md p-6 relative z-10">
+      <div class="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-md p-6 relative z-10 max-h-[90vh] overflow-y-auto">
         <div class="flex items-center justify-between mb-4">
-          <h3 class="font-bold text-lg">Nuevo cliente</h3>
+          <h3 class="font-bold text-lg">{{ editingId ? 'Editar cliente' : 'Nuevo cliente' }}</h3>
           <button @click="showForm = false" class="text-gray-400 hover:text-gray-600">✕</button>
         </div>
         <form @submit.prevent="submit" class="space-y-3">
@@ -54,7 +55,91 @@
           <div v-if="formError" class="bg-red-50 text-red-600 text-sm p-3 rounded-lg">{{ formError }}</div>
           <button type="submit" :disabled="saving" class="w-full bg-blue-600 text-white font-semibold py-2.5 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition flex items-center justify-center gap-2">
             <span v-if="saving" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-            {{ saving ? 'Creando...' : 'Crear cliente' }}
+            {{ saving ? 'Guardando...' : (editingId ? 'Guardar cambios' : 'Crear cliente') }}
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal detalle del cliente -->
+    <div v-if="showDetail" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center" @click.self="showDetail = false">
+      <div class="absolute inset-0 bg-black/40"></div>
+      <div class="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-md p-6 relative z-10 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-bold text-lg">{{ detailCliente?.nombre }}</h3>
+          <button @click="showDetail = false" class="text-gray-400 hover:text-gray-600">✕</button>
+        </div>
+
+        <div class="space-y-3 mb-6">
+          <p v-if="detailCliente?.alias" class="text-sm text-gray-500"><span class="font-medium text-gray-700">Alias:</span> {{ detailCliente.alias }}</p>
+          <p v-if="detailCliente?.telefono" class="text-sm text-gray-500"><span class="font-medium text-gray-700">Teléfono:</span> {{ detailCliente.telefono }}</p>
+          <p v-if="detailCliente?.email" class="text-sm text-gray-500"><span class="font-medium text-gray-700">Email:</span> {{ detailCliente.email }}</p>
+          <p v-if="detailCliente?.notas" class="text-sm text-gray-500"><span class="font-medium text-gray-700">Notas:</span> {{ detailCliente.notas }}</p>
+          <p class="text-sm text-gray-500"><span class="font-medium text-gray-700">Saldo:</span> <span :class="(detailCliente?.saldo_cache_usd || 0) >= 0 ? 'text-green-600' : 'text-red-600'">${{ format(detailCliente?.saldo_cache_usd) }}</span></p>
+        </div>
+
+        <!-- Cuentas bancarias -->
+        <div class="border-t border-gray-200 pt-4">
+          <div class="flex items-center justify-between mb-3">
+            <h4 class="font-semibold text-gray-700">Cuentas bancarias</h4>
+            <button v-if="auth.user?.roles?.includes('admin') || auth.user?.roles?.includes('super_admin')" @click="openCuentaForm" class="text-xs bg-blue-600 text-white px-2 py-1 rounded-lg hover:bg-blue-700">+ Agregar cuenta</button>
+          </div>
+
+          <div v-if="loadingCuentas" class="text-center py-4 text-gray-400 text-sm">Cargando cuentas...</div>
+          <div v-else-if="clienteCuentas.length === 0" class="text-sm text-gray-400 py-2">No hay cuentas registradas.</div>
+          <div v-else class="space-y-2">
+            <div v-for="cu in clienteCuentas" :key="cu.id" class="bg-gray-50 border border-gray-200 rounded-lg p-3">
+              <p class="font-medium text-sm">{{ cu.alias }}</p>
+              <p class="text-xs text-gray-500">{{ cu.banco?.nombre }} — {{ cu.moneda?.codigo }}</p>
+              <p v-if="cu.numero_cuenta" class="text-xs text-gray-400">{{ cu.numero_cuenta }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal crear cuenta para cliente -->
+    <div v-if="showCuentaForm" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center" @click.self="showCuentaForm = false">
+      <div class="absolute inset-0 bg-black/40"></div>
+      <div class="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-md p-6 relative z-10 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-bold text-lg">Agregar cuenta para {{ detailCliente?.nombre }}</h3>
+          <button @click="showCuentaForm = false" class="text-gray-400 hover:text-gray-600">✕</button>
+        </div>
+        <form @submit.prevent="submitCuenta" class="space-y-3">
+          <div>
+            <label class="text-sm text-gray-600 mb-1 block">Banco</label>
+            <select v-model="cuentaForm.banco_id" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+              <option value="">Seleccionar banco</option>
+              <option v-for="b in bancos.list" :key="b.id" :value="b.id">{{ b.nombre }} ({{ b.codigo }})</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-sm text-gray-600 mb-1 block">Moneda</label>
+            <select v-model="cuentaForm.moneda_id" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+              <option value="">Seleccionar moneda</option>
+              <option v-for="m in tasas.monedas" :key="m.id" :value="m.id">{{ m.codigo }} — {{ m.nombre }}</option>
+            </select>
+          </div>
+          <input v-model="cuentaForm.alias" required placeholder="Alias * (ej: Banesco USD)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+          <select v-model="cuentaForm.tipo" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+            <option value="">Tipo de cuenta *</option>
+            <option value="banco">Banco</option>
+            <option value="zelle">Zelle</option>
+            <option value="wallet">Wallet</option>
+            <option value="efectivo">Efectivo</option>
+            <option value="otro">Otro</option>
+          </select>
+          <input v-model="cuentaForm.numero_cuenta" placeholder="Número de cuenta (opcional)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+          <textarea v-model="cuentaForm.notas" rows="2" placeholder="Notas (opcional)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none"></textarea>
+          <label class="flex items-center gap-2 text-sm text-gray-600">
+            <input v-model="cuentaForm.activa" type="checkbox" class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+            Activa
+          </label>
+          <div v-if="cuentaFormError" class="bg-red-50 text-red-600 text-sm p-3 rounded-lg">{{ cuentaFormError }}</div>
+          <button type="submit" :disabled="savingCuenta" class="w-full bg-blue-600 text-white font-semibold py-2.5 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition flex items-center justify-center gap-2">
+            <span v-if="savingCuenta" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+            {{ savingCuenta ? 'Guardando...' : 'Crear cuenta' }}
           </button>
         </form>
       </div>
@@ -65,15 +150,45 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { useClientesStore } from '../stores/clientes.js'
+import { useAuthStore } from '../stores/auth.js'
+import { useBancosStore } from '../stores/bancos.js'
+import { useTasasStore } from '../stores/tasas.js'
+import api from '../api/axios.js'
 
 const clientes = useClientesStore()
+const auth = useAuthStore()
+const bancos = useBancosStore()
+const tasas = useTasasStore()
+
 const search = ref('')
 const showForm = ref(false)
 const saving = ref(false)
 const formError = ref('')
+const editingId = ref(null)
 let debounce = null
 
 const form = reactive({ nombre: '', alias: '', telefono: '', email: '', notas: '' })
+
+// Detalle / cuentas
+const showDetail = ref(false)
+const detailCliente = ref(null)
+const clienteCuentas = ref([])
+const loadingCuentas = ref(false)
+
+// Formulario cuenta
+const showCuentaForm = ref(false)
+const savingCuenta = ref(false)
+const cuentaFormError = ref('')
+const cuentaForm = reactive({
+  cliente_id: '',
+  banco_id: '',
+  moneda_id: '',
+  alias: '',
+  tipo: '',
+  numero_cuenta: '',
+  notas: '',
+  activa: true,
+})
 
 function debounceSearch() {
   clearTimeout(debounce)
@@ -82,6 +197,26 @@ function debounceSearch() {
 
 function format(n) {
   return new Intl.NumberFormat('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n || 0)
+}
+
+function openCreate() {
+  editingId.value = null
+  Object.assign(form, { nombre: '', alias: '', telefono: '', email: '', notas: '' })
+  formError.value = ''
+  showForm.value = true
+}
+
+function openEdit(c) {
+  editingId.value = c.id
+  Object.assign(form, {
+    nombre: c.nombre || '',
+    alias: c.alias || '',
+    telefono: c.telefono || '',
+    email: c.email || '',
+    notas: c.notas || '',
+  })
+  formError.value = ''
+  showForm.value = true
 }
 
 async function submit() {
@@ -93,7 +228,11 @@ async function submit() {
     if (form.telefono) body.telefono = form.telefono
     if (form.email) body.email = form.email
     if (form.notas) body.notas = form.notas
-    await clientes.create(body)
+    if (editingId.value) {
+      await clientes.update(editingId.value, body)
+    } else {
+      await clientes.create(body)
+    }
     showForm.value = false
     clientes.fetchAll(search.value)
     Object.assign(form, { nombre: '', alias: '', telefono: '', email: '', notas: '' })
@@ -101,6 +240,69 @@ async function submit() {
     formError.value = err.response?.data?.message || err.message
   } finally {
     saving.value = false
+  }
+}
+
+// Detalle
+async function openDetail(c) {
+  detailCliente.value = c
+  showDetail.value = true
+  loadingCuentas.value = true
+  try {
+    const { data } = await api.get(`/clientes/${c.id}/cuentas`)
+    clienteCuentas.value = Array.isArray(data) ? data : (data.data || [])
+  } catch {
+    clienteCuentas.value = []
+  } finally {
+    loadingCuentas.value = false
+  }
+}
+
+function openCuentaForm() {
+  cuentaFormError.value = ''
+  Object.assign(cuentaForm, {
+    cliente_id: detailCliente.value.id,
+    banco_id: '',
+    moneda_id: '',
+    alias: '',
+    tipo: '',
+    numero_cuenta: '',
+    notas: '',
+    activa: true,
+  })
+  bancos.fetchAll()
+  tasas.fetchMonedas()
+  showCuentaForm.value = true
+}
+
+async function submitCuenta() {
+  cuentaFormError.value = ''
+  savingCuenta.value = true
+  try {
+    const body = {
+      cliente_id: Number(cuentaForm.cliente_id),
+      banco_id: Number(cuentaForm.banco_id),
+      moneda_id: Number(cuentaForm.moneda_id),
+      alias: cuentaForm.alias,
+      tipo: cuentaForm.tipo,
+      activa: cuentaForm.activa,
+    }
+    if (cuentaForm.numero_cuenta) body.numero_cuenta = cuentaForm.numero_cuenta
+    if (cuentaForm.notas) body.notas = cuentaForm.notas
+    await api.post('/cuentas', body)
+    showCuentaForm.value = false
+    // Recargar cuentas del cliente
+    const { data } = await api.get(`/clientes/${detailCliente.value.id}/cuentas`)
+    clienteCuentas.value = Array.isArray(data) ? data : (data.data || [])
+  } catch (err) {
+    const data = err.response?.data
+    if (data?.errors) {
+      cuentaFormError.value = Object.values(data.errors).flat().join('\n')
+    } else {
+      cuentaFormError.value = data?.message || err.message
+    }
+  } finally {
+    savingCuenta.value = false
   }
 }
 
