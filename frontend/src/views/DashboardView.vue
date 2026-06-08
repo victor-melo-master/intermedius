@@ -276,8 +276,8 @@ onMounted(async () => {
     fetchResumen(),
     fetchOperadores(),
   ])
-  // Refrescar tasas de referencia cada 15 minutos
-  refInterval = setInterval(fetchTasasReferencia, 15 * 60 * 1000)
+  // Refrescar tasas de referencia cada 5 minutos
+  refInterval = setInterval(fetchTasasReferencia, 5 * 60 * 1000)
 })
 
 onUnmounted(() => {
