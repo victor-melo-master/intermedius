@@ -33,7 +33,7 @@ class StoreCuentaRequest extends FormRequest
                         : $q
                     ),
             ],
-            'tipo'           => ['required', Rule::in(['banco', 'plataforma', 'cash', 'wallet'])],
+            'tipo'           => ['required', Rule::in(['banco', 'plataforma', 'cash', 'wallet', 'zelle', 'efectivo', 'otro'])],
             'numero_cuenta'  => ['nullable', 'string', 'max:50'],
             'activa'         => ['boolean'],
             'notas'          => ['nullable', 'string'],
