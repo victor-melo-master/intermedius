@@ -40,6 +40,10 @@ class OperacionResource extends JsonResource
                 'ves' => (string) $this->total_comisiones_ves,
             ],
 
+            'genera_comision'        => (bool) $this->genera_comision,
+            'monto_comision'         => (string) $this->monto_comision,
+            'tipo_comision'          => $this->tipo_comision,
+
             'verificado_at'         => $this->verificado_at?->toIso8601String(),
 
             'estado_pool'           => $this->estado_pool,

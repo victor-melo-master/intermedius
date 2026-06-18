@@ -85,9 +85,14 @@
         <div v-if="tasaDesfavorable" class="bg-amber-50 border border-amber-200 text-amber-700 text-sm p-3 rounded-lg">
           ⚠️ La tasa es desfavorable para la casa (sugerida {{ form.tipo === 'venta' ? '≥' : '≤' }} {{ tasaSugerida }}). El backend podría rechazarla salvo aprobación especial.
         </div>
-        <div class="bg-gray-50 rounded-lg p-3 flex items-center justify-between">
-          <span class="text-sm text-gray-500">{{ quoteNombre }} {{ form.tipo === 'venta' ? 'a recibir' : 'a pagar' }}</span>
-          <span class="text-lg font-bold text-gray-800">{{ quoteSimbolo }} {{ formatMoney(bolivares) }}</span>
+        <div>
+          <label class="block text-sm text-gray-600 mb-1">{{ quoteNombre }} ({{ quoteCodigo }}) {{ form.tipo === 'venta' ? 'a recibir' : 'a pagar' }}</label>
+          <div class="relative">
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">{{ quoteSimbolo }}</span>
+            <input v-model="form.bolivares" type="number" step="0.01" inputmode="decimal" placeholder="0.00"
+              class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" />
+          </div>
+          <p class="text-xs text-gray-400 mt-1">Edita el monto o los {{ quoteNombre.toLowerCase() }}; la tasa es el valor de referencia.</p>
         </div>
       </div>
 
@@ -140,13 +145,47 @@
         </template>
       </div>
 
-      <!-- Referencia y descripción -->
-      <div class="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
-        <div>
-          <label class="block text-sm text-gray-600 mb-1">Referencia (comprobante)</label>
-          <input v-model="form.referencia" placeholder="Ej: TRF-001"
-            class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" />
+      <!-- Comisión (cuenta de salida) -->
+      <div class="bg-white border border-gray-200 rounded-xl p-5 space-y-4">
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <h3 class="font-semibold text-gray-700">Comisión</h3>
+            <p class="text-xs text-gray-400">Comisión bancaria sobre el monto en {{ quoteSimbolo }} que sale.</p>
+          </div>
+          <button type="button" @click="form.genera_comision = !form.genera_comision"
+            class="relative w-12 h-6 rounded-full transition shrink-0" :class="form.genera_comision ? 'bg-blue-600' : 'bg-gray-300'"
+            :aria-pressed="form.genera_comision">
+            <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform"
+              :class="form.genera_comision ? 'translate-x-6' : ''"></span>
+          </button>
         </div>
+
+        <template v-if="form.genera_comision">
+          <div>
+            <label class="block text-sm text-gray-600 mb-1">Tipo de comisión</label>
+            <select v-model="form.tipo_comision"
+              class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+              <option value="pago_movil">Pago móvil (0.3%)</option>
+              <option value="otros_bancos">Transferencia otros bancos (0.3%)</option>
+              <option value="mismo_banco">Transferencia mismo banco (0%)</option>
+              <option value="manual">Manual (monto libre)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm text-gray-600 mb-1">Monto de comisión ({{ quoteSimbolo }})</label>
+            <input v-model="form.monto_comision" type="number" step="0.01" inputmode="decimal" placeholder="0.00"
+              :disabled="form.tipo_comision === 'mismo_banco'"
+              class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none disabled:bg-gray-100 disabled:text-gray-400" />
+            <p v-if="['pago_movil', 'otros_bancos'].includes(form.tipo_comision)" class="text-xs text-gray-400 mt-1">
+              Calculado: 0.3% de {{ quoteSimbolo }} {{ formatMoney(bolivares) }}. Puedes ajustarlo.
+            </p>
+            <p v-else-if="form.tipo_comision === 'mismo_banco'" class="text-xs text-gray-400 mt-1">Sin comisión para el mismo banco.</p>
+          </div>
+        </template>
+      </div>
+
+      <!-- Descripción -->
+      <div class="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
         <div>
           <label class="block text-sm text-gray-600 mb-1">Descripción</label>
           <textarea v-model="form.descripcion" rows="2" placeholder="Notas opcionales"
@@ -162,6 +201,7 @@
         <div class="flex justify-between"><span class="text-gray-500">Monto {{ monedaSel }}</span><span class="font-medium">{{ simbolo }} {{ formatMoney(form.monto_usd) }}</span></div>
         <div class="flex justify-between"><span class="text-gray-500">Tasa</span><span class="font-medium">{{ form.tasa }}</span></div>
         <div class="flex justify-between"><span class="text-gray-500">{{ quoteNombre }}</span><span class="font-medium">{{ quoteSimbolo }} {{ formatMoney(bolivares) }}</span></div>
+        <div v-if="form.genera_comision" class="flex justify-between"><span class="text-gray-500">Comisión ({{ tipoComisionLabel }})</span><span class="font-medium">{{ quoteSimbolo }} {{ formatMoney(form.monto_comision) }}</span></div>
         <div v-if="form.cuenta_usd_id" class="flex justify-between"><span class="text-gray-500">Cuenta {{ monedaSel }}</span><span class="font-medium">{{ cuentaAlias(form.cuenta_usd_id) }}</span></div>
         <div class="flex justify-between"><span class="text-gray-500">Cuenta {{ quoteCodigo }}</span><span class="font-medium">{{ cuentaAlias(form.cuenta_ves_id) }}</span></div>
         <div class="flex justify-between"><span class="text-gray-500">Entrega</span><span class="font-medium">{{ estadoEntregaLabel }}</span></div>
@@ -179,7 +219,7 @@
 </template>
 
 <script setup>
-import { reactive, ref, computed, onMounted, watch } from 'vue'
+import { reactive, ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { useTasasStore } from '../stores/tasas.js'
 import { useAuthStore } from '../stores/auth.js'
@@ -225,13 +265,18 @@ const form = reactive({
   cliente_id: '',
   cliente_nombre: '',
   monto_usd: '',
+  bolivares: '',
   tasa: '',
   cuenta_usd_id: '',
   cuenta_ves_id: '',
   estado_entrega: 'digital',
-  referencia: '',
+  genera_comision: false,
+  tipo_comision: 'pago_movil',
+  monto_comision: '',
   descripcion: '',
 })
+
+const COMISION_RATE = 0.003
 
 // ── Cuenta extranjera opcional para efectivo ──
 const cuentaForeignRequerida = computed(() => {
@@ -255,10 +300,63 @@ const tasaSugerida = computed(() => {
   return form.tipo === 'venta' ? tasaPar.value.tasa_venta : tasaPar.value.tasa_compra
 })
 
-const bolivares = computed(() => {
+const bolivares = computed(() => parseFloat(form.bolivares) || 0)
+
+const tipoComisionLabel = computed(() => ({
+  pago_movil:   'Pago móvil',
+  otros_bancos: 'Otros bancos',
+  mismo_banco:  'Mismo banco',
+  manual:       'Manual',
+}[form.tipo_comision] || form.tipo_comision))
+
+// ── Calculadora bidireccional (monto ⇄ bolívares, tasa = ancla) ──
+let calcGuard = false
+function round2(n) {
+  return (Math.round((n + Number.EPSILON) * 100) / 100).toString()
+}
+async function runGuarded(mutate) {
+  calcGuard = true
+  mutate()
+  await nextTick()
+  calcGuard = false
+}
+watch(() => form.monto_usd, (v) => {
+  if (calcGuard) return
+  const m = parseFloat(v) || 0
+  const t = parseFloat(form.tasa) || 0
+  runGuarded(() => { form.bolivares = (m && t) ? round2(m * t) : '' })
+})
+watch(() => form.bolivares, (v) => {
+  if (calcGuard) return
+  const b = parseFloat(v) || 0
+  const t = parseFloat(form.tasa) || 0
+  runGuarded(() => { form.monto_usd = (b && t) ? round2(b / t) : '' })
+})
+watch(() => form.tasa, () => {
+  if (calcGuard) return
   const m = parseFloat(form.monto_usd) || 0
   const t = parseFloat(form.tasa) || 0
-  return m * t
+  if (m && t) runGuarded(() => { form.bolivares = round2(m * t) })
+})
+
+// ── Comisión por método de pago (0.3% sobre la salida en bolívares) ──
+function recalcComision() {
+  if (!form.genera_comision) return
+  if (form.tipo_comision === 'mismo_banco') { form.monto_comision = '0'; return }
+  if (form.tipo_comision === 'pago_movil' || form.tipo_comision === 'otros_bancos') {
+    form.monto_comision = round2(bolivares.value * COMISION_RATE)
+  }
+  // manual: se conserva el valor que escriba el operador
+}
+watch(() => form.genera_comision, (on) => {
+  if (on) recalcComision()
+  else form.monto_comision = ''
+})
+watch(() => form.tipo_comision, () => recalcComision())
+watch(bolivares, () => {
+  if (form.genera_comision && ['pago_movil', 'otros_bancos'].includes(form.tipo_comision)) {
+    recalcComision()
+  }
 })
 
 const tasaDesfavorable = computed(() => {
@@ -308,11 +406,14 @@ function setTipo(tipo) {
 // ── Watcher para resetear al cambiar moneda ──
 watch(monedaSel, () => {
   form.monto_usd = ''
+  form.bolivares = ''
   form.tasa = tasaSugerida.value || ''
   form.cuenta_usd_id = ''
   form.cuenta_ves_id = ''
   form.estado_entrega = 'digital'
-  form.referencia = ''
+  form.genera_comision = false
+  form.tipo_comision = 'pago_movil'
+  form.monto_comision = ''
   form.descripcion = ''
   tasas.fetchVigentes()
 }, { immediate: false })
@@ -386,7 +487,7 @@ async function crearClienteInline() {
 // ── Submit ────────────────────────────────────────────────
 function buildMovimientos() {
   const montoForeign = parseFloat(form.monto_usd)
-  const montoQuote = bolivares.value
+  const montoQuote = parseFloat(form.bolivares) || 0
   const movimientos = []
 
   // Pata de moneda cotizada (siempre requerida)
@@ -418,7 +519,11 @@ async function submit() {
       movimientos: buildMovimientos(),
     }
     if (form.cliente_id) body.cliente_id = Number(form.cliente_id)
-    if (form.referencia) body.referencia = form.referencia
+    body.genera_comision = form.genera_comision
+    if (form.genera_comision) {
+      body.monto_comision = parseFloat(form.monto_comision) || 0
+      body.tipo_comision = form.tipo_comision
+    }
 
     const created = await ops.create(body)
     const op = created.data || created
@@ -439,8 +544,9 @@ function registrarOtra() {
   successRef.value = ''
   error.value = ''
   Object.assign(form, {
-    cliente_id: '', cliente_nombre: '', monto_usd: '', tasa: tasaSugerida.value || '',
-    cuenta_usd_id: '', cuenta_ves_id: '', estado_entrega: 'digital', referencia: '', descripcion: '',
+    cliente_id: '', cliente_nombre: '', monto_usd: '', bolivares: '', tasa: tasaSugerida.value || '',
+    cuenta_usd_id: '', cuenta_ves_id: '', estado_entrega: 'digital',
+    genera_comision: false, tipo_comision: 'pago_movil', monto_comision: '', descripcion: '',
   })
   tasas.fetchVigentes()
 }
