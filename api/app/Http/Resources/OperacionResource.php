@@ -42,6 +42,17 @@ class OperacionResource extends JsonResource
 
             'verificado_at'         => $this->verificado_at?->toIso8601String(),
 
+            'estado_pool'           => $this->estado_pool,
+            'pagador_id'            => $this->pagador_id,
+            'asignada_at'           => $this->asignada_at?->toIso8601String(),
+            'pagada_at'             => $this->pagada_at?->toIso8601String(),
+            'cancelada_at'          => $this->cancelada_at?->toIso8601String(),
+            'motivo_cancelacion'    => $this->motivo_cancelacion,
+            'pagador'               => $this->whenLoaded('pagador', fn () => $this->pagador ? [
+                'id'   => $this->pagador->id,
+                'name' => $this->pagador->name,
+            ] : null),
+
             'tipo_operacion'        => $this->whenLoaded('tipoOperacion', fn () => [
                 'id'     => $this->tipoOperacion->id,
                 'codigo' => $this->tipoOperacion->codigo,

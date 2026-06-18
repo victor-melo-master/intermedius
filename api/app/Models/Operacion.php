@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Operacion extends Model
@@ -41,6 +42,12 @@ class Operacion extends Model
         'verificado_por_id',
         'origen',
         'origen_referencia',
+        'estado_pool',
+        'pagador_id',
+        'asignada_at',
+        'pagada_at',
+        'cancelada_at',
+        'motivo_cancelacion',
     ];
 
     protected function casts(): array
@@ -48,6 +55,9 @@ class Operacion extends Model
         return [
             'fecha'                  => 'date',
             'verificado_at'          => 'datetime',
+            'asignada_at'            => 'datetime',
+            'pagada_at'              => 'datetime',
+            'cancelada_at'           => 'datetime',
             'sin_tasa_referencia'     => 'boolean',
             'ganancia_bruta_usd'     => 'decimal:4',
             'ganancia_real_usd'      => 'decimal:4',
@@ -91,6 +101,22 @@ class Operacion extends Model
     public function verificadoPor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'verificado_por_id');
+    }
+
+    public function pagador(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'pagador_id');
+    }
+
+    public function scopePendientes(Builder $query): Builder
+    {
+        return $query->where('estado_pool', 'pendiente');
+    }
+
+    public function scopeAsignadasA(Builder $query, int $userId): Builder
+    {
+        return $query->where('pagador_id', $userId)
+            ->where('estado_pool', 'asignada');
     }
 
     public function tasaDiaria(): BelongsTo

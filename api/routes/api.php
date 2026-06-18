@@ -9,6 +9,7 @@ use App\Http\Controllers\MonedaController;
 use App\Http\Controllers\TitularController;
 use App\Http\Controllers\Api\V1\GastoController;
 use App\Http\Controllers\Api\V1\OperacionController;
+use App\Http\Controllers\Api\V1\PoolController;
 use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\ReporteComisionesController;
@@ -50,6 +51,22 @@ Route::prefix('v1')->group(function () {
             ->except(['update', 'destroy']);
         Route::patch('operaciones/{operacion}/verificar', [OperacionController::class, 'verificar']);
         Route::delete('operaciones/{operacion}', [OperacionController::class, 'destroy']);
+
+        // ── Pool de pagadores ─────────────────────────────────────────────────
+        Route::prefix('pool')->group(function () {
+            Route::get('/', [PoolController::class, 'index'])
+                ->middleware('role:pagador|admin|super_admin');
+            Route::get('mis-ordenes', [PoolController::class, 'misOrdenes'])
+                ->middleware('role:pagador|admin|super_admin');
+            Route::post('{operacion}/tomar', [PoolController::class, 'tomar'])
+                ->middleware('role:pagador|admin|super_admin');
+            Route::post('{operacion}/soltar', [PoolController::class, 'soltar'])
+                ->middleware('role:pagador|admin|super_admin');
+            Route::post('{operacion}/pagar', [PoolController::class, 'marcarPagada'])
+                ->middleware('role:pagador|admin|super_admin');
+            Route::post('{operacion}/cancelar', [PoolController::class, 'cancelar'])
+                ->middleware('role:admin|super_admin');
+        });
 
         // Gastos (subtipo de operaciones)
         Route::get('gastos',                [GastoController::class, 'index']);

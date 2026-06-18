@@ -83,6 +83,7 @@ class RegistroOperacionService
                 'referencia'             => $payload['referencia'] ?? null,
                 'descripcion'            => $payload['descripcion'] ?? null,
                 'estatus'                => 'sin_verificar',
+                'estado_pool'            => 'pendiente',
                 'origen'                 => $payload['origen'] ?? 'manual',
                 'origen_referencia'      => $payload['origen_referencia'] ?? null,
             ]);

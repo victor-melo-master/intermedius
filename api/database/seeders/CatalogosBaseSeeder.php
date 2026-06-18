@@ -13,7 +13,7 @@ class CatalogosBaseSeeder extends Seeder
     public function run(): void
     {
         // Roles
-        $roles = ['super_admin', 'admin', 'operador', 'contador', 'lectura'];
+        $roles = ['super_admin', 'admin', 'operador', 'contador', 'lectura', 'pagador'];
         foreach ($roles as $rol) {
             Role::firstOrCreate(['name' => $rol, 'guard_name' => 'web']);
         }
