@@ -16,7 +16,10 @@ class PoolController extends Controller
      */
     private const EAGER = [
         'cliente',
+        'tipoOperacion',
         'movimientos.cuenta.banco',
+        'movimientos.cuenta.titular',
+        'movimientos.cuenta.cliente',
         'movimientos.moneda',
         'operador',
         'pagador',

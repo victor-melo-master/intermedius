@@ -79,8 +79,16 @@ const baseNav = [
   { path: '/reportes', label: 'Reportes', icon: '📉' },
 ]
 
+const canPool = computed(() => {
+  const roles = auth.user?.roles || []
+  return roles.includes('pagador') || roles.includes('admin') || roles.includes('super_admin')
+})
+
 const nav = computed(() => {
   const items = [...baseNav]
+  if (canPool.value) {
+    items.push({ path: '/pool', label: 'Pool de pagos', icon: '💸' })
+  }
   if (auth.isSuperAdmin) {
     items.push({ path: '/usuarios', label: 'Usuarios', icon: '🔑' })
   }

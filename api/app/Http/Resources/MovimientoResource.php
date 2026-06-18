@@ -19,12 +19,25 @@ class MovimientoResource extends JsonResource
             'monto_usd_equivalente' => (string) $this->monto_usd_equivalente,
             'orden'                 => $this->orden,
             'cuenta'                => $this->whenLoaded('cuenta', fn () => [
-                'id'        => $this->cuenta->id,
-                'alias'     => $this->cuenta->alias,
-                'tipo'      => $this->cuenta->tipo,
+                'id'            => $this->cuenta->id,
+                'alias'         => $this->cuenta->alias,
+                'tipo'          => $this->cuenta->tipo,
+                'numero_cuenta' => $this->cuenta->numero_cuenta,
+                'banco'         => $this->when(
+                    $this->cuenta->relationLoaded('banco'),
+                    fn () => $this->cuenta->banco
+                        ? ['id' => $this->cuenta->banco->id, 'nombre' => $this->cuenta->banco->nombre]
+                        : null
+                ),
                 'titular'   => $this->when(
                     isset($this->cuenta->titular),
                     fn () => ['id' => $this->cuenta->titular?->id, 'nombre' => $this->cuenta->titular?->nombre]
+                ),
+                'cliente'   => $this->when(
+                    $this->cuenta->relationLoaded('cliente'),
+                    fn () => $this->cuenta->cliente
+                        ? ['id' => $this->cuenta->cliente->id, 'nombre' => $this->cuenta->cliente->nombre]
+                        : null
                 ),
             ]),
             'moneda'                => $this->whenLoaded('moneda', fn () => [
