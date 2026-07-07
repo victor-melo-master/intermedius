@@ -12,6 +12,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
+// src/Http/Controllers/Api/V1/OperacionController.php
 class OperacionController extends Controller
 {
     public function __construct(private readonly RegistroOperacionService $registroService) {}

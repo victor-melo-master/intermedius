@@ -1,3 +1,4 @@
+<!-- src/views/OperacionFormView.vue -->
 <template>
   <div class="max-w-2xl mx-auto space-y-4 pb-10">
     <div class="flex items-center gap-3 mb-2">
@@ -217,7 +218,6 @@
     </form>
   </div>
 </template>
-
 <script setup>
 import { reactive, ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
@@ -239,7 +239,6 @@ const loadingCuentas = ref(true)
 const clienteCuentas = ref([])
 const loadingClienteCuentas = ref(false)
 
-// Cliente autocomplete
 const clienteSearch = ref('')
 const clienteResults = ref([])
 const searchingCliente = ref(false)
@@ -247,7 +246,6 @@ let clienteDebounce = null
 
 const today = new Date().toISOString().split('T')[0]
 
-// ── Moneda y cotización dinámicas ──
 const SIMBOLOS = { USD: '$', USDT: '₮', EUR: '€', COP: '$', VES: 'Bs.' }
 const NOMBRES = { USD: 'Dólar', USDT: 'Tether', EUR: 'Euro', COP: 'Peso', VES: 'Bolívar' }
 
@@ -278,12 +276,8 @@ const form = reactive({
 
 const COMISION_RATE = 0.003
 
-// ── Cuenta extranjera opcional para efectivo ──
-const cuentaForeignRequerida = computed(() => {
-  return !form.estado_entrega.startsWith('efectivo')
-})
+const cuentaForeignRequerida = computed(() => true)
 
-// ── Computeds ─────────────────────────────────────────────
 const tipoCodigo = computed(() => (form.tipo === 'venta' ? 'venta_usd' : 'compra_usd'))
 
 const titulo = computed(() => {
@@ -309,7 +303,6 @@ const tipoComisionLabel = computed(() => ({
   manual:       'Manual',
 }[form.tipo_comision] || form.tipo_comision))
 
-// ── Calculadora bidireccional (monto ⇄ bolívares, tasa = ancla) ──
 let calcGuard = false
 function round2(n) {
   return (Math.round((n + Number.EPSILON) * 100) / 100).toString()
@@ -339,14 +332,12 @@ watch(() => form.tasa, () => {
   if (m && t) runGuarded(() => { form.bolivares = round2(m * t) })
 })
 
-// ── Comisión por método de pago (0.3% sobre la salida en bolívares) ──
 function recalcComision() {
   if (!form.genera_comision) return
   if (form.tipo_comision === 'mismo_banco') { form.monto_comision = '0'; return }
   if (form.tipo_comision === 'pago_movil' || form.tipo_comision === 'otros_bancos') {
     form.monto_comision = round2(bolivares.value * COMISION_RATE)
   }
-  // manual: se conserva el valor que escriba el operador
 }
 watch(() => form.genera_comision, (on) => {
   if (on) recalcComision()
@@ -363,7 +354,6 @@ const tasaDesfavorable = computed(() => {
   const sug = parseFloat(tasaSugerida.value)
   const t = parseFloat(form.tasa)
   if (!sug || !t) return false
-  // Compra: desfavorable si pagas MÁS que la sugerida. Venta: si cobras MENOS.
   return form.tipo === 'compra' ? t > sug : t < sug
 })
 
@@ -383,7 +373,6 @@ const resumenVisible = computed(() =>
   form.monto_usd && form.tasa && form.cuenta_ves_id && (cuentaForeignRequerida.value ? form.cuenta_usd_id : true)
 )
 
-// ── Helpers ───────────────────────────────────────────────
 function formatMoney(n) {
   return new Intl.NumberFormat('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(parseFloat(n) || 0)
 }
@@ -403,7 +392,6 @@ function setTipo(tipo) {
   if (tasaSugerida.value) form.tasa = tasaSugerida.value
 }
 
-// ── Watcher para resetear al cambiar moneda ──
 watch(monedaSel, () => {
   form.monto_usd = ''
   form.bolivares = ''
@@ -418,7 +406,6 @@ watch(monedaSel, () => {
   tasas.fetchVigentes()
 }, { immediate: false })
 
-// ── Cliente autocomplete ──────────────────────────────────
 function onClienteSearch() {
   clearTimeout(clienteDebounce)
   searchingCliente.value = true
@@ -484,27 +471,55 @@ async function crearClienteInline() {
   }
 }
 
-// ── Submit ────────────────────────────────────────────────
+// ── Única función buildMovimientos (sin duplicados) ──
 function buildMovimientos() {
-  const montoForeign = parseFloat(form.monto_usd)
+  const montoForeign = parseFloat(form.monto_usd) || 0
   const montoQuote = parseFloat(form.bolivares) || 0
+  const tasaAplicada = parseFloat(form.tasa) || 0
   const movimientos = []
 
-  // Pata de moneda cotizada (siempre requerida)
+  // Moneda cotizada (siempre requerida)
   if (form.cuenta_ves_id) {
-    movimientos.push({ cuenta_id: Number(form.cuenta_ves_id), monto: form.tipo === 'compra' ? -montoQuote : montoQuote })
+    const cuenta = cuentas.value.find(c => c.id === Number(form.cuenta_ves_id))
+    const monedaCuenta = cuenta?.moneda?.codigo || quoteCodigo.value
+    movimientos.push({
+      cuenta_id: Number(form.cuenta_ves_id),
+      monto: form.tipo === 'compra' ? -montoQuote : montoQuote,
+      tasa_a_usd: monedaCuenta === 'USD' ? 1 : (tasaAplicada ? 1 / tasaAplicada : 0),
+    })
   }
 
-  // Pata de moneda extranjera (opcional para efectivo)
+  // Moneda extranjera (ahora siempre requerida)
   if (form.cuenta_usd_id) {
-    movimientos.push({ cuenta_id: Number(form.cuenta_usd_id), monto: form.tipo === 'compra' ? montoForeign : -montoForeign })
+    const cuenta = cuentas.value.find(c => c.id === Number(form.cuenta_usd_id))
+    const monedaCuenta = cuenta?.moneda?.codigo || monedaSel.value
+    movimientos.push({
+      cuenta_id: Number(form.cuenta_usd_id),
+      monto: form.tipo === 'compra' ? montoForeign : -montoForeign,
+      tasa_a_usd: monedaCuenta === 'USD' ? 1 : (tasaAplicada || 0),
+    })
+  } else {
+    error.value = `Debes seleccionar una cuenta en ${monedaSel.value}.`
+    return []
   }
 
   return movimientos
 }
 
 async function submit() {
-  error.value = ''
+  if (!form.cuenta_ves_id) {
+    error.value = `Selecciona una cuenta en ${quoteCodigo.value}.`
+    return
+  }
+  if (!form.cuenta_usd_id) {
+    error.value = `Selecciona una cuenta en ${monedaSel.value}.`
+    return
+  }
+  const movimientos = buildMovimientos()
+  if (movimientos.length !== 2) {
+    if (!error.value) error.value = 'Se requieren exactamente 2 movimientos contables (origen y destino).'
+    return
+  }
   saving.value = true
   try {
     const descripcionFinal = [form.descripcion, `[Entrega: ${estadoEntregaLabel.value}]`]
@@ -516,7 +531,7 @@ async function submit() {
       operador_id: Number(auth.user.id),
       tasa_aplicada: parseFloat(form.tasa),
       descripcion: descripcionFinal,
-      movimientos: buildMovimientos(),
+      movimientos: movimientos,
     }
     if (form.cliente_id) body.cliente_id = Number(form.cliente_id)
     body.genera_comision = form.genera_comision

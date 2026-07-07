@@ -13,6 +13,7 @@ use App\Services\Configuracion\TasaDiariaService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
+// src/Services/Operaciones/RegistroOperacionService.php
 class RegistroOperacionService
 {
     /**

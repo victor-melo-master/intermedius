@@ -4,6 +4,7 @@ namespace App\Http\Requests\Operacion;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+// src/Http/Requests/Operacion/VerificarOperacionRequest.php
 class VerificarOperacionRequest extends FormRequest
 {
     public function authorize(): bool

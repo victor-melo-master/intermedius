@@ -1,0 +1,10 @@
+┌─(~/Desktop/intermedius)────────────────────────────────────────────────(fran@fedora:pts/3)─┐
+└─(15:42:14 on main ✹ ✭)──> docker run -d \                                    ──(Tue,Jul07)─┘
+  --name intermedius-db \
+  -p 3306:3306 \
+  -e MYSQL_ROOT_PASSWORD=root \
+  -e MYSQL_DATABASE=intermedius \
+  -e MYSQL_USER=laravel_user \
+  -e MYSQL_PASSWORD=secret \
+  -v mariadb_data:/var/lib/mysql \
+  mariadb:10.3

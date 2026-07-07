@@ -7,6 +7,7 @@ use App\Http\Requests\Moneda\UpdateMonedaRequest;
 use App\Models\Moneda;
 use Illuminate\Http\JsonResponse;
 
+// src/Http/Controllers/MonedaController.php
 class MonedaController extends Controller
 {
     public function index(): JsonResponse

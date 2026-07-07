@@ -5,6 +5,7 @@ namespace App\Http\Requests\Operacion;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
+// src/Http/Requests/Operacion/StoreOperacionRequest.php
 class StoreOperacionRequest extends FormRequest
 {
     public function authorize(): bool
@@ -30,7 +31,7 @@ class StoreOperacionRequest extends FormRequest
             'descripcion'                => ['nullable', 'string'],
             'origen'                     => ['nullable', 'in:manual,importado,ajuste_apertura'],
             'origen_referencia'          => ['nullable', 'string', 'max:100', 'unique:operaciones,origen_referencia'],
-            'movimientos'                => ['required', 'array', 'min:1'],
+            'movimientos' => ['required', 'array', 'min:2'],
             'movimientos.*.cuenta_id'    => ['required', 'integer', 'exists:cuentas,id'],
             'movimientos.*.monto'        => ['required', 'numeric', 'not_in:0'],
             'movimientos.*.tasa_a_usd'   => ['nullable', 'numeric', 'gt:0'],
