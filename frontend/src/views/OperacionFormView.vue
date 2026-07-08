@@ -32,7 +32,41 @@
         </div>
         <template v-else>
           <CuentaSelector v-model="form.cuenta_usd_id" :label="`${form.tipo === 'venta' ? 'Cuenta ' + monedaSel + ' desde donde entregas' : 'Cuenta ' + monedaSel + ' donde recibes'}`" :placeholder="'Seleccionar cuenta ' + monedaSel" :cuentas="cuentasForeign" :empty-message="'No hay cuentas en ' + monedaSel" :cuenta-label="cuentaLabel" :bancos="bancos" />
-          <CuentaSelector v-model="form.cuenta_ves_id" :label="`${form.tipo === 'venta' ? 'Cuenta ' + quoteCodigo + ' donde recibes' : 'Cuenta ' + quoteCodigo + ' desde donde pagas'}`" :placeholder="'Seleccionar cuenta ' + quoteCodigo" :cuentas="cuentasQuote" :empty-message="'No hay cuentas en ' + quoteCodigo" :cuenta-label="cuentaLabel" :bancos="bancos" />
+
+          <!-- Toggle pago a terceros -->
+          <div class="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2">
+            <span class="text-sm text-gray-600">Pago a terceros (cuenta no registrada)</span>
+            <button type="button" @click="pagoTerceros = !pagoTerceros"
+              class="relative w-12 h-6 rounded-full transition shrink-0"
+              :class="pagoTerceros ? 'bg-blue-600' : 'bg-gray-300'">
+              <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform"
+                :class="pagoTerceros ? 'translate-x-6' : ''"></span>
+            </button>
+          </div>
+
+          <!-- Cuenta VES normal -->
+          <CuentaSelector v-if="!pagoTerceros" v-model="form.cuenta_ves_id" :label="`${form.tipo === 'venta' ? 'Cuenta ' + quoteCodigo + ' donde recibes' : 'Cuenta ' + quoteCodigo + ' desde donde pagas'}`" :placeholder="'Seleccionar cuenta ' + quoteCodigo" :cuentas="cuentasQuote" :empty-message="'No hay cuentas en ' + quoteCodigo" :cuenta-label="cuentaLabel" :bancos="bancos" />
+
+          <!-- Formulario cuenta temporal para pago a terceros -->
+          <template v-if="pagoTerceros">
+            <div>
+              <label class="block text-sm text-gray-600 mb-1">Banco del tercero *</label>
+              <select v-model="terceroForm.banco_id" required class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                <option value="">Seleccionar banco</option>
+                <option v-for="b in bancos" :key="b.id" :value="b.id">{{ b.nombre }} ({{ b.codigo }})</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm text-gray-600 mb-1">Número de cuenta *</label>
+              <input v-model="terceroForm.numero_cuenta" type="text" required placeholder="Ej: 0123-4567-89"
+                class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" />
+            </div>
+            <div>
+              <label class="block text-sm text-gray-600 mb-1">Alias (referencia)</label>
+              <input v-model="terceroForm.alias" type="text" placeholder="Ej: Pago tienda X"
+                class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" />
+            </div>
+          </template>
           <div>
             <label class="block text-sm text-gray-600 mb-1">Estado de entrega</label>
             <select v-model="form.estado_entrega" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none bg-white">
@@ -100,6 +134,14 @@ const cuentas = ref([])
 const loadingCuentas = ref(true)
 const clienteSeleccionado = ref({ id: '', nombre: '' })
 
+const pagoTerceros = ref(false)
+const terceroForm = reactive({
+  banco_id: '',
+  numero_cuenta: '',
+  alias: '',
+})
+const monedasVesId = ref(null)
+
 const today = new Date().toISOString().split('T')[0]
 
 const SIMBOLOS = { USD: '$', USDT: '₮', EUR: '€', COP: '$', VES: 'Bs.' }
@@ -154,12 +196,13 @@ const formularioValido = computed(() => {
   if (!form.tasa || parseFloat(form.tasa) <= 0) return false
   if (!form.bolivares || parseFloat(form.bolivares) <= 0) return false
   if (!form.cuenta_usd_id) return false
-  if (!form.cuenta_ves_id) return false
+  if (!pagoTerceros.value && !form.cuenta_ves_id) return false
+  if (pagoTerceros.value && (!terceroForm.banco_id || !terceroForm.numero_cuenta)) return false
   if (tasaDesfavorable.value && !form.descripcion.trim()) return false
   return true
 })
 
-const resumenVisible = computed(() => form.monto_usd && form.tasa && form.cuenta_ves_id && form.cuenta_usd_id)
+const resumenVisible = computed(() => form.monto_usd && form.tasa && form.cuenta_usd_id && (form.cuenta_ves_id || (pagoTerceros.value && terceroForm.banco_id && terceroForm.numero_cuenta)))
 const resumenItems = computed(() => {
   const items = [
     { label: 'Tipo', value: form.tipo === 'venta' ? `Venta de ${monedaSel.value}` : `Compra de ${monedaSel.value}` },
@@ -170,7 +213,12 @@ const resumenItems = computed(() => {
   ]
   if (form.genera_comision) items.push({ label: 'Comisión', value: `${quoteSimbolo.value} ${formatMoney(form.monto_comision)}` })
   if (form.cuenta_usd_id) items.push({ label: `Cuenta ${monedaSel.value}`, value: cuentaAlias(form.cuenta_usd_id) })
-  items.push({ label: `Cuenta ${quoteCodigo.value}`, value: cuentaAlias(form.cuenta_ves_id) })
+  if (pagoTerceros.value) {
+    const aliasTercero = terceroForm.alias || `Temporal-${terceroForm.numero_cuenta || Date.now()}`
+    items.push({ label: `Cuenta ${quoteCodigo.value} (tercero)`, value: aliasTercero })
+  } else {
+    items.push({ label: `Cuenta ${quoteCodigo.value}`, value: cuentaAlias(form.cuenta_ves_id) })
+  }
   return items
 })
 
@@ -252,14 +300,15 @@ watch(monedaSel, () => {
   tasas.fetchVigentes()
 })
 
-function buildMovimientos() {
+function buildMovimientos(cuentaVesOverride = null) {
   const montoForeign = parseFloat(form.monto_usd) || 0
   const montoQuote = parseFloat(form.bolivares) || 0
   const tasaAplicada = parseFloat(form.tasa) || 0
   const movimientos = []
-  if (form.cuenta_ves_id) {
-    const cuenta = cuentas.value.find(c => c.id === Number(form.cuenta_ves_id))
-    movimientos.push({ cuenta_id: Number(form.cuenta_ves_id), monto: form.tipo === 'compra' ? -montoQuote : montoQuote, tasa_a_usd: cuenta?.moneda?.codigo === 'USD' ? 1 : (tasaAplicada ? 1 / tasaAplicada : 0) })
+  const vesId = cuentaVesOverride || form.cuenta_ves_id
+  if (vesId) {
+    const cuenta = cuentas.value.find(c => c.id === Number(vesId))
+    movimientos.push({ cuenta_id: Number(vesId), monto: form.tipo === 'compra' ? -montoQuote : montoQuote, tasa_a_usd: cuenta?.moneda?.codigo === 'USD' ? 1 : (tasaAplicada ? 1 / tasaAplicada : 0) })
   }
   if (form.cuenta_usd_id) {
     const cuenta = cuentas.value.find(c => c.id === Number(form.cuenta_usd_id))
@@ -274,9 +323,32 @@ async function recargarCuentas() {
 
 async function submit() {
   error.value = ''
-  if (!form.cuenta_ves_id) { error.value = `Selecciona una cuenta en ${quoteCodigo.value}.`; return }
+  let cuentaVesId = form.cuenta_ves_id
+
+  // Si es pago a terceros, crear la cuenta temporal primero
+  if (pagoTerceros.value) {
+    try {
+      const titularTerceros = 1
+      const { data: nuevaCuenta } = await api.post('/cuentas', {
+        titular_id: titularTerceros,
+        banco_id: Number(terceroForm.banco_id),
+        moneda_id: monedasVesId.value,
+        alias: terceroForm.alias || `Temporal-${Date.now()}`,
+        tipo: 'otro',
+        numero_cuenta: terceroForm.numero_cuenta,
+        activa: true,
+      })
+      const cuenta = Array.isArray(nuevaCuenta) ? nuevaCuenta[0] : (nuevaCuenta.data || nuevaCuenta)
+      cuentaVesId = cuenta.id
+    } catch (err) {
+      error.value = 'Error al crear cuenta temporal: ' + (err.response?.data?.message || err.message)
+      return
+    }
+  }
+
+  if (!cuentaVesId) { error.value = `Selecciona una cuenta en ${quoteCodigo.value}.`; return }
   if (!form.cuenta_usd_id) { error.value = `Selecciona una cuenta en ${monedaSel.value}.`; return }
-  const movimientos = buildMovimientos()
+  const movimientos = buildMovimientos(cuentaVesId)
   if (movimientos.length !== 2) { if (!error.value) error.value = 'Se requieren 2 movimientos.'; return }
   saving.value = true
   try {
@@ -310,6 +382,8 @@ async function submit() {
 function registrarOtra() {
   successRef.value = ''; error.value = ''; clienteSeleccionado.value = { id: '', nombre: '' }
   Object.assign(form, { monto_usd: '', bolivares: '', tasa: tasaSugerida.value || '', cuenta_usd_id: '', cuenta_ves_id: '', estado_entrega: 'digital', genera_comision: false, tipo_comision: 'pago_movil', monto_comision: '', descripcion: '' })
+  pagoTerceros.value = false
+  Object.assign(terceroForm, { banco_id: '', numero_cuenta: '', alias: '' })
   tasas.fetchVigentes()
 }
 
@@ -318,6 +392,11 @@ onMounted(async () => {
   await bancosStore.fetchAll()
   bancos.value = bancosStore.list
   try { const { data } = await api.get('/cuentas'); cuentas.value = Array.isArray(data) ? data : (data.data || []) } catch { cuentas.value = [] }
+  try {
+    const { data: monedasData } = await api.get('/monedas')
+    const monedas = Array.isArray(monedasData) ? monedasData : (monedasData.data || [])
+    monedasVesId.value = monedas.find(m => m.codigo === 'VES')?.id || 1
+  } catch { monedasVesId.value = 1 }
   finally { loadingCuentas.value = false }
 
   if (esEdicion.value) {

@@ -55,3 +55,10 @@ SELECT r.id, 'App\\Models\\User', u.id
 FROM `roles` r, `users` u
 WHERE r.name = 'super_admin' AND u.email = 'admin@test.com'
 ON DUPLICATE KEY UPDATE `role_id` = VALUES(`role_id`);
+
+-- ──────────────────────────────────────────────────────────────────────────
+-- Titular genérico para pagos a terceros (T5)
+-- ──────────────────────────────────────────────────────────────────────────
+INSERT INTO `titulares` (`nombre`, `alias`, `activo`, `created_at`, `updated_at`)
+VALUES ('Pago a terceros', 'terceros', 1, NOW(), NOW())
+ON DUPLICATE KEY UPDATE `alias` = VALUES(`alias`);

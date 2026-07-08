@@ -21,6 +21,13 @@
           <div v-if="c.moneda?.codigo" class="bg-blue-50 text-blue-700 text-xs font-bold px-3 py-1 rounded-full">
             {{ c.moneda.codigo }}
           </div>
+          <button
+            v-if="auth.isAdmin"
+            @click="openSaldoModal(c)"
+            class="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded-lg hover:bg-emerald-200"
+          >
+            💰 Saldo
+          </button>
         </div>
       </div>
     </div>
@@ -154,12 +161,38 @@
         </form>
       </div>
     </div>
+
+    <!-- Modal cargar saldo -->
+    <Teleport to="body">
+      <div v-if="showSaldoModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="showSaldoModal = false">
+        <div class="absolute inset-0 bg-black/40"></div>
+        <div class="bg-white rounded-2xl w-full max-w-sm p-6 relative z-10">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-bold text-lg">Cargar saldo</h3>
+            <button @click="showSaldoModal = false" class="text-gray-400 hover:text-gray-600 text-xl leading-none">✕</button>
+          </div>
+          <form @submit.prevent="submitSaldo" class="space-y-3">
+            <p class="text-sm text-gray-600">{{ saldoTarget?.alias }} ({{ saldoTarget?.moneda?.codigo }})</p>
+            <div>
+              <label class="block text-sm text-gray-600 mb-1">Nuevo saldo</label>
+              <input v-model="saldoInput" type="number" step="0.01" required class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" />
+            </div>
+            <AppErrorState v-if="saldoError" :message="saldoError" :retry="false" />
+            <button type="submit" :disabled="savingSaldo"
+              class="w-full bg-blue-600 text-white font-semibold py-2.5 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition">
+              {{ savingSaldo ? 'Guardando...' : 'Guardar saldo' }}
+            </button>
+          </form>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import api from '../api/axios.js'
+import { useAuthStore } from '../stores/auth.js'
 import { useTitularesStore } from '../stores/titulares.js'
 import { useBancosStore } from '../stores/bancos.js'
 import { useTasasStore } from '../stores/tasas.js'
@@ -169,6 +202,7 @@ import AppErrorState from '../components/AppErrorState.vue'
 import AppEmptyState from '../components/AppEmptyState.vue'
 import ClienteSelector from '../components/ClienteSelector.vue'
 
+const auth = useAuthStore()
 const titulares = useTitularesStore()
 const bancos = useBancosStore()
 const tasas = useTasasStore()
@@ -191,6 +225,12 @@ const bancoInlineError = ref('')
 const bancoForm = reactive({ nombre: '', codigo: '', pais: 'VE', activo: true })
 
 const clienteSeleccionado = ref({ id: '', nombre: '' })
+
+const showSaldoModal = ref(false)
+const saldoTarget = ref(null)
+const saldoInput = ref('')
+const saldoError = ref('')
+const savingSaldo = ref(false)
 
 const form = reactive({
   titular_id: '',
@@ -308,6 +348,29 @@ async function submit() {
     }
   } finally {
     saving.value = false
+  }
+}
+
+function openSaldoModal(cuenta) {
+  saldoTarget.value = cuenta
+  saldoInput.value = cuenta.saldo_cache || ''
+  saldoError.value = ''
+  showSaldoModal.value = true
+}
+
+async function submitSaldo() {
+  if (!saldoInput.value) return
+  savingSaldo.value = true
+  saldoError.value = ''
+  try {
+    await api.post(`/cuentas/${saldoTarget.value.id}/saldo`, { saldo: parseFloat(saldoInput.value) })
+    showSaldoModal.value = false
+    await fetchCuentas()
+  } catch (err) {
+    const data = err.response?.data
+    saldoError.value = data?.errors ? Object.values(data.errors).flat().join('\n') : data?.message || err.message
+  } finally {
+    savingSaldo.value = false
   }
 }
 

@@ -27,7 +27,17 @@ class CuentaPolicy
 
     public function create(User $user): bool
     {
-        return $user->hasRole('admin');
+        if ($user->hasRole('admin') || $user->hasRole('super_admin')) {
+            return true;
+        }
+
+        // Operador puede crear cuentas para el titular "Terceros"
+        $tercerosId = \App\Models\Titular::where('alias', 'terceros')->value('id');
+        if ($tercerosId && request()->input('titular_id') == $tercerosId) {
+            return true;
+        }
+
+        return false;
     }
 
     public function update(User $user, Cuenta $cuenta): bool
