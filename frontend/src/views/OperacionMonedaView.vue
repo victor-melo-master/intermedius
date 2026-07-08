@@ -16,6 +16,16 @@
         </div>
         <p class="text-sm text-gray-500">{{ m.nombre }}</p>
       </button>
+
+      <!-- Botón Intermediada -->
+      <router-link to="/operaciones/intermediada/nueva"
+        class="bg-white border-2 border-purple-300 rounded-2xl p-6 text-left hover:border-purple-500 hover:shadow-md transition active:scale-[0.98] bg-purple-50">
+        <div class="flex items-center gap-3 mb-2">
+          <span class="text-3xl">🔗</span>
+          <span class="text-2xl font-bold text-purple-700">Intermediada</span>
+        </div>
+        <p class="text-sm text-purple-600">Conectar comprador y vendedor</p>
+      </router-link>
     </div>
   </div>
 </template>

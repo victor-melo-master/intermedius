@@ -20,9 +20,13 @@ class Operacion extends Model
         'fecha',
         'tipo_operacion_id',
         'cliente_id',
+        'cliente_emisor_id',
+        'cliente_receptor_id',
         'categoria_gasto_id',
         'operador_id',
         'tasa_aplicada',
+        'tasa_compra',
+        'tasa_venta',
         'genera_comision',
         'monto_comision',
         'tipo_comision',
@@ -76,6 +80,8 @@ class Operacion extends Model
             'tasa_aplicada'          => 'decimal:8',
             'tasa_sugerida'          => 'decimal:8',
             'tasa_mercado_snapshot'  => 'decimal:8',
+            'tasa_compra'            => 'decimal:8',
+            'tasa_venta'             => 'decimal:8',
         ];
     }
 
@@ -133,5 +139,15 @@ class Operacion extends Model
     public function comisiones(): HasMany
     {
         return $this->hasMany(ComisionOperacion::class);
+    }
+
+    public function clienteEmisor(): BelongsTo
+    {
+        return $this->belongsTo(Cliente::class, 'cliente_emisor_id');
+    }
+
+        public function clienteReceptor(): BelongsTo
+    {
+        return $this->belongsTo(Cliente::class, 'cliente_receptor_id');
     }
 }

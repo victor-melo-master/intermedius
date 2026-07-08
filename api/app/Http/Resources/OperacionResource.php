@@ -19,6 +19,8 @@ class OperacionResource extends JsonResource
             'descripcion'           => $this->descripcion,
 
             'tasa_aplicada'         => (string) $this->tasa_aplicada,
+            'tasa_compra'          => (string) $this->tasa_compra,
+            'tasa_venta'           => (string) $this->tasa_venta,
             'tasa_mercado_snapshot' => (string) $this->tasa_mercado_snapshot,
             'fuente_tasa_mercado'   => $this->fuente_tasa_mercado,
 
@@ -66,6 +68,16 @@ class OperacionResource extends JsonResource
                 'id'     => $this->cliente->id,
                 'nombre' => $this->cliente->nombre,
                 'alias'  => $this->cliente->alias,
+            ] : null),
+            'cliente_emisor'       => $this->whenLoaded('clienteEmisor', fn () => $this->clienteEmisor ? [
+                'id'     => $this->clienteEmisor->id,
+                'nombre' => $this->clienteEmisor->nombre,
+                'alias'  => $this->clienteEmisor->alias,
+            ] : null),
+            'cliente_receptor'     => $this->whenLoaded('clienteReceptor', fn () => $this->clienteReceptor ? [
+                'id'     => $this->clienteReceptor->id,
+                'nombre' => $this->clienteReceptor->nombre,
+                'alias'  => $this->clienteReceptor->alias,
             ] : null),
             'categoria_gasto'       => $this->whenLoaded('categoriaGasto', fn () => $this->categoriaGasto ? [
                 'id'     => $this->categoriaGasto->id,

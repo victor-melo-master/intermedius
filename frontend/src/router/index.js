@@ -13,6 +13,7 @@ const routes = [
       { path: 'operaciones', name: 'Operaciones', component: () => import('../views/OperacionesView.vue') },
       { path: 'operaciones/nueva', name: 'OperacionMoneda', component: () => import('../views/OperacionMonedaView.vue') },
       { path: 'operaciones/nueva/:moneda', name: 'OperacionNueva', component: () => import('../views/OperacionFormView.vue') },
+      { path: 'operaciones/intermediada/nueva', name: 'OperacionIntermediadaNueva', component: () => import('../views/OperacionIntermediadaForm.vue') },
       { path: 'operaciones/:id', name: 'OperacionDetail', component: () => import('../views/OperacionDetailView.vue') },
       { path: 'operaciones/:id/editar', name: 'OperacionEdit', component: () => import('../views/OperacionFormView.vue') },
       { path: 'pool', name: 'Pool', component: () => import('../views/PoolView.vue') },

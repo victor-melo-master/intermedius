@@ -35,7 +35,36 @@
         <form @submit.prevent="submit" class="space-y-3">
           <input v-model="form.nombre" required placeholder="Nombre del banco * (ej: Banesco)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
           <input v-model="form.codigo" required placeholder="Código * (ej: BANESCO)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-          <input v-model="form.pais" placeholder="País (default: VE)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+          <select v-model="form.pais" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+            <option value="VE">Venezuela</option>
+            <option value="US">Estados Unidos</option>
+            <option value="PA">Panamá</option>
+            <option value="ES">España</option>
+            <option value="CO">Colombia</option>
+            <option value="MX">México</option>
+            <option value="PE">Perú</option>
+            <option value="CL">Chile</option>
+            <option value="AR">Argentina</option>
+            <option value="BR">Brasil</option>
+            <option value="EC">Ecuador</option>
+            <option value="UY">Uruguay</option>
+            <option value="DO">República Dominicana</option>
+            <option value="CR">Costa Rica</option>
+            <option value="GT">Guatemala</option>
+            <option value="HN">Honduras</option>
+            <option value="SV">El Salvador</option>
+            <option value="NI">Nicaragua</option>
+            <option value="BO">Bolivia</option>
+            <option value="PY">Paraguay</option>
+            <option value="PR">Puerto Rico</option>
+            <option value="GB">Reino Unido</option>
+            <option value="FR">Francia</option>
+            <option value="DE">Alemania</option>
+            <option value="IT">Italia</option>
+            <option value="PT">Portugal</option>
+            <option value="CN">China</option>
+            <option value="JP">Japón</option>
+          </select>
           <label class="flex items-center gap-2 text-sm text-gray-600">
             <input v-model="form.activo" type="checkbox" class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
             Activo

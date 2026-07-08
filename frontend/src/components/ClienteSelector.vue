@@ -293,9 +293,11 @@ function onSearch() {
     const q = search.value.trim()
     if (!q) { results.value = []; searching.value = false; return }
     try {
-      await clientesStore.fetchAll(q)
-      results.value = clientesStore.list.slice(0, 10)
-    } catch { results.value = [] }
+      // dentro de onSearch, después de clearTimeout
+console.log('Buscando:', q)
+  const { data } = await api.get('/clientes', { params: { q } })
+  results.value = Array.isArray(data) ? data : (data.data || [])
+} catch { results.value = [] }
     finally { searching.value = false }
   }, 300)
 }

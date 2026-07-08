@@ -31,7 +31,7 @@ class UpdateCuentaRequest extends FormRequest
                     }))
                     ->ignore($cuenta->id),
             ],
-            'tipo'          => ['sometimes', Rule::in(['banco', 'plataforma', 'cash', 'wallet'])],
+            'tipo'          => ['sometimes', Rule::in(['banco', 'plataforma', 'cash', 'wallet', 'zelle', 'efectivo', 'otro'])],
             'numero_cuenta' => ['nullable', 'string', 'max:50'],
             'activa'        => ['boolean'],
             'notas'         => ['nullable', 'string'],

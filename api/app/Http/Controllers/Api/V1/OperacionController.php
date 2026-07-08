@@ -71,6 +71,8 @@ class OperacionController extends Controller
         'movimientos.moneda',
         'tipoOperacion',
         'cliente',
+        'clienteEmisor',
+        'clienteReceptor',
         'categoriaGasto',
         'operador',
         'verificadoPor',

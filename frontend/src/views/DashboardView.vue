@@ -17,9 +17,15 @@
     </div>
 
     <!-- Encabezado -->
-    <div>
-      <h2 class="text-xl font-bold text-gray-800">Resumen operativo</h2>
-      <p class="text-sm text-gray-500">Hola, {{ auth.user?.name }} · {{ hoy }}</p>
+    <div class="flex items-start justify-between">
+      <div>
+        <h2 class="text-xl font-bold text-gray-800">Resumen operativo</h2>
+        <p class="text-sm text-gray-500">Hola, {{ auth.user?.name }} · {{ hoy }}</p>
+      </div>
+      <router-link to="/bancos" class="flex items-center gap-2 bg-white border border-gray-200 hover:border-blue-300 text-gray-700 hover:text-blue-700 text-sm font-medium px-4 py-2 rounded-xl shadow-sm transition">
+        <span>🏛️</span>
+        Gestionar bancos
+      </router-link>
     </div>
 
     <!-- ── Filtros ──────────────────────────────────────────────────────── -->

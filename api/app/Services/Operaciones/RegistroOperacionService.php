@@ -45,6 +45,11 @@ class RegistroOperacionService
     {
         $tipo = TipoOperacion::where('codigo', $payload['tipo_codigo'])->firstOrFail();
 
+        // Si es intermediada, no se usa tasa diaria
+        if ($tipo->codigo === 'intermediada') {
+            return $this->registrarIntermediada($payload, $tipo);
+        }
+
         // Auto-calcular tasa_a_usd si no viene en el payload
         $tasaAplicada = (float) ($payload['tasa_aplicada'] ?? 1);
         $payload['movimientos'] = array_map(function ($mov) use ($tasaAplicada) {
@@ -527,4 +532,120 @@ public function actualizar(Operacion $operacion, array $payload, \App\Models\Use
         return $operacion->fresh(['movimientos.cuenta', 'tipoOperacion']);
     });
 }
+
+    /**
+     * Registra una operación intermediada (spread entre tasas de compra y venta).
+     *
+     * Flujo:
+     * 1. Valida movimientos específicos de intermediada (mínimo 4).
+     * 2. Crea operación con cliente_emisor_id y cliente_receptor_id.
+     * 3. Crea movimientos sin validar cuadre estricto.
+     * 4. Calcula ganancia como spread entre tasas.
+     * 5. Aplica comisiones si corresponde.
+     *
+     * @param array $payload
+     * @param TipoOperacion $tipo
+     * @return Operacion
+     */
+    private function registrarIntermediada(array $payload, TipoOperacion $tipo): Operacion
+    {
+        $this->validarMovimientosIntermediada($payload['movimientos']);
+
+        return DB::transaction(function () use ($payload, $tipo) {
+            $operacion = Operacion::create([
+                'fecha'                  => $payload['fecha'],
+                'tipo_operacion_id'      => $tipo->id,
+                'cliente_emisor_id'      => $payload['cliente_emisor_id'],
+                'cliente_receptor_id'    => $payload['cliente_receptor_id'],
+                'operador_id'            => $payload['operador_id'],
+                'tasa_compra'            => $payload['tasa_compra'],
+                'tasa_venta'             => $payload['tasa_venta'],
+                'tasa_aplicada'          => null,
+                'descripcion'            => $payload['descripcion'] ?? null,
+                'estatus'                => 'sin_verificar',
+                'estado_pool'            => 'pendiente',
+                'origen'                 => $payload['origen'] ?? 'manual',
+            ]);
+
+            foreach ($payload['movimientos'] as $index => $movData) {
+                $cuenta = Cuenta::findOrFail($movData['cuenta_id']);
+                $operacion->movimientos()->create([
+                    'cuenta_id'             => $cuenta->id,
+                    'moneda_id'             => $cuenta->moneda_id,
+                    'monto'                 => $movData['monto'],
+                    'tasa_a_usd'            => $movData['tasa_a_usd'] ?? 1,
+                    'monto_usd_equivalente' => round($movData['monto'] * ($movData['tasa_a_usd'] ?? 1), 4),
+                    'orden'                 => $index + 1,
+                ]);
+            }
+
+            // Calcular ganancia
+            $operacion->load('movimientos.moneda');
+            $ganancia = $this->calcularGananciaBrutaIntermediada($operacion);
+            $operacion->update([
+                'ganancia_bruta_usd' => $ganancia['usd'],
+                'ganancia_bruta_ves' => $ganancia['ves'],
+            ]);
+
+            // Aplicar comisiones si corresponde
+            $operacion->load(['movimientos.cuenta.banco', 'movimientos.moneda', 'operador.titular', 'tipoOperacion']);
+            $this->comisionesService->aplicarAOperacion($operacion);
+
+            return $operacion->fresh(['movimientos.cuenta', 'tipoOperacion']);
+        });
+    }
+
+    /**
+     * Valida movimientos específicos para operaciones intermediadas.
+     *
+     * @param array $movs
+     * @return void
+     * @throws ValidationException
+     */
+    private function validarMovimientosIntermediada(array $movs): void
+    {
+        if (count($movs) < 4) {
+            throw ValidationException::withMessages([
+                'movimientos' => 'La operación intermediada requiere al menos 4 movimientos.',
+            ]);
+        }
+
+        $cuentaIds = array_column($movs, 'cuenta_id');
+        $inactivas = Cuenta::whereIn('id', $cuentaIds)->where('activa', false)->get();
+        if ($inactivas->isNotEmpty()) {
+            $aliases = $inactivas->pluck('alias')->join(', ');
+            throw ValidationException::withMessages([
+                'movimientos' => "Las siguientes cuentas están inactivas: {$aliases}.",
+            ]);
+        }
+        // No validamos cuadre estricto porque la ganancia es la diferencia
+    }
+
+    /**
+     * Calcula la ganancia bruta para operaciones intermediadas.
+     *
+     * La ganancia es el spread entre la tasa de venta y la tasa de compra,
+     * aplicado al monto en divisa (USD) de la operación.
+     *
+     * @param Operacion $operacion
+     * @return array{usd: float, ves: float}
+     */
+    private function calcularGananciaBrutaIntermediada(Operacion $operacion): array
+    {
+        $tasaCompra = (float) $operacion->tasa_compra;
+        $tasaVenta  = (float) $operacion->tasa_venta;
+
+        // Buscar el monto en divisa (USD) desde los movimientos
+        $montoDivisa = $operacion->movimientos
+            ->filter(fn ($m) => in_array($m->moneda->codigo, ['USD', 'USDT', 'EUR', 'COP']))
+            ->sum(fn ($m) => abs((float) $m->monto)) / 2; // cada par (ida y vuelta) suma 2 veces
+
+        $gananciaVes = $montoDivisa * ($tasaVenta - $tasaCompra);
+        $gananciaUsd = $tasaVenta > 0 ? $gananciaVes / $tasaVenta : 0;
+
+        return [
+            'usd' => round($gananciaUsd, 4),
+            'ves' => round($gananciaVes, 2),
+        ];
+    }
 }
