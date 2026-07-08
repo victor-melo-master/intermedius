@@ -47,6 +47,8 @@ Route::prefix('v1')->group(function () {
         Route::get('clientes/{cliente}/cuentas', [ClienteController::class, 'cuentas']);
         Route::get('clientes/{cliente}/operaciones', [ClienteController::class, 'operaciones']);
         Route::post('clientes/{cliente}/operaciones/exportar', [ClienteController::class, 'exportarOperaciones']);
+        Route::post('clientes/{cliente}/restaurar', [ClienteController::class, 'restaurar'])
+            ->middleware('role:admin|super_admin');
         Route::apiResource('categorias-gasto', CategoriaGastoController::class)
             ->parameters(['categorias-gasto' => 'categoria_gasto']);
 

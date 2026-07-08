@@ -12,6 +12,13 @@ class StoreCuentaRequest extends FormRequest
         return $this->user()->can('create', \App\Models\Cuenta::class);
     }
 
+    protected function prepareForValidation(): void
+    {
+        if ($this->tipo === 'efectivo' && !$this->filled('titular_id') && !$this->filled('cliente_id')) {
+            $this->merge(['titular_id' => 1]);
+        }
+    }
+
     public function rules(): array
     {
         $titularId = $this->input('titular_id');

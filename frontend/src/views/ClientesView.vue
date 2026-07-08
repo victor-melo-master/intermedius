@@ -14,14 +14,21 @@
     </div>
 
     <AppLoadingSpinner v-if="clientes.loading" />
-    <AppErrorState v-else-if="clientes.error" :message="clientes.error" @retry="clientes.fetchAll()" />
+    <!-- Toggle activos / papelera -->
+    <div class="flex gap-2" v-if="auth.user?.roles?.includes('admin') || auth.user?.roles?.includes('super_admin')">
+      <button @click="mostrarPapelera = false; cargarLista()" class="text-sm px-3 py-1.5 rounded-lg transition" :class="mostrarPapelera ? 'bg-gray-100 text-gray-600' : 'bg-blue-600 text-white'">Activos</button>
+      <button @click="mostrarPapelera = true; cargarLista()" class="text-sm px-3 py-1.5 rounded-lg transition" :class="mostrarPapelera ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-600'">🗑 Papelera</button>
+    </div>
+
+    <AppLoadingSpinner v-if="clientes.loading" />
+    <AppErrorState v-else-if="clientes.error" :message="clientes.error" @retry="cargarLista()" />
     <AppEmptyState
       v-else-if="clientes.list.length === 0"
       icon="👥"
-      :message="search ? 'Sin resultados' : 'No hay clientes'"
+      :message="search ? 'Sin resultados' : (mostrarPapelera ? 'No hay clientes eliminados' : 'No hay clientes')"
     />
     <div v-else class="space-y-2">
-      <div v-for="c in clientes.list" :key="c.id" @click="openDetail(c)" class="bg-white border border-gray-200 rounded-xl p-4 flex items-center gap-3 cursor-pointer hover:shadow-md transition">
+      <div v-for="c in clientes.list" :key="c.id" @click="openDetail(c)" class="bg-white border border-gray-200 rounded-xl p-4 flex items-center gap-3 cursor-pointer hover:shadow-md transition" :class="c.deleted_at ? 'opacity-70 border-red-200' : ''">
         <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-700 font-bold text-sm">{{ c.nombre.charAt(0).toUpperCase() }}</div>
         <div class="flex-1 min-w-0">
           <p class="font-semibold text-sm truncate">{{ c.nombre }}</p>
@@ -30,8 +37,12 @@
         </div>
         <div class="text-right shrink-0">
           <p class="text-sm font-bold" :class="(c.saldo_cache_usd || 0) >= 0 ? 'text-green-600' : 'text-red-600'">${{ format(c.saldo_cache_usd) }}</p>
-          <span v-if="!c.activo" class="text-[10px] bg-red-50 text-red-600 px-2 py-0.5 rounded-full">Inactivo</span>
-          <button v-if="auth.user?.roles?.includes('admin') || auth.user?.roles?.includes('super_admin')" @click.stop="openEdit(c)" class="mt-1 text-xs text-blue-600 hover:text-blue-800 underline">✏️ Editar</button>
+          <span v-if="c.deleted_at" class="text-[10px] bg-red-50 text-red-600 px-2 py-0.5 rounded-full">Eliminado</span>
+          <span v-else-if="!c.activo" class="text-[10px] bg-red-50 text-red-600 px-2 py-0.5 rounded-full">Inactivo</span>
+          <div class="mt-1 flex gap-2 justify-end">
+            <button v-if="c.deleted_at && (auth.user?.roles?.includes('admin') || auth.user?.roles?.includes('super_admin'))" @click.stop="restaurarCliente(c)" class="text-xs text-green-600 hover:text-green-800 underline">↩ Recuperar</button>
+            <button v-else-if="auth.user?.roles?.includes('admin') || auth.user?.roles?.includes('super_admin')" @click.stop="openEdit(c)" class="text-xs text-blue-600 hover:text-blue-800 underline">✏️ Editar</button>
+          </div>
         </div>
       </div>
     </div>
@@ -65,7 +76,10 @@
       <div class="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-md p-6 relative z-10 max-h-[90vh] overflow-y-auto flex flex-col">
         <div class="flex items-center justify-between mb-4">
           <h3 class="font-bold text-lg">{{ detailCliente?.nombre }}</h3>
-          <button @click="showDetail = false" class="text-gray-400 hover:text-gray-600">✕</button>
+          <div class="flex gap-2">
+            <button v-if="detailCliente?.deleted_at && (auth.user?.roles?.includes('admin') || auth.user?.roles?.includes('super_admin'))" @click="restaurarCliente(detailCliente)" class="text-xs bg-green-600 text-white px-2 py-1 rounded-lg hover:bg-green-700">↩ Recuperar</button>
+            <button @click="showDetail = false" class="text-gray-400 hover:text-gray-600">✕</button>
+          </div>
         </div>
 
         <div class="space-y-3 mb-8">
@@ -74,6 +88,7 @@
           <p v-if="detailCliente?.email" class="text-sm text-gray-500"><span class="font-medium text-gray-700">Email:</span> {{ detailCliente.email }}</p>
           <p v-if="detailCliente?.notas" class="text-sm text-gray-500"><span class="font-medium text-gray-700">Notas:</span> {{ detailCliente.notas }}</p>
           <p class="text-sm text-gray-500"><span class="font-medium text-gray-700">Saldo:</span> <span :class="(detailCliente?.saldo_cache_usd || 0) >= 0 ? 'text-green-600' : 'text-red-600'">${{ format(detailCliente?.saldo_cache_usd) }}</span></p>
+          <button v-if="!detailCliente?.deleted_at && (auth.user?.roles?.includes('admin') || auth.user?.roles?.includes('super_admin'))" @click="eliminarCliente(detailCliente)" class="text-xs bg-red-600 text-white px-2 py-1 rounded-lg hover:bg-red-700">🗑 Eliminar cliente</button>
         </div>
 
         <!-- Cuentas bancarias -->
@@ -172,13 +187,31 @@
           <button @click="showCuentaForm = false" class="text-gray-400 hover:text-gray-600">✕</button>
         </div>
         <form @submit.prevent="submitCuenta" class="space-y-3">
+          <!-- Tipo de cuenta (siempre primero) -->
           <div>
+            <label class="text-sm text-gray-600 mb-1 block">Tipo de cuenta *</label>
+            <select v-model="cuentaForm.tipo" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+              <option value="">Seleccionar tipo</option>
+              <option value="banco">Banco</option>
+              <option value="plataforma">Plataforma</option>
+              <option value="cash">Cash</option>
+              <option value="zelle">Zelle</option>
+              <option value="wallet">Wallet</option>
+              <option value="efectivo">Efectivo</option>
+              <option value="otro">Otro</option>
+            </select>
+          </div>
+
+          <!-- Banco (solo si no es efectivo) -->
+          <div v-if="cuentaForm.tipo !== 'efectivo'">
             <label class="text-sm text-gray-600 mb-1 block">Banco</label>
             <select v-model="cuentaForm.banco_id" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
               <option value="">Seleccionar banco</option>
               <option v-for="b in bancos.list" :key="b.id" :value="b.id">{{ b.nombre }} ({{ b.codigo }})</option>
             </select>
           </div>
+
+          <!-- Moneda (siempre visible) -->
           <div>
             <label class="text-sm text-gray-600 mb-1 block">Moneda</label>
             <select v-model="cuentaForm.moneda_id" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
@@ -186,16 +219,11 @@
               <option v-for="m in tasas.monedas" :key="m.id" :value="m.id">{{ m.codigo }} — {{ m.nombre }}</option>
             </select>
           </div>
+
           <input v-model="cuentaForm.alias" required placeholder="Alias * (ej: Banesco USD)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-          <select v-model="cuentaForm.tipo" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-            <option value="">Tipo de cuenta *</option>
-            <option value="banco">Banco</option>
-            <option value="zelle">Zelle</option>
-            <option value="wallet">Wallet</option>
-            <option value="efectivo">Efectivo</option>
-            <option value="otro">Otro</option>
-          </select>
-          <input v-model="cuentaForm.numero_cuenta" placeholder="Número de cuenta (opcional)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+
+          <!-- Número de cuenta (solo si no es efectivo) -->
+          <input v-if="cuentaForm.tipo !== 'efectivo'" v-model="cuentaForm.numero_cuenta" placeholder="Número de cuenta (opcional)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
           <textarea v-model="cuentaForm.notas" rows="2" placeholder="Notas (opcional)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none"></textarea>
           <label class="flex items-center gap-2 text-sm text-gray-600">
             <input v-model="cuentaForm.activa" type="checkbox" class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
@@ -234,6 +262,7 @@ const showForm = ref(false)
 const saving = ref(false)
 const formError = ref('')
 const editingId = ref(null)
+const mostrarPapelera = ref(false)
 let debounce = null
 
 const form = reactive({ nombre: '', alias: '', telefono: '', email: '', notas: '' })
@@ -257,9 +286,17 @@ const cuentaForm = reactive({
   activa: true,
 })
 
+function cargarLista() {
+  if (mostrarPapelera.value) {
+    clientes.fetchTrashed(search.value)
+  } else {
+    clientes.fetchAll(search.value)
+  }
+}
+
 function debounceSearch() {
   clearTimeout(debounce)
-  debounce = setTimeout(() => clientes.fetchAll(search.value), 400)
+  debounce = setTimeout(() => cargarLista(), 400)
 }
 
 function format(n) {
@@ -300,9 +337,9 @@ async function submit() {
     } else {
       await clientes.create(body)
     }
-    showForm.value = false
-    clientes.fetchAll(search.value)
-    Object.assign(form, { nombre: '', alias: '', telefono: '', email: '', notas: '' })
+      showForm.value = false
+      cargarLista()
+      Object.assign(form, { nombre: '', alias: '', telefono: '', email: '', notas: '' })
   } catch (err) {
     formError.value = err.response?.data?.message || err.message
   } finally {
@@ -347,13 +384,15 @@ async function submitCuenta() {
   try {
     const body = {
       cliente_id: Number(cuentaForm.cliente_id),
-      banco_id: Number(cuentaForm.banco_id),
       moneda_id: Number(cuentaForm.moneda_id),
       alias: cuentaForm.alias,
       tipo: cuentaForm.tipo,
       activa: cuentaForm.activa,
     }
-    if (cuentaForm.numero_cuenta) body.numero_cuenta = cuentaForm.numero_cuenta
+    if (cuentaForm.tipo !== 'efectivo') {
+      body.banco_id = Number(cuentaForm.banco_id)
+    }
+    if (cuentaForm.numero_cuenta && cuentaForm.tipo !== 'efectivo') body.numero_cuenta = cuentaForm.numero_cuenta
     if (cuentaForm.notas) body.notas = cuentaForm.notas
     await api.post('/cuentas', body)
     showCuentaForm.value = false
@@ -466,5 +505,26 @@ watch(showDetail, (val) => {
   }
 })
 
-onMounted(() => clientes.fetchAll())
+async function eliminarCliente(c) {
+  if (!confirm(`¿Eliminar cliente "${c.nombre}"? Se archivará y podrá recuperarse después.`)) return
+  try {
+    await api.delete(`/clientes/${c.id}`)
+    showDetail.value = false
+    cargarLista()
+  } catch (err) {
+    alert(err.response?.data?.message || 'Error al eliminar cliente')
+  }
+}
+
+async function restaurarCliente(c) {
+  if (!confirm(`¿Recuperar cliente "${c.nombre}"?`)) return
+  try {
+    await clientes.restore(c.id)
+    cargarLista()
+  } catch (err) {
+    alert(err.response?.data?.message || 'Error al recuperar cliente')
+  }
+}
+
+onMounted(() => cargarLista())
 </script>

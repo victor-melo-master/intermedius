@@ -3,6 +3,7 @@
 use App\Jobs\AlertarTasasFaltantesJob;
 use App\Jobs\GenerarReporteMensualComisionesJob;
 use App\Jobs\SincronizarTasasJob;
+use App\Jobs\AutoArchivarClientesInactivos;
 use App\Jobs\SincronizarTasasReferenciaJob;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -34,3 +35,8 @@ Schedule::job(new GenerarReporteMensualComisionesJob())
     ->monthlyOn(1, '06:00')
     ->withoutOverlapping()
     ->name('reporte-mensual-comisiones');
+
+Schedule::job(new AutoArchivarClientesInactivos())
+    ->weeklyOn(0, '03:00')
+    ->withoutOverlapping()
+    ->name('auto-archivar-clientes-inactivos');

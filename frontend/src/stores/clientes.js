@@ -21,9 +21,22 @@ export const useClientesStore = defineStore('clientes', () => {
     }
   }
 
+  async function fetchTrashed(search = '') {
+    loading.value = true
+    try {
+      const params = { inactivos: true }
+      if (search) params.q = search
+      const { data } = await api.get('/clientes', { params })
+      list.value = Array.isArray(data) ? data : (data.data || [])
+    } catch (err) {
+      error.value = err.response?.data?.message || err.message
+    } finally {
+      loading.value = false
+    }
+  }
+
   async function create(body) {
     const { data } = await api.post('/clientes', body)
-    // console.log('Data response post /clientes:', data)
     return data
   }
 
@@ -32,5 +45,10 @@ export const useClientesStore = defineStore('clientes', () => {
     return data
   }
 
-  return { list, loading, error, fetchAll, create, update }
+  async function restore(id) {
+    const { data } = await api.post(`/clientes/${id}/restaurar`)
+    return data
+  }
+
+  return { list, loading, error, fetchAll, fetchTrashed, create, update, restore }
 })

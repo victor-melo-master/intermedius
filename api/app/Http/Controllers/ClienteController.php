@@ -16,6 +16,7 @@ class ClienteController extends Controller
         $this->authorize('viewAny', Cliente::class);
 
         $clientes = Cliente::query()
+            ->when($request->boolean('inactivos'), fn($q) => $q->onlyTrashed())
             ->when($request->filled('q'), function ($q) use ($request) {
                 $search = $request->q;
                 $q->where(function ($sub) use ($search) {
@@ -114,5 +115,21 @@ class ClienteController extends Controller
         return response($pdf->output(), 200)
     ->header('Content-Type', 'application/pdf')
     ->header('Content-Disposition', 'attachment; filename="operaciones_'.$cliente->nombre.'.pdf"');
+    }
+
+    public function restaurar(Cliente $cliente): JsonResponse
+    {
+        $this->authorize('restore', $cliente);
+
+        if (!$cliente->trashed()) {
+            return response()->json(['message' => 'El cliente no está eliminado.'], 422);
+        }
+
+        $cliente->restore();
+
+        return response()->json([
+            'message' => 'Cliente restaurado correctamente.',
+            'cliente' => $cliente,
+        ]);
     }
 }

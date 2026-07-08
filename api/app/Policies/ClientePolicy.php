@@ -39,4 +39,9 @@ class ClientePolicy
     {
         return $user->hasRole('admin');
     }
+
+    public function restore(User $user, Cliente $cliente): bool
+    {
+        return $user->hasRole('admin');
+    }
 }

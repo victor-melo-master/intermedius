@@ -44,9 +44,47 @@
           <!-- Cliente (opcional) -->
           <ClienteSelector v-model="clienteSeleccionado" />
 
-          <!-- Banco (visible también para clientes) -->
-          <template v-if="clienteSeleccionado.id">
-            <div>
+          <!-- Tipo de cuenta (siempre primero) -->
+          <div>
+            <label class="text-sm text-gray-600 mb-1 block">Tipo de cuenta *</label>
+            <select v-model="form.tipo" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+              <option value="">Seleccionar tipo</option>
+              <option value="banco">Banco</option>
+              <option value="plataforma">Plataforma</option>
+              <option value="cash">Cash</option>
+              <option value="zelle">Zelle</option>
+              <option value="wallet">Wallet</option>
+              <option value="efectivo">Efectivo</option>
+              <option value="otro">Otro</option>
+            </select>
+          </div>
+
+          <!-- Titular y Banco (solo si no se seleccionó cliente y el tipo no es efectivo) -->
+          <template v-if="!clienteSeleccionado.id">
+            <div v-if="form.tipo !== 'efectivo'">
+              <div class="flex items-center justify-between mb-1">
+                <label class="text-sm text-gray-600">Titular</label>
+                <button type="button" @click="showTitularInline = !showTitularInline" class="text-xs text-blue-600 hover:text-blue-800 font-medium">+ Nuevo titular</button>
+              </div>
+              <select v-model="form.titular_id" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                <option value="">Seleccionar titular</option>
+                <option v-for="t in titulares.list" :key="t.id" :value="t.id">{{ t.alias }}</option>
+              </select>
+              <div v-if="showTitularInline" class="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <p class="text-sm font-medium text-gray-700 mb-2">Crear titular</p>
+                <div class="space-y-2">
+                  <input v-model="titularForm.nombre" placeholder="Nombre completo" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
+                  <input v-model="titularForm.alias" placeholder="Alias" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
+                  <div class="flex gap-2">
+                    <button type="button" @click="submitTitularInline" :disabled="savingInline" class="flex-1 bg-blue-600 text-white text-sm font-medium py-1.5 rounded-lg hover:bg-blue-700 disabled:bg-blue-300">Crear</button>
+                    <button type="button" @click="showTitularInline = false" class="flex-1 bg-gray-200 text-gray-700 text-sm font-medium py-1.5 rounded-lg hover:bg-gray-300">Cancelar</button>
+                  </div>
+                  <AppErrorState v-if="titularInlineError" :message="titularInlineError" :retry="false" />
+                </div>
+              </div>
+            </div>
+
+            <div v-if="form.tipo !== 'efectivo'">
               <div class="flex items-center justify-between mb-1">
                 <label class="text-sm text-gray-600">Banco</label>
                 <button type="button" @click="showBancoInline = !showBancoInline" class="text-xs text-blue-600 hover:text-blue-800 font-medium">+ Nuevo banco</button>
@@ -71,34 +109,9 @@
             </div>
           </template>
 
-          <!-- Titular y Banco (solo si no se seleccionó cliente) -->
-          <template v-if="!clienteSeleccionado.id">
-            <!-- Titular -->
-            <div>
-              <div class="flex items-center justify-between mb-1">
-                <label class="text-sm text-gray-600">Titular</label>
-                <button type="button" @click="showTitularInline = !showTitularInline" class="text-xs text-blue-600 hover:text-blue-800 font-medium">+ Nuevo titular</button>
-              </div>
-              <select v-model="form.titular_id" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-                <option value="">Seleccionar titular</option>
-                <option v-for="t in titulares.list" :key="t.id" :value="t.id">{{ t.alias }}</option>
-              </select>
-              <div v-if="showTitularInline" class="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                <p class="text-sm font-medium text-gray-700 mb-2">Crear titular</p>
-                <div class="space-y-2">
-                  <input v-model="titularForm.nombre" placeholder="Nombre completo" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
-                  <input v-model="titularForm.alias" placeholder="Alias" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
-                  <div class="flex gap-2">
-                    <button type="button" @click="submitTitularInline" :disabled="savingInline" class="flex-1 bg-blue-600 text-white text-sm font-medium py-1.5 rounded-lg hover:bg-blue-700 disabled:bg-blue-300">Crear</button>
-                    <button type="button" @click="showTitularInline = false" class="flex-1 bg-gray-200 text-gray-700 text-sm font-medium py-1.5 rounded-lg hover:bg-gray-300">Cancelar</button>
-                  </div>
-                  <AppErrorState v-if="titularInlineError" :message="titularInlineError" :retry="false" />
-                </div>
-              </div>
-            </div>
-
-            <!-- Banco -->
-            <div>
+          <!-- Cuando hay cliente: banco solo si no es efectivo -->
+          <template v-if="clienteSeleccionado.id">
+            <div v-if="form.tipo !== 'efectivo'">
               <div class="flex items-center justify-between mb-1">
                 <label class="text-sm text-gray-600">Banco</label>
                 <button type="button" @click="showBancoInline = !showBancoInline" class="text-xs text-blue-600 hover:text-blue-800 font-medium">+ Nuevo banco</button>
@@ -134,18 +147,7 @@
 
           <input v-model="form.alias" required placeholder="Alias * (ej: Banesco Karol USD)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
 
-          <select v-model="form.tipo" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-            <option value="">Tipo de cuenta *</option>
-            <option value="banco">Banco</option>
-            <option value="plataforma">Plataforma</option>
-            <option value="cash">Cash</option>
-            <option value="zelle">Zelle</option>
-            <option value="wallet">Wallet</option>
-            <option value="efectivo">Efectivo</option>
-            <option value="otro">Otro</option>
-          </select>
-
-          <input v-model="form.numero_cuenta" placeholder="Número de cuenta (opcional)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+          <input v-if="form.tipo !== 'efectivo'" v-model="form.numero_cuenta" placeholder="Número de cuenta (opcional)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
           <textarea v-model="form.notas" rows="2" placeholder="Notas (opcional)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none"></textarea>
 
           <label class="flex items-center gap-2 text-sm text-gray-600">
@@ -327,13 +329,16 @@ async function submit() {
       activa: form.activa,
     }
 
-    // Asociar a cliente O a titular (mutuamente excluyentes)
     if (clienteSeleccionado.value.id) {
       body.cliente_id = Number(clienteSeleccionado.value.id)
-      body.banco_id = Number(form.banco_id)
+      if (form.tipo !== 'efectivo') {
+        body.banco_id = Number(form.banco_id)
+      }
     } else {
-      body.titular_id = Number(form.titular_id)
-      body.banco_id = Number(form.banco_id)
+      if (form.tipo !== 'efectivo') {
+        body.titular_id = Number(form.titular_id)
+        body.banco_id = Number(form.banco_id)
+      }
     }
 
     await api.post('/cuentas', body)
