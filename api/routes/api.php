@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * API routes for version 1 (prefix: /api/v1).
+ *
+ * Public: auth/login.
+ * Protected (auth:sanctum): CRUD for titulares, bancos, monedas, cuentas, clientes,
+ * categorias-gasto, operaciones, pool de pagadores, gastos, configuración de tasas
+ * y comisiones, reportes, usuarios, bitácora y dashboard.
+ */
+
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BancoController;
 use App\Http\Controllers\CategoriaGastoController;

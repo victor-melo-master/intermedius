@@ -177,27 +177,46 @@
 </template>
 
 <script setup>
+/**
+ * DashboardView — Panel principal con resumen operativo del día.
+ * Muestra tasas de referencia (BCV, Binance P2P), alertas, filtros por fecha/moneda/operador,
+ * tarjetas de totales, volúmenes por moneda y actividad por operador.
+ * Las tasas se refrescan automáticamente cada minuto.
+ */
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '../stores/auth.js'
 import api from '../api/axios.js'
 
+/** Store de autenticación */
 const auth = useAuthStore()
 
+/** Fecha actual formateada para el saludo */
 const hoy = computed(() => new Date().toLocaleDateString('es-VE', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }))
 
-// ── Estado ──
+/** Tasas de referencia (BCV, Binance P2P) */
 const refTasas = ref(null)
+/** Datos del resumen operativo */
 const resumen = ref(null)
+/** Mensaje de error al cargar resumen */
 const resumenError = ref('')
+/** Indica carga del resumen */
 const loadingResumen = ref(false)
+/** Lista de operadores para el filtro */
 const operadores = ref([])
+/** Timestamp actual para calcular frescura de tasas */
 const ahora = ref(Date.now())
+/** Alertas del dashboard (operaciones sin tasa, pares sin publicar) */
 const alertas = ref({})
 
+/**
+ * Devuelve la fecha de hoy en formato ISO (YYYY-MM-DD).
+ * @returns {string}
+ */
 function hoyStr() {
   return new Date().toLocaleDateString('en-CA')
 }
 
+/** Filtros del resumen operativo */
 const filtros = reactive({
   fecha_desde: hoyStr(),
   fecha_hasta: hoyStr(),
@@ -205,17 +224,28 @@ const filtros = reactive({
   operador_id: '',
 })
 
-// ── Formateo ──
+/**
+ * Formatea un número como USD (con $ y 2 decimales).
+ * @param {number|string} n
+ * @returns {string}
+ */
 function formatUsd(n) {
   return '$' + new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(parseFloat(n) || 0)
 }
+
+/**
+ * Formatea un número como Bs. (con 2 decimales).
+ * @param {number|string} n
+ * @returns {string}
+ */
 function formatVes(n) {
   return 'Bs. ' + new Intl.NumberFormat('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(parseFloat(n) || 0)
 }
 
-// ── Tasas de referencia ──
+/** Indica si hay al menos una tasa de referencia disponible */
 const hayReferencia = computed(() => !!(refTasas.value?.bcv || refTasas.value?.binance_p2p))
 
+/** Timestamp del dato de referencia más reciente */
 const refUltimoTs = computed(() => {
   const fechas = [refTasas.value?.bcv?.capturado_en, refTasas.value?.binance_p2p?.capturado_en]
     .filter(Boolean)
@@ -223,11 +253,13 @@ const refUltimoTs = computed(() => {
   return fechas.length ? Math.max(...fechas) : null
 })
 
+/** Indica si los datos de referencia están desactualizados (> 2 minutos) */
 const refStale = computed(() => {
   if (!refUltimoTs.value) return false
   return (ahora.value - refUltimoTs.value) > 2 * 60 * 1000
 })
 
+/** Texto relativo de la última actualización (ej: "hace 3 min") */
 const refRelativo = computed(() => {
   if (!refUltimoTs.value) return ''
   const diff = Math.max(0, Math.floor((ahora.value - refUltimoTs.value) / 1000))
@@ -239,7 +271,10 @@ const refRelativo = computed(() => {
   return `hace ${Math.floor(h / 24)} d`
 })
 
-// ── Llamadas API ──
+/**
+ * Obtiene las tasas de referencia del dashboard.
+ * @returns {Promise<void>}
+ */
 async function fetchTasasReferencia() {
   try {
     const { data } = await api.get('/dashboard/tasas-referencia')
@@ -250,6 +285,10 @@ async function fetchTasasReferencia() {
   }
 }
 
+/**
+ * Obtiene el resumen operativo según los filtros actuales.
+ * @returns {Promise<void>}
+ */
 async function fetchResumen() {
   loadingResumen.value = true
   resumenError.value = ''
@@ -270,6 +309,10 @@ async function fetchResumen() {
   }
 }
 
+/**
+ * Obtiene la lista de operadores para el filtro.
+ * @returns {Promise<void>}
+ */
 async function fetchOperadores() {
   try {
     const { data } = await api.get('/usuarios')
@@ -280,6 +323,10 @@ async function fetchOperadores() {
   }
 }
 
+/**
+ * Obtiene las alertas generales del dashboard.
+ * @returns {Promise<void>}
+ */
 async function fetchAlertas() {
   try {
     const { data } = await api.get('/dashboard/general')
@@ -289,13 +336,15 @@ async function fetchAlertas() {
   }
 }
 
+/** Aplica los filtros y recarga el resumen */
 function aplicarFiltros() {
   fetchResumen()
 }
 
-// ── Ciclo de vida ──
+/** Timer para refresco automático de tasas */
 let refTimer = null
 
+/** Programa el refresco de tasas cada 60 segundos */
 function scheduleRefresh() {
   refTimer = setTimeout(async () => {
     await fetchTasasReferencia()
@@ -303,6 +352,7 @@ function scheduleRefresh() {
   }, 1 * 60 * 1000)
 }
 
+/** Carga datos iniciales al montar y programa refresco */
 onMounted(async () => {
   await Promise.all([
     fetchTasasReferencia(),
@@ -313,6 +363,7 @@ onMounted(async () => {
   scheduleRefresh()
 })
 
+/** Limpia el timer al desmontar */
 onUnmounted(() => {
   if (refTimer) clearTimeout(refTimer)
 })

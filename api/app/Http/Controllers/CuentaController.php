@@ -8,8 +8,17 @@ use App\Models\Cuenta;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+/**
+ * Controlador de cuentas bancarias.
+ */
 class CuentaController extends Controller
 {
+    /**
+     * Lista las cuentas con filtros opcionales por titular, cliente y moneda.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
     public function index(Request $request): JsonResponse
     {
         $this->authorize('viewAny', Cuenta::class);
@@ -24,6 +33,12 @@ class CuentaController extends Controller
         return response()->json($cuentas);
     }
 
+    /**
+     * Crea una nueva cuenta bancaria.
+     *
+     * @param StoreCuentaRequest $request
+     * @return JsonResponse
+     */
     public function store(StoreCuentaRequest $request): JsonResponse
     {
         $cuenta = Cuenta::create($request->validated());
@@ -31,6 +46,12 @@ class CuentaController extends Controller
         return response()->json($cuenta->load(['titular', 'cliente', 'banco', 'moneda']), 201);
     }
 
+    /**
+     * Muestra una cuenta con sus relaciones.
+     *
+     * @param Cuenta $cuenta
+     * @return JsonResponse
+     */
     public function show(Cuenta $cuenta): JsonResponse
     {
         $this->authorize('view', $cuenta);
@@ -38,6 +59,13 @@ class CuentaController extends Controller
         return response()->json($cuenta->load(['titular', 'cliente', 'banco', 'moneda']));
     }
 
+    /**
+     * Actualiza una cuenta existente.
+     *
+     * @param UpdateCuentaRequest $request
+     * @param Cuenta $cuenta
+     * @return JsonResponse
+     */
     public function update(UpdateCuentaRequest $request, Cuenta $cuenta): JsonResponse
     {
         $cuenta->update($request->validated());
@@ -45,6 +73,12 @@ class CuentaController extends Controller
         return response()->json($cuenta->fresh()->load(['titular', 'cliente', 'banco', 'moneda']));
     }
 
+    /**
+     * Elimina una cuenta bancaria.
+     *
+     * @param Cuenta $cuenta
+     * @return JsonResponse
+     */
     public function destroy(Cuenta $cuenta): JsonResponse
     {
         $this->authorize('delete', $cuenta);
@@ -54,6 +88,13 @@ class CuentaController extends Controller
         return response()->json(null, 204);
     }
 
+    /**
+     * Actualiza el saldo en caché de una cuenta.
+     *
+     * @param Request $request
+     * @param Cuenta $cuenta
+     * @return JsonResponse
+     */
     public function cargarSaldo(Request $request, Cuenta $cuenta): JsonResponse
     {
         $this->authorize('update', $cuenta);

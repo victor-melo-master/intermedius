@@ -81,6 +81,11 @@
 </template>
 
 <script setup>
+/**
+ * BancosView — CRUD de bancos.
+ * Permite listar, crear y editar bancos con campos nombre, código y país.
+ * Modal inline para el formulario de creación/edición.
+ */
 import { ref, reactive, onMounted } from 'vue'
 import { useBancosStore } from '../stores/bancos.js'
 import AppPageHeader from '../components/AppPageHeader.vue'
@@ -88,13 +93,20 @@ import AppLoadingSpinner from '../components/AppLoadingSpinner.vue'
 import AppErrorState from '../components/AppErrorState.vue'
 import AppEmptyState from '../components/AppEmptyState.vue'
 
+/** Store de bancos */
 const bancos = useBancosStore()
+/** Controla visibilidad del modal de formulario */
 const showForm = ref(false)
+/** Indica si hay una operación de guardado en curso */
 const saving = ref(false)
+/** Mensaje de error del formulario */
 const formError = ref('')
+/** Indica si se está editando un banco existente */
 const editing = ref(false)
+/** ID del banco que se está editando */
 const editId = ref(null)
 
+/** Datos del formulario reactivo */
 const form = reactive({
   nombre: '',
   codigo: '',
@@ -102,6 +114,10 @@ const form = reactive({
   activo: true,
 })
 
+/**
+ * Abre el modal en modo creación.
+ * Resetea el formulario a valores por defecto.
+ */
 function openForm() {
   editing.value = false
   editId.value = null
@@ -110,6 +126,10 @@ function openForm() {
   showForm.value = true
 }
 
+/**
+ * Abre el modal en modo edición, precargando los datos del banco.
+ * @param {Object} b - Objeto del banco a editar
+ */
 function editBanco(b) {
   editing.value = true
   editId.value = b.id
@@ -123,10 +143,15 @@ function editBanco(b) {
   showForm.value = true
 }
 
+/** Cierra el modal del formulario */
 function closeForm() {
   showForm.value = false
 }
 
+/**
+ * Envía el formulario para crear o actualizar un banco.
+ * @returns {Promise<void>}
+ */
 async function submit() {
   formError.value = ''
   saving.value = true
@@ -156,5 +181,6 @@ async function submit() {
   }
 }
 
+/** Carga la lista de bancos al montar el componente */
 onMounted(() => bancos.fetchAll())
 </script>

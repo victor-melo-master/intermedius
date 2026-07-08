@@ -224,6 +224,16 @@
 </template>
 
 <script setup>
+/**
+ * Componente selector de cliente con búsqueda y creación inline.
+ * Incluye modal para crear clientes y agregar cuentas bancarias.
+ *
+ * @component
+ * @prop {Object} modelValue - Cliente seleccionado { id, nombre, alias, documento }
+ * @prop {boolean} clienteTieneCuentas - Indica si el cliente seleccionado tiene cuentas
+ * @emit {Object} update:modelValue - Actualiza el cliente seleccionado
+ * @emit {string|number} cuenta-agregada - Evento emitido al agregar una cuenta, con el ID del cliente
+ */
 import { ref, reactive, computed, onMounted, nextTick } from 'vue'
 import { useClientesStore } from '../stores/clientes.js'
 import { useBancosStore } from '../stores/bancos.js'
@@ -234,7 +244,9 @@ import AppErrorState from './AppErrorState.vue'
 const emit = defineEmits(['update:modelValue', 'cuenta-agregada'])
 
 const props = defineProps({
+  /** @type {Object} - Cliente seleccionado */
   modelValue: { type: Object, default: () => ({ id: '', nombre: '' }) },
+  /** @type {boolean} - Indica si el cliente tiene cuentas */
   clienteTieneCuentas: { type: Boolean, default: false },
 })
 
@@ -242,23 +254,36 @@ const clientesStore = useClientesStore()
 const bancosStore = useBancosStore()
 const tasasStore = useTasasStore()
 
+/** @type {import('vue').Ref<string>} - Texto de búsqueda */
 const search = ref('')
+/** @type {import('vue').Ref<Array<Object>>} - Resultados de la búsqueda */
 const results = ref([])
+/** @type {import('vue').Ref<boolean>} - Indica si se está realizando una búsqueda */
 const searching = ref(false)
+/** @type {import('vue').Ref<boolean>} - Controla la visibilidad del modal de creación */
 const showModal = ref(false)
+/** @type {import('vue').Ref<boolean>} - Indica si se está creando un cliente */
 const creating = ref(false)
+/** @type {import('vue').Ref<string>} - Mensaje de error en creación */
 const createError = ref('')
+/** @type {import('vue').Ref<Array<Object>>} - Lista de bancos */
 const bancos = ref([])
+/** @type {import('vue').Ref<Array<Object>>} - Lista de monedas */
 const monedas = ref([])
+/** @type {import('vue').Ref<number>} - Índice activo para navegación por teclado */
 const activeIndex = ref(-1)
+/** @type {import('vue').Ref<HTMLElement|null>} - Ref al input de búsqueda */
 const searchInput = ref(null)
 
+/** @type {number|null} - Timeout del debounce de búsqueda */
 let debounce = null
 
+/** @type {import('vue').ComputedRef<Object|null>} - Cliente actualmente seleccionado */
 const selectedCliente = computed(() =>
   props.modelValue?.id ? props.modelValue : null
 )
 
+/** @type {Object} - Datos del formulario de nuevo cliente */
 const newCliente = reactive({
   nombre: '',
   alias: '',
@@ -269,9 +294,13 @@ const newCliente = reactive({
   cuentas: [],
 })
 
+/** @type {import('vue').Ref<boolean>} - Controla la visibilidad del modal de agregar cuenta */
 const showCuentaModal = ref(false)
+/** @type {import('vue').Ref<boolean>} - Indica si se está guardando una cuenta */
 const savingCuenta = ref(false)
+/** @type {import('vue').Ref<string>} - Mensaje de error al agregar cuenta */
 const cuentaError = ref('')
+/** @type {Object} - Datos del formulario de nueva cuenta */
 const nuevaCuenta = reactive({
   banco_id: '',
   moneda_id: '',
@@ -280,11 +309,18 @@ const nuevaCuenta = reactive({
   numero_cuenta: '',
 })
 
+/**
+ * Retorna un objeto de cuenta vacío para el formulario.
+ * @returns {{ banco_id: string, moneda_id: string, alias: string, tipo: string, numero_cuenta: string }}
+ */
 function emptyCuenta() {
   return { banco_id: '', moneda_id: '', alias: '', tipo: 'banco', numero_cuenta: '' }
 }
 
-// ── Búsqueda ──
+/**
+ * Ejecuta la búsqueda de clientes con debounce de 300ms.
+ * @returns {Promise<void>}
+ */
 function onSearch() {
   clearTimeout(debounce)
   searching.value = true
@@ -302,7 +338,11 @@ console.log('Buscando:', q)
   }, 300)
 }
 
-// ── Navegación con teclado ──
+/**
+ * Maneja la navegación por teclado en la lista de resultados.
+ * @param {KeyboardEvent} e - Evento de teclado
+ * @returns {void}
+ */
 function onKeyDown(e) {
   if (!results.value.length && search.value.trim()) return
 
@@ -330,6 +370,15 @@ function onKeyDown(e) {
   }
 }
 
+/**
+ * Selecciona un cliente y emite el evento update:modelValue.
+ * @param {Object} c - Cliente a seleccionar
+ * @param {string|number} c.id - ID del cliente
+ * @param {string} c.nombre - Nombre del cliente
+ * @param {string} [c.alias] - Alias del cliente
+ * @param {string} [c.documento] - Documento del cliente
+ * @returns {void}
+ */
 function selectCliente(c) {
   emit('update:modelValue', { id: c.id, nombre: c.nombre, alias: c.alias, documento: c.documento })
   search.value = ''
@@ -337,11 +386,18 @@ function selectCliente(c) {
   activeIndex.value = -1
 }
 
+/**
+ * Limpia la selección actual de cliente.
+ * @returns {void}
+ */
 function clearSelection() {
   emit('update:modelValue', { id: '', nombre: '' })
 }
 
-// ── Modal crear cliente + cuentas ──
+/**
+ * Abre el modal de creación de cliente con el nombre de búsqueda pre-cargado.
+ * @returns {void}
+ */
 function openCreateModal() {
   newCliente.nombre = search.value.trim()
   newCliente.alias = ''
@@ -354,11 +410,29 @@ function openCreateModal() {
   showModal.value = true
 }
 
+/**
+ * Cierra el modal de creación de cliente.
+ * @returns {void}
+ */
 function closeModal() { showModal.value = false }
 
+/**
+ * Agrega una cuenta vacía al formulario de nuevo cliente.
+ * @returns {void}
+ */
 function addCuenta() { newCliente.cuentas.push(emptyCuenta()) }
+
+/**
+ * Elimina una cuenta del formulario de nuevo cliente.
+ * @param {number} i - Índice de la cuenta a eliminar
+ * @returns {void}
+ */
 function removeCuenta(i) { newCliente.cuentas.splice(i, 1) }
 
+/**
+ * Crea un nuevo cliente con sus cuentas asociadas.
+ * @returns {Promise<void>}
+ */
 async function createCliente() {
   if (!newCliente.nombre.trim()) return
   creating.value = true
@@ -399,13 +473,20 @@ async function createCliente() {
   }
 }
 
-// ── Agregar cuenta a cliente existente ──
+/**
+ * Abre el modal para agregar una cuenta a un cliente existente.
+ * @returns {void}
+ */
 function openAddCuentaModal() {
   Object.assign(nuevaCuenta, emptyCuenta())
   cuentaError.value = ''
   showCuentaModal.value = true
 }
 
+/**
+ * Agrega una cuenta bancaria al cliente seleccionado.
+ * @returns {Promise<void>}
+ */
 async function addCuentaToCliente() {
   if (!nuevaCuenta.alias.trim() || !nuevaCuenta.banco_id || !nuevaCuenta.moneda_id) {
     cuentaError.value = 'Banco, moneda y alias son obligatorios.'

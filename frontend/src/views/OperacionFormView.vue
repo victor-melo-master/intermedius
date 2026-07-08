@@ -99,6 +99,12 @@
 </template>
 
 <script setup>
+/**
+ * OperacionFormView — Formulario para crear/editar operaciones de compra/venta de divisas.
+ * Incluye: selección de tipo (compra/venta), cliente, calculadora bidireccional (monto/tasa/bolivares),
+ * cuentas involucradas (divisa y VES), pago a terceros, comisión, y resumen previo al envío.
+ * Soporta modo edición con motivo de cambio.
+ */
 import { reactive, ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { useTasasStore } from '../stores/tasas.js'
@@ -115,62 +121,94 @@ import ResumenOperacion from '../components/ResumenOperacion.vue'
 import AppLoadingSpinner from '../components/AppLoadingSpinner.vue'
 import AppErrorState from '../components/AppErrorState.vue'
 
+/** Ruta actual (params.moneda, params.id) */
 const route = useRoute()
+/** Store de tasas (para tasa vigente sugerida) */
 const tasas = useTasasStore()
+/** Store de bancos */
 const bancosStore = useBancosStore()
+/** Store de auth (para operador_id) */
 const auth = useAuthStore()
+/** Store de operaciones */
 const ops = useOperacionesStore()
 
+/** Lista de bancos para terceros */
 const bancos = ref([])
 
+/** ID de operación en edición (desde ruta) */
 const editId = computed(() => route.params.id || null)
+/** Indica si es modo edición */
 const esEdicion = computed(() => !!editId.value)
+/** Motivo de edición pasado por query string */
 const motivoEdicion = computed(() => route.query.motivo || '')
 
+/** Indica guardado en curso */
 const saving = ref(false)
+/** Mensaje de error del formulario */
 const error = ref('')
+/** Referencia de la operación creada (para mensaje de éxito) */
 const successRef = ref('')
+/** Lista de cuentas disponibles */
 const cuentas = ref([])
+/** Indica carga de cuentas */
 const loadingCuentas = ref(true)
+/** Cliente seleccionado en el formulario */
 const clienteSeleccionado = ref({ id: '', nombre: '' })
 
+/** Indica si se está usando pago a terceros (cuenta temporal) */
 const pagoTerceros = ref(false)
+/** Datos del tercero para cuenta temporal */
 const terceroForm = reactive({
   banco_id: '',
   numero_cuenta: '',
   alias: '',
 })
+/** ID de moneda VES para crear cuentas temporales */
 const monedasVesId = ref(null)
 
+/** Fecha de hoy en formato ISO */
 const today = new Date().toISOString().split('T')[0]
 
+/** Mapas de símbolos y nombres de monedas */
 const SIMBOLOS = { USD: '$', USDT: '₮', EUR: '€', COP: '$', VES: 'Bs.' }
 const NOMBRES = { USD: 'Dólar', USDT: 'Tether', EUR: 'Euro', COP: 'Peso', VES: 'Bolívar' }
 
+/** Moneda seleccionada desde la ruta */
 const monedaSel = computed(() => route.params.moneda || 'USD')
+/** Código de la moneda cotizada (VES si base es USD, etc.) */
 const quoteCodigo = computed(() => monedaSel.value === 'USD' ? 'VES' : 'USD')
+/** String del par (ej: USD/VES) */
 const parStr = computed(() => `${monedaSel.value}/${quoteCodigo.value}`)
+/** Símbolo de la moneda base */
 const simbolo = computed(() => SIMBOLOS[monedaSel.value] || '$')
+/** Símbolo de la moneda cotizada */
 const quoteSimbolo = computed(() => SIMBOLOS[quoteCodigo.value] || 'Bs.')
+/** Nombre de la moneda cotizada */
 const quoteNombre = computed(() => NOMBRES[quoteCodigo.value] || 'moneda cotizada')
 
+/** Datos del formulario principal */
 const form = reactive({
   tipo: 'compra', fecha: today, monto_usd: '', bolivares: '', tasa: '',
   cuenta_usd_id: '', cuenta_ves_id: '', estado_entrega: 'digital',
   genera_comision: false, tipo_comision: 'pago_movil', monto_comision: '', descripcion: '',
 })
 
+/** Código del tipo de operación para la API */
 const tipoCodigo = computed(() => (form.tipo === 'venta' ? 'venta_usd' : 'compra_usd'))
+/** Título dinámico del formulario */
 const titulo = computed(() => {
   if (esEdicion.value) return `Editar operación #${editId.value}`
   return `Nueva ${form.tipo === 'venta' ? 'Venta' : 'Compra'} ${monedaSel.value}`
 })
 
+/** Tasa vigente para el par seleccionado */
 const tasaPar = computed(() => tasas.vigentes.find(t => t.par === parStr.value) || null)
+/** Tasa sugerida según el tipo de operación */
 const tasaSugerida = computed(() => {
   if (!tasaPar.value) return null
   return form.tipo === 'venta' ? tasaPar.value.tasa_venta : tasaPar.value.tasa_compra
 })
+/** Indica si la tasa ingresada es desfavorable vs la sugerida */
 const tasaDesfavorable = computed(() => {
   const sug = parseFloat(tasaSugerida.value)
   const t = parseFloat(form.tasa)
@@ -178,19 +216,24 @@ const tasaDesfavorable = computed(() => {
   return form.tipo === 'compra' ? t > sug : t < sug
 })
 
+/** Monto en bolivares como número */
 const bolivares = computed(() => parseFloat(form.bolivares) || 0)
 
+/** Cuentas filtradas por moneda base (foreign) */
 const cuentasForeign = computed(() => cuentas.value.filter(c => c.moneda?.codigo === monedaSel.value))
+/** Cuentas filtradas por moneda cotizada (quote), filtradas por cliente si aplica */
 const cuentasQuote = computed(() => {
   const pool = clienteSeleccionado.value.id ? cuentas.value.filter(c => c.cliente_id === clienteSeleccionado.value.id) : cuentas.value
   return pool.filter(c => c.moneda?.codigo === quoteCodigo.value)
 })
 
+/** Indica si el cliente seleccionado tiene cuentas registradas */
 const clienteTieneCuentas = computed(() => {
   if (!clienteSeleccionado.value.id) return false
   return cuentas.value.some(c => c.cliente_id === clienteSeleccionado.value.id)
 })
 
+/** Valida que todos los campos requeridos estén completos */
 const formularioValido = computed(() => {
   if (!form.monto_usd || parseFloat(form.monto_usd) <= 0) return false
   if (!form.tasa || parseFloat(form.tasa) <= 0) return false
@@ -202,7 +245,9 @@ const formularioValido = computed(() => {
   return true
 })
 
+/** Indica si el resumen es visible (datos mínimos completos) */
 const resumenVisible = computed(() => form.monto_usd && form.tasa && form.cuenta_usd_id && (form.cuenta_ves_id || (pagoTerceros.value && terceroForm.banco_id && terceroForm.numero_cuenta)))
+/** Ítems para mostrar en el resumen de operación */
 const resumenItems = computed(() => {
   const items = [
     { label: 'Tipo', value: form.tipo === 'venta' ? `Venta de ${monedaSel.value}` : `Compra de ${monedaSel.value}` },
@@ -222,6 +267,10 @@ const resumenItems = computed(() => {
   return items
 })
 
+/**
+ * Carga los datos de una operación existente para edición.
+ * @returns {Promise<void>}
+ */
 async function cargarOperacion() {
   if (!esEdicion.value) return
   await ops.fetchOne(editId.value)
@@ -261,38 +310,78 @@ async function cargarOperacion() {
   form.estado_entrega = 'digital'
 }
 
+/**
+ * Formatea un número con 2 decimales.
+ * @param {number|string} n
+ * @returns {string}
+ */
 function formatMoney(n) { return new Intl.NumberFormat('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(parseFloat(n) || 0) }
+
+/**
+ * Genera etiqueta descriptiva de una cuenta.
+ * @param {Object} c - Objeto de cuenta
+ * @returns {string}
+ */
 function cuentaLabel(c) { const tipo = c.banco?.nombre || c.tipo || 'cuenta'; return `${c.alias} · ${tipo} (${c.moneda?.codigo})` }
+
+/**
+ * Obtiene el alias de una cuenta por su ID.
+ * @param {number|string} id
+ * @returns {string}
+ */
 function cuentaAlias(id) { const c = cuentas.value.find(x => x.id === Number(id)); return c ? c.alias : '-' }
 
+/** Guarda para evitar recalculo mutuo entre montoUSD, bolivares y tasa */
 let calcGuard = false
+/**
+ * Redondea un número a 2 decimales.
+ * @param {number} n
+ * @returns {string}
+ */
 function round2(n) { return (Math.round((n + Number.EPSILON) * 100) / 100).toString() }
+/**
+ * Ejecuta una mutación evitando que los watchers disparen recálculos en cadena.
+ * @param {Function} mutate
+ * @returns {Promise<void>}
+ */
 async function runGuarded(mutate) { calcGuard = true; mutate(); await nextTick(); calcGuard = false }
+
+/** Recalcula bolivares cuando cambia monto_usd */
 watch(() => form.monto_usd, (v) => {
   if (calcGuard) return
   const m = parseFloat(v) || 0; const t = parseFloat(form.tasa) || 0
   runGuarded(() => { form.bolivares = (m && t) ? round2(m * t) : '' })
 })
+
+/** Recalcula monto_usd cuando cambian bolivares */
 watch(() => form.bolivares, (v) => {
   if (calcGuard) return
   const b = parseFloat(v) || 0; const t = parseFloat(form.tasa) || 0
   runGuarded(() => { form.monto_usd = (b && t) ? round2(b / t) : '' })
 })
+
+/** Recalcula bolivares cuando cambia tasa */
 watch(() => form.tasa, () => {
   if (calcGuard) return
   const m = parseFloat(form.monto_usd) || 0; const t = parseFloat(form.tasa) || 0
   if (m && t) runGuarded(() => { form.bolivares = round2(m * t) })
 })
 
+/** Recalcula la comisión automáticamente según el tipo */
 function recalcComision() {
   if (!form.genera_comision) return
   if (form.tipo_comision === 'mismo_banco') { form.monto_comision = '0'; return }
   if (['pago_movil', 'otros_bancos'].includes(form.tipo_comision)) form.monto_comision = round2(bolivares.value * 0.003)
 }
+
+/** Al activar/desactivar comisión, recalcula o limpia */
 watch(() => form.genera_comision, (on) => { if (on) recalcComision(); else form.monto_comision = '' })
+/** Al cambiar tipo de comisión, recalcula */
 watch(() => form.tipo_comision, () => recalcComision())
+/** Al cambiar bolivares, recalcula comisión si aplica */
 watch(bolivares, () => { if (form.genera_comision && ['pago_movil', 'otros_bancos'].includes(form.tipo_comision)) recalcComision() })
 
+/** Al cambiar moneda, resetea formulario y recarga tasas */
 watch(monedaSel, () => {
   form.monto_usd = ''; form.bolivares = ''; form.tasa = tasaSugerida.value ? parseFloat(tasaSugerida.value).toFixed(2) : ''
   form.cuenta_usd_id = ''; form.cuenta_ves_id = ''; form.estado_entrega = 'digital'
@@ -300,6 +389,11 @@ watch(monedaSel, () => {
   tasas.fetchVigentes()
 })
 
+/**
+ * Construye el array de movimientos para enviar a la API.
+ * @param {number|string} [cuentaVesOverride] - ID de cuenta VES override (para pago a terceros)
+ * @returns {Array<Object>} Array de movimientos
+ */
 function buildMovimientos(cuentaVesOverride = null) {
   const montoForeign = parseFloat(form.monto_usd) || 0
   const montoQuote = parseFloat(form.bolivares) || 0
@@ -317,15 +411,20 @@ function buildMovimientos(cuentaVesOverride = null) {
   return movimientos
 }
 
+/** Recarga la lista de cuentas desde la API */
 async function recargarCuentas() {
   try { const { data } = await api.get('/cuentas'); cuentas.value = Array.isArray(data) ? data : (data.data || []) } catch {}
 }
 
+/**
+ * Envía el formulario completo a la API.
+ * Si es pago a terceros, crea una cuenta temporal primero.
+ * @returns {Promise<void>}
+ */
 async function submit() {
   error.value = ''
   let cuentaVesId = form.cuenta_ves_id
 
-  // Si es pago a terceros, crear la cuenta temporal primero
   if (pagoTerceros.value) {
     try {
       const titularTerceros = 1
@@ -379,6 +478,7 @@ async function submit() {
   } finally { saving.value = false }
 }
 
+/** Resetea el formulario para registrar otra operación */
 function registrarOtra() {
   successRef.value = ''; error.value = ''; clienteSeleccionado.value = { id: '', nombre: '' }
   Object.assign(form, { monto_usd: '', bolivares: '', tasa: tasaSugerida.value || '', cuenta_usd_id: '', cuenta_ves_id: '', estado_entrega: 'digital', genera_comision: false, tipo_comision: 'pago_movil', monto_comision: '', descripcion: '' })
@@ -387,6 +487,7 @@ function registrarOtra() {
   tasas.fetchVigentes()
 }
 
+/** Inicializa catálogos, cuentas, y carga operación si es edición */
 onMounted(async () => {
   await tasas.fetchVigentes()
   await bancosStore.fetchAll()

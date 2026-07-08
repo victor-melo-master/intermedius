@@ -4,3 +4,12 @@
     <div class="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
   </div>
 </template>
+
+<script setup>
+/**
+ * Componente de spinner de carga.
+ * Muestra un indicador animado de carga sin props ni eventos.
+ *
+ * @component
+ */
+</script>

@@ -9,8 +9,17 @@ use App\Models\Operacion;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+/**
+ * Controlador de clientes.
+ */
 class ClienteController extends Controller
 {
+    /**
+     * Lista los clientes con filtros opcionales de búsqueda e inactivos.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
     public function index(Request $request): JsonResponse
     {
         $this->authorize('viewAny', Cliente::class);
@@ -30,6 +39,12 @@ class ClienteController extends Controller
         return response()->json($clientes);
     }
 
+    /**
+     * Crea un nuevo cliente.
+     *
+     * @param StoreClienteRequest $request
+     * @return JsonResponse
+     */
     public function store(StoreClienteRequest $request): JsonResponse
     {
         $this->authorize('create', Cliente::class);
@@ -39,6 +54,12 @@ class ClienteController extends Controller
         return response()->json($cliente, 201);
     }
 
+    /**
+     * Muestra un cliente con sus cuentas relacionadas.
+     *
+     * @param Cliente $cliente
+     * @return JsonResponse
+     */
     public function show(Cliente $cliente): JsonResponse
     {
         $this->authorize('view', $cliente);
@@ -46,6 +67,12 @@ class ClienteController extends Controller
         return response()->json($cliente->load(['cuentas.banco', 'cuentas.moneda']));
     }
 
+    /**
+     * Devuelve las cuentas de un cliente ordenadas por alias.
+     *
+     * @param Cliente $cliente
+     * @return JsonResponse
+     */
     public function cuentas(Cliente $cliente): JsonResponse
     {
         $this->authorize('view', $cliente);
@@ -55,6 +82,13 @@ class ClienteController extends Controller
         );
     }
 
+    /**
+     * Actualiza un cliente existente.
+     *
+     * @param UpdateClienteRequest $request
+     * @param Cliente $cliente
+     * @return JsonResponse
+     */
     public function update(UpdateClienteRequest $request, Cliente $cliente): JsonResponse
     {
         $cliente->update($request->validated());
@@ -62,6 +96,12 @@ class ClienteController extends Controller
         return response()->json($cliente->fresh());
     }
 
+    /**
+     * Elimina un cliente (soft delete).
+     *
+     * @param Cliente $cliente
+     * @return JsonResponse
+     */
     public function destroy(Cliente $cliente): JsonResponse
     {
         $this->authorize('delete', $cliente);
@@ -71,6 +111,13 @@ class ClienteController extends Controller
         return response()->json(null, 204);
     }
 
+    /**
+     * Lista las operaciones de un cliente con filtros opcionales de fecha y tipo.
+     *
+     * @param Request $request
+     * @param Cliente $cliente
+     * @return JsonResponse
+     */
     public function operaciones(Request $request, Cliente $cliente): JsonResponse
     {
         $this->authorize('view', $cliente);
@@ -88,6 +135,13 @@ class ClienteController extends Controller
         return response()->json($operaciones);
     }
 
+    /**
+     * Exporta las operaciones de un cliente en un archivo PDF.
+     *
+     * @param Request $request
+     * @param Cliente $cliente
+     * @return \Illuminate\Http\Response
+     */
     public function exportarOperaciones(Request $request, Cliente $cliente)
     {
         $this->authorize('view', $cliente);
@@ -117,6 +171,12 @@ class ClienteController extends Controller
     ->header('Content-Disposition', 'attachment; filename="operaciones_'.$cliente->nombre.'.pdf"');
     }
 
+    /**
+     * Restaura un cliente eliminado (soft delete).
+     *
+     * @param Cliente $cliente
+     * @return JsonResponse
+     */
     public function restaurar(Cliente $cliente): JsonResponse
     {
         $this->authorize('restore', $cliente);

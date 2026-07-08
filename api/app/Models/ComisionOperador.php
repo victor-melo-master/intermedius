@@ -10,6 +10,29 @@ use Illuminate\Support\Carbon;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
+/**
+ * Comisiones configuradas por operador (titular) según tipo de operación.
+ *
+ * @property int $id
+ * @property int $titular_id
+ * @property int $tipo_operacion_id
+ * @property string|null $descripcion
+ * @property string $tipo_calculo
+ * @property string $valor
+ * @property int $moneda_id
+ * @property string $base_calculo
+ * @property \Illuminate\Support\Carbon $vigente_desde
+ * @property \Illuminate\Support\Carbon|null $vigente_hasta
+ * @property bool $activa
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ *
+ * @property-read \App\Models\Titular|null $titular
+ * @property-read \App\Models\TipoOperacion|null $tipoOperacion
+ * @property-read \App\Models\Moneda|null $moneda
+ *
+ * @method static \Illuminate\Database\Eloquent\Builder|static vigentes(\Illuminate\Support\Carbon|string $fecha)
+ */
 class ComisionOperador extends Model
 {
     use HasFactory, LogsActivity;
@@ -47,16 +70,25 @@ class ComisionOperador extends Model
             ->setDescriptionForEvent(fn (string $e) => "ComisionOperador {$e}");
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Titular>
+     */
     public function titular(): BelongsTo
     {
         return $this->belongsTo(Titular::class);
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\TipoOperacion>
+     */
     public function tipoOperacion(): BelongsTo
     {
         return $this->belongsTo(TipoOperacion::class);
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Moneda>
+     */
     public function moneda(): BelongsTo
     {
         return $this->belongsTo(Moneda::class);

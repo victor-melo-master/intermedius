@@ -3,13 +3,22 @@
 namespace App\Http\Requests\Cliente;
 
 use Illuminate\Foundation\Http\FormRequest;
+/**
+ * Valida la solicitud para crear un cliente (POST /clientes).
+ */
 class StoreClienteRequest extends FormRequest
 {
+    /**
+     * @return bool
+     */
     public function authorize(): bool
     {
         return $this->user()->can('create', \App\Models\Cliente::class);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return [

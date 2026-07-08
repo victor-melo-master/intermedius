@@ -241,6 +241,12 @@
 </template>
 
 <script setup>
+/**
+ * ClientesView — CRUD de clientes con soft-delete y papelera.
+ * Permite crear, editar, eliminar (archivar) y restaurar clientes.
+ * Incluye detalle con cuentas bancarias asociadas, historial de transacciones
+ * con filtros por fecha/tipo, paginación y exportación a PDF.
+ */
 import { ref, reactive, watch, onMounted } from 'vue'
 import { useClientesStore } from '../stores/clientes.js'
 import { useAuthStore } from '../stores/auth.js'
@@ -252,29 +258,49 @@ import AppLoadingSpinner from '../components/AppLoadingSpinner.vue'
 import AppErrorState from '../components/AppErrorState.vue'
 import AppEmptyState from '../components/AppEmptyState.vue'
 
+/** Store de clientes */
 const clientes = useClientesStore()
+/** Store de autenticación (para permisos) */
 const auth = useAuthStore()
+/** Store de bancos */
 const bancos = useBancosStore()
+/** Store de tasas (para monedas) */
 const tasas = useTasasStore()
 
+/** Término de búsqueda por nombre o alias */
 const search = ref('')
+/** Controla visibilidad del modal crear/editar cliente */
 const showForm = ref(false)
+/** Indica si se está guardando el formulario de cliente */
 const saving = ref(false)
+/** Mensaje de error del formulario de cliente */
 const formError = ref('')
+/** ID del cliente en edición (null si es creación) */
 const editingId = ref(null)
+/** Alterna entre vista de activos y papelera */
 const mostrarPapelera = ref(false)
+/** Timeout para debounce de búsqueda */
 let debounce = null
 
+/** Datos del formulario de cliente */
 const form = reactive({ nombre: '', alias: '', telefono: '', email: '', notas: '' })
 
+/** Controla visibilidad del modal de detalle */
 const showDetail = ref(false)
+/** Cliente actualmente visible en el detalle */
 const detailCliente = ref(null)
+/** Cuentas bancarias del cliente mostrado */
 const clienteCuentas = ref([])
+/** Indica carga de cuentas del cliente */
 const loadingCuentas = ref(false)
 
+/** Controla visibilidad del modal de crear cuenta para cliente */
 const showCuentaForm = ref(false)
+/** Indica si se está guardando la cuenta */
 const savingCuenta = ref(false)
+/** Mensaje de error del formulario de cuenta */
 const cuentaFormError = ref('')
+/** Datos del formulario de creación de cuenta */
 const cuentaForm = reactive({
   cliente_id: '',
   banco_id: '',
@@ -286,6 +312,10 @@ const cuentaForm = reactive({
   activa: true,
 })
 
+/**
+ * Carga la lista de clientes según la pestalla activa (activos o papelera).
+ * Aplica el filtro de búsqueda si existe.
+ */
 function cargarLista() {
   if (mostrarPapelera.value) {
     clientes.fetchTrashed(search.value)
@@ -294,15 +324,22 @@ function cargarLista() {
   }
 }
 
+/** Ejecuta la búsqueda con debounce de 400ms */
 function debounceSearch() {
   clearTimeout(debounce)
   debounce = setTimeout(() => cargarLista(), 400)
 }
 
+/**
+ * Formatea un número a string con 2 decimales.
+ * @param {number} n
+ * @returns {string}
+ */
 function format(n) {
   return new Intl.NumberFormat('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n || 0)
 }
 
+/** Abre el modal en modo creación */
 function openCreate() {
   editingId.value = null
   Object.assign(form, { nombre: '', alias: '', telefono: '', email: '', notas: '' })
@@ -310,6 +347,10 @@ function openCreate() {
   showForm.value = true
 }
 
+/**
+ * Abre el modal en modo edición con datos del cliente.
+ * @param {Object} c - Objeto del cliente
+ */
 function openEdit(c) {
   editingId.value = c.id
   Object.assign(form, {
@@ -323,6 +364,10 @@ function openEdit(c) {
   showForm.value = true
 }
 
+/**
+ * Envía el formulario de creación/edición de cliente.
+ * @returns {Promise<void>}
+ */
 async function submit() {
   formError.value = ''
   saving.value = true
@@ -347,6 +392,10 @@ async function submit() {
   }
 }
 
+/**
+ * Abre el detalle del cliente, cargando sus cuentas.
+ * @param {Object} c - Objeto del cliente
+ */
 async function openDetail(c) {
   detailCliente.value = c
   showDetail.value = true
@@ -361,6 +410,7 @@ async function openDetail(c) {
   }
 }
 
+/** Abre el formulario para agregar una cuenta al cliente actual */
 function openCuentaForm() {
   cuentaFormError.value = ''
   Object.assign(cuentaForm, {
@@ -378,6 +428,10 @@ function openCuentaForm() {
   showCuentaForm.value = true
 }
 
+/**
+ * Envía el formulario de creación de cuenta para el cliente.
+ * @returns {Promise<void>}
+ */
 async function submitCuenta() {
   cuentaFormError.value = ''
   savingCuenta.value = true
@@ -411,17 +465,28 @@ async function submitCuenta() {
 }
 
 // ── Historial de transacciones ──
+/** Lista de operaciones del historial */
 const historial = ref([])
+/** Metadatos de paginación del historial (current_page, last_page, etc.) */
 const historialPaginacion = ref({})
+/** Indica si el historial ya fue cargado alguna vez */
 const historialCargado = ref(false)
+/** Indica carga del historial */
 const loadingHistorial = ref(false)
+/** Indica si se está exportando el PDF */
 const exportando = ref(false)
+/** Filtros del historial de transacciones */
 const historialFiltros = reactive({
   fecha_desde: '',
   fecha_hasta: '',
   tipo_codigo: '',
 })
 
+/**
+ * Carga el historial paginado de operaciones del cliente en detalle.
+ * @param {number} [page=1] - Número de página
+ * @returns {Promise<void>}
+ */
 async function cargarHistorial(page = 1) {
   if (!detailCliente.value) return
   loadingHistorial.value = true
@@ -447,18 +512,34 @@ async function cargarHistorial(page = 1) {
   }
 }
 
+/**
+ * Formatea una fecha ISO a dd/mm/aaaa.
+ * @param {string} fecha - Fecha ISO
+ * @returns {string}
+ */
 function formatFecha(fecha) {
   if (!fecha) return '—'
   const d = new Date(fecha)
   return d.toLocaleDateString('es-VE', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
+/**
+ * Obtiene el monto absoluto formateado de un movimiento en una moneda específica.
+ * @param {Object} op - Operación con movimientos
+ * @param {string} moneda - Código de moneda (USD, VES)
+ * @returns {string}
+ */
 function formatMonto(op, moneda) {
   const mov = op.movimientos?.find(m => m.moneda?.codigo === moneda)
   if (!mov) return '—'
   return new Intl.NumberFormat('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Math.abs(parseFloat(mov.monto)))
 }
 
+/**
+ * Exporta el historial de operaciones del cliente a PDF.
+ * Usa axios directo para evitar interceptores que rompan el blob.
+ * @returns {Promise<void>}
+ */
 async function exportarPDF() {
   if (!detailCliente.value) return
   exportando.value = true
@@ -469,7 +550,6 @@ async function exportarPDF() {
     if (historialFiltros.fecha_hasta) params.fecha_hasta = historialFiltros.fecha_hasta
     if (historialFiltros.tipo_codigo) params.tipo_codigo = historialFiltros.tipo_codigo
 
-    // Usar axios directamente (no la instancia api) para evitar interceptores que rompan el blob
     const axios = (await import('axios')).default
     const response = await axios.post(
       `${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/clientes/${detailCliente.value.id}/operaciones/exportar`,
@@ -499,12 +579,18 @@ async function exportarPDF() {
   }
 }
 
+/** Cuando se abre el detalle, carga automáticamente el historial */
 watch(showDetail, (val) => {
   if (val && detailCliente.value) {
     cargarHistorial()
   }
 })
 
+/**
+ * Elimina (soft-delete) un cliente.
+ * @param {Object} c - Objeto del cliente
+ * @returns {Promise<void>}
+ */
 async function eliminarCliente(c) {
   if (!confirm(`¿Eliminar cliente "${c.nombre}"? Se archivará y podrá recuperarse después.`)) return
   try {
@@ -516,6 +602,11 @@ async function eliminarCliente(c) {
   }
 }
 
+/**
+ * Restaura un cliente eliminado.
+ * @param {Object} c - Objeto del cliente
+ * @returns {Promise<void>}
+ */
 async function restaurarCliente(c) {
   if (!confirm(`¿Recuperar cliente "${c.nombre}"?`)) return
   try {
@@ -526,5 +617,6 @@ async function restaurarCliente(c) {
   }
 }
 
+/** Carga la lista de clientes al montar el componente */
 onMounted(() => cargarLista())
 </script>

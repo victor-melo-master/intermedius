@@ -38,11 +38,30 @@
 </template>
 
 <script setup>
+/**
+ * Componente toggle de comisión.
+ * Permite activar/desactivar comisión, seleccionar tipo y editar el monto.
+ *
+ * @component
+ * @prop {boolean} activa - Indica si la comisión está activa
+ * @prop {string} tipo - Tipo de comisión (pago_movil, otros_bancos, mismo_banco, manual)
+ * @prop {string|number} monto - Monto de la comisión
+ * @prop {string} simbolo - Símbolo de la moneda
+ * @prop {string|number} montoCalculado - Monto calculado automáticamente
+ * @emit {boolean} update:activa - Actualiza el estado activo
+ * @emit {string} update:tipo - Actualiza el tipo de comisión
+ * @emit {string|number} update:monto - Actualiza el monto de comisión
+ */
 defineProps({
+  /** @type {boolean} - Indica si la comisión está activa */
   activa: Boolean,
+  /** @type {string} - Tipo de comisión */
   tipo: String,
+  /** @type {string|number} - Monto de la comisión */
   monto: [String, Number],
+  /** @type {string} - Símbolo de la moneda */
   simbolo: String,
+  /** @type {string|number} - Monto calculado automáticamente */
   montoCalculado: [String, Number],
 })
 defineEmits(['update:activa', 'update:tipo', 'update:monto'])

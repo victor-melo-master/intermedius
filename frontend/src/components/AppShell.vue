@@ -62,14 +62,23 @@
 </template>
 
 <script setup>
+/**
+ * Componente de layout principal.
+ * Renderiza la estructura global con header, sidebar y router-view para el contenido.
+ *
+ * @component
+ */
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth.js'
 
 const router = useRouter()
 const auth = useAuthStore()
+
+/** @type {import('vue').Ref<boolean>} - Controla la apertura del drawer móvil */
 const drawer = ref(false)
 
+/** @type {Array<{path: string, label: string, icon: string}>} - Items fijos de navegación */
 const baseNav = [
   { path: '/dashboard', label: 'Dashboard', icon: '📊' },
   { path: '/operaciones', label: 'Operaciones', icon: '📄' },
@@ -81,11 +90,13 @@ const baseNav = [
   { path: '/comisiones', label: 'Comisiones', icon: '💰' },
 ]
 
+/** @type {import('vue').ComputedRef<boolean>} - Indica si el usuario puede acceder al pool de pagos */
 const canPool = computed(() => {
   const roles = auth.user?.roles || []
   return roles.includes('pagador') || roles.includes('admin') || roles.includes('super_admin')
 })
 
+/** @type {import('vue').ComputedRef<Array<{path: string, label: string, icon: string}>>} - Items de navegación dinámicos según rol */
 const nav = computed(() => {
   const items = [...baseNav]
   if (canPool.value) {
@@ -97,6 +108,10 @@ const nav = computed(() => {
   return items
 })
 
+/**
+ * Cierra la sesión del usuario y redirige al login.
+ * @returns {void}
+ */
 function logout() {
   auth.logout()
   router.push('/login')

@@ -192,6 +192,11 @@
 </template>
 
 <script setup>
+/**
+ * CuentasView — CRUD de cuentas bancarias/plataforma/cash.
+ * Permite seleccionar tipo de cuenta primero, ocultar campos de banco/número para efectivo,
+ * crear titulares y bancos inline, y cargar saldo a cuentas.
+ */
 import { ref, reactive, onMounted } from 'vue'
 import api from '../api/axios.js'
 import { useAuthStore } from '../stores/auth.js'
@@ -204,36 +209,60 @@ import AppErrorState from '../components/AppErrorState.vue'
 import AppEmptyState from '../components/AppEmptyState.vue'
 import ClienteSelector from '../components/ClienteSelector.vue'
 
+/** Store de autenticación */
 const auth = useAuthStore()
+/** Store de titulares */
 const titulares = useTitularesStore()
+/** Store de bancos */
 const bancos = useBancosStore()
+/** Store de tasas (monedas) */
 const tasas = useTasasStore()
 
+/** Lista de cuentas cargadas */
 const cuentas = ref([])
+/** Indica carga de cuentas */
 const loading = ref(false)
+/** Mensaje de error general */
 const error = ref('')
 
+/** Controla visibilidad del modal de formulario */
 const showForm = ref(false)
+/** Indica guardado en curso */
 const saving = ref(false)
+/** Mensaje de error del formulario */
 const formError = ref('')
+/** Indica guardado inline en curso */
 const savingInline = ref(false)
 
+/** Controla visibilidad del formulario inline de titular */
 const showTitularInline = ref(false)
+/** Error del formulario inline de titular */
 const titularInlineError = ref('')
+/** Datos del formulario inline de titular */
 const titularForm = reactive({ nombre: '', alias: '', telefono: '', email: '', activo: true })
 
+/** Controla visibilidad del formulario inline de banco */
 const showBancoInline = ref(false)
+/** Error del formulario inline de banco */
 const bancoInlineError = ref('')
+/** Datos del formulario inline de banco */
 const bancoForm = reactive({ nombre: '', codigo: '', pais: 'VE', activo: true })
 
+/** Cliente seleccionado opcional para asociar la cuenta */
 const clienteSeleccionado = ref({ id: '', nombre: '' })
 
+/** Controla visibilidad del modal de carga de saldo */
 const showSaldoModal = ref(false)
+/** Cuenta objetivo para cargar saldo */
 const saldoTarget = ref(null)
+/** Valor ingresado para el nuevo saldo */
 const saldoInput = ref('')
+/** Error del formulario de saldo */
 const saldoError = ref('')
+/** Indica guardado de saldo en curso */
 const savingSaldo = ref(false)
 
+/** Datos del formulario de cuenta */
 const form = reactive({
   titular_id: '',
   banco_id: '',
@@ -245,6 +274,10 @@ const form = reactive({
   activa: true,
 })
 
+/**
+ * Obtiene la lista de cuentas desde la API.
+ * @returns {Promise<void>}
+ */
 async function fetchCuentas() {
   loading.value = true
   error.value = ''
@@ -258,6 +291,7 @@ async function fetchCuentas() {
   }
 }
 
+/** Abre el modal de formulario preparando catálogos y reseteando valores */
 function openForm() {
   Object.assign(form, { titular_id: '', banco_id: '', moneda_id: '', alias: '', tipo: '', numero_cuenta: '', notas: '', activa: true })
   formError.value = ''
@@ -272,8 +306,13 @@ function openForm() {
   showForm.value = true
 }
 
+/** Cierra el modal de formulario */
 function closeForm() { showForm.value = false }
 
+/**
+ * Crea un titular inline desde el formulario de cuenta.
+ * @returns {Promise<void>}
+ */
 async function submitTitularInline() {
   if (!titularForm.nombre || !titularForm.alias) {
     titularInlineError.value = 'Nombre y alias son obligatorios'
@@ -295,6 +334,10 @@ async function submitTitularInline() {
   }
 }
 
+/**
+ * Crea un banco inline desde el formulario de cuenta.
+ * @returns {Promise<void>}
+ */
 async function submitBancoInline() {
   if (!bancoForm.nombre || !bancoForm.codigo) {
     bancoInlineError.value = 'Nombre y código son obligatorios'
@@ -316,6 +359,10 @@ async function submitBancoInline() {
   }
 }
 
+/**
+ * Envía el formulario para crear la cuenta.
+ * @returns {Promise<void>}
+ */
 async function submit() {
   formError.value = ''
   saving.value = true
@@ -356,6 +403,10 @@ async function submit() {
   }
 }
 
+/**
+ * Abre el modal para cargar saldo de una cuenta.
+ * @param {Object} cuenta - Cuenta a actualizar saldo
+ */
 function openSaldoModal(cuenta) {
   saldoTarget.value = cuenta
   saldoInput.value = cuenta.saldo_cache || ''
@@ -363,6 +414,10 @@ function openSaldoModal(cuenta) {
   showSaldoModal.value = true
 }
 
+/**
+ * Envía el nuevo saldo para la cuenta seleccionada.
+ * @returns {Promise<void>}
+ */
 async function submitSaldo() {
   if (!saldoInput.value) return
   savingSaldo.value = true
@@ -379,5 +434,6 @@ async function submitSaldo() {
   }
 }
 
+/** Carga la lista de cuentas al montar el componente */
 onMounted(fetchCuentas)
 </script>

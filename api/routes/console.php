@@ -1,5 +1,15 @@
 <?php
 
+/**
+ * Console (schedule) routes.
+ *
+ * Defines the task schedule:
+ * - SincronizarTasasJob / SincronizarTasasReferenciaJob: every minute.
+ * - AlertarTasasFaltantesJob: daily at 08:00 and 14:00.
+ * - GenerarReporteMensualComisionesJob: monthly on 1st at 06:00.
+ * - AutoArchivarClientesInactivos: weekly on Sunday at 03:00.
+ */
+
 use App\Jobs\AlertarTasasFaltantesJob;
 use App\Jobs\GenerarReporteMensualComisionesJob;
 use App\Jobs\SincronizarTasasJob;

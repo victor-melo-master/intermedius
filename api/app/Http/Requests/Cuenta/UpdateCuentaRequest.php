@@ -5,13 +5,22 @@ namespace App\Http\Requests\Cuenta;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
+/**
+ * Valida la solicitud para actualizar una cuenta (PUT/PATCH /cuentas/{cuenta}).
+ */
 class UpdateCuentaRequest extends FormRequest
 {
+    /**
+     * @return bool
+     */
     public function authorize(): bool
     {
         return $this->user()->can('update', $this->route('cuenta'));
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         $cuenta = $this->route('cuenta');

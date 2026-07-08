@@ -122,42 +122,69 @@
 </template>
 
 <script setup>
+/**
+ * TasasView — Gestión de tasas de mercado del día.
+ * Muestra las tasas vigentes agrupadas por moneda base, con alerta si no hay tasas hoy.
+ * Modal en 2 pasos: seleccionar moneda base y configurar pares con tasas compra/venta
+ * (y mínimos opcionales). Solo administradores pueden publicar/editar tasas.
+ */
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useTasasStore } from '../stores/tasas.js'
 import { useAuthStore } from '../stores/auth.js'
 
+/** Store de tasas */
 const tasas = useTasasStore()
+/** Store de autenticación (permisos) */
 const auth = useAuthStore()
 
+/** Controla visibilidad del modal */
 const showForm = ref(false)
+/** Indica si es modo edición */
 const isEdit = ref(false)
+/** Indica guardado en curso */
 const saving = ref(false)
+/** Error del formulario */
 const formError = ref('')
+/** ID de moneda base seleccionada en el modal */
 const selectedBaseId = ref('')
+/** Pares de tasas configurados en el modal (key: moneda_cotizada_id) */
 const pairs = reactive({})
 
+/** Moneda local (cotizada) */
 const LOCAL = 'VES'
+/** Íconos para cada moneda */
 const ICONOS = { USD: '💵', USDT: '₮', EUR: '€', COP: '$', VES: 'Bs' }
+/**
+ * Devuelve el ícono de una moneda.
+ * @param {string} codigo - Código de moneda
+ * @returns {string}
+ */
 function iconoMoneda(codigo) { return ICONOS[codigo] || '💱' }
 
-// ── Mapas y opciones ──
+/** Mapa de moneda ID a objeto de moneda */
 const monedaById = computed(() => Object.fromEntries(tasas.monedas.map(m => [m.id, m])))
 
-// Base: todas menos la moneda local (VES siempre es cotizada)
+/** Opciones de moneda base (todas excepto VES) */
 const baseOptions = computed(() => tasas.monedas.filter(m => m.codigo !== LOCAL))
 
+/** Código de la moneda base seleccionada */
 const baseCodigo = computed(() => monedaById.value[selectedBaseId.value]?.codigo || '')
 
-// Referencias: todas las monedas excepto la base seleccionada
+/** Monedas cotizadas disponibles para la base seleccionada */
 const referenceMonedas = computed(() =>
   tasas.monedas.filter(m => m.id !== selectedBaseId.value)
 )
 
-// ── Lista agrupada por base ──
+/**
+ * Obtiene el código de la moneda base de una tasa.
+ * @param {Object} t - Tasa vigente
+ * @returns {string}
+ */
 function baseCodigoDe(t) {
   return monedaById.value[t.moneda_base_id]?.codigo || (t.par || '').split('/')[0] || '?'
 }
 
+/** Tasas vigentes agrupadas por moneda base */
 const grupos = computed(() => {
   const map = {}
   for (const t of tasas.vigentes) {
@@ -168,17 +195,28 @@ const grupos = computed(() => {
   return Object.values(map)
 })
 
+/** Indica si hay al menos una tasa publicada hoy */
 const hayTasasHoy = computed(() => tasas.vigentes.some(t => esHoy(t.vigente_desde)))
 
+/** Indica si se puede guardar (base seleccionada y al menos un par activo) */
 const puedeGuardar = computed(() =>
   selectedBaseId.value && Object.values(pairs).some(p => p?.active)
 )
 
-// ── Helpers ──
+/**
+ * Formatea un número de tasa con 2-4 decimales (local es-VE).
+ * @param {number|string} n
+ * @returns {string}
+ */
 function format(n) {
   return new Intl.NumberFormat('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 4 }).format(parseFloat(n) || 0)
 }
 
+/**
+ * Verifica si una fecha ISO corresponde al día de hoy.
+ * @param {string} iso - Fecha ISO
+ * @returns {boolean}
+ */
 function esHoy(iso) {
   if (!iso) return false
   const d = new Date(iso)
@@ -186,6 +224,11 @@ function esHoy(iso) {
   return d.toDateString() === h.toDateString()
 }
 
+/**
+ * Genera texto descriptivo de cuándo fue publicada una tasa.
+ * @param {string} iso - Fecha ISO
+ * @returns {string}
+ */
 function publicada(iso) {
   if (!iso) return ''
   const d = new Date(iso)
@@ -194,11 +237,18 @@ function publicada(iso) {
   return `Publicada ${d.toLocaleDateString('es-VE', { day: '2-digit', month: '2-digit' })} ${hora}`
 }
 
-// ── Modal ──
+/** Crea un objeto de par vacío para el formulario */
 function emptyPair() {
   return { active: false, tasa_compra: '', tasa_compra_minima: '', tasa_venta: '', tasa_venta_minima: '' }
 }
 
+/**
+ * Construye los pares del formulario para una moneda base.
+ * Si prefill es true, precarga con datos de tasas vigentes.
+ * @param {number|string} baseId - ID de moneda base
+ * @param {Object} [options] - Opciones
+ * @param {boolean} [options.prefill=false] - Precargar con tasas existentes
+ */
 function buildPairs(baseId, { prefill = false } = {}) {
   Object.keys(pairs).forEach(k => delete pairs[k])
   for (const ref of tasas.monedas.filter(m => m.id !== baseId)) {
@@ -217,11 +267,16 @@ function buildPairs(baseId, { prefill = false } = {}) {
   }
 }
 
+/**
+ * Selecciona una moneda base y construye los pares en el formulario.
+ * @param {number|string} id - ID de moneda base
+ */
 function selectBase(id) {
   selectedBaseId.value = id
   buildPairs(id, { prefill: true })
 }
 
+/** Abre el modal en modo nueva publicación */
 async function openNew() {
   await tasas.fetchMonedas()
   isEdit.value = false
@@ -231,6 +286,10 @@ async function openNew() {
   showForm.value = true
 }
 
+/**
+ * Abre el modal en modo edición para una tasa específica.
+ * @param {Object} t - Tasa vigente a editar
+ */
 async function openEdit(t) {
   await tasas.fetchMonedas()
   isEdit.value = true
@@ -239,6 +298,10 @@ async function openEdit(t) {
   selectBase(t.moneda_base_id)
 }
 
+/**
+ * Envía las tasas configuradas a la API (una por par).
+ * @returns {Promise<void>}
+ */
 async function submit() {
   formError.value = ''
   const activos = Object.entries(pairs).filter(([, p]) => p.active)
@@ -282,6 +345,7 @@ async function submit() {
   }
 }
 
+/** Carga tasas vigentes y monedas al montar */
 onMounted(() => {
   tasas.fetchVigentes()
   tasas.fetchMonedas()

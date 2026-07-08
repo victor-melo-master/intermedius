@@ -5,13 +5,22 @@ namespace App\Http\Requests\Gasto;
 use App\Models\Operacion;
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Valida la solicitud para registrar un gasto (POST /gastos).
+ */
 class StoreGastoRequest extends FormRequest
 {
+    /**
+     * @return bool
+     */
     public function authorize(): bool
     {
         return $this->user()->can('create', Operacion::class);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return [

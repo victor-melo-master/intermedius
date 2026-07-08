@@ -66,16 +66,28 @@
 </template>
 
 <script setup>
+/**
+ * TitularesView — CRUD de titulares de cuentas bancarias.
+ * Permite listar, crear y editar titulares con nombre, alias, teléfono y email.
+ * Modal inline para formulario de creación/edición.
+ */
 import { ref, reactive, onMounted } from 'vue'
 import { useTitularesStore } from '../stores/titulares.js'
 
+/** Store de titulares */
 const titulares = useTitularesStore()
+/** Controla visibilidad del modal */
 const showForm = ref(false)
+/** Indica guardado en curso */
 const saving = ref(false)
+/** Mensaje de error del formulario */
 const formError = ref('')
+/** Indica si se está editando un titular existente */
 const editing = ref(false)
+/** ID del titular en edición */
 const editId = ref(null)
 
+/** Datos del formulario */
 const form = reactive({
   nombre: '',
   alias: '',
@@ -84,6 +96,7 @@ const form = reactive({
   activo: true,
 })
 
+/** Abre el modal en modo creación */
 function openForm() {
   editing.value = false
   editId.value = null
@@ -92,6 +105,10 @@ function openForm() {
   showForm.value = true
 }
 
+/**
+ * Abre el modal en modo edición con datos precargados.
+ * @param {Object} t - Titular a editar
+ */
 function editTitular(t) {
   editing.value = true
   editId.value = t.id
@@ -106,10 +123,15 @@ function editTitular(t) {
   showForm.value = true
 }
 
+/** Cierra el modal */
 function closeForm() {
   showForm.value = false
 }
 
+/**
+ * Envía el formulario para crear o actualizar un titular.
+ * @returns {Promise<void>}
+ */
 async function submit() {
   formError.value = ''
   saving.value = true
@@ -140,5 +162,6 @@ async function submit() {
   }
 }
 
+/** Carga la lista de titulares al montar */
 onMounted(() => titulares.fetchAll())
 </script>

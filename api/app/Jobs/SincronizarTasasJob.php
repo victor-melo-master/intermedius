@@ -13,6 +13,10 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
+/**
+ * Job que sincroniza tasas de mercado desde fuentes externas (BCV, paralelo, Binance P2P)
+ * y las persiste en la tabla tasas_mercado, además de cachear la última tasa por fuente.
+ */
 class SincronizarTasasJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
@@ -20,6 +24,11 @@ class SincronizarTasasJob implements ShouldQueue
     public int $tries   = 3;
     public int $backoff = 30;
 
+    /**
+     * Execute the job.
+     *
+     * @param  TasasMercadoService  $service
+     */
     public function handle(TasasMercadoService $service): void
     {
         $resultados = [

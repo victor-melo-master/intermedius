@@ -89,6 +89,11 @@
 </template>
 
 <script setup>
+/**
+ * OperacionIntermediaForm — Formulario para crear una operación intermediada.
+ * Conecta un cliente emisor (vende divisa) con un cliente receptor (compra divisa),
+ * con tasas de compra y venta diferenciadas, 4 movimientos y ganancia estimada.
+ */
 import { reactive, ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '../stores/auth.js'
 import { useBancosStore } from '../stores/bancos.js'
@@ -98,35 +103,53 @@ import CuentaSelector from '../components/CuentaSelector.vue'
 import AppErrorState from '../components/AppErrorState.vue'
 import api from '../api/axios.js'
 
+/** Store de autenticación */
 const auth = useAuthStore()
+/** Store de bancos */
 const bancosStore = useBancosStore()
+/** Store de operaciones */
 const ops = useOperacionesStore()
 
+/** Lista de bancos */
 const bancos = ref([])
 
+/** Moneda de la operación (USD por defecto) */
 const moneda = ref('USD')
+/** Indica guardado en curso */
 const saving = ref(false)
+/** Mensaje de error */
 const error = ref('')
+/** Referencia de la operación creada */
 const successRef = ref('')
+/** Cliente emisor seleccionado */
 const clienteEmisor = ref({ id: '', nombre: '' })
+/** Cliente receptor seleccionado */
 const clienteReceptor = ref({ id: '', nombre: '' })
 
-// Cuentas seleccionadas
-const cuentaEmisorDivisa = ref('')
-const cuentaEmisorVes = ref('')
-const cuentaReceptorDivisa = ref('')
-const cuentaReceptorVes = ref('')
+/** Cuentas seleccionadas para cada lado */
+const cuentasEmisorDivisa = ref('')
+const cuentasEmisorVes = ref('')
+const cuentasReceptorDivisa = ref('')
+const cuentasReceptorVes = ref('')
 
-// Listas de cuentas
+/** Lista de todas las cuentas disponibles */
 const cuentas = ref([])
+/** Cuentas filtradas por moneda (divisa) */
 const cuentasDivisa = computed(() => cuentas.value.filter(c => c.moneda?.codigo === moneda.value))
+/** Cuentas filtradas por moneda VES */
 const cuentasVes = computed(() => cuentas.value.filter(c => c.moneda?.codigo === 'VES'))
 
+/**
+ * Genera etiqueta descriptiva de una cuenta.
+ * @param {Object} c - Objeto de cuenta
+ * @returns {string}
+ */
 function cuentaLabel(c) {
   const tipo = c.banco?.nombre || c.tipo || 'cuenta'
   return `${c.alias} · ${tipo} (${c.moneda?.codigo})`
 }
 
+/** Datos del formulario */
 const form = reactive({
   monto: '',
   tasa_compra: '',
@@ -134,14 +157,19 @@ const form = reactive({
   descripcion: '',
 })
 
+/** Tasa de compra como número */
 const tasaCompra = computed(() => parseFloat(form.tasa_compra) || 0)
+/** Tasa de venta como número */
 const tasaVenta = computed(() => parseFloat(form.tasa_venta) || 0)
+/** Diferencia entre tasa venta y compra */
 const spread = computed(() => (tasaVenta.value - tasaCompra.value).toFixed(2))
+/** Ganancia estimada en VES */
 const gananciaEstimada = computed(() => {
   const monto = parseFloat(form.monto) || 0
   return (monto * (tasaVenta.value - tasaCompra.value)).toFixed(2)
 })
 
+/** Valida que el formulario esté completo y consistente */
 const formularioValido = computed(() => {
   if (!form.monto || parseFloat(form.monto) <= 0) return false
   if (!form.tasa_compra || parseFloat(form.tasa_compra) <= 0) return false
@@ -154,6 +182,11 @@ const formularioValido = computed(() => {
   return true
 })
 
+/**
+ * Envía el formulario para registrar la operación intermediada.
+ * Construye 4 movimientos: emisor entrega divisa, casa paga VES, receptor recibe divisa, receptor paga VES.
+ * @returns {Promise<void>}
+ */
 async function submit() {
   if (!formularioValido.value) return
   saving.value = true
@@ -170,13 +203,9 @@ async function submit() {
       tasa_venta: parseFloat(form.tasa_venta),
       descripcion: form.descripcion,
       movimientos: [
-        // 1. Emisor entrega la divisa a la casa (negativo)
         { cuenta_id: Number(cuentaEmisorDivisa.value), monto: -monto, tasa_a_usd: 1 },
-        // 2. Casa paga al emisor en VES (positivo en cuenta del emisor)
         { cuenta_id: Number(cuentaEmisorVes.value), monto: monto * tasaCompra.value, tasa_a_usd: 1 / tasaCompra.value },
-        // 3. Receptor recibe la divisa de la casa (positivo)
         { cuenta_id: Number(cuentaReceptorDivisa.value), monto: monto, tasa_a_usd: 1 },
-        // 4. Receptor paga a la casa en VES (negativo en cuenta del receptor)
         { cuenta_id: Number(cuentaReceptorVes.value), monto: -(monto * tasaVenta.value), tasa_a_usd: 1 / tasaVenta.value },
       ],
     }
@@ -192,6 +221,7 @@ async function submit() {
   }
 }
 
+/** Carga bancos y cuentas al montar */
 onMounted(async () => {
   await bancosStore.fetchAll()
   bancos.value = bancosStore.list

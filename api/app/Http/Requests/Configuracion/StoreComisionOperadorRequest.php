@@ -4,13 +4,22 @@ namespace App\Http\Requests\Configuracion;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Valida la solicitud para crear una comisión por operador (POST /configuracion/comisiones-operador).
+ */
 class StoreComisionOperadorRequest extends FormRequest
 {
+    /**
+     * @return bool
+     */
     public function authorize(): bool
     {
         return $this->user()->hasRole(['admin', 'super_admin']);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return [

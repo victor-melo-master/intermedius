@@ -31,10 +31,17 @@
 </template>
 
 <script setup>
+/**
+ * OperacionMonedaView — Pantalla de selección de moneda para nueva operación.
+ * Muestra tarjetas con las monedas disponibles (USD, USDT, EUR, COP) y
+ * un enlace directo a la operación intermediada.
+ */
 import { useRouter } from 'vue-router'
 
+/** Router para navegar a la URL de nueva operación con la moneda elegida */
 const router = useRouter()
 
+/** Lista de monedas disponibles para operación directa */
 const monedas = [
   { codigo: 'USD', nombre: 'Dólar Estadounidense', icono: '💵' },
   { codigo: 'USDT', nombre: 'Tether', icono: '₮' },
@@ -42,6 +49,10 @@ const monedas = [
   { codigo: 'COP', nombre: 'Peso Colombiano', icono: '$' },
 ]
 
+/**
+ * Navega al formulario de nueva operación con la moneda seleccionada.
+ * @param {string} codigo - Código de moneda (USD, USDT, EUR, COP)
+ */
 function seleccionar(codigo) {
   router.push(`/operaciones/nueva/${codigo}`)
 }

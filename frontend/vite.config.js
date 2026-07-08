@@ -1,3 +1,8 @@
+/**
+ * Configuración de Vite para el frontend.
+ * Define el plugin de Vue, el puerto del servidor de desarrollo,
+ * el proxy inverso hacia la API y el directorio de salida para producción.
+ */
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 

@@ -12,6 +12,10 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
+/**
+ * Job programado que genera el reporte mensual de comisiones de operadores
+ * (Excel + PDF) y opcionalmente envía notificación por email a los destinatarios configurados.
+ */
 class GenerarReporteMensualComisionesJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
@@ -19,6 +23,11 @@ class GenerarReporteMensualComisionesJob implements ShouldQueue
     public int $tries = 3;
     public int $timeout = 300;
 
+    /**
+     * Execute the job.
+     *
+     * @param  ReporteComisionesOperadoresService  $service
+     */
     public function handle(ReporteComisionesOperadoresService $service): void
     {
         $desde = now()->subMonth()->startOfMonth();

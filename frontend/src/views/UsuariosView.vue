@@ -122,18 +122,32 @@
 </template>
 
 <script setup>
+/**
+ * UsuariosView — CRUD de usuarios del sistema.
+ * Permite listar, crear y editar usuarios con nombre, email, contraseña, rol,
+ * titular asociado y estado activo/inactivo. Incluye toggle de activación,
+ * badges de roles y selector de titular.
+ */
 import { ref, reactive, onMounted } from 'vue'
 import api from '../api/axios.js'
 import { useUsuariosStore } from '../stores/usuarios.js'
 
+/** Store de usuarios */
 const usuarios = useUsuariosStore()
+/** Lista de titulares para el selector del formulario */
 const titulares = ref([])
+/** Controla visibilidad del modal */
 const showForm = ref(false)
+/** Indica guardado en curso */
 const saving = ref(false)
+/** Mensaje de error del formulario */
 const formError = ref('')
+/** Indica si se está editando un usuario existente */
 const editing = ref(false)
+/** ID del usuario en edición */
 const editId = ref(null)
 
+/** Datos del formulario */
 const form = reactive({
   name: '',
   email: '',
@@ -143,6 +157,11 @@ const form = reactive({
   activo: true,
 })
 
+/**
+ * Devuelve la clase CSS del badge según el rol.
+ * @param {string} rol - Nombre del rol
+ * @returns {string}
+ */
 const roleBadgeClass = (rol) => ({
   'super_admin': 'bg-red-100 text-red-700',
   'admin':       'bg-orange-100 text-orange-700',
@@ -151,11 +170,20 @@ const roleBadgeClass = (rol) => ({
   'lectura':     'bg-gray-100 text-gray-600',
 }[rol] || 'bg-gray-100 text-gray-600')
 
+/**
+ * Formatea una fecha ISO a dd/mm/aaaa hh:mm.
+ * @param {string} d - Fecha ISO
+ * @returns {string}
+ */
 function formatDate(d) {
   if (!d) return ''
   return new Date(d).toLocaleDateString('es-VE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
+/**
+ * Abre el modal en modo creación o edición.
+ * @param {Object|null} u - Usuario a editar (null para creación)
+ */
 function openForm(u = null) {
   if (u) {
     editing.value = true
@@ -177,10 +205,16 @@ function openForm(u = null) {
   showForm.value = true
 }
 
+/** Cierra el modal */
 function closeForm() {
   showForm.value = false
 }
 
+/**
+ * Alterna el estado activo/inactivo de un usuario.
+ * @param {Object} u - Usuario a togglear
+ * @returns {Promise<void>}
+ */
 async function handleToggle(u) {
   try {
     await usuarios.toggleActivo(u)
@@ -190,6 +224,10 @@ async function handleToggle(u) {
   }
 }
 
+/**
+ * Envía el formulario para crear o actualizar un usuario.
+ * @returns {Promise<void>}
+ */
 async function submit() {
   formError.value = ''
   saving.value = true
@@ -221,6 +259,7 @@ async function submit() {
   }
 }
 
+/** Carga usuarios y lista de titulares al montar */
 onMounted(async () => {
   usuarios.fetchAll()
   try {

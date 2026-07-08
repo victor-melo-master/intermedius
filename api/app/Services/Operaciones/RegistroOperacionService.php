@@ -13,7 +13,11 @@ use App\Services\Configuracion\TasaDiariaService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
-// src/Services/Operaciones/RegistroOperacionService.php
+/**
+ * Service for registering and updating business operations with their accounting movements.
+ * Handles double-entry validation, daily rate resolution, gross profit calculation,
+ * automatic commission application, and FIFO/saldo cache job dispatching.
+ */
 class RegistroOperacionService
 {
     /**

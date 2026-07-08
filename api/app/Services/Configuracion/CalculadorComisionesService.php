@@ -12,6 +12,11 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Service for calculating and applying commissions to operations.
+ * Supports three commission types: account-level, operator-level, and payment-method fees.
+ * Handles percentage/fixed amounts, currency conversion, and total recomputation.
+ */
 class CalculadorComisionesService
 {
     public function __construct(private readonly TasaDiariaService $tasaService) {}
@@ -200,6 +205,15 @@ class CalculadorComisionesService
     /**
      * Edita una comisión ya aplicada (solo admin/super_admin).
      * Registra quién editó, cuándo y por qué, y recalcula los totales.
+     */
+    /**
+     * Edits an already applied commission (admin/super_admin only).
+     * Logs who edited, when, and why, then recalculates totals.
+     *
+     * @param  ComisionOperacion  $comision
+     * @param  array              $nuevoValor
+     * @param  \App\Models\User   $admin
+     * @param  string             $razon
      */
     public function editarComision(ComisionOperacion $comision, array $nuevoValor, \App\Models\User $admin, string $razon): void
     {

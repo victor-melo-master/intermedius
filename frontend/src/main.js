@@ -1,3 +1,8 @@
+/**
+ * Punto de entrada de la aplicación Vue 3.
+ * Inicializa la aplicación con Pinia (estado), Vue Router (navegación)
+ * y monta el componente raíz en el elemento #app.
+ */
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import App from './App.vue'

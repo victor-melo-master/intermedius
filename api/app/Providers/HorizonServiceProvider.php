@@ -6,6 +6,10 @@ use Illuminate\Support\Facades\Gate;
 use Laravel\Horizon\Horizon;
 use Laravel\Horizon\HorizonApplicationServiceProvider;
 
+/**
+ * Horizon service provider.
+ * Configures Horizon authorization gate and notification routes.
+ */
 class HorizonServiceProvider extends HorizonApplicationServiceProvider
 {
     /**

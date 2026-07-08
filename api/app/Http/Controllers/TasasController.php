@@ -7,14 +7,17 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
+/**
+ * Controlador de tasas de cambio.
+ */
 class TasasController extends Controller
 {
     private const FUENTES = ['bcv', 'paralelo', 'binance_p2p_buy', 'binance_p2p_sell'];
 
     /**
-     * GET /api/v1/tasas/actuales
-     *
      * Retorna las últimas tasas de cada fuente (cache → BD) y el spread entre ellas.
+     *
+     * @return JsonResponse
      */
     public function actuales(): JsonResponse
     {
@@ -58,9 +61,10 @@ class TasasController extends Controller
     }
 
     /**
-     * GET /api/v1/tasas/historico
+     * Histórico paginado de tasas con filtros opcionales: fuente, desde, hasta.
      *
-     * Histórico paginado con filtros opcionales: fuente, desde, hasta.
+     * @param Request $request
+     * @return JsonResponse
      */
     public function historico(Request $request): JsonResponse
     {

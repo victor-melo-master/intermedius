@@ -5,13 +5,22 @@ namespace App\Http\Requests\Configuracion;
 use App\Models\ComisionOperacion;
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Valida la solicitud para editar una comisión en una operación (PUT/PATCH /configuracion/comisiones-operacion/{comision_operacion}).
+ */
 class UpdateComisionOperacionRequest extends FormRequest
 {
+    /**
+     * @return bool
+     */
     public function authorize(): bool
     {
         return $this->user()->hasRole(['admin', 'super_admin']);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return [

@@ -5,8 +5,19 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * API Resource for transforming Operacion models into JSON responses.
+ * Includes nested relationships (movements, operator, clients, etc.)
+ * and formats monetary values as strings to avoid floating-point issues.
+ */
 class OperacionResource extends JsonResource
 {
+    /**
+     * Transform the resource into an array.
+     *
+     * @param  Request  $request
+     * @return array<string, mixed>
+     */
     public function toArray(Request $request): array
     {
         return [

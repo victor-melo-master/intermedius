@@ -8,9 +8,21 @@
 </template>
 
 <script setup>
+/**
+ * Componente de estado vacío.
+ * Muestra un icono y un mensaje cuando no hay datos que listar.
+ *
+ * @component
+ * @prop {string} icon - Icono a mostrar (emoji)
+ * @prop {string} message - Mensaje descriptivo
+ * @prop {string} subtitle - Subtítulo opcional
+ */
 defineProps({
+  /** @type {string} - Icono a mostrar (emoji) */
   icon: { type: String, default: '📄' },
+  /** @type {string} - Mensaje descriptivo */
   message: { type: String, default: 'No hay datos' },
+  /** @type {string} - Subtítulo opcional */
   subtitle: { type: String, default: '' },
 })
 </script>

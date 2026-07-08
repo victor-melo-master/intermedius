@@ -32,6 +32,9 @@ class SincronizarTasasReferenciaJob implements ShouldQueue
     public int $tries   = 3;
     public int $backoff = 30;
 
+    /**
+     * Execute the job: capture BCV official rate and Binance P2P USDT/VES rate.
+     */
     public function handle(): void
     {
         $ahora     = now();
@@ -105,6 +108,16 @@ class SincronizarTasasReferenciaJob implements ShouldQueue
         }
     }
 
+    /**
+     * Persist a tasa_mercado record.
+     *
+     * @param  string                   $fuente
+     * @param  int|null                 $baseId
+     * @param  int|null                 $cotizadaId
+     * @param  float                    $valor
+     * @param  Carbon                   $capturadoEn
+     * @param  array                    $payload
+     */
     private function guardar(string $fuente, ?int $baseId, ?int $cotizadaId, float $valor, Carbon $capturadoEn, array $payload): void
     {
         if ($baseId === null || $cotizadaId === null) {

@@ -11,12 +11,19 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 
+/**
+ * Job programado que archiva (soft-delete) clientes sin operaciones
+ * en los últimos N meses (config: sistema.clientes_meses_inactividad).
+ */
 class AutoArchivarClientesInactivos implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $tries = 1;
 
+    /**
+     * Execute the job.
+     */
     public function handle(): void
     {
         $mesesInactividad = config('sistema.clientes_meses_inactividad', 4);

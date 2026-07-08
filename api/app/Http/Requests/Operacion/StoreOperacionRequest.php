@@ -6,13 +6,22 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
 // src/Http/Requests/Operacion/StoreOperacionRequest.php
+/**
+ * Valida la solicitud para crear una operación (POST /operaciones).
+ */
 class StoreOperacionRequest extends FormRequest
 {
+    /**
+     * @return bool
+     */
     public function authorize(): bool
     {
         return $this->user()->can('create', \App\Models\Operacion::class);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return [
@@ -49,6 +58,10 @@ class StoreOperacionRequest extends FormRequest
         ];
     }
 
+    /**
+     * @param Validator $validator
+     * @return void
+     */
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $v) {

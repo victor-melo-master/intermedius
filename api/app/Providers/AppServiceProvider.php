@@ -19,13 +19,24 @@ use App\Policies\TitularPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
+/**
+ * Application service provider.
+ * Registers policy mappings for all models.
+ */
 class AppServiceProvider extends ServiceProvider
 {
+    /**
+     * Register any application services.
+     */
     public function register(): void
     {
         //
     }
 
+    /**
+     * Bootstrap any application services.
+     * Registers model policies via Gate::policy().
+     */
     public function boot(): void
     {
         Gate::policy(Titular::class,       TitularPolicy::class);

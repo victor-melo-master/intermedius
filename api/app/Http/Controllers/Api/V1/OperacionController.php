@@ -13,10 +13,20 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
+/**
+ * Controlador de operaciones financieras.
+ * CRUD de operaciones con soporte de filtros, verificación y registro.
+ */
 class OperacionController extends Controller
 {
     public function __construct(private readonly RegistroOperacionService $registroService) {}
 
+    /**
+     * Lista paginada de operaciones con filtros opcionales.
+     *
+     * @param Request $request Filtros: fecha_desde, fecha_hasta, tipo_codigo, cliente_id, operador_id, estatus, cuenta_id
+     * @return AnonymousResourceCollection Colección paginada de operaciones
+     */
     public function index(Request $request): AnonymousResourceCollection
     {
         $this->authorize('viewAny', Operacion::class);
@@ -37,6 +47,12 @@ class OperacionController extends Controller
         return OperacionResource::collection($query->paginate($perPage));
     }
 
+    /**
+     * Registra una nueva operación en el sistema.
+     *
+     * @param StoreOperacionRequest $request Datos validados de la operación
+     * @return JsonResponse Operación creada con código 201
+     */
     public function store(StoreOperacionRequest $request): JsonResponse
     {
         $operacion = $this->registroService->registrar($request->validated());
@@ -46,6 +62,13 @@ class OperacionController extends Controller
             ->setStatusCode(201);
     }
 
+    /**
+     * Actualiza una operación existente.
+     *
+     * @param UpdateOperacionRequest $request Datos validados de actualización
+     * @param Operacion $operacion Operación a modificar
+     * @return JsonResponse Operación actualizada
+     */
     public function update(UpdateOperacionRequest $request, Operacion $operacion): JsonResponse
     {
         $operacion = $this->registroService->actualizar($operacion, $request->validated(), $request->user());
@@ -55,6 +78,12 @@ class OperacionController extends Controller
             ->setStatusCode(200);
     }
 
+    /**
+     * Muestra los detalles de una operación con todas sus relaciones.
+     *
+     * @param Operacion $operacion Operación a consultar
+     * @return OperacionResource Recurso con datos completos de la operación
+     */
     public function show(Operacion $operacion): OperacionResource
 {
     $this->authorize('view', $operacion);
@@ -87,6 +116,13 @@ class OperacionController extends Controller
     return new OperacionResource($operacion);
 }
 
+    /**
+     * Verifica una operación cambiando su estatus a 'verificado'.
+     *
+     * @param VerificarOperacionRequest $request Datos validados de verificación
+     * @param Operacion $operacion Operación a verificar
+     * @return JsonResponse Operación verificada o error 422 si ya lo estaba
+     */
     public function verificar(VerificarOperacionRequest $request, Operacion $operacion): JsonResponse
     {
         if ($operacion->estatus === 'verificado') {
@@ -104,6 +140,12 @@ class OperacionController extends Controller
         return (new OperacionResource($operacion->fresh(['tipoOperacion', 'operador', 'verificadoPor'])))->response();
     }
 
+    /**
+     * Bloquea la eliminación de operaciones (no permitido).
+     *
+     * @param Operacion $operacion Operación que se intenta eliminar
+     * @return JsonResponse Respuesta 405 (Método no permitido)
+     */
     public function destroy(Operacion $operacion): JsonResponse
     {
         return response()->json([

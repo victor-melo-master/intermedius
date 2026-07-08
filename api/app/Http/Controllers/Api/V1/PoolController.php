@@ -9,6 +9,10 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
+/**
+ * Controlador del pool de órdenes para pagadores.
+ * Gestiona la asignación, liberación, pago y cancelación de órdenes pendientes.
+ */
 class PoolController extends Controller
 {
     /**
@@ -26,9 +30,10 @@ class PoolController extends Controller
     ];
 
     /**
-     * GET /api/v1/pool
-     * Lista las órdenes PENDIENTES del pool (sin asignar).
-     * Más antiguas primero.
+     * Lista las órdenes pendientes del pool (sin asignar), más antiguas primero.
+     *
+     * @param Request $request Parámetro opcional 'per_page' para paginación
+     * @return AnonymousResourceCollection Colección paginada de órdenes pendientes
      */
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -43,8 +48,10 @@ class PoolController extends Controller
     }
 
     /**
-     * GET /api/v1/pool/mis-ordenes
-     * Lista las órdenes ASIGNADAS al pagador autenticado.
+     * Lista las órdenes asignadas al pagador autenticado.
+     *
+     * @param Request $request Parámetro opcional 'per_page' para paginación
+     * @return AnonymousResourceCollection Colección paginada de órdenes asignadas
      */
     public function misOrdenes(Request $request): AnonymousResourceCollection
     {
@@ -59,8 +66,11 @@ class PoolController extends Controller
     }
 
     /**
-     * POST /api/v1/pool/{operacion}/tomar
-     * El pagador toma una orden pendiente.
+     * Asigna una orden pendiente al pagador autenticado.
+     *
+     * @param Request $request Datos de la solicitud (usuario autenticado)
+     * @param Operacion $operacion Orden a tomar
+     * @return JsonResponse Orden asignada o error 422 si ya fue tomada
      */
     public function tomar(Request $request, Operacion $operacion): JsonResponse
     {
@@ -80,8 +90,11 @@ class PoolController extends Controller
     }
 
     /**
-     * POST /api/v1/pool/{operacion}/soltar
-     * El pagador suelta la orden y vuelve al pool.
+     * Libera una orden asignada y la devuelve al pool como pendiente.
+     *
+     * @param Request $request Datos de la solicitud (usuario autenticado)
+     * @param Operacion $operacion Orden a liberar
+     * @return JsonResponse Orden liberada o error 403/422
      */
     public function soltar(Request $request, Operacion $operacion): JsonResponse
     {
@@ -107,8 +120,11 @@ class PoolController extends Controller
     }
 
     /**
-     * POST /api/v1/pool/{operacion}/pagar
-     * El pagador marca la orden como pagada.
+     * Marca una orden asignada como pagada.
+     *
+     * @param Request $request Datos de la solicitud (usuario autenticado)
+     * @param Operacion $operacion Orden a marcar como pagada
+     * @return JsonResponse Orden actualizada o error 403/422
      */
     public function marcarPagada(Request $request, Operacion $operacion): JsonResponse
     {
@@ -133,8 +149,11 @@ class PoolController extends Controller
     }
 
     /**
-     * POST /api/v1/pool/{operacion}/cancelar
-     * Solo admin|super_admin. Requiere motivo_cancelacion.
+     * Cancela una orden (solo admin/super_admin). Requiere motivo de cancelación.
+     *
+     * @param Request $request Debe incluir 'motivo_cancelacion'
+     * @param Operacion $operacion Orden a cancelar
+     * @return JsonResponse Orden cancelada o error 422
      */
     public function cancelar(Request $request, Operacion $operacion): JsonResponse
     {

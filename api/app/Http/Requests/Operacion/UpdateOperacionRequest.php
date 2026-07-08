@@ -5,8 +5,14 @@ namespace App\Http\Requests\Operacion;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
+/**
+ * Valida la solicitud para actualizar una operación (PUT/PATCH /operaciones/{operacion}).
+ */
 class UpdateOperacionRequest extends FormRequest
 {
+    /**
+     * @return bool
+     */
     public function authorize(): bool
     {
         $operacion = $this->route('operacion');
@@ -28,6 +34,9 @@ class UpdateOperacionRequest extends FormRequest
         return false;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return [
@@ -52,6 +61,10 @@ class UpdateOperacionRequest extends FormRequest
         ];
     }
 
+    /**
+     * @param Validator $validator
+     * @return void
+     */
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $v) {
@@ -75,6 +88,9 @@ class UpdateOperacionRequest extends FormRequest
         });
     }
 
+    /**
+     * @return array<string, string>
+     */
     public function messages(): array
     {
         return [

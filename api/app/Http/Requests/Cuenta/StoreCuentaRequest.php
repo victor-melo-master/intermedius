@@ -5,13 +5,22 @@ namespace App\Http\Requests\Cuenta;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
+/**
+ * Valida la solicitud para crear una cuenta (POST /cuentas).
+ */
 class StoreCuentaRequest extends FormRequest
 {
+    /**
+     * @return bool
+     */
     public function authorize(): bool
     {
         return $this->user()->can('create', \App\Models\Cuenta::class);
     }
 
+    /**
+     * @return void
+     */
     protected function prepareForValidation(): void
     {
         if ($this->tipo === 'efectivo' && !$this->filled('titular_id') && !$this->filled('cliente_id')) {
@@ -19,6 +28,9 @@ class StoreCuentaRequest extends FormRequest
         }
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         $titularId = $this->input('titular_id');

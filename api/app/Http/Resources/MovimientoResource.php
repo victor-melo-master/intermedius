@@ -5,8 +5,18 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * API Resource for transforming Movimiento (movement) models into JSON responses.
+ * Includes nested cuenta, banco, titular, cliente and moneda relationships.
+ */
 class MovimientoResource extends JsonResource
 {
+    /**
+     * Transform the resource into an array.
+     *
+     * @param  Request  $request
+     * @return array<string, mixed>
+     */
     public function toArray(Request $request): array
     {
         return [

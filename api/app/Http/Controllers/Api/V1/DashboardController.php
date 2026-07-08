@@ -11,8 +11,17 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
+/**
+ * Controlador del dashboard principal.
+ * Provee tasas vigentes, referencia de mercado, alertas y resumen de operaciones.
+ */
 class DashboardController extends Controller
 {
+    /**
+     * Obtiene las tasas vigentes, referencias de mercado (BCV/Binance) y alertas.
+     *
+     * @return JsonResponse Tasas vigentes, referencia de mercado y alertas del sistema
+     */
     public function general(): JsonResponse
     {
         // ── Tasas vigentes (operativas, definidas por admin) ──────────────────

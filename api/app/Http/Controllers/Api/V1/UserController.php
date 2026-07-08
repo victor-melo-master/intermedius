@@ -10,8 +10,15 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 
+/**
+ * Controlador de usuarios del sistema.
+ * Gestiona el CRUD de usuarios (alta, baja, modificación y listado).
+ */
 class UserController extends Controller
 {
+    /**
+     * Obtiene la lista de todos los usuarios activos con su titular.
+     */
     public function index(): JsonResponse
     {
         $usuarios = User::with('titular')
@@ -23,6 +30,12 @@ class UserController extends Controller
         return response()->json($usuarios);
     }
 
+    /**
+     * Crea un nuevo usuario con rol y lo asigna al sistema.
+     *
+     * @param Request $request Datos del usuario (name, email, password, rol, titular_id, activo)
+     * @return JsonResponse Usuario creado con código 201
+     */
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -47,6 +60,13 @@ class UserController extends Controller
         return response()->json($this->formatUser($usuario->load('titular')), 201);
     }
 
+    /**
+     * Actualiza los datos de un usuario existente.
+     *
+     * @param Request $request Datos a actualizar (parcial o total)
+     * @param User $usuario Modelo del usuario a modificar
+     * @return JsonResponse Usuario actualizado
+     */
     public function update(Request $request, User $usuario): JsonResponse
     {
         $validated = $request->validate([
@@ -73,6 +93,12 @@ class UserController extends Controller
         return response()->json($this->formatUser($usuario->fresh('titular')));
     }
 
+    /**
+     * Desactiva (borrado lógico) un usuario.
+     *
+     * @param User $usuario Modelo del usuario a desactivar
+     * @return JsonResponse Usuario desactivado
+     */
     public function destroy(User $usuario): JsonResponse
     {
         $usuario->update(['activo' => false]);

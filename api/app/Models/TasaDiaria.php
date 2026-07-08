@@ -11,6 +11,31 @@ use Illuminate\Support\Carbon;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
+/**
+ * Tasas de cambio diarias configuradas manualmente para el sistema.
+ *
+ * @property int $id
+ * @property \Illuminate\Support\Carbon $fecha
+ * @property int $moneda_base_id
+ * @property int $moneda_cotizada_id
+ * @property string $tasa_compra
+ * @property string|null $tasa_compra_minima
+ * @property string $tasa_venta
+ * @property string|null $tasa_venta_minima
+ * @property int|null $definida_por_id
+ * @property string|null $notas
+ * @property \Illuminate\Support\Carbon|null $vigente_desde
+ * @property \Illuminate\Support\Carbon|null $vigente_hasta
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ *
+ * @property-read \App\Models\Moneda|null $monedaBase
+ * @property-read \App\Models\Moneda|null $monedaCotizada
+ * @property-read \App\Models\User|null $definidaPor
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Operacion> $operaciones
+ *
+ * @method static \Illuminate\Database\Eloquent\Builder|static vigentes(\Illuminate\Support\Carbon|null $momento = null)
+ */
 class TasaDiaria extends Model
 {
     use HasFactory, LogsActivity;
@@ -72,21 +97,33 @@ class TasaDiaria extends Model
         };
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Moneda>
+     */
     public function monedaBase(): BelongsTo
     {
         return $this->belongsTo(Moneda::class, 'moneda_base_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Moneda>
+     */
     public function monedaCotizada(): BelongsTo
     {
         return $this->belongsTo(Moneda::class, 'moneda_cotizada_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\User>
+     */
     public function definidaPor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'definida_por_id');
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Operacion>
+     */
     public function operaciones(): HasMany
     {
         return $this->hasMany(Operacion::class);

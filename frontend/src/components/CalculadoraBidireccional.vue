@@ -32,6 +32,31 @@
 </template>
 
 <script setup>
+/**
+ * Componente de calculadora bidireccional de tasas.
+ * Permite ingresar monto, tasa y bolívares con validación de tasa desfavorable.
+ *
+ * @component
+ * @prop {string|number} monto - Monto en moneda origen
+ * @prop {string|number} bolivares - Monto en moneda quote (bolívares)
+ * @prop {string|number} tasa - Tasa de cambio
+ * @prop {string} tipo - Tipo de operación ('compra' | 'venta')
+ * @prop {string} moneda - Código de moneda origen
+ * @prop {string} quoteCodigo - Código de moneda quote
+ * @prop {string} quoteSimbolo - Símbolo de moneda quote
+ * @prop {string} quoteNombre - Nombre de moneda quote
+ * @prop {string} parStr - Representación del par (ej. "USD/BS")
+ * @prop {string|number|null} tasaSugerida - Tasa sugerida del día
+ * @prop {boolean} desfavorable - Indica si la tasa es desfavorable para la casa
+ * @emit {string|number} update:monto - Actualiza el monto
+ * @emit {string|number} update:bolivares - Actualiza los bolívares
+ * @emit {string|number} update:tasa - Actualiza la tasa
+ */
+/**
+ * Formatea un valor numérico a 2 decimales.
+ * @param {string|number} val - Valor a formatear
+ * @returns {string} Valor formateado o cadena vacía si no es numérico
+ */
 function formatTasa(val) {
   const n = parseFloat(val)
   if (isNaN(n)) return ''
@@ -39,16 +64,27 @@ function formatTasa(val) {
 }
 
 defineProps({
+  /** @type {string|number} - Monto en moneda origen */
   monto: [String, Number],
+  /** @type {string|number} - Monto en moneda quote */
   bolivares: [String, Number],
+  /** @type {string|number} - Tasa de cambio */
   tasa: [String, Number],
+  /** @type {string} - Tipo de operación ('compra' | 'venta') */
   tipo: String,
+  /** @type {string} - Código de moneda origen */
   moneda: String,
+  /** @type {string} - Código de moneda quote */
   quoteCodigo: String,
+  /** @type {string} - Símbolo de moneda quote */
   quoteSimbolo: String,
+  /** @type {string} - Nombre de moneda quote */
   quoteNombre: String,
+  /** @type {string} - Representación del par */
   parStr: String,
+  /** @type {string|number|null} - Tasa sugerida del día */
   tasaSugerida: [String, Number, null],
+  /** @type {boolean} - Indica si la tasa es desfavorable */
   desfavorable: Boolean,
 })
 defineEmits(['update:monto', 'update:bolivares', 'update:tasa'])

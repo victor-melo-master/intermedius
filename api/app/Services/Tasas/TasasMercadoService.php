@@ -5,6 +5,10 @@ namespace App\Services\Tasas;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
+/**
+ * Service for fetching market exchange rates from external APIs.
+ * Sources: BCV (via dolarapi.com) and Binance P2P (USDT/VES).
+ */
 class TasasMercadoService
 {
     private const DOLAR_API_BASE = 'https://ve.dolarapi.com/v1/dolares';

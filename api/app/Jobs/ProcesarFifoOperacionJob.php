@@ -8,12 +8,24 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 
+/**
+ * Job para procesar la asignación FIFO de una operación sobre lotes de inventario.
+ * TODO Fase 4: delegar a FifoService::procesarOperacion().
+ */
 class ProcesarFifoOperacionJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    /**
+     * Create a new job instance.
+     *
+     * @param  int  $operacionId  ID de la operación a procesar.
+     */
     public function __construct(public readonly int $operacionId) {}
 
+    /**
+     * Execute the job.
+     */
     public function handle(): void
     {
         // TODO Fase 4: FifoService::procesarOperacion($this->operacionId).

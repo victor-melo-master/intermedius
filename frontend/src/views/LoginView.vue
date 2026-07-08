@@ -38,14 +38,27 @@
 </template>
 
 <script setup>
+/**
+ * LoginView — Pantalla de inicio de sesión del sistema.
+ * Formulario simple de email/contraseña que consume el store de autenticación
+ * y redirige al dashboard en caso de éxito.
+ */
 import { reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth.js'
 
+/** Router para redirigir tras login exitoso */
 const router = useRouter()
+/** Store de autenticación */
 const auth = useAuthStore()
+/** Datos del formulario de login */
 const form = reactive({ email: '', password: '' })
 
+/**
+ * Envía las credenciales al store de autenticación.
+ * Si es exitoso, redirige al dashboard.
+ * @returns {Promise<void>}
+ */
 async function submit() {
   const ok = await auth.login(form.email, form.password)
   if (ok) router.push('/dashboard')

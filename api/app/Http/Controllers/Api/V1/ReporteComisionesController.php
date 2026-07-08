@@ -10,10 +10,20 @@ use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\Support\Carbon;
 
+/**
+ * Controlador de reportes de comisiones de operadores.
+ * Genera, exporta y lista el histórico de comisiones calculadas.
+ */
 class ReporteComisionesController extends Controller
 {
     public function __construct(private readonly ReporteComisionesOperadoresService $service) {}
 
+    /**
+     * Genera el reporte de comisiones para un rango de fechas.
+     *
+     * @param Request $request Parámetros 'desde' y 'hasta' (fechas)
+     * @return JsonResponse Datos del reporte generado
+     */
     public function index(Request $request): JsonResponse
     {
         $request->validate([
@@ -29,6 +39,12 @@ class ReporteComisionesController extends Controller
         return response()->json(['data' => $reporte]);
     }
 
+    /**
+     * Exporta el reporte de comisiones en formato Excel o PDF.
+     *
+     * @param Request $request Parámetros 'desde', 'hasta' y 'formato' (excel|pdf)
+     * @return JsonResponse|StreamedResponse URL del archivo exportado
+     */
     public function exportar(Request $request): JsonResponse|StreamedResponse
     {
         $request->validate([
@@ -55,6 +71,11 @@ class ReporteComisionesController extends Controller
         ]);
     }
 
+    /**
+     * Lista el histórico de reportes exportados con sus metadatos.
+     *
+     * @return JsonResponse Lista de archivos ordenados por fecha de modificación
+     */
     public function historico(): JsonResponse
     {
         $base  = config('reportes.comisiones_operadores.storage_path');

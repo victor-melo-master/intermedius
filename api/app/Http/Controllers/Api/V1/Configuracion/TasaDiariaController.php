@@ -10,10 +10,20 @@ use App\Services\Configuracion\TasaDiariaService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+/**
+ * Controlador de tasas diarias.
+ * Publica, consulta y lista el historial de tasas de cambio.
+ */
 class TasaDiariaController extends Controller
 {
     public function __construct(private readonly TasaDiariaService $service) {}
 
+    /**
+     * Lista las tasas diarias para una fecha y monedas opcionales.
+     *
+     * @param Request $request Parámetros: fecha, moneda_base_id, moneda_cotizada_id
+     * @return JsonResponse Lista de tasas del día
+     */
     public function index(Request $request): JsonResponse
     {
         $fecha = $request->date('fecha', 'Y-m-d') ?? now()->toDateString();
@@ -32,6 +42,12 @@ class TasaDiariaController extends Controller
         return response()->json(['data' => $query->get()]);
     }
 
+    /**
+     * Publica una nueva tasa diaria.
+     *
+     * @param StoreTasaDiariaRequest $request Datos validados de la tasa
+     * @return JsonResponse Tasa creada con código 201
+     */
     public function store(StoreTasaDiariaRequest $request): JsonResponse
     {
         $tasa = $this->service->publicar($request->validated(), $request->user());
@@ -41,6 +57,11 @@ class TasaDiariaController extends Controller
         return response()->json(['data' => $tasa], 201);
     }
 
+    /**
+     * Obtiene las tasas actualmente vigentes (sin fecha de fin).
+     *
+     * @return JsonResponse Tasas vigentes con metadatos
+     */
     public function vigentes(): JsonResponse
     {
         $tasas = TasaDiaria::with(['monedaBase', 'monedaCotizada', 'definidaPor'])
@@ -64,6 +85,13 @@ class TasaDiariaController extends Controller
         return response()->json(['data' => $tasas]);
     }
 
+    /**
+     * Obtiene el historial de tasas para un par de monedas.
+     *
+     * @param int $base ID de la moneda base
+     * @param int $cotizada ID de la moneda cotizada
+     * @return JsonResponse Historial paginado de tasas
+     */
     public function historial(int $base, int $cotizada): JsonResponse
     {
         $tasas = TasaDiaria::with(['definidaPor'])

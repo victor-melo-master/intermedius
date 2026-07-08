@@ -51,21 +51,42 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+/**
+ * ReportesView — Generación de reportes descargables.
+ * Permite consultar y exportar comisiones por operador en un rango de fechas.
+ * Los datos se muestran en tarjetas y se pueden exportar a Excel.
+ */
+import { ref } from 'vue'
 import api from '../api/axios.js'
 
+/** Fecha de inicio del reporte (primer día del mes actual) */
 const desde = ref(new Date().toISOString().slice(0, 8) + '01')
+/** Fecha de fin del reporte (hoy) */
 const hasta = ref(new Date().toISOString().slice(0, 10))
+/** Indica carga de la consulta */
 const loading = ref(false)
+/** Indica generación de exportación */
 const exporting = ref(false)
+/** Mensaje de error */
 const error = ref('')
+/** Datos del reporte consultado */
 const data = ref([])
+/** Indica si ya se realizó una consulta */
 const loaded = ref(false)
 
+/**
+ * Formatea un número con 2 decimales.
+ * @param {number|string} n
+ * @returns {string}
+ */
 function format(n) {
   return new Intl.NumberFormat('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n)
 }
 
+/**
+ * Consulta el reporte de comisiones por operador en el rango de fechas.
+ * @returns {Promise<void>}
+ */
 async function buscar() {
   error.value = ''
   loading.value = true
@@ -84,6 +105,10 @@ async function buscar() {
   }
 }
 
+/**
+ * Exporta el reporte a Excel.
+ * @returns {Promise<void>}
+ */
 async function exportar() {
   error.value = ''
   exporting.value = true

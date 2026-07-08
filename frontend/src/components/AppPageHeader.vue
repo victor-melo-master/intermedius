@@ -13,8 +13,19 @@
 </template>
 
 <script setup>
+/**
+ * Componente de encabezado de página.
+ * Muestra un título y un botón de acción lateral.
+ *
+ * @component
+ * @prop {string} title - Título de la página
+ * @prop {string} actionLabel - Etiqueta del botón de acción (vacio = oculto)
+ * @emit {void} action - Evento emitido al hacer clic en el botón de acción
+ */
 defineProps({
+  /** @type {string} - Título de la página */
   title: { type: String, required: true },
+  /** @type {string} - Etiqueta del botón de acción */
   actionLabel: { type: String, default: '' },
 })
 defineEmits(['action'])

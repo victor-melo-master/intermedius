@@ -96,6 +96,11 @@
 </template>
 
 <script setup>
+/**
+ * ComisionesView — Reporte y gestión de comisiones por método de pago.
+ * Permite listar, crear, editar y desactivar comisiones (porcentuales o monto fijo)
+ * asociadas a monedas y cuentas, con fechas de vigencia.
+ */
 import { ref, reactive, onMounted } from 'vue'
 import api from '../api/axios.js'
 import AppPageHeader from '../components/AppPageHeader.vue'
@@ -103,17 +108,28 @@ import AppLoadingSpinner from '../components/AppLoadingSpinner.vue'
 import AppErrorState from '../components/AppErrorState.vue'
 import AppEmptyState from '../components/AppEmptyState.vue'
 
+/** Lista de comisiones cargadas */
 const comisiones = ref([])
+/** Catálogo de monedas disponibles */
 const monedas = ref([])
+/** Catálogo de cuentas disponibles */
 const cuentas = ref([])
+/** Indica carga de comisiones */
 const loading = ref(false)
+/** Mensaje de error general */
 const error = ref('')
+/** Controla visibilidad del modal */
 const showForm = ref(false)
+/** Indica guardado en curso */
 const saving = ref(false)
+/** Mensaje de error del formulario */
 const formError = ref('')
+/** ID de la comisión en edición */
 const editingId = ref(null)
+/** ID de la comisión que se está desactivando */
 const savingId = ref(null)
 
+/** Datos del formulario de comisión */
 const form = reactive({
   nombre_metodo: '',
   descripcion: '',
@@ -126,14 +142,17 @@ const form = reactive({
   activa: true,
 })
 
+/**
+ * Obtiene la lista de comisiones desde la API.
+ * @returns {Promise<void>}
+ */
 async function fetchComisiones() {
   loading.value = true
   error.value = ''
   try {
     const { data } = await api.get('/configuracion/comisiones-metodo-pago')
-    // El backend devuelve { data: { current_page, data: [...], ... } }
     const paginated = data.data || data
-    comisiones.value = paginated.data || []  // array de items
+    comisiones.value = paginated.data || []
   } catch (err) {
     error.value = err.response?.data?.message || err.message
   } finally {
@@ -141,6 +160,10 @@ async function fetchComisiones() {
   }
 }
 
+/**
+ * Obtiene catálogos de monedas y cuentas en paralelo.
+ * @returns {Promise<void>}
+ */
 async function fetchCatalogos() {
   try {
     const [monedasRes, cuentasRes] = await Promise.all([
@@ -152,6 +175,7 @@ async function fetchCatalogos() {
   } catch {}
 }
 
+/** Abre el modal en modo creación */
 function openForm() {
   editingId.value = null
   Object.assign(form, {
@@ -169,6 +193,10 @@ function openForm() {
   showForm.value = true
 }
 
+/**
+ * Abre el modal en modo edición con datos precargados.
+ * @param {Object} c - Comisión a editar
+ */
 function editComision(c) {
   editingId.value = c.id
   Object.assign(form, {
@@ -186,10 +214,15 @@ function editComision(c) {
   showForm.value = true
 }
 
+/** Cierra el modal */
 function closeForm() {
   showForm.value = false
 }
 
+/**
+ * Envía el formulario para crear o actualizar la comisión.
+ * @returns {Promise<void>}
+ */
 async function submit() {
   formError.value = ''
   saving.value = true
@@ -224,6 +257,11 @@ async function submit() {
   }
 }
 
+/**
+ * Desactiva (elimina) una comisión.
+ * @param {Object} c - Comisión a desactivar
+ * @returns {Promise<void>}
+ */
 async function deactivateComision(c) {
   if (!confirm(`¿Desactivar la comisión "${c.nombre_metodo}"?`)) return
   savingId.value = c.id
@@ -237,6 +275,7 @@ async function deactivateComision(c) {
   }
 }
 
+/** Carga comisiones y catálogos al montar el componente */
 onMounted(() => {
   fetchComisiones()
   fetchCatalogos()

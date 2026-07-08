@@ -137,26 +137,49 @@
 </template>
 
 <script setup>
+/**
+ * PoolView — Pool de pagadores para operadores.
+ * Permite ver órdenes pendientes ("Pool"), tomar órdenes, ver órdenes asignadas ("Mis órdenes"),
+ * soltarlas de vuelta al pool, marcarlas como pagadas, y copiar datos de pago al portapapeles.
+ * El pool se refresca automáticamente cada 30 segundos.
+ */
 import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { usePoolStore } from '../stores/pool.js'
 
+/** Store del pool de pagos */
 const store = usePoolStore()
+/** Pestaña activa: 'pool' | 'mias' */
 const tab = ref('pool')
+/** ID de la orden sobre la que se está ejecutando una acción */
 const acting = ref(null)
+/** ID de la orden cuyo texto fue copiado (para feedback visual) */
 const copiedId = ref(null)
+/** Estado del toast de notificación */
 const toast = ref({ msg: '', error: false })
+/** Timer de refresco automático */
 let refreshTimer = null
+/** Timer para ocultar el toast */
 let toastTimer = null
+/** Timer para resetear el estado de copiado */
 let copyTimer = null
 
-// ── Toast helper ──
+/**
+ * Muestra un toast de notificación.
+ * @param {string} msg - Mensaje a mostrar
+ * @param {boolean} [error=false] - Si es un mensaje de error
+ */
 function showToast(msg, error = false) {
   toast.value = { msg, error }
   clearTimeout(toastTimer)
   toastTimer = setTimeout(() => { toast.value = { msg: '', error: false } }, 3000)
 }
 
-// ── Movimiento de pago (cuenta destino) ──
+/**
+ * Obtiene el movimiento de pago (cuenta destino) de una operación.
+ * Busca primero un movimiento con cliente asociado, luego el primer negativo, o el primero disponible.
+ * @param {Object} op - Operación del pool
+ * @returns {Object|null}
+ */
 function pagoMov(op) {
   const movs = op.movimientos || []
   return movs.find(m => m.cuenta?.cliente)
@@ -165,26 +188,59 @@ function pagoMov(op) {
       || null
 }
 
+/**
+ * Obtiene el nombre del banco del movimiento de pago.
+ * @param {Object} op - Operación
+ * @returns {string}
+ */
 function banco(op) {
   return pagoMov(op)?.cuenta?.banco?.nombre || ''
 }
+
+/**
+ * Obtiene el número de cuenta del movimiento de pago.
+ * @param {Object} op - Operación
+ * @returns {string}
+ */
 function numeroCuenta(op) {
   return pagoMov(op)?.cuenta?.numero_cuenta || ''
 }
+
+/**
+ * Obtiene el nombre del titular/cliente del movimiento de pago.
+ * @param {Object} op - Operación
+ * @returns {string}
+ */
 function titular(op) {
   const c = pagoMov(op)?.cuenta
   return c?.cliente?.nombre || c?.titular?.nombre || c?.alias || ''
 }
+
+/**
+ * Obtiene el monto absoluto del movimiento de pago.
+ * @param {Object} op - Operación
+ * @returns {number}
+ */
 function monto(op) {
   const m = pagoMov(op)
   return m ? Math.abs(parseFloat(m.monto)) : 0
 }
+
+/**
+ * Obtiene la etiqueta de moneda (símbolo o código) del movimiento de pago.
+ * @param {Object} op - Operación
+ * @returns {string}
+ */
 function monedaLabel(op) {
   const mo = pagoMov(op)?.moneda
   return mo?.simbolo || mo?.codigo || ''
 }
 
-// ── Badges ──
+/**
+ * Genera el badge visual del tipo de operación.
+ * @param {Object} op - Operación
+ * @returns {{ label: string, class: string }}
+ */
 function tipoBadge(op) {
   const codigo = op.tipo_operacion?.codigo
   const map = {
@@ -195,16 +251,30 @@ function tipoBadge(op) {
   return map[codigo] || { label: op.tipo_operacion?.nombre || 'Operación', class: 'bg-gray-100 text-gray-600' }
 }
 
-// ── Formatos ──
+/**
+ * Formatea un número con 2 decimales.
+ * @param {number|string} n
+ * @returns {string}
+ */
 function formatMoney(n) {
   return new Intl.NumberFormat('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(parseFloat(n) || 0)
 }
+
+/**
+ * Formatea una fecha/hora ISO a dd/mm hh:mm.
+ * @param {string} d - Fecha ISO
+ * @returns {string}
+ */
 function formatHora(d) {
   if (!d) return ''
   return new Date(d).toLocaleString('es-VE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
 }
 
-// ── Acciones ──
+/**
+ * Toma una orden del pool y la asigna al operador actual.
+ * @param {Object} op - Operación a tomar
+ * @returns {Promise<void>}
+ */
 async function tomar(op) {
   acting.value = op.id
   try {
@@ -220,6 +290,11 @@ async function tomar(op) {
   }
 }
 
+/**
+ * Suelta una orden asignada de vuelta al pool.
+ * @param {Object} op - Operación a soltar
+ * @returns {Promise<void>}
+ */
 async function soltar(op) {
   acting.value = op.id
   try {
@@ -233,6 +308,11 @@ async function soltar(op) {
   }
 }
 
+/**
+ * Marca una orden como pagada.
+ * @param {Object} op - Operación a pagar
+ * @returns {Promise<void>}
+ */
 async function pagar(op) {
   acting.value = op.id
   try {
@@ -246,7 +326,11 @@ async function pagar(op) {
   }
 }
 
-// ── Copiar datos al portapapeles ──
+/**
+ * Copia los datos de pago de una orden al portapapeles.
+ * @param {Object} op - Operación
+ * @returns {Promise<void>}
+ */
 async function copiar(op) {
   const texto = [
     `Banco: ${banco(op) || '—'}`,
@@ -277,16 +361,18 @@ async function copiar(op) {
   }
 }
 
-// ── Refresh manual + auto cada 30s ──
+/** Refresca manualmente el pool */
 function refrescarPool() {
   store.fetchPool()
 }
 
+/** Al cambiar de pestaña, carga los datos correspondientes */
 watch(tab, (t) => {
   if (t === 'mias') store.fetchMisOrdenes()
   else store.fetchPool()
 })
 
+/** Inicia el refresco automático cada 30s */
 onMounted(() => {
   store.fetchPool()
   store.fetchMisOrdenes()
@@ -295,6 +381,7 @@ onMounted(() => {
   }, 30000)
 })
 
+/** Limpia timers al desmontar */
 onUnmounted(() => {
   clearInterval(refreshTimer)
   clearTimeout(toastTimer)

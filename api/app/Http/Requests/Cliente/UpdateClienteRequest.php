@@ -4,13 +4,22 @@ namespace App\Http\Requests\Cliente;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Valida la solicitud para actualizar un cliente (PUT/PATCH /clientes/{cliente}).
+ */
 class UpdateClienteRequest extends FormRequest
 {
+    /**
+     * @return bool
+     */
     public function authorize(): bool
     {
         return $this->user()->can('update', $this->route('cliente'));
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return [

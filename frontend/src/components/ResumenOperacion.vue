@@ -9,7 +9,15 @@
 </template>
 
 <script setup>
+/**
+ * Componente de resumen de operación.
+ * Muestra una lista de pares label/valor antes de confirmar una operación.
+ *
+ * @component
+ * @prop {Array<{label: string, value: string}>} items - Items del resumen
+ */
 defineProps({
+  /** @type {Array<{label: string, value: string}>} - Items del resumen */
   items: { type: Array, required: true },
 })
 </script>

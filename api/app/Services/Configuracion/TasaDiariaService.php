@@ -9,6 +9,11 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
+/**
+ * Service for managing daily exchange rates (TasaDiaria).
+ * Handles publication, lookup of vigent/last rates, rate validation against minimums,
+ * direction resolution per operation type, and currency pair identification from movements.
+ */
 class TasaDiariaService
 {
     /**

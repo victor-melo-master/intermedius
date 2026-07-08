@@ -112,6 +112,12 @@
 </template>
 
 <script setup>
+/**
+ * OperacionDetailView — Detalle individual de una operación.
+ * Muestra datos generales, movimientos (cuentas, montos, tasas) y métricas.
+ * Permite verificar (admin) y editar (con motivo) si la operación no está
+ * verificada ni cancelada.
+ */
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useOperacionesStore } from '../stores/operaciones.js'
@@ -119,15 +125,24 @@ import { useAuthStore } from '../stores/auth.js'
 import AppLoadingSpinner from '../components/AppLoadingSpinner.vue'
 import AppErrorState from '../components/AppErrorState.vue'
 
+/** Ruta actual (contiene params.id) */
 const route = useRoute()
+/** Router para navegar a edición */
 const router = useRouter()
+/** Store de operaciones */
 const ops = useOperacionesStore()
+/** Store de autenticación (permisos) */
 const auth = useAuthStore()
+/** Indica si se está verificando la operación */
 const verifying = ref(false)
+/** Controla visibilidad del modal de motivo de edición */
 const showEditModal = ref(false)
+/** Motivo ingresado para la edición */
 const motivoEdicion = ref('')
+/** Error al mostrar el modal */
 const editError = ref('')
 
+/** Indica si la operación puede ser editada (no verificada ni cancelada) */
 const puedeEditar = computed(() => {
   const op = ops.detail
   if (!op) return false
@@ -136,10 +151,16 @@ const puedeEditar = computed(() => {
   return true
 })
 
+/**
+ * Formatea un número con 2 decimales.
+ * @param {number|string} n
+ * @returns {string}
+ */
 function format(n) {
   return new Intl.NumberFormat('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n || 0)
 }
 
+/** Verifica la operación actual (cambia estatus a verificado) */
 async function verificar() {
   verifying.value = true
   try {
@@ -149,12 +170,14 @@ async function verificar() {
   verifying.value = false
 }
 
+/** Abre el modal para ingresar motivo de edición */
 function abrirEdicion() {
   motivoEdicion.value = ''
   editError.value = ''
   showEditModal.value = true
 }
 
+/** Redirige a la URL de edición con el motivo como query param */
 function guardarEdicion() {
   if (!motivoEdicion.value.trim()) return
   router.push({
@@ -163,5 +186,6 @@ function guardarEdicion() {
   })
 }
 
+/** Carga la operación al montar el componente */
 onMounted(() => ops.fetchOne(route.params.id))
 </script>

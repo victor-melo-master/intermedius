@@ -128,13 +128,22 @@
 </template>
 
 <script setup>
+/**
+ * OperacionesView — Listado de operaciones con filtros.
+ * Muestra todas las operaciones con badges de tipo y estatus,
+ * montos desde movimientos, y un modal de filtros por tipo, estatus,
+ * fechas, moneda y cliente (con autocomplete).
+ */
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useOperacionesStore } from '../stores/operaciones.js'
 import api from '../api/axios.js'
 
+/** Store de operaciones */
 const ops = useOperacionesStore()
+/** Controla visibilidad del modal de filtros */
 const showFilter = ref(false)
 
+/** Valores actuales de filtros en el modal */
 const filters = reactive({
   tipo_codigo: '',
   estatus: '',
@@ -145,17 +154,24 @@ const filters = reactive({
   moneda: '',
 })
 
+/** Parámetros activos enviados a la API (sincronizado al aplicar filtros) */
 const params = reactive({})
 
+/** Cantidad de filtros activos (para el badge del botón) */
 const activeFilterCount = computed(() =>
   ['tipo_codigo', 'estatus', 'fecha_desde', 'fecha_hasta', 'cliente_id', 'moneda'].filter(k => filters[k]).length
 )
 
-// ── Cliente autocomplete en filtro ──
+/** Término de búsqueda para autocomplete de cliente en filtro */
 const clienteSearch = ref('')
+/** Resultados de búsqueda de cliente */
 const clienteResults = ref([])
+/** Timeout para debounce del autocomplete */
 let clienteDebounce = null
 
+/**
+ * Ejecuta búsqueda de cliente con debounce de 300ms para el autocomplete.
+ */
 function onClienteSearch() {
   clearTimeout(clienteDebounce)
   clienteDebounce = setTimeout(async () => {
@@ -170,6 +186,10 @@ function onClienteSearch() {
   }, 300)
 }
 
+/**
+ * Selecciona un cliente del autocomplete.
+ * @param {Object} c - Cliente seleccionado
+ */
 function selectClienteFilter(c) {
   filters.cliente_id = c.id
   filters.cliente_nombre = c.nombre
@@ -177,12 +197,17 @@ function selectClienteFilter(c) {
   clienteResults.value = []
 }
 
+/** Limpia el filtro de cliente */
 function clearClienteFilter() {
   filters.cliente_id = ''
   filters.cliente_nombre = ''
 }
 
-// ── Badges ──
+/**
+ * Genera el badge visual del tipo de operación.
+ * @param {Object} op - Operación
+ * @returns {{ label: string, class: string }}
+ */
 function tipoBadge(op) {
   const codigo = op.tipo_operacion?.codigo
   const moneda = monedaDeOperacion(op)
@@ -200,13 +225,22 @@ function tipoBadge(op) {
   return map[codigo] || { label, class: 'bg-gray-100 text-gray-600' }
 }
 
+/**
+ * Extrae la moneda (no VES) de los movimientos de la operación.
+ * @param {Object} op - Operación
+ * @returns {string}
+ */
 function monedaDeOperacion(op) {
   const mov = (op.movimientos || []).find(m => m.moneda?.codigo !== 'VES')
   return mov?.moneda?.codigo || ''
 }
 
+/**
+ * Genera el badge visual del estatus de la operación.
+ * @param {Object} op - Operación
+ * @returns {{ label: string, class: string }}
+ */
 function estatusBadge(op) {
-  // Efectivo pendiente se infiere de la descripción (Fase 1, sin columna dedicada)
   if (/pendiente/i.test(op.descripcion || '')) {
     return { label: 'Efectivo pendiente', class: 'bg-red-100 text-red-700' }
   }
@@ -218,31 +252,55 @@ function estatusBadge(op) {
   return map[op.estatus] || { label: op.estatus, class: 'bg-gray-100 text-gray-600' }
 }
 
-// ── Montos desde movimientos ──
+/**
+ * Obtiene el monto en USD de una operación desde sus movimientos.
+ * @param {Object} op - Operación
+ * @returns {number}
+ */
 function montoUsd(op) {
   const mov = (op.movimientos || []).find(m => ['USD', 'USDT'].includes(m.moneda?.codigo))
   return mov ? Math.abs(parseFloat(mov.monto)) : 0
 }
 
+/**
+ * Obtiene el monto en VES de una operación desde sus movimientos.
+ * @param {Object} op - Operación
+ * @returns {number}
+ */
 function bolivares(op) {
   const mov = (op.movimientos || []).find(m => m.moneda?.codigo === 'VES')
   return mov ? Math.abs(parseFloat(mov.monto)) : 0
 }
 
+/**
+ * Formatea un número con 2 decimales.
+ * @param {number|string} n
+ * @returns {string}
+ */
 function formatMoney(n) {
   return new Intl.NumberFormat('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(parseFloat(n) || 0)
 }
 
+/**
+ * Formatea un número de tasa con 2-4 decimales.
+ * @param {number|string} n
+ * @returns {string}
+ */
 function formatRate(n) {
   return new Intl.NumberFormat('en', { minimumFractionDigits: 2, maximumFractionDigits: 4 }).format(parseFloat(n) || 0)
 }
 
+/**
+ * Formatea una fecha ISO a dd/mm/aaaa hh:mm.
+ * @param {string} d - Fecha ISO
+ * @returns {string}
+ */
 function formatDate(d) {
   if (!d) return ''
   return new Date(d).toLocaleString('es-VE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
-// ── Filtros ──
+/** Aplica los filtros y recarga la lista de operaciones */
 function applyFilters() {
   Object.keys(params).forEach(k => delete params[k])
   if (filters.tipo_codigo) params.tipo_codigo = filters.tipo_codigo
@@ -255,6 +313,7 @@ function applyFilters() {
   showFilter.value = false
 }
 
+/** Limpia todos los filtros y recarga la lista */
 function clearFilters() {
   Object.assign(filters, { tipo_codigo: '', estatus: '', fecha_desde: '', fecha_hasta: '', cliente_id: '', cliente_nombre: '', moneda: '' })
   Object.keys(params).forEach(k => delete params[k])
@@ -262,5 +321,6 @@ function clearFilters() {
   showFilter.value = false
 }
 
+/** Carga la lista de operaciones al montar */
 onMounted(() => ops.fetchAll())
 </script>

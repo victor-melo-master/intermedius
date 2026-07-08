@@ -6,13 +6,22 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Validation\ValidationException;
 
+/**
+ * Valida la solicitud para registrar una tasa diaria (POST /configuracion/tasas-diarias).
+ */
 class StoreTasaDiariaRequest extends FormRequest
 {
+    /**
+     * @return bool
+     */
     public function authorize(): bool
     {
         return $this->user()->hasRole(['admin', 'super_admin']);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return [
@@ -27,6 +36,10 @@ class StoreTasaDiariaRequest extends FormRequest
         ];
     }
 
+    /**
+     * @param Validator $validator
+     * @return void
+     */
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $v) {

@@ -8,8 +8,17 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
+/**
+ * Controlador de autenticación de usuarios.
+ */
 class AuthController extends Controller
 {
+    /**
+     * Autentica al usuario con credenciales y devuelve un token de API.
+     *
+     * @param LoginRequest $request
+     * @return JsonResponse
+     */
     public function login(LoginRequest $request): JsonResponse
     {
         if (! Auth::attempt($request->only('email', 'password'))) {
@@ -34,6 +43,12 @@ class AuthController extends Controller
         ]);
     }
 
+    /**
+     * Revoca el token de acceso del usuario autenticado.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
     public function logout(Request $request): JsonResponse
     {
         $request->user()->currentAccessToken()->delete();
@@ -41,6 +56,12 @@ class AuthController extends Controller
         return response()->json(['message' => 'Sesión cerrada correctamente.']);
     }
 
+    /**
+     * Devuelve la información del usuario autenticado.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
     public function me(Request $request): JsonResponse
     {
         return response()->json($this->usuarioConRol($request->user()));

@@ -13,12 +13,19 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
+/**
+ * Job programado que verifica si hay tasas diarias vigentes para los pares principales
+ * y, si faltan, envía una alerta por email a los administradores.
+ */
 class AlertarTasasFaltantesJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $tries = 2;
 
+    /**
+     * Execute the job.
+     */
     public function handle(): void
     {
         $paresPrincipales = config('sistema.pares_principales', ['USD/VES', 'USDT/VES']);

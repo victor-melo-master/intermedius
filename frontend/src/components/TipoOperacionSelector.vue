@@ -24,11 +24,29 @@
 </template>
 
 <script setup>
+/**
+ * Componente selector de tipo de operación.
+ * Permite elegir entre compra/venta y seleccionar una fecha.
+ *
+ * @component
+ * @prop {string} tipo - Tipo de operación ('compra' | 'venta')
+ * @prop {string} fecha - Fecha de la operación (formato YYYY-MM-DD)
+ * @prop {string} moneda - Código de la moneda
+ * @prop {string} quoteSimbolo - Símbolo de la moneda quote
+ * @prop {string} today - Fecha máxima permitida (hoy)
+ * @emit {string} update:tipo - Actualiza el tipo de operación
+ * @emit {string} update:fecha - Actualiza la fecha de operación
+ */
 defineProps({
+  /** @type {string} - Tipo de operación ('compra' | 'venta') */
   tipo: String,
+  /** @type {string} - Fecha de la operación */
   fecha: String,
+  /** @type {string} - Código de moneda */
   moneda: String,
+  /** @type {string} - Símbolo de moneda quote */
   quoteSimbolo: String,
+  /** @type {string} - Fecha máxima (hoy) */
   today: String,
 })
 defineEmits(['update:tipo', 'update:fecha'])

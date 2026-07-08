@@ -9,6 +9,10 @@ use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
 
+/**
+ * Service for generating and exporting operator commission reports.
+ * Supports Excel and PDF output formats.
+ */
 class ReporteComisionesOperadoresService
 {
     /**

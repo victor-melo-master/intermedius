@@ -11,12 +11,19 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
+/**
+ * Controlador de gastos (operaciones de tipo 'gasto').
+ * Lista, registra y consulta gastos del sistema.
+ */
 class GastoController extends Controller
 {
     public function __construct(private readonly RegistroOperacionService $registroService) {}
 
     /**
-     * GET /api/v1/gastos — lista operaciones de tipo gasto, paginadas.
+     * Lista paginada de operaciones de tipo gasto con filtros opcionales.
+     *
+     * @param Request $request Filtros: fecha_desde, fecha_hasta, categoria_gasto_id, operador_id
+     * @return AnonymousResourceCollection Colección paginada de gastos
      */
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -37,7 +44,10 @@ class GastoController extends Controller
     }
 
     /**
-     * POST /api/v1/gastos — registra un gasto (tipo_codigo='gasto' inyectado).
+     * Registra un nuevo gasto en el sistema.
+     *
+     * @param StoreGastoRequest $request Datos validados del gasto
+     * @return JsonResponse Gasto creado con código 201
      */
     public function store(StoreGastoRequest $request): JsonResponse
     {
@@ -49,7 +59,10 @@ class GastoController extends Controller
     }
 
     /**
-     * GET /api/v1/gastos/{operacion}
+     * Muestra los detalles de un gasto específico.
+     *
+     * @param Operacion $operacion Gasto a consultar
+     * @return OperacionResource Recurso con datos del gasto
      */
     public function show(Operacion $operacion): OperacionResource
     {

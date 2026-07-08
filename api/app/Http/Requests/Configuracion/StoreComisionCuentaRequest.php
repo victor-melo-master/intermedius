@@ -5,13 +5,22 @@ namespace App\Http\Requests\Configuracion;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Valida la solicitud para crear una comisión por cuenta (POST /configuracion/comisiones-cuenta).
+ */
 class StoreComisionCuentaRequest extends FormRequest
 {
+    /**
+     * @return bool
+     */
     public function authorize(): bool
     {
         return $this->user()->hasRole(['admin', 'super_admin']);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return [
@@ -28,6 +37,10 @@ class StoreComisionCuentaRequest extends FormRequest
         ];
     }
 
+    /**
+     * @param Validator $validator
+     * @return void
+     */
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $v) {
