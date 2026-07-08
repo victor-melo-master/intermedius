@@ -1,3 +1,4 @@
+// src/views/DashboardView.vue
 <template>
   <div class="space-y-5">
     <!-- ── Sección 1: Tasas de referencia (discreta) ───────────────────── -->

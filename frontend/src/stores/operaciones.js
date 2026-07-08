@@ -1,3 +1,4 @@
+// src/stores/operaciones.js
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import api from '../api/axios.js'

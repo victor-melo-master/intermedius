@@ -1,23 +1,11 @@
 <template>
   <div class="space-y-4">
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-      <h2 class="text-xl font-bold text-gray-800">Bancos</h2>
-      <button @click="openForm" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-1">
-        <span>+</span> Nuevo banco
-      </button>
-    </div>
+    <AppPageHeader title="Bancos" action-label="Nuevo banco" @action="openForm" />
 
-    <div v-if="bancos.loading" class="text-center py-12">
-      <div class="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
-    </div>
-    <div v-else-if="bancos.error" class="bg-red-50 text-red-600 p-4 rounded-xl">
-      {{ bancos.error }}
-      <button @click="bancos.fetchAll()" class="underline ml-2">Reintentar</button>
-    </div>
-    <div v-else-if="bancos.list.length === 0" class="text-center py-16">
-      <span class="text-5xl block mb-4">🏛️</span>
-      <p class="text-gray-500">No hay bancos registrados</p>
-    </div>
+    <AppLoadingSpinner v-if="bancos.loading" />
+    <AppErrorState v-else-if="bancos.error" :message="bancos.error" @retry="bancos.fetchAll()" />
+    <AppEmptyState v-else-if="bancos.list.length === 0" icon="🏛️" message="No hay bancos registrados" />
+
     <div v-else class="space-y-2">
       <div v-for="b in bancos.list" :key="b.id" class="bg-white border border-gray-200 rounded-xl p-4 flex items-center gap-3">
         <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-700 font-bold text-sm">
@@ -52,7 +40,7 @@
             <input v-model="form.activo" type="checkbox" class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
             Activo
           </label>
-          <div v-if="formError" class="bg-red-50 text-red-600 text-sm p-3 rounded-lg">{{ formError }}</div>
+          <AppErrorState v-if="formError" :message="formError" :retry="false" />
           <button type="submit" :disabled="saving" class="w-full bg-blue-600 text-white font-semibold py-2.5 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition flex items-center justify-center gap-2">
             <span v-if="saving" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
             {{ saving ? 'Guardando...' : (editing ? 'Guardar cambios' : 'Crear banco') }}
@@ -66,6 +54,10 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { useBancosStore } from '../stores/bancos.js'
+import AppPageHeader from '../components/AppPageHeader.vue'
+import AppLoadingSpinner from '../components/AppLoadingSpinner.vue'
+import AppErrorState from '../components/AppErrorState.vue'
+import AppEmptyState from '../components/AppEmptyState.vue'
 
 const bancos = useBancosStore()
 const showForm = ref(false)

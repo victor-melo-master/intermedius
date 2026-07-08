@@ -1,3 +1,4 @@
+// src/stores/clientes.js
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import api from '../api/axios.js'
@@ -22,6 +23,7 @@ export const useClientesStore = defineStore('clientes', () => {
 
   async function create(body) {
     const { data } = await api.post('/clientes', body)
+    // console.log('Data response post /clientes:', data)
     return data
   }
 

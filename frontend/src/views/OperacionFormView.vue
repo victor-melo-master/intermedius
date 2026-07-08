@@ -1,4 +1,3 @@
-<!-- src/views/OperacionFormView.vue -->
 <template>
   <div class="max-w-2xl mx-auto space-y-4 pb-10">
     <div class="flex items-center gap-3 mb-2">
@@ -42,28 +41,7 @@
       </div>
 
       <!-- Cliente -->
-      <div class="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
-        <h3 class="font-semibold text-gray-700">Cliente</h3>
-        <div v-if="form.cliente_id" class="flex items-center justify-between bg-blue-50 rounded-lg px-3 py-2">
-          <span class="text-sm text-blue-700 font-medium">{{ form.cliente_nombre }}</span>
-          <button type="button" @click="clearCliente" class="text-xs text-blue-500 hover:text-blue-700">Cambiar</button>
-        </div>
-        <div v-else class="relative">
-          <input v-model="clienteSearch" @input="onClienteSearch" type="text" placeholder="Buscar cliente por nombre..."
-            class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" />
-          <div v-if="clienteSearch && (clienteResults.length || !searchingCliente)"
-            class="absolute z-20 left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-56 overflow-y-auto">
-            <button v-for="c in clienteResults" :key="c.id" type="button" @click="selectCliente(c)"
-              class="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 border-b border-gray-100 last:border-0">
-              {{ c.nombre }} <span v-if="c.alias" class="text-gray-400">· {{ c.alias }}</span>
-            </button>
-            <button type="button" @click="crearClienteInline"
-              class="w-full text-left px-4 py-2.5 text-sm text-blue-600 font-medium hover:bg-blue-50">
-              + Crear cliente "{{ clienteSearch }}"
-            </button>
-          </div>
-        </div>
-      </div>
+      <ClienteSelector v-model="clienteSeleccionado" @cuenta-agregada="recargarCuentas" />
 
       <!-- Monto y tasa -->
       <div class="bg-white border border-gray-200 rounded-xl p-5 space-y-4">
@@ -100,7 +78,7 @@
       <!-- Cuentas -->
       <div class="bg-white border border-gray-200 rounded-xl p-5 space-y-4">
         <h3 class="font-semibold text-gray-700">Cuentas involucradas</h3>
-        <div v-if="loadingCuentas" class="text-center py-4 text-gray-400 text-sm">Cargando cuentas...</div>
+        <AppLoadingSpinner v-if="loadingCuentas" />
         <div v-else-if="cuentas.length === 0" class="bg-amber-50 border border-amber-200 text-amber-700 text-sm p-4 rounded-lg">
           ⚠️ No hay cuentas configuradas. Crea al menos una cuenta {{ monedaSel }} y una {{ quoteCodigo }} en <strong>Cuentas</strong>.
         </div>
@@ -108,9 +86,8 @@
           <div>
             <label class="block text-sm text-gray-600 mb-1">
               {{ form.tipo === 'venta' ? `Cuenta ${monedaSel} desde donde entregas` : `Cuenta ${monedaSel} donde recibes` }}
-              <span v-if="!cuentaForeignRequerida" class="text-gray-400 font-normal">(opcional para efectivo)</span>
             </label>
-            <select v-model="form.cuenta_usd_id" :required="cuentaForeignRequerida"
+            <select v-model="form.cuenta_usd_id" required
               class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none bg-white">
               <option value="">Seleccionar cuenta {{ monedaSel }}</option>
               <option v-for="c in cuentasForeign" :key="c.id" :value="c.id">{{ cuentaLabel(c) }}</option>
@@ -121,18 +98,12 @@
             <label class="block text-sm text-gray-600 mb-1">
               {{ form.tipo === 'venta' ? `Cuenta ${quoteCodigo} donde recibes` : `Cuenta ${quoteCodigo} desde donde pagas` }} *
             </label>
-            <div v-if="form.cliente_id && loadingClienteCuentas" class="text-xs text-gray-400 py-2">Cargando cuentas del cliente...</div>
-            <div v-else-if="form.cliente_id && !loadingClienteCuentas && cuentasQuote.length === 0" class="bg-amber-50 border border-amber-200 text-amber-700 text-sm p-3 rounded-lg">
-              Este cliente no tiene cuentas registradas. Agrégalas en el módulo de Clientes.
-            </div>
-            <template v-else>
-              <select v-model="form.cuenta_ves_id" required
-                class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none bg-white">
-                <option value="">Seleccionar cuenta {{ quoteCodigo }}</option>
-                <option v-for="c in cuentasQuote" :key="c.id" :value="c.id">{{ cuentaLabel(c) }}</option>
-              </select>
-              <p v-if="!form.cliente_id && cuentasQuote.length === 0" class="text-xs text-amber-500 mt-1">No hay cuentas en {{ quoteCodigo }}.</p>
-            </template>
+            <select v-model="form.cuenta_ves_id" required
+              class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+              <option value="">Seleccionar cuenta {{ quoteCodigo }}</option>
+              <option v-for="c in cuentasQuote" :key="c.id" :value="c.id">{{ cuentaLabel(c) }}</option>
+            </select>
+            <p v-if="cuentasQuote.length === 0" class="text-xs text-amber-500 mt-1">No hay cuentas en {{ quoteCodigo }}. Agregá una cuenta al cliente o usá una de la casa.</p>
           </div>
           <div>
             <label class="block text-sm text-gray-600 mb-1">Estado de entrega</label>
@@ -146,7 +117,7 @@
         </template>
       </div>
 
-      <!-- Comisión (cuenta de salida) -->
+      <!-- Comisión -->
       <div class="bg-white border border-gray-200 rounded-xl p-5 space-y-4">
         <div class="flex items-center justify-between gap-3">
           <div>
@@ -198,7 +169,7 @@
       <div v-if="resumenVisible" class="bg-slate-50 border border-slate-200 rounded-xl p-5 space-y-2 text-sm">
         <h3 class="font-semibold text-gray-700 mb-2">Resumen</h3>
         <div class="flex justify-between"><span class="text-gray-500">Tipo</span><span class="font-medium">{{ form.tipo === 'venta' ? `Venta de ${monedaSel}` : `Compra de ${monedaSel}` }}</span></div>
-        <div class="flex justify-between"><span class="text-gray-500">Cliente</span><span class="font-medium">{{ form.cliente_nombre || 'Sin cliente' }}</span></div>
+        <div class="flex justify-between"><span class="text-gray-500">Cliente</span><span class="font-medium">{{ clienteSeleccionado.nombre || 'Sin cliente' }}</span></div>
         <div class="flex justify-between"><span class="text-gray-500">Monto {{ monedaSel }}</span><span class="font-medium">{{ simbolo }} {{ formatMoney(form.monto_usd) }}</span></div>
         <div class="flex justify-between"><span class="text-gray-500">Tasa</span><span class="font-medium">{{ form.tasa }}</span></div>
         <div class="flex justify-between"><span class="text-gray-500">{{ quoteNombre }}</span><span class="font-medium">{{ quoteSimbolo }} {{ formatMoney(bolivares) }}</span></div>
@@ -208,7 +179,7 @@
         <div class="flex justify-between"><span class="text-gray-500">Entrega</span><span class="font-medium">{{ estadoEntregaLabel }}</span></div>
       </div>
 
-      <div v-if="error" class="bg-red-50 border border-red-200 text-red-600 text-sm p-4 rounded-xl whitespace-pre-line">{{ error }}</div>
+      <AppErrorState v-if="error" :message="error" :retry="false" />
 
       <button type="submit" :disabled="saving || cuentas.length === 0"
         class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-semibold py-3 rounded-xl transition flex items-center justify-center gap-2">
@@ -218,6 +189,7 @@
     </form>
   </div>
 </template>
+
 <script setup>
 import { reactive, ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
@@ -225,6 +197,9 @@ import { useTasasStore } from '../stores/tasas.js'
 import { useAuthStore } from '../stores/auth.js'
 import { useOperacionesStore } from '../stores/operaciones.js'
 import api from '../api/axios.js'
+import ClienteSelector from '../components/ClienteSelector.vue'
+import AppLoadingSpinner from '../components/AppLoadingSpinner.vue'
+import AppErrorState from '../components/AppErrorState.vue'
 
 const route = useRoute()
 const tasas = useTasasStore()
@@ -236,13 +211,7 @@ const error = ref('')
 const successRef = ref('')
 const cuentas = ref([])
 const loadingCuentas = ref(true)
-const clienteCuentas = ref([])
-const loadingClienteCuentas = ref(false)
-
-const clienteSearch = ref('')
-const clienteResults = ref([])
-const searchingCliente = ref(false)
-let clienteDebounce = null
+const clienteSeleccionado = ref({ id: '', nombre: '' })
 
 const today = new Date().toISOString().split('T')[0]
 
@@ -260,8 +229,6 @@ const quoteNombre = computed(() => NOMBRES[quoteCodigo.value] || 'moneda cotizad
 const form = reactive({
   tipo: 'compra',
   fecha: today,
-  cliente_id: '',
-  cliente_nombre: '',
   monto_usd: '',
   bolivares: '',
   tasa: '',
@@ -276,8 +243,6 @@ const form = reactive({
 
 const COMISION_RATE = 0.003
 
-const cuentaForeignRequerida = computed(() => true)
-
 const tipoCodigo = computed(() => (form.tipo === 'venta' ? 'venta_usd' : 'compra_usd'))
 
 const titulo = computed(() => {
@@ -285,9 +250,7 @@ const titulo = computed(() => {
   return `Nueva ${accion} ${monedaSel.value}`
 })
 
-const tasaPar = computed(() =>
-  tasas.vigentes.find(t => t.par === parStr.value) || null
-)
+const tasaPar = computed(() => tasas.vigentes.find(t => t.par === parStr.value) || null)
 
 const tasaSugerida = computed(() => {
   if (!tasaPar.value) return null
@@ -297,21 +260,17 @@ const tasaSugerida = computed(() => {
 const bolivares = computed(() => parseFloat(form.bolivares) || 0)
 
 const tipoComisionLabel = computed(() => ({
-  pago_movil:   'Pago móvil',
+  pago_movil: 'Pago móvil',
   otros_bancos: 'Otros bancos',
-  mismo_banco:  'Mismo banco',
-  manual:       'Manual',
+  mismo_banco: 'Mismo banco',
+  manual: 'Manual',
 }[form.tipo_comision] || form.tipo_comision))
 
+// ── Calculadora bidireccional ──
 let calcGuard = false
-function round2(n) {
-  return (Math.round((n + Number.EPSILON) * 100) / 100).toString()
-}
+function round2(n) { return (Math.round((n + Number.EPSILON) * 100) / 100).toString() }
 async function runGuarded(mutate) {
-  calcGuard = true
-  mutate()
-  await nextTick()
-  calcGuard = false
+  calcGuard = true; mutate(); await nextTick(); calcGuard = false
 }
 watch(() => form.monto_usd, (v) => {
   if (calcGuard) return
@@ -332,6 +291,7 @@ watch(() => form.tasa, () => {
   if (m && t) runGuarded(() => { form.bolivares = round2(m * t) })
 })
 
+// ── Comisión ──
 function recalcComision() {
   if (!form.genera_comision) return
   if (form.tipo_comision === 'mismo_banco') { form.monto_comision = '0'; return }
@@ -339,15 +299,10 @@ function recalcComision() {
     form.monto_comision = round2(bolivares.value * COMISION_RATE)
   }
 }
-watch(() => form.genera_comision, (on) => {
-  if (on) recalcComision()
-  else form.monto_comision = ''
-})
+watch(() => form.genera_comision, (on) => { if (on) recalcComision(); else form.monto_comision = '' })
 watch(() => form.tipo_comision, () => recalcComision())
 watch(bolivares, () => {
-  if (form.genera_comision && ['pago_movil', 'otros_bancos'].includes(form.tipo_comision)) {
-    recalcComision()
-  }
+  if (form.genera_comision && ['pago_movil', 'otros_bancos'].includes(form.tipo_comision)) recalcComision()
 })
 
 const tasaDesfavorable = computed(() => {
@@ -359,7 +314,7 @@ const tasaDesfavorable = computed(() => {
 
 const cuentasForeign = computed(() => cuentas.value.filter(c => c.moneda?.codigo === monedaSel.value))
 const cuentasQuote = computed(() => {
-  const pool = form.cliente_id ? clienteCuentas.value : cuentas.value
+  const pool = clienteSeleccionado.value.id ? cuentas.value.filter(c => c.cliente_id === clienteSeleccionado.value.id) : cuentas.value
   return pool.filter(c => c.moneda?.codigo === quoteCodigo.value)
 })
 
@@ -370,115 +325,41 @@ const estadoEntregaLabel = computed(() => ({
 }[form.estado_entrega]))
 
 const resumenVisible = computed(() =>
-  form.monto_usd && form.tasa && form.cuenta_ves_id && (cuentaForeignRequerida.value ? form.cuenta_usd_id : true)
+  form.monto_usd && form.tasa && form.cuenta_ves_id && form.cuenta_usd_id
 )
 
+// ── Helpers ──
 function formatMoney(n) {
   return new Intl.NumberFormat('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(parseFloat(n) || 0)
 }
-
 function cuentaLabel(c) {
   const tipo = c.banco?.nombre || c.tipo || 'cuenta'
   return `${c.alias} · ${tipo} (${c.moneda?.codigo})`
 }
-
 function cuentaAlias(id) {
   const c = cuentas.value.find(x => x.id === Number(id))
   return c ? c.alias : '-'
 }
-
 function setTipo(tipo) {
   form.tipo = tipo
   if (tasaSugerida.value) form.tasa = tasaSugerida.value
 }
 
 watch(monedaSel, () => {
-  form.monto_usd = ''
-  form.bolivares = ''
-  form.tasa = tasaSugerida.value || ''
-  form.cuenta_usd_id = ''
-  form.cuenta_ves_id = ''
-  form.estado_entrega = 'digital'
-  form.genera_comision = false
-  form.tipo_comision = 'pago_movil'
-  form.monto_comision = ''
+  form.monto_usd = ''; form.bolivares = ''; form.tasa = tasaSugerida.value || ''
+  form.cuenta_usd_id = ''; form.cuenta_ves_id = ''; form.estado_entrega = 'digital'
+  form.genera_comision = false; form.tipo_comision = 'pago_movil'; form.monto_comision = ''
   form.descripcion = ''
   tasas.fetchVigentes()
 }, { immediate: false })
 
-function onClienteSearch() {
-  clearTimeout(clienteDebounce)
-  searchingCliente.value = true
-  clienteDebounce = setTimeout(async () => {
-    const q = clienteSearch.value.trim()
-    if (!q) { clienteResults.value = []; searchingCliente.value = false; return }
-    try {
-      const { data } = await api.get('/clientes', { params: { q } })
-      clienteResults.value = Array.isArray(data) ? data : (data.data || [])
-    } catch {
-      clienteResults.value = []
-    } finally {
-      searchingCliente.value = false
-    }
-  }, 300)
-}
-
-function selectCliente(c) {
-  form.cliente_id = c.id
-  form.cliente_nombre = c.nombre
-  clienteSearch.value = ''
-  clienteResults.value = []
-}
-
-function clearCliente() {
-  form.cliente_id = ''
-  form.cliente_nombre = ''
-  clienteCuentas.value = []
-  form.cuenta_ves_id = ''
-}
-
-async function fetchClienteCuentas(clienteId) {
-  if (!clienteId) { clienteCuentas.value = []; return }
-  loadingClienteCuentas.value = true
-  try {
-    const { data } = await api.get(`/clientes/${clienteId}/cuentas`)
-    clienteCuentas.value = Array.isArray(data) ? data : (data.data || [])
-  } catch {
-    clienteCuentas.value = []
-  } finally {
-    loadingClienteCuentas.value = false
-  }
-}
-
-watch(() => form.cliente_id, (newId) => {
-  if (newId) {
-    fetchClienteCuentas(newId)
-    form.cuenta_ves_id = ''
-  } else {
-    clienteCuentas.value = []
-  }
-})
-
-async function crearClienteInline() {
-  const nombre = clienteSearch.value.trim()
-  if (!nombre) return
-  try {
-    const { data } = await api.post('/clientes', { nombre })
-    const cliente = data.data || data
-    selectCliente(cliente)
-  } catch (err) {
-    error.value = err.response?.data?.message || err.message
-  }
-}
-
-// ── Única función buildMovimientos (sin duplicados) ──
+// ── Movimientos ──
 function buildMovimientos() {
   const montoForeign = parseFloat(form.monto_usd) || 0
   const montoQuote = parseFloat(form.bolivares) || 0
   const tasaAplicada = parseFloat(form.tasa) || 0
   const movimientos = []
 
-  // Moneda cotizada (siempre requerida)
   if (form.cuenta_ves_id) {
     const cuenta = cuentas.value.find(c => c.id === Number(form.cuenta_ves_id))
     const monedaCuenta = cuenta?.moneda?.codigo || quoteCodigo.value
@@ -489,7 +370,6 @@ function buildMovimientos() {
     })
   }
 
-  // Moneda extranjera (ahora siempre requerida)
   if (form.cuenta_usd_id) {
     const cuenta = cuentas.value.find(c => c.id === Number(form.cuenta_usd_id))
     const monedaCuenta = cuenta?.moneda?.codigo || monedaSel.value
@@ -506,15 +386,20 @@ function buildMovimientos() {
   return movimientos
 }
 
+// ── Recargar cuentas ──
+async function recargarCuentas() {
+  try {
+    const { data } = await api.get('/cuentas')
+    cuentas.value = Array.isArray(data) ? data : (data.data || [])
+  } catch {
+    // silencioso
+  }
+}
+
 async function submit() {
-  if (!form.cuenta_ves_id) {
-    error.value = `Selecciona una cuenta en ${quoteCodigo.value}.`
-    return
-  }
-  if (!form.cuenta_usd_id) {
-    error.value = `Selecciona una cuenta en ${monedaSel.value}.`
-    return
-  }
+  error.value = ''
+  if (!form.cuenta_ves_id) { error.value = `Selecciona una cuenta en ${quoteCodigo.value}.`; return }
+  if (!form.cuenta_usd_id) { error.value = `Selecciona una cuenta en ${monedaSel.value}.`; return }
   const movimientos = buildMovimientos()
   if (movimientos.length !== 2) {
     if (!error.value) error.value = 'Se requieren exactamente 2 movimientos contables (origen y destino).'
@@ -522,8 +407,7 @@ async function submit() {
   }
   saving.value = true
   try {
-    const descripcionFinal = [form.descripcion, `[Entrega: ${estadoEntregaLabel.value}]`]
-      .filter(Boolean).join(' ')
+    const descripcionFinal = [form.descripcion, `[Entrega: ${estadoEntregaLabel.value}]`].filter(Boolean).join(' ')
 
     const body = {
       fecha: form.fecha,
@@ -533,7 +417,7 @@ async function submit() {
       descripcion: descripcionFinal,
       movimientos: movimientos,
     }
-    if (form.cliente_id) body.cliente_id = Number(form.cliente_id)
+    if (clienteSeleccionado.value.id) body.cliente_id = Number(clienteSeleccionado.value.id)
     body.genera_comision = form.genera_comision
     if (form.genera_comision) {
       body.monto_comision = parseFloat(form.monto_comision) || 0
@@ -558,8 +442,9 @@ async function submit() {
 function registrarOtra() {
   successRef.value = ''
   error.value = ''
+  clienteSeleccionado.value = { id: '', nombre: '' }
   Object.assign(form, {
-    cliente_id: '', cliente_nombre: '', monto_usd: '', bolivares: '', tasa: tasaSugerida.value || '',
+    monto_usd: '', bolivares: '', tasa: tasaSugerida.value || '',
     cuenta_usd_id: '', cuenta_ves_id: '', estado_entrega: 'digital',
     genera_comision: false, tipo_comision: 'pago_movil', monto_comision: '', descripcion: '',
   })

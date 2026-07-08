@@ -1,23 +1,10 @@
 <template>
   <div class="space-y-4">
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-      <h2 class="text-xl font-bold text-gray-800">Cuentas</h2>
-      <button @click="openForm" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-1">
-        <span>+</span> Nueva cuenta
-      </button>
-    </div>
+    <AppPageHeader title="Cuentas" action-label="Nueva cuenta" @action="openForm" />
 
-    <div v-if="loading" class="text-center py-12">
-      <div class="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
-    </div>
-    <div v-else-if="error" class="bg-red-50 text-red-600 p-4 rounded-xl">
-      {{ error }}
-      <button @click="fetchCuentas" class="underline ml-2">Reintentar</button>
-    </div>
-    <div v-else-if="cuentas.length === 0" class="text-center py-16">
-      <span class="text-5xl block mb-4">🏦</span>
-      <p class="text-gray-500">No hay cuentas registradas</p>
-    </div>
+    <AppLoadingSpinner v-if="loading" />
+    <AppErrorState v-else-if="error" :message="error" @retry="fetchCuentas" />
+    <AppEmptyState v-else-if="cuentas.length === 0" icon="🏦" message="No hay cuentas registradas" />
     <div v-else class="space-y-2">
       <div v-for="c in cuentas" :key="c.id" class="bg-white border border-gray-200 rounded-xl p-4 flex items-center gap-3">
         <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-lg">🏦</div>
@@ -56,7 +43,6 @@
               <option value="">Seleccionar titular</option>
               <option v-for="t in titulares.list" :key="t.id" :value="t.id">{{ t.alias }}</option>
             </select>
-            <!-- Inline crear titular -->
             <div v-if="showTitularInline" class="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
               <p class="text-sm font-medium text-gray-700 mb-2">Crear titular</p>
               <div class="space-y-2">
@@ -66,7 +52,7 @@
                   <button type="button" @click="submitTitularInline" :disabled="savingInline" class="flex-1 bg-blue-600 text-white text-sm font-medium py-1.5 rounded-lg hover:bg-blue-700 disabled:bg-blue-300">Crear</button>
                   <button type="button" @click="showTitularInline = false" class="flex-1 bg-gray-200 text-gray-700 text-sm font-medium py-1.5 rounded-lg hover:bg-gray-300">Cancelar</button>
                 </div>
-                <p v-if="titularInlineError" class="text-xs text-red-600">{{ titularInlineError }}</p>
+                <AppErrorState v-if="titularInlineError" :message="titularInlineError" :retry="false" />
               </div>
             </div>
           </div>
@@ -81,7 +67,6 @@
               <option value="">Seleccionar banco</option>
               <option v-for="b in bancos.list" :key="b.id" :value="b.id">{{ b.nombre }} ({{ b.codigo }})</option>
             </select>
-            <!-- Inline crear banco -->
             <div v-if="showBancoInline" class="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
               <p class="text-sm font-medium text-gray-700 mb-2">Crear banco</p>
               <div class="space-y-2">
@@ -92,7 +77,7 @@
                   <button type="button" @click="submitBancoInline" :disabled="savingInline" class="flex-1 bg-blue-600 text-white text-sm font-medium py-1.5 rounded-lg hover:bg-blue-700 disabled:bg-blue-300">Crear</button>
                   <button type="button" @click="showBancoInline = false" class="flex-1 bg-gray-200 text-gray-700 text-sm font-medium py-1.5 rounded-lg hover:bg-gray-300">Cancelar</button>
                 </div>
-                <p v-if="bancoInlineError" class="text-xs text-red-600">{{ bancoInlineError }}</p>
+                <AppErrorState v-if="bancoInlineError" :message="bancoInlineError" :retry="false" />
               </div>
             </div>
           </div>
@@ -106,10 +91,8 @@
             </select>
           </div>
 
-          <!-- Alias -->
           <input v-model="form.alias" required placeholder="Alias * (ej: Banesco Karol USD)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
 
-          <!-- Tipo -->
           <select v-model="form.tipo" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
             <option value="">Tipo de cuenta *</option>
             <option value="banco">Banco</option>
@@ -119,19 +102,15 @@
             <option value="otro">Otro</option>
           </select>
 
-          <!-- Número de cuenta -->
           <input v-model="form.numero_cuenta" placeholder="Número de cuenta (opcional)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-
-          <!-- Notas -->
           <textarea v-model="form.notas" rows="2" placeholder="Notas (opcional)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none"></textarea>
 
-          <!-- Activa -->
           <label class="flex items-center gap-2 text-sm text-gray-600">
             <input v-model="form.activa" type="checkbox" class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
             Activa
           </label>
 
-          <div v-if="formError" class="bg-red-50 text-red-600 text-sm p-3 rounded-lg">{{ formError }}</div>
+          <AppErrorState v-if="formError" :message="formError" :retry="false" />
           <button type="submit" :disabled="saving" class="w-full bg-blue-600 text-white font-semibold py-2.5 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition flex items-center justify-center gap-2">
             <span v-if="saving" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
             {{ saving ? 'Guardando...' : 'Crear cuenta' }}
@@ -148,6 +127,10 @@ import api from '../api/axios.js'
 import { useTitularesStore } from '../stores/titulares.js'
 import { useBancosStore } from '../stores/bancos.js'
 import { useTasasStore } from '../stores/tasas.js'
+import AppPageHeader from '../components/AppPageHeader.vue'
+import AppLoadingSpinner from '../components/AppLoadingSpinner.vue'
+import AppErrorState from '../components/AppErrorState.vue'
+import AppEmptyState from '../components/AppEmptyState.vue'
 
 const titulares = useTitularesStore()
 const bancos = useBancosStore()
@@ -195,31 +178,19 @@ async function fetchCuentas() {
 }
 
 function openForm() {
-  Object.assign(form, {
-    titular_id: '',
-    banco_id: '',
-    moneda_id: '',
-    alias: '',
-    tipo: '',
-    numero_cuenta: '',
-    notas: '',
-    activa: true,
-  })
+  Object.assign(form, { titular_id: '', banco_id: '', moneda_id: '', alias: '', tipo: '', numero_cuenta: '', notas: '', activa: true })
   formError.value = ''
   showTitularInline.value = false
   showBancoInline.value = false
   titularInlineError.value = ''
   bancoInlineError.value = ''
-  // Cargar catálogos
   titulares.fetchAll()
   bancos.fetchAll()
   tasas.fetchMonedas()
   showForm.value = true
 }
 
-function closeForm() {
-  showForm.value = false
-}
+function closeForm() { showForm.value = false }
 
 async function submitTitularInline() {
   if (!titularForm.nombre || !titularForm.alias) {
@@ -229,11 +200,7 @@ async function submitTitularInline() {
   savingInline.value = true
   titularInlineError.value = ''
   try {
-    const body = {
-      nombre: titularForm.nombre,
-      alias: titularForm.alias,
-      activo: true,
-    }
+    const body = { nombre: titularForm.nombre, alias: titularForm.alias, activo: true }
     const nuevo = await titulares.create(body)
     await titulares.fetchAll()
     form.titular_id = nuevo.id || titulares.list[titulares.list.length - 1]?.id
@@ -254,12 +221,7 @@ async function submitBancoInline() {
   savingInline.value = true
   bancoInlineError.value = ''
   try {
-    const body = {
-      nombre: bancoForm.nombre,
-      codigo: bancoForm.codigo,
-      pais: bancoForm.pais || 'VE',
-      activo: true,
-    }
+    const body = { nombre: bancoForm.nombre, codigo: bancoForm.codigo, pais: bancoForm.pais || 'VE', activo: true }
     const nuevo = await bancos.create(body)
     await bancos.fetchAll()
     form.banco_id = nuevo.id || bancos.list[bancos.list.length - 1]?.id

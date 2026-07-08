@@ -1,11 +1,10 @@
 <template>
   <div class="space-y-4">
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-      <h2 class="text-xl font-bold text-gray-800">Clientes</h2>
-      <button v-if="auth.user?.roles?.includes('admin') || auth.user?.roles?.includes('super_admin')" @click="openCreate" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-1">
-        <span>+</span> Nuevo cliente
-      </button>
-    </div>
+    <AppPageHeader
+      title="Clientes"
+      :action-label="(auth.user?.roles?.includes('admin') || auth.user?.roles?.includes('super_admin')) ? 'Nuevo cliente' : ''"
+      @action="openCreate"
+    />
 
     <div class="relative">
       <input v-model="search" @input="debounceSearch" placeholder="Buscar por nombre o alias..."
@@ -14,14 +13,13 @@
       <button v-if="search" @click="search = ''; clientes.fetchAll()" class="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600">✕</button>
     </div>
 
-    <div v-if="clientes.loading" class="text-center py-12">
-      <div class="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
-    </div>
-    <div v-else-if="clientes.error" class="bg-red-50 text-red-600 p-4 rounded-xl">{{ clientes.error }}</div>
-    <div v-else-if="clientes.list.length === 0" class="text-center py-16">
-      <span class="text-5xl block mb-4">👥</span>
-      <p class="text-gray-500">{{ search ? 'Sin resultados' : 'No hay clientes' }}</p>
-    </div>
+    <AppLoadingSpinner v-if="clientes.loading" />
+    <AppErrorState v-else-if="clientes.error" :message="clientes.error" @retry="clientes.fetchAll()" />
+    <AppEmptyState
+      v-else-if="clientes.list.length === 0"
+      icon="👥"
+      :message="search ? 'Sin resultados' : 'No hay clientes'"
+    />
     <div v-else class="space-y-2">
       <div v-for="c in clientes.list" :key="c.id" @click="openDetail(c)" class="bg-white border border-gray-200 rounded-xl p-4 flex items-center gap-3 cursor-pointer hover:shadow-md transition">
         <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-700 font-bold text-sm">{{ c.nombre.charAt(0).toUpperCase() }}</div>
@@ -52,7 +50,7 @@
           <input v-model="form.telefono" placeholder="Teléfono" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
           <input v-model="form.email" type="email" placeholder="Email" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
           <textarea v-model="form.notas" rows="2" placeholder="Notas" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none"></textarea>
-          <div v-if="formError" class="bg-red-50 text-red-600 text-sm p-3 rounded-lg">{{ formError }}</div>
+          <AppErrorState v-if="formError" :message="formError" :retry="false" />
           <button type="submit" :disabled="saving" class="w-full bg-blue-600 text-white font-semibold py-2.5 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition flex items-center justify-center gap-2">
             <span v-if="saving" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
             {{ saving ? 'Guardando...' : (editingId ? 'Guardar cambios' : 'Crear cliente') }}
@@ -78,8 +76,6 @@
           <p class="text-sm text-gray-500"><span class="font-medium text-gray-700">Saldo:</span> <span :class="(detailCliente?.saldo_cache_usd || 0) >= 0 ? 'text-green-600' : 'text-red-600'">${{ format(detailCliente?.saldo_cache_usd) }}</span></p>
         </div>
 
-        <p class="text-red-500 text-xs mb-2">DEBUG: sección cuentas</p>
-
         <!-- Cuentas bancarias -->
         <div class="border-t-2 border-gray-300 pt-6 pb-2">
           <div class="flex items-center justify-between mb-4">
@@ -87,8 +83,8 @@
             <button v-if="auth.user?.roles?.includes('admin') || auth.user?.roles?.includes('super_admin')" @click="openCuentaForm" class="text-xs bg-blue-600 text-white px-2 py-1 rounded-lg hover:bg-blue-700">+ Agregar cuenta</button>
           </div>
 
-          <div v-if="loadingCuentas" class="text-center py-4 text-gray-400 text-sm">Cargando cuentas...</div>
-          <div v-else-if="clienteCuentas.length === 0" class="text-sm text-gray-500 py-3 bg-gray-50 rounded-lg px-3">No hay cuentas registradas.</div>
+          <AppLoadingSpinner v-if="loadingCuentas" />
+          <AppEmptyState v-else-if="clienteCuentas.length === 0" icon="🏦" message="No hay cuentas registradas." />
           <div v-else class="space-y-3">
             <div v-for="cu in clienteCuentas" :key="cu.id" class="bg-gray-50 border border-gray-200 rounded-lg p-3">
               <p class="font-medium text-sm">{{ cu.alias }}</p>
@@ -138,7 +134,7 @@
             <input v-model="cuentaForm.activa" type="checkbox" class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
             Activa
           </label>
-          <div v-if="cuentaFormError" class="bg-red-50 text-red-600 text-sm p-3 rounded-lg">{{ cuentaFormError }}</div>
+          <AppErrorState v-if="cuentaFormError" :message="cuentaFormError" :retry="false" />
           <button type="submit" :disabled="savingCuenta" class="w-full bg-blue-600 text-white font-semibold py-2.5 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition flex items-center justify-center gap-2">
             <span v-if="savingCuenta" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
             {{ savingCuenta ? 'Guardando...' : 'Crear cuenta' }}
@@ -156,6 +152,10 @@ import { useAuthStore } from '../stores/auth.js'
 import { useBancosStore } from '../stores/bancos.js'
 import { useTasasStore } from '../stores/tasas.js'
 import api from '../api/axios.js'
+import AppPageHeader from '../components/AppPageHeader.vue'
+import AppLoadingSpinner from '../components/AppLoadingSpinner.vue'
+import AppErrorState from '../components/AppErrorState.vue'
+import AppEmptyState from '../components/AppEmptyState.vue'
 
 const clientes = useClientesStore()
 const auth = useAuthStore()
@@ -171,13 +171,11 @@ let debounce = null
 
 const form = reactive({ nombre: '', alias: '', telefono: '', email: '', notas: '' })
 
-// Detalle / cuentas
 const showDetail = ref(false)
 const detailCliente = ref(null)
 const clienteCuentas = ref([])
 const loadingCuentas = ref(false)
 
-// Formulario cuenta
 const showCuentaForm = ref(false)
 const savingCuenta = ref(false)
 const cuentaFormError = ref('')
@@ -245,7 +243,6 @@ async function submit() {
   }
 }
 
-// Detalle
 async function openDetail(c) {
   detailCliente.value = c
   showDetail.value = true
@@ -293,7 +290,6 @@ async function submitCuenta() {
     if (cuentaForm.notas) body.notas = cuentaForm.notas
     await api.post('/cuentas', body)
     showCuentaForm.value = false
-    // Recargar cuentas del cliente
     const { data } = await api.get(`/clientes/${detailCliente.value.id}/cuentas`)
     clienteCuentas.value = Array.isArray(data) ? data : (data.data || [])
   } catch (err) {
