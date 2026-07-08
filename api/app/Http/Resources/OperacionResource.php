@@ -11,7 +11,7 @@ class OperacionResource extends JsonResource
     {
         return [
             'id'                    => $this->id,
-            'fecha'                 => $this->fecha?->toIso8601String(),
+            'fecha'                 => $this->fecha,
             'estatus'               => $this->estatus,
             'origen'                => $this->origen,
             'origen_referencia'     => $this->origen_referencia,

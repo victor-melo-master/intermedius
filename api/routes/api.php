@@ -23,16 +23,20 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
 
+    // ─────────────────────────────────────────────────────────────────
     // Autenticación (públicas)
+    // ─────────────────────────────────────────────────────────────────
     Route::post('auth/login', [AuthController::class, 'login']);
 
+    // ─────────────────────────────────────────────────────────────────
     // Rutas protegidas con Sanctum
+    // ─────────────────────────────────────────────────────────────────
     Route::middleware('auth:sanctum')->group(function () {
 
         Route::post('auth/logout', [AuthController::class, 'logout']);
         Route::get('auth/me',     [AuthController::class, 'me']);
 
-        // Catálogos
+        // ── Catálogos ────────────────────────────────────────────────
         Route::apiResource('titulares',        TitularController::class);
         Route::apiResource('bancos',           BancoController::class);
         Route::apiResource('monedas',          MonedaController::class);
@@ -42,17 +46,25 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('categorias-gasto', CategoriaGastoController::class)
             ->parameters(['categorias-gasto' => 'categoria_gasto']);
 
-        // Tasas de mercado
+        // ── Tasas de mercado ─────────────────────────────────────────
         Route::get('tasas/actuales',  [TasasController::class, 'actuales']);
         Route::get('tasas/historico', [TasasController::class, 'historico']);
 
-        // Operaciones (ledger contable)
+        // ── Comisiones aplicadas por operación (DEBE IR ANTES del apiResource de operaciones) ──
+        Route::prefix('operaciones/{operacion}/comisiones')->group(function () {
+            Route::get('/',          [ComisionOperacionController::class, 'index'])
+                ->middleware('role:admin|super_admin|contador');
+            Route::patch('{comision}', [ComisionOperacionController::class, 'update'])
+                ->middleware('role:admin|super_admin');
+        });
+
+        // ── Operaciones (ledger contable) ────────────────────────────
         Route::apiResource('operaciones', OperacionController::class)
-            ->except(['update', 'destroy']);
+            ->parameters(['operaciones' => 'operacion']);
         Route::patch('operaciones/{operacion}/verificar', [OperacionController::class, 'verificar']);
         Route::delete('operaciones/{operacion}', [OperacionController::class, 'destroy']);
 
-        // ── Pool de pagadores ─────────────────────────────────────────────────
+        // ── Pool de pagadores ────────────────────────────────────────
         Route::prefix('pool')->group(function () {
             Route::get('/', [PoolController::class, 'index'])
                 ->middleware('role:pagador|admin|super_admin');
@@ -68,18 +80,18 @@ Route::prefix('v1')->group(function () {
                 ->middleware('role:admin|super_admin');
         });
 
-        // Gastos (subtipo de operaciones)
+        // ── Gastos (subtipo de operaciones) ──────────────────────────
         Route::get('gastos',                [GastoController::class, 'index']);
         Route::post('gastos',               [GastoController::class, 'store']);
         Route::get('gastos/{operacion}',    [GastoController::class, 'show']);
 
-        // ── Configuración: tasas vigentes (lectura para todos) ────────────────
+        // ── Configuración: tasas vigentes (lectura para todos) ───────
         Route::prefix('configuracion')->group(function () {
             Route::get('tasas-vigentes', [TasaDiariaController::class, 'vigentes']);
             Route::get('tasas-diarias',  [TasaDiariaController::class, 'index']);
             Route::get('tasas-diarias/historial/{base}/{cotizada}', [TasaDiariaController::class, 'historial']);
 
-            // ── Escritura solo admin ──────────────────────────────────────────
+            // ── Escritura solo admin ─────────────────────────────────
             Route::middleware('role:admin|super_admin')->group(function () {
                 Route::post('tasas-diarias',  [TasaDiariaController::class, 'store']);
                 Route::apiResource('comisiones-cuenta',        ComisionCuentaController::class)
@@ -91,27 +103,19 @@ Route::prefix('v1')->group(function () {
             });
         });
 
-        // ── Comisiones aplicadas por operación ────────────────────────────────
-        Route::prefix('operaciones/{operacion}/comisiones')->group(function () {
-            Route::get('/',          [ComisionOperacionController::class, 'index'])
-                ->middleware('role:admin|super_admin|contador');
-            Route::patch('{comision}', [ComisionOperacionController::class, 'update'])
-                ->middleware('role:admin|super_admin');
-        });
-
-        // ── Reportes de comisiones ────────────────────────────────────────────
+        // ── Reportes de comisiones ───────────────────────────────────
         Route::middleware('role:admin|super_admin|contador')->group(function () {
             Route::get('reportes/comisiones-operadores',              [ReporteComisionesController::class, 'index']);
             Route::post('reportes/comisiones-operadores/exportar',    [ReporteComisionesController::class, 'exportar']);
             Route::get('reportes/comisiones-operadores/historico',    [ReporteComisionesController::class, 'historico']);
         });
 
-        // ── Gestión de usuarios (solo admin|super_admin) ─────────────────────
+        // ── Gestión de usuarios (solo admin|super_admin) ─────────────
         Route::middleware('role:admin|super_admin')->group(function () {
             Route::apiResource('usuarios', UserController::class);
         });
 
-        // ── Bitácora (solo super_admin) ───────────────────────────────────────
+        // ── Bitácora (solo super_admin) ──────────────────────────────
         Route::middleware('role:super_admin')->group(function () {
             Route::get('admin/bitacora', function (\Illuminate\Http\Request $request) {
                 $query = \Spatie\Activitylog\Models\Activity::query()
@@ -134,7 +138,7 @@ Route::prefix('v1')->group(function () {
             });
         });
 
-        // ── Dashboard general ─────────────────────────────────────────────────
+        // ── Dashboard general ────────────────────────────────────────
         Route::get('dashboard/general', [DashboardController::class, 'general']);
         Route::get('dashboard/tasas-referencia', [DashboardController::class, 'tasasReferencia']);
         Route::get('dashboard/resumen', [DashboardController::class, 'resumen']);

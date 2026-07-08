@@ -85,6 +85,10 @@ const tasas = useTasasStore()
 const auth = useAuthStore()
 const ops = useOperacionesStore()
 
+const editId = computed(() => route.params.id || null)
+const esEdicion = computed(() => !!editId.value)
+const motivoEdicion = computed(() => route.query.motivo || '')
+
 const saving = ref(false)
 const error = ref('')
 const successRef = ref('')
@@ -111,7 +115,10 @@ const form = reactive({
 })
 
 const tipoCodigo = computed(() => (form.tipo === 'venta' ? 'venta_usd' : 'compra_usd'))
-const titulo = computed(() => `Nueva ${form.tipo === 'venta' ? 'Venta' : 'Compra'} ${monedaSel.value}`)
+const titulo = computed(() => {
+  if (esEdicion.value) return `Editar operación #${editId.value}`
+  return `Nueva ${form.tipo === 'venta' ? 'Venta' : 'Compra'} ${monedaSel.value}`
+})
 
 const tasaPar = computed(() => tasas.vigentes.find(t => t.par === parStr.value) || null)
 const tasaSugerida = computed(() => {
@@ -163,11 +170,49 @@ const resumenItems = computed(() => {
   return items
 })
 
+async function cargarOperacion() {
+  if (!esEdicion.value) return
+  await ops.fetchOne(editId.value)
+  const op = ops.detail
+  if (!op) return
+
+  const codigo = op.tipo_operacion?.codigo
+  form.tipo = codigo === 'venta_usd' ? 'venta' : 'compra'
+  form.fecha = op.fecha
+  form.tasa = parseFloat(op.tasa_aplicada).toFixed(2)
+
+  const movs = op.movimientos || []
+  const movUsd = movs.find(m => m.moneda?.codigo === monedaSel.value)
+  const movVes = movs.find(m => m.moneda?.codigo === quoteCodigo.value)
+
+  if (movUsd) {
+    form.monto_usd = Math.abs(parseFloat(movUsd.monto)).toString()
+    form.cuenta_usd_id = movUsd.cuenta_id.toString()
+  }
+  if (movVes) {
+    form.bolivares = Math.abs(parseFloat(movVes.monto)).toString()
+    form.cuenta_ves_id = movVes.cuenta_id.toString()
+  }
+
+  if (op.cliente) {
+    clienteSeleccionado.value = {
+      id: op.cliente.id,
+      nombre: op.cliente.nombre,
+      alias: op.cliente.alias,
+    }
+  }
+
+  form.genera_comision = op.genera_comision || false
+  form.tipo_comision = op.tipo_comision || 'pago_movil'
+  form.monto_comision = op.monto_comision || ''
+  form.descripcion = op.descripcion || ''
+  form.estado_entrega = 'digital'
+}
+
 function formatMoney(n) { return new Intl.NumberFormat('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(parseFloat(n) || 0) }
 function cuentaLabel(c) { const tipo = c.banco?.nombre || c.tipo || 'cuenta'; return `${c.alias} · ${tipo} (${c.moneda?.codigo})` }
 function cuentaAlias(id) { const c = cuentas.value.find(x => x.id === Number(id)); return c ? c.alias : '-' }
 
-// ── Calculadora ──
 let calcGuard = false
 function round2(n) { return (Math.round((n + Number.EPSILON) * 100) / 100).toString() }
 async function runGuarded(mutate) { calcGuard = true; mutate(); await nextTick(); calcGuard = false }
@@ -187,7 +232,6 @@ watch(() => form.tasa, () => {
   if (m && t) runGuarded(() => { form.bolivares = round2(m * t) })
 })
 
-// ── Comisión ──
 function recalcComision() {
   if (!form.genera_comision) return
   if (form.tipo_comision === 'mismo_banco') { form.monto_comision = '0'; return }
@@ -204,7 +248,6 @@ watch(monedaSel, () => {
   tasas.fetchVigentes()
 })
 
-// ── Movimientos ──
 function buildMovimientos() {
   const montoForeign = parseFloat(form.monto_usd) || 0
   const montoQuote = parseFloat(form.bolivares) || 0
@@ -233,13 +276,27 @@ async function submit() {
   if (movimientos.length !== 2) { if (!error.value) error.value = 'Se requieren 2 movimientos.'; return }
   saving.value = true
   try {
-    const body = { fecha: form.fecha, tipo_codigo: tipoCodigo.value, operador_id: Number(auth.user.id), tasa_aplicada: parseFloat(form.tasa), descripcion: [form.descripcion, `[Entrega: ${form.estado_entrega}]`].filter(Boolean).join(' '), movimientos }
+    const body = {
+      fecha: form.fecha,
+      tipo_codigo: tipoCodigo.value,
+      operador_id: Number(auth.user.id),
+      tasa_aplicada: parseFloat(form.tasa),
+      descripcion: [form.descripcion, `[Entrega: ${form.estado_entrega}]`].filter(Boolean).join(' '),
+      movimientos,
+    }
     if (clienteSeleccionado.value.id) body.cliente_id = Number(clienteSeleccionado.value.id)
     body.genera_comision = form.genera_comision
     if (form.genera_comision) { body.monto_comision = parseFloat(form.monto_comision) || 0; body.tipo_comision = form.tipo_comision }
-    const created = await ops.create(body)
-    const op = created.data || created
-    successRef.value = op.referencia ? `(${op.referencia})` : `#${op.id || ''}`
+
+    if (esEdicion.value) {
+      body.motivo_edicion = motivoEdicion.value
+      await ops.update(editId.value, body)
+    } else {
+      await ops.create(body)
+    }
+
+    const op = ops.detail
+    successRef.value = op?.referencia ? `(${op.referencia})` : `#${op?.id || ''}`
   } catch (err) {
     const data = err.response?.data
     error.value = data?.errors ? Object.values(data.errors).flat().join('\n') : data?.message || err.message
@@ -248,14 +305,19 @@ async function submit() {
 
 function registrarOtra() {
   successRef.value = ''; error.value = ''; clienteSeleccionado.value = { id: '', nombre: '' }
-  Object.assign(form, { monto_usd: '', bolivares: '', tasa: tasaSugerida.value ? parseFloat(tasaSugerida.value).toFixed(2) : '', cuenta_usd_id: '', cuenta_ves_id: '', estado_entrega: 'digital', genera_comision: false, tipo_comision: 'pago_movil', monto_comision: '', descripcion: '' })
+  Object.assign(form, { monto_usd: '', bolivares: '', tasa: tasaSugerida.value || '', cuenta_usd_id: '', cuenta_ves_id: '', estado_entrega: 'digital', genera_comision: false, tipo_comision: 'pago_movil', monto_comision: '', descripcion: '' })
   tasas.fetchVigentes()
 }
 
 onMounted(async () => {
   await tasas.fetchVigentes()
-  if (tasaSugerida.value) form.tasa = parseFloat(tasaSugerida.value).toFixed(2)
   try { const { data } = await api.get('/cuentas'); cuentas.value = Array.isArray(data) ? data : (data.data || []) } catch { cuentas.value = [] }
   finally { loadingCuentas.value = false }
+
+  if (esEdicion.value) {
+    await cargarOperacion()
+  } else if (tasaSugerida.value) {
+    form.tasa = parseFloat(tasaSugerida.value).toFixed(2)
+  }
 })
 </script>

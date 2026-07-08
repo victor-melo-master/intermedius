@@ -1,4 +1,3 @@
-// src/stores/operaciones.js
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import api from '../api/axios.js'
@@ -39,10 +38,16 @@ export const useOperacionesStore = defineStore('operaciones', () => {
     return data
   }
 
+  async function update(id, body) {
+    const { data } = await api.put(`/operaciones/${id}`, body)
+    detail.value = data.data || data
+    return data
+  }
+
   async function verificar(id) {
     const { data } = await api.patch(`/operaciones/${id}/verificar`)
     return data
   }
 
-  return { list, detail, loading, error, fetchAll, fetchOne, create, verificar }
+  return { list, detail, loading, error, fetchAll, fetchOne, create, update, verificar }
 })

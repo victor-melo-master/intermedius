@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Operacion\StoreOperacionRequest;
+use App\Http\Requests\Operacion\UpdateOperacionRequest;
 use App\Http\Requests\Operacion\VerificarOperacionRequest;
 use App\Http\Resources\OperacionResource;
 use App\Models\Operacion;
@@ -12,7 +13,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
-// src/Http/Controllers/Api/V1/OperacionController.php
 class OperacionController extends Controller
 {
     public function __construct(private readonly RegistroOperacionService $registroService) {}
@@ -46,22 +46,44 @@ class OperacionController extends Controller
             ->setStatusCode(201);
     }
 
-    public function show(Operacion $operacion): OperacionResource
+    public function update(UpdateOperacionRequest $request, Operacion $operacion): JsonResponse
     {
-        $this->authorize('view', $operacion);
+        $operacion = $this->registroService->actualizar($operacion, $request->validated(), $request->user());
 
-        $operacion->load([
-            'movimientos.cuenta.titular',
-            'movimientos.moneda',
-            'tipoOperacion',
-            'cliente',
-            'categoriaGasto',
-            'operador',
-            'verificadoPor',
-        ]);
-
-        return new OperacionResource($operacion);
+        return (new OperacionResource($operacion))
+            ->response()
+            ->setStatusCode(200);
     }
+
+    public function show(Operacion $operacion): OperacionResource
+{
+    $this->authorize('view', $operacion);
+
+    \Log::info('Show operacion', [
+        'id' => $operacion->id,
+        'fecha' => $operacion->fecha,
+        'estatus' => $operacion->estatus,
+        'tasa' => $operacion->tasa_aplicada,
+    ]);
+
+    $operacion->load([
+        'movimientos.cuenta.titular',
+        'movimientos.moneda',
+        'tipoOperacion',
+        'cliente',
+        'categoriaGasto',
+        'operador',
+        'verificadoPor',
+        'pagador',
+    ]);
+
+    \Log::info('Show operacion after load', [
+        'movimientos_count' => $operacion->movimientos->count(),
+        'tipo_operacion' => $operacion->tipoOperacion?->codigo,
+    ]);
+
+    return new OperacionResource($operacion);
+}
 
     public function verificar(VerificarOperacionRequest $request, Operacion $operacion): JsonResponse
     {

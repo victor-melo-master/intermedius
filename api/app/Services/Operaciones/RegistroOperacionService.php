@@ -373,4 +373,158 @@ class RegistroOperacionService
                 return ['usd' => 0.0, 'ves' => 0.0];
         }
     }
+
+    /**
+ * Actualiza una operación existente.
+ *
+ * Flujo:
+ * 1. Valida que la operación sea editable (no verificada, no cancelada).
+ * 2. Si cambian los movimientos, elimina los anteriores y crea los nuevos.
+ * 3. Si cambia la tasa o los montos, recalcula ganancia bruta.
+ * 4. Re-aplica comisiones automáticamente.
+ * 5. Registra en bitácora quién editó y qué cambió.
+ * 6. Despacha jobs de recálculo de saldos y FIFO.
+ *
+ * @param Operacion $operacion
+ * @param array $payload
+ * @param \App\Models\User $editor
+ * @return Operacion
+ */
+public function actualizar(Operacion $operacion, array $payload, \App\Models\User $editor): Operacion
+{
+    // La validación de editable (no verificada, no cancelada) ya está en el FormRequest.
+
+    return DB::transaction(function () use ($operacion, $payload, $editor) {
+        $cambios = [];
+
+        // ── 1. Actualizar campos básicos ────────────────────────────────
+        $camposBasicos = [
+            'fecha',
+            'cliente_id',
+            'categoria_gasto_id',
+            'operador_id',
+            'tasa_aplicada',
+            'genera_comision',
+            'monto_comision',
+            'tipo_comision',
+            'tasa_mercado_snapshot',
+            'fuente_tasa_mercado',
+            'referencia',
+            'descripcion',
+        ];
+
+        foreach ($camposBasicos as $campo) {
+            if (array_key_exists($campo, $payload)) {
+                $valorAnterior = $operacion->$campo;
+                $operacion->$campo = $payload[$campo];
+                if ($valorAnterior != $payload[$campo]) {
+                    $cambios[$campo] = ['anterior' => $valorAnterior, 'nuevo' => $payload[$campo]];
+                }
+            }
+        }
+
+        // ── 2. Si vienen movimientos nuevos, reemplazar ────────────────
+        if (!empty($payload['movimientos'])) {
+            $movimientosAnteriores = $operacion->movimientos->map(function ($m) {
+                return [
+                    'cuenta_id'  => $m->cuenta_id,
+                    'monto'      => $m->monto,
+                    'tasa_a_usd' => $m->tasa_a_usd,
+                    'moneda_id'  => $m->moneda_id,
+                ];
+            })->toArray();
+
+            // Auto-calcular tasa_a_usd si no viene en el payload
+            $tasaAplicada = (float) ($payload['tasa_aplicada'] ?? $operacion->tasa_aplicada);
+            $payload['movimientos'] = array_map(function ($mov) use ($tasaAplicada) {
+                if (!empty($mov['tasa_a_usd'])) {
+                    return $mov;
+                }
+                $cuenta = Cuenta::with('moneda')->find($mov['cuenta_id']);
+                $codigo = $cuenta?->moneda?->codigo;
+                $mov['tasa_a_usd'] = match ($codigo) {
+                    'USD', 'USDT' => 1.0,
+                    default       => $tasaAplicada > 0 ? round(1 / $tasaAplicada, 8) : 1.0,
+                };
+                return $mov;
+            }, $payload['movimientos']);
+
+            // Validar los nuevos movimientos
+            $tipo = $operacion->tipoOperacion;
+            $this->validarMovimientos($payload['movimientos'], $tipo);
+
+            // Eliminar movimientos anteriores
+            $operacion->movimientos()->delete();
+
+            // Crear nuevos movimientos
+            foreach ($payload['movimientos'] as $index => $movData) {
+                $cuenta = Cuenta::findOrFail($movData['cuenta_id']);
+
+                $operacion->movimientos()->create([
+                    'cuenta_id'             => $cuenta->id,
+                    'moneda_id'             => $cuenta->moneda_id,
+                    'monto'                 => $movData['monto'],
+                    'tasa_a_usd'            => $movData['tasa_a_usd'],
+                    'monto_usd_equivalente' => round($movData['monto'] * $movData['tasa_a_usd'], 4),
+                    'orden'                 => $index + 1,
+                ]);
+            }
+
+            $cambios['movimientos'] = [
+                'anterior' => $movimientosAnteriores,
+                'nuevo'    => $payload['movimientos'],
+            ];
+        }
+
+        // ── 3. Guardar cambios básicos ──────────────────────────────────
+        $operacion->save();
+
+        // ── 4. Recalcular ganancia bruta ────────────────────────────────
+        $tipo = $operacion->tipoOperacion;
+        if ($tipo->genera_ganancia) {
+            $operacion->setRelation('tipoOperacion', $tipo);
+            $operacion->load('movimientos.moneda');
+
+            $ganancia = $this->calcularGananciaBruta($operacion);
+
+            $operacion->update([
+                'ganancia_bruta_usd' => $ganancia['usd'],
+                'ganancia_bruta_ves' => $ganancia['ves'],
+            ]);
+        }
+
+        // ── 5. Re-aplicar comisiones ────────────────────────────────────
+        $operacion->load(['movimientos.cuenta.banco', 'movimientos.moneda', 'operador.titular', 'tipoOperacion']);
+        $this->comisionesService->aplicarAOperacion($operacion);
+
+        // ── 6. Registrar en bitácora ─────────────────────────────────────
+        if (!empty($cambios)) {
+            activity()
+                ->performedOn($operacion)
+                ->causedBy($editor)
+                ->withProperties([
+                    'cambios'        => $cambios,
+                    'motivo_edicion' => $payload['motivo_edicion'] ?? 'Sin motivo especificado',
+                ])
+                ->log('Operación editada');
+        }
+
+        // ── 7. Despachar jobs ───────────────────────────────────────────
+        $cuentaIds = collect($payload['movimientos'] ?? $operacion->movimientos)
+            ->pluck('cuenta_id')
+            ->unique()
+            ->values()
+            ->all();
+
+        if (!empty($cuentaIds)) {
+            RecalcularSaldoCuentaJob::dispatch($cuentaIds);
+        }
+
+        if ($tipo->afecta_fifo) {
+            ProcesarFifoOperacionJob::dispatch($operacion->id);
+        }
+
+        return $operacion->fresh(['movimientos.cuenta', 'tipoOperacion']);
+    });
+}
 }
