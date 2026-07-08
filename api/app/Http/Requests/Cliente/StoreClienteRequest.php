@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Cliente;
 
 use Illuminate\Foundation\Http\FormRequest;
-
 class StoreClienteRequest extends FormRequest
 {
     public function authorize(): bool

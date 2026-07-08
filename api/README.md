@@ -1,66 +1,24 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Intermedius API - Documentación del Sistema
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## Descripción General
 
-## About Laravel
+El API Intermedius es una aplicación web Laravel que implementa un **sistema completo de casa de cambio (casa de conversión de divisas)**. El API maneja todas las operaciones financieras, tipos de cambio, clientes, titulares, cuentas y comisiones necesarios para una plataforma de intercambio de divisas.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Características Clave
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- **Gestión de Operaciones**: Depósitos, retiros y conversiones con fondos FIFO (primero en entrar, primero en salir)
+- **Catálogo de Tasas de Mercado**: Tasas diarias y referencias históricas en tiempo real
+- **Sistema de Comisiones**: Comisiones por cuenta con sistema de vigencia flexible
+- **Control de Riesgo**: Pool de pagadores, verificaciones antifraude
+- **Full CRUD API**: Todas las operaciones bajo API RESTful
+- **Auditoría Completa**: Bitácora completa de todas las acciones financieras
+- **Reportes de Comisiones**: Generación de reportes detallados para operadores
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Arquitectura del Sistema
 
-## Learning Laravel
+```
+api/\\n├── app/\\n│   ├── Http/\\n│   │   ├── Controllers/          # Controladores de API\\n│   │   └-launch Requests/              # Validación de solicitudes\\n│   ├── Models/                   # Modelos Eloquent de Laravel\\n│   ├── Services/                 # Servicios de aplicación (reglas de negocio)\\n│   ├── Jobs/                     # Trabajos en segundo plano\\n│   ├── Exports/                  # Exportaciones Excel/PDF\\n│   └-- Policies/                 # Autorizaciones de políticas Laravel\\n├── config/                       # Configuración de Laravel (app, database, etc.)\\n├── routes/                       # Definiciones de enrutamiento API\\n└── tests/                        # Pruebas de aplicación (PHPUnit)\\n```
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
-
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-## Laravel Sponsors
-
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
-
-### Premium Partners
-
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
-
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Flujo de Trabajo Principal\n
+### 1. Autenticación\n- **Archivo**: `AuthController.php`\n- **Endpoints**: `POST /v1/auth/login`, `POST /v1/auth/logout`, `GET /v1/auth/me`\n- **Rol**: Autenticación tradicional con Sanctum + roles Spatie\n
+### 2. Registro de Operaciones\n- **Archivo de Controlador**: `App/Http/Controllers/Api/V1/OperacionController.php`\n- **Servicio**: `RegistroOperacionService` (orquesta operaciones)\n- **Enrutados CLAVE**:\\n  - `POST /v1/operaciones` → Crea nueva operación (depósito/retirro/conversión)\n  - `PATCH /v1/operaciones/{operacion}/verificar` → Verifica operación (CONTROL DE CALIDAD)\n  - `GET /v1/operaciones` → Histórico de operaciones (API filtering/paginado)\n\n### 3. Control de Comisiones\n- **Modelo**: `App/Models/ComisionCuenta.php`\n- **Controlador**: `App/Http/Controllers/Api/V1/Configuracion/ComisionCuentaController.php`\n- **Lógica**: Comisiones por cuenta en monedas específicas, con rangos de vigencia (`vigente_desde` / `vigente_hasta`)\n- **Tipos**: Fijo, porcentaje, líquido, bruto\n\n### 4. Pool de Pagadores\n- **Controlador**: `App/Http/Controllers/Api/V1/PoolController.php`\n- **Regla**: 5% de retiros líquidos asignados aleatoriamente a pool activo\n- **Permisos**: `rol:pagador|admin|super_admin`\n- **Endpoints**: Tomar, soltar, pagar, cancelar operaciones\n\n## Modelos Clave\n\n### App/Models/User.php\n- **Propósito**: Autenticación + asignación de roles\n- **Relaciones**: `titular()` (una a uno con titulares)\n- **Campos importantes**: `name`, `email`, `activo`, `roles`, `last_login_at`\n- **Comprobación de estado activo**: Requerida para login exitoso\n\n### App/Models/Cliente.php\n- **Propósito**: Clientes de la casa de cambio\n- **Campos**: `nombre`, `alias`, `documento`, `telefono`, `email`, `notas`\n- **Relaciones**: `cuentas()` (uno a muchos con cuentas)\n\n### App/Models/Cuenta.php\n- **Propósito**: Cuentas bancarias para titulares o clientes (no ambos)\n- **Regla de negocio clave**: Exclusiva - una cuenta pertenece EITHER a un titular **OR** a un cliente\n- **Relaciones**: `titular()` / `cliente()` + `banco()` + `moneda()` (cada una a uno)\n- **Validaciones de guardado**: Control integridad (prohibido titulares + clientes simultáneos)\n\n### App/Models/Moneda.php\n- **Propósito**: Monedas soportadas (Fiats + Cryptos)\n- **Campos**: `codigo`, `nombre`, `simbolo`, `es_fiat`, `es_cripto`, `decimales`\n- **Relaciones**: `cuentas()` (uno a muchos)\n\n### App/Models/Banco.php\n- **Propósito**: Datos de bancos y entidades financieras\n- **Campos**: `nombre`, `codigo`, `pais`, `activo`\n- **Relaciones**: `cuentas()` (uno a muchos)\n\n### App/Models/Operacion.php\n- **Propósito**: Transacción financiera primaria\n- **Campos**: `tipo_operacion_id`, `cliente_id`, `operador_id`, `estatus`, `fecha`\n- **Relaciones**: `movimientos()` (uno a muchos con movimiento contable)\n\n### App/Models/ComisionCuenta.php\n- **Propósito**: Comisiones por cuenta aplicables por operación\n- **Campos**: `cuenta_id` / `banco_id` (al menos uno requerido), `descripcion`, `tipo_calculo`, `valor`\n- **Campos de tiempo**: `vigente_desde`, `vigente_hasta`\n- **Combos**: Soporta comisiones por cuenta individual OR por banco entero\n\n## Servicios Clave\n\n### App/Services/Operaciones/RegistroOperacionService.php\n**Propósito**: Orquesta registro de operaciones completas\n- **Procesamiento**: Valida duplicados, aplica FIFO, crea entradas contables\n- **Comisiones**: Aplica comisiones relevantes por cuenta\n- **Retiros**: Asigna aleatoriamente al pool de pagadores (5% probabilidad)\n\n### App/Services/Configuracion/CalculadorComisionesService.php\n**Propósito**: Calcula comisiones según reglas definidas\n- **Inputs**: Cuenta, tipo operacion, valor, moneda\n- **Lógica**: Consulta comisiones vigentes, aplica tipo calculo (fijo/%)\n\n### App/Services/Configuracion/TasaDiariaService.php\n**Propósito**: Gestiona tasas diarias de mercado\n- **Actualización**: Pull de APIs externas de FX + rates históricos\n\n### App/Services/Reportes/ReporteComisionesOperadoresService.php\n**Propósito**: Genera reportes CSV/Excel para comisiones\n- **Dimensiones**: Por operador, día/mes, tipo operacion\n- **Outputs**: CSV y Excel (con Sheets separados)\n\n## Trabajos en Segundo Plano\n\n### App/Jobs/AlertarTasasFaltantesJob.php\n**Propósito**: Notifica si faltan tasas de mercado\n- **Horario**: Programado cada 5 minutos\n- **Umbral**: Si no hay tasa hoy para una moneda base/cotizada\n\n### App/Jobs/SincronizarTasasJob.php\n**Propósito**: Sincroniza tasas históricas de FX desde proveedores externos\n- **Frecuencia**: Diario\n\n### App/Jobs/GenerarReporteMensualComisionesJob.php\n**Propósito**: Genera informes mensuales automáticos\n- **Destino**: Upload a storage, email a gerentes\n\n### App/Jobs/ProcesarFifoOperacionJob.php\n**Propósito**: Mejora de rendimiento para operaciones FIFO\n- **Uso**: Para operaciones de alto volumen, procesa por lote\n\n## Espacio de Archivos\n\n### App/Exports/\n- **`ComisionesDetalleSheet.php`**: Hoja de detalles de comisiones granular\n- **`ComisionesOperadoresExport.php`**: Reporte consolidado de operador\n- **`ComisionesResumenSheet.php`**: Matriz resumen formato hoja de cálculo\n\n## Autorización y Roles\n\n### Roles Spatie (`super_admin`, `admin`, `operador`, `contador`, `lectura`)\n**Responsabilidades por rol**:\\n- **`super_admin`**: Todo (incluye bitácora)\\n- **`admin`**: Escritura completa (excepto reportes)\\n- **`operador`**: Puede crear operaciones (depósitos/retirros)\\n- **`contador`**: Puede verificar operaciones, ver reportes\\n- **`lectura`**: Solo catálogo (bancos, monedas, titulares)\n\n**Middleware**:\n- `auth:sanctum` para endpoints protegidos\n- `role:admin|super_admin` para escritura\n- `role:pagador|admin|super_admin` para pool\n\n## Variables Clave de .env\\n\\n```\\nAPP_NAME=Intermedius\\nAPP_ENV=production\\nDB_CONNECTION=sqlite\\nSANCTUM_STATE=production\\nCACHE_DRIVER=redis\\nQUEUE_CONNECTION=redis\\n```\\n\n## Scripts de Inicio\\n\n```bash\\ncd api\\nphp artisan serve --host=0.0.0.0 --port=8000  # Development\\n```\\n\n## Licencia\\nMIT (Laravel Framework)\\n\\n---\\n\\nEste es el README.md principal para la API de Intermedius en la carpeta api\\n--- Documentación principal terminada ---\n

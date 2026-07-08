@@ -9,7 +9,7 @@
         <span v-if="selectedCliente.alias" class="text-xs text-blue-500 ml-2">· {{ selectedCliente.alias }}</span>
       </div>
       <div class="flex items-center gap-2">
-        <button type="button" @click="openAddCuentaModal" class="text-xs bg-green-600 text-white px-2 py-1 rounded-lg hover:bg-green-700">+ Cuenta</button>
+        <button v-if="!clienteTieneCuentas" type="button" @click="openAddCuentaModal" class="text-xs bg-green-600 text-white px-2 py-1 rounded-lg hover:bg-green-700">+ Cuenta</button>
         <button type="button" @click="clearSelection" class="text-xs text-blue-500 hover:text-blue-700">Cambiar</button>
       </div>
     </div>
@@ -17,8 +17,10 @@
     <!-- Búsqueda -->
     <div v-else class="relative">
       <input
+        ref="searchInput"
         v-model="search"
         @input="onSearch"
+        @keydown="onKeyDown"
         type="text"
         placeholder="Buscar cliente por nombre..."
         class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
@@ -28,11 +30,12 @@
         class="absolute z-20 left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-56 overflow-y-auto"
       >
         <button
-          v-for="c in results"
+          v-for="(c, i) in results"
           :key="c.id"
           type="button"
           @click="selectCliente(c)"
-          class="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 border-b border-gray-100 last:border-0"
+          class="w-full text-left px-4 py-2.5 text-sm border-b border-gray-100 last:border-0"
+          :class="i === activeIndex ? 'bg-blue-50 text-blue-700' : 'hover:bg-gray-50'"
         >
           <div class="font-medium">{{ c.nombre }}</div>
           <div v-if="c.alias || c.documento" class="text-xs text-gray-400">
@@ -43,6 +46,7 @@
           type="button"
           @click="openCreateModal"
           class="w-full text-left px-4 py-2.5 text-sm text-blue-600 font-medium hover:bg-blue-50 flex items-center gap-1"
+          :class="activeIndex === results.length ? 'bg-blue-50' : ''"
         >
           <span>+</span> Crear nuevo cliente "{{ search }}"
         </button>
@@ -220,7 +224,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, nextTick } from 'vue'
 import { useClientesStore } from '../stores/clientes.js'
 import { useBancosStore } from '../stores/bancos.js'
 import { useTasasStore } from '../stores/tasas.js'
@@ -231,6 +235,7 @@ const emit = defineEmits(['update:modelValue', 'cuenta-agregada'])
 
 const props = defineProps({
   modelValue: { type: Object, default: () => ({ id: '', nombre: '' }) },
+  clienteTieneCuentas: { type: Boolean, default: false },
 })
 
 const clientesStore = useClientesStore()
@@ -245,6 +250,8 @@ const creating = ref(false)
 const createError = ref('')
 const bancos = ref([])
 const monedas = ref([])
+const activeIndex = ref(-1)
+const searchInput = ref(null)
 
 let debounce = null
 
@@ -281,6 +288,7 @@ function emptyCuenta() {
 function onSearch() {
   clearTimeout(debounce)
   searching.value = true
+  activeIndex.value = -1
   debounce = setTimeout(async () => {
     const q = search.value.trim()
     if (!q) { results.value = []; searching.value = false; return }
@@ -292,10 +300,39 @@ function onSearch() {
   }, 300)
 }
 
+// ── Navegación con teclado ──
+function onKeyDown(e) {
+  if (!results.value.length && search.value.trim()) return
+
+  switch (e.key) {
+    case 'ArrowDown':
+      e.preventDefault()
+      activeIndex.value = Math.min(activeIndex.value + 1, results.value.length - 1)
+      break
+    case 'ArrowUp':
+      e.preventDefault()
+      activeIndex.value = Math.max(activeIndex.value - 1, -1)
+      break
+    case 'Enter':
+      e.preventDefault()
+      if (activeIndex.value >= 0 && activeIndex.value < results.value.length) {
+        selectCliente(results.value[activeIndex.value])
+      } else if (search.value.trim()) {
+        openCreateModal()
+      }
+      break
+    case 'Escape':
+      results.value = []
+      activeIndex.value = -1
+      break
+  }
+}
+
 function selectCliente(c) {
   emit('update:modelValue', { id: c.id, nombre: c.nombre, alias: c.alias, documento: c.documento })
   search.value = ''
   results.value = []
+  activeIndex.value = -1
 }
 
 function clearSelection() {

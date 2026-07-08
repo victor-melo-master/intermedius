@@ -15,8 +15,13 @@ class ClienteController extends Controller
         $this->authorize('viewAny', Cliente::class);
 
         $clientes = Cliente::query()
-            ->when($request->filled('q'), fn ($q) => $q->whereFullText(['nombre', 'alias'], $request->q))
-            ->when($request->boolean('inactivos'), fn ($q) => $q->where('activo', false), fn ($q) => $q->where('activo', true))
+            ->when($request->filled('q'), function ($q) use ($request) {
+                $search = $request->q;
+                $q->where(function ($sub) use ($search) {
+                    $sub->where('nombre', 'like', "%{$search}%")
+                        ->orWhere('alias', 'like', "%{$search}%");
+                });
+            })
             ->orderBy('nombre')
             ->paginate(50);
 

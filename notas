@@ -8,3 +8,12 @@
   -e MYSQL_PASSWORD=secret \
   -v mariadb_data:/var/lib/mysql \
   mariadb:10.3
+
+
+docker start intermedius-db
+
+
+/////////////////
+
+cd ~/Desktop/intermedius/api
+php artisan serve --port=8000
