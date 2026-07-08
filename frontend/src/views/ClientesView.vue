@@ -93,6 +93,73 @@
             </div>
           </div>
         </div>
+
+        <!-- Historial de transacciones -->
+        <div class="border-t-2 border-gray-300 pt-6 pb-2 mt-4">
+          <div class="flex items-center justify-between mb-4">
+            <h4 class="font-semibold text-gray-800 text-base">Historial de transacciones</h4>
+            <button @click="exportarPDF" :disabled="exportando" class="text-xs bg-red-600 text-white px-2 py-1 rounded-lg hover:bg-red-700">
+              {{ exportando ? 'Generando...' : '📄 PDF' }}
+            </button>
+          </div>
+
+          <!-- Filtros -->
+          <div class="grid grid-cols-2 gap-2 mb-3">
+            <div>
+              <label class="text-[10px] text-gray-400">Desde</label>
+              <input v-model="historialFiltros.fecha_desde" type="date" class="w-full px-2 py-1 text-xs border border-gray-300 rounded" />
+            </div>
+            <div>
+              <label class="text-[10px] text-gray-400">Hasta</label>
+              <input v-model="historialFiltros.fecha_hasta" type="date" class="w-full px-2 py-1 text-xs border border-gray-300 rounded" />
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="text-[10px] text-gray-400">Tipo</label>
+            <select v-model="historialFiltros.tipo_codigo" class="w-full px-2 py-1 text-xs border border-gray-300 rounded">
+              <option value="">Todos</option>
+              <option value="compra_usd">Compra USD</option>
+              <option value="venta_usd">Venta USD</option>
+              <option value="intermediada">Intermediada</option>
+            </select>
+          </div>
+          <button @click="cargarHistorial(1)" :disabled="loadingHistorial" class="w-full text-xs bg-blue-600 text-white py-1.5 rounded hover:bg-blue-700 mb-3">
+            {{ loadingHistorial ? 'Cargando...' : 'Buscar' }}
+          </button>
+
+          <!-- Tabla de operaciones -->
+          <div v-if="historial.length > 0" class="overflow-x-auto">
+            <table class="w-full text-xs">
+              <thead>
+                <tr class="text-left text-gray-400 border-b">
+                  <th class="py-1">ID</th>
+                  <th class="py-1">Fecha</th>
+                  <th class="py-1">Tipo</th>
+                  <th class="py-1 text-right">USD</th>
+                  <th class="py-1 text-right">VES</th>
+                  <th class="py-1 text-right">Tasa</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="op in historial" :key="op.id" class="border-b border-gray-50">
+                  <td class="py-1">#{{ op.id }}</td>
+                  <td class="py-1">{{ formatFecha(op.fecha) }}</td>
+                  <td class="py-1">{{ op.tipo_operacion?.nombre || '—' }}</td>
+                  <td class="py-1 text-right">{{ formatMonto(op, 'USD') }}</td>
+                  <td class="py-1 text-right">{{ formatMonto(op, 'VES') }}</td>
+                  <td class="py-1 text-right">{{ op.tasa_aplicada ? parseFloat(op.tasa_aplicada).toFixed(2) : '—' }}</td>
+                </tr>
+              </tbody>
+            </table>
+            <!-- Paginación simple -->
+            <div v-if="historialPaginacion.last_page > 1" class="flex justify-between items-center mt-2 text-xs">
+              <button @click="cargarHistorial(historialPaginacion.current_page - 1)" :disabled="!historialPaginacion.prev_page_url" class="text-blue-600 disabled:text-gray-300">&lt; Anterior</button>
+              <span class="text-gray-500">Pág {{ historialPaginacion.current_page }} / {{ historialPaginacion.last_page }}</span>
+              <button @click="cargarHistorial(historialPaginacion.current_page + 1)" :disabled="!historialPaginacion.next_page_url" class="text-blue-600 disabled:text-gray-300">Siguiente &gt;</button>
+            </div>
+          </div>
+          <div v-else-if="!loadingHistorial && historialCargado" class="text-xs text-gray-400 py-2">Sin operaciones.</div>
+        </div>
       </div>
     </div>
 
@@ -146,7 +213,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, watch, onMounted } from 'vue'
 import { useClientesStore } from '../stores/clientes.js'
 import { useAuthStore } from '../stores/auth.js'
 import { useBancosStore } from '../stores/bancos.js'
@@ -303,6 +370,101 @@ async function submitCuenta() {
     savingCuenta.value = false
   }
 }
+
+// ── Historial de transacciones ──
+const historial = ref([])
+const historialPaginacion = ref({})
+const historialCargado = ref(false)
+const loadingHistorial = ref(false)
+const exportando = ref(false)
+const historialFiltros = reactive({
+  fecha_desde: '',
+  fecha_hasta: '',
+  tipo_codigo: '',
+})
+
+async function cargarHistorial(page = 1) {
+  if (!detailCliente.value) return
+  loadingHistorial.value = true
+  try {
+    const params = { page }
+    if (historialFiltros.fecha_desde) params.fecha_desde = historialFiltros.fecha_desde
+    if (historialFiltros.fecha_hasta) params.fecha_hasta = historialFiltros.fecha_hasta
+    if (historialFiltros.tipo_codigo) params.tipo_codigo = historialFiltros.tipo_codigo
+
+    const { data } = await api.get(`/clientes/${detailCliente.value.id}/operaciones`, { params })
+    historial.value = data.data || []
+    historialPaginacion.value = {
+      current_page: data.current_page,
+      last_page: data.last_page,
+      prev_page_url: data.prev_page_url,
+      next_page_url: data.next_page_url,
+    }
+    historialCargado.value = true
+  } catch {
+    historial.value = []
+  } finally {
+    loadingHistorial.value = false
+  }
+}
+
+function formatFecha(fecha) {
+  if (!fecha) return '—'
+  const d = new Date(fecha)
+  return d.toLocaleDateString('es-VE', { day: '2-digit', month: '2-digit', year: 'numeric' })
+}
+
+function formatMonto(op, moneda) {
+  const mov = op.movimientos?.find(m => m.moneda?.codigo === moneda)
+  if (!mov) return '—'
+  return new Intl.NumberFormat('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Math.abs(parseFloat(mov.monto)))
+}
+
+async function exportarPDF() {
+  if (!detailCliente.value) return
+  exportando.value = true
+  try {
+    const token = localStorage.getItem('token')
+    const params = {}
+    if (historialFiltros.fecha_desde) params.fecha_desde = historialFiltros.fecha_desde
+    if (historialFiltros.fecha_hasta) params.fecha_hasta = historialFiltros.fecha_hasta
+    if (historialFiltros.tipo_codigo) params.tipo_codigo = historialFiltros.tipo_codigo
+
+    // Usar axios directamente (no la instancia api) para evitar interceptores que rompan el blob
+    const axios = (await import('axios')).default
+    const response = await axios.post(
+      `${import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'}/clientes/${detailCliente.value.id}/operaciones/exportar`,
+      params,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/pdf',
+        },
+        responseType: 'blob',
+      }
+    )
+
+    const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }))
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', `operaciones_${detailCliente.value.nombre}.pdf`)
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.URL.revokeObjectURL(url)
+  } catch (err) {
+    console.error('Error al exportar PDF:', err)
+    alert('Error al generar el PDF. Intenta de nuevo.')
+  } finally {
+    exportando.value = false
+  }
+}
+
+watch(showDetail, (val) => {
+  if (val && detailCliente.value) {
+    cargarHistorial()
+  }
+})
 
 onMounted(() => clientes.fetchAll())
 </script>

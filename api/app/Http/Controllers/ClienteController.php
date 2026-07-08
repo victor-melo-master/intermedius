@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Cliente\StoreClienteRequest;
 use App\Http\Requests\Cliente\UpdateClienteRequest;
 use App\Models\Cliente;
+use App\Models\Operacion;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -67,5 +68,51 @@ class ClienteController extends Controller
         $cliente->delete();
 
         return response()->json(null, 204);
+    }
+
+    public function operaciones(Request $request, Cliente $cliente): JsonResponse
+    {
+        $this->authorize('view', $cliente);
+
+        $query = Operacion::with(['tipoOperacion', 'movimientos.moneda'])
+            ->where('cliente_id', $cliente->id)
+            ->when($request->filled('fecha_desde'), fn($q) => $q->where('fecha', '>=', $request->fecha_desde))
+            ->when($request->filled('fecha_hasta'), fn($q) => $q->where('fecha', '<=', $request->fecha_hasta))
+            ->when($request->filled('tipo_codigo'), fn($q) => $q->whereHas('tipoOperacion', fn($t) => $t->where('codigo', $request->tipo_codigo)))
+            ->orderByDesc('fecha')
+            ->orderByDesc('id');
+
+        $operaciones = $query->paginate(20);
+
+        return response()->json($operaciones);
+    }
+
+    public function exportarOperaciones(Request $request, Cliente $cliente)
+    {
+        $this->authorize('view', $cliente);
+
+        $query = Operacion::with(['tipoOperacion', 'movimientos.moneda'])
+            ->where('cliente_id', $cliente->id)
+            ->when($request->filled('fecha_desde'), fn($q) => $q->where('fecha', '>=', $request->fecha_desde))
+            ->when($request->filled('fecha_hasta'), fn($q) => $q->where('fecha', '<=', $request->fecha_hasta))
+            ->when($request->filled('tipo_codigo'), fn($q) => $q->whereHas('tipoOperacion', fn($t) => $t->where('codigo', $request->tipo_codigo)))
+            ->orderByDesc('fecha')
+            ->orderByDesc('id');
+
+        $operaciones = $query->get();
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reportes.cliente_operaciones', [
+            'cliente' => $cliente,
+            'operaciones' => $operaciones,
+            'filtros' => [
+                'fecha_desde' => $request->input('fecha_desde', ''),
+                'fecha_hasta' => $request->input('fecha_hasta', ''),
+                'tipo_codigo' => $request->input('tipo_codigo', ''),
+            ],
+        ]);
+
+        return response($pdf->output(), 200)
+    ->header('Content-Type', 'application/pdf')
+    ->header('Content-Disposition', 'attachment; filename="operaciones_'.$cliente->nombre.'.pdf"');
     }
 }

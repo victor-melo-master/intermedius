@@ -1,0 +1,242 @@
+{
+    "message": "Undefined array key \"fecha_desde\"",
+    "exception": "Spatie\\LaravelIgnition\\Exceptions\\ViewException",
+    "file": "/home/fran/Desktop/intermedius/api/resources/views/reportes/cliente_operaciones.blade.php",
+    "line": 23,
+    "trace": {
+        "2": {
+            "file": "/home/fran/Desktop/intermedius/api/vendor/laravel/framework/src/Illuminate/Filesystem/Filesystem.php",
+            "line": 123,
+            "function": "require"
+        },
+        "3": {
+            "file": "/home/fran/Desktop/intermedius/api/vendor/laravel/framework/src/Illuminate/Filesystem/Filesystem.php",
+            "line": 124,
+            "function": "{closure:Illuminate\\Filesystem\\Filesystem::getRequire():120}",
+            "class": "Illuminate\\Filesystem\\Filesystem",
+            "type": "::"
+        },
+        "4": {
+            "file": "/home/fran/Desktop/intermedius/api/vendor/laravel/framework/src/Illuminate/View/Engines/PhpEngine.php",
+            "line": 58,
+            "function": "getRequire",
+            "class": "Illuminate\\Filesystem\\Filesystem",
+            "type": "->"
+        },
+        "5": {
+            "file": "/home/fran/Desktop/intermedius/api/vendor/laravel/framework/src/Illuminate/View/Engines/CompilerEngine.php",
+            "line": 75,
+            "function": "evaluatePath",
+            "class": "Illuminate\\View\\Engines\\PhpEngine",
+            "type": "->"
+        },
+        "6": {
+            "file": "/home/fran/Desktop/intermedius/api/vendor/laravel/framework/src/Illuminate/View/View.php",
+            "line": 209,
+            "function": "get",
+            "class": "Illuminate\\View\\Engines\\CompilerEngine",
+            "type": "->"
+        },
+        "7": {
+            "file": "/home/fran/Desktop/intermedius/api/vendor/laravel/framework/src/Illuminate/View/View.php",
+            "line": 192,
+            "function": "getContents",
+            "class": "Illuminate\\View\\View",
+            "type": "->"
+        },
+        "8": {
+            "file": "/home/fran/Desktop/intermedius/api/vendor/laravel/framework/src/Illuminate/View/View.php",
+            "line": 161,
+            "function": "renderContents",
+            "class": "Illuminate\\View\\View",
+            "type": "->"
+        },
+        "9": {
+            "file": "/home/fran/Desktop/intermedius/api/vendor/barryvdh/laravel-dompdf/src/PDF.php",
+            "line": 142,
+            "function": "render",
+            "class": "Illuminate\\View\\View",
+            "type": "->"
+        },
+        "10": {
+            "file": "/home/fran/Desktop/intermedius/api/vendor/barryvdh/laravel-dompdf/src/Facade/Pdf.php",
+            "line": 66,
+            "function": "loadView",
+            "class": "Barryvdh\\DomPDF\\PDF",
+            "type": "->"
+        },
+        "11": {
+            "file": "/home/fran/Desktop/intermedius/api/app/Http/Controllers/ClienteController.php",
+            "line": 104,
+            "function": "__callStatic",
+            "class": "Barryvdh\\DomPDF\\Facade\\Pdf",
+            "type": "::"
+        },
+        "12": {
+            "file": "/home/fran/Desktop/intermedius/api/vendor/laravel/framework/src/Illuminate/Routing/ControllerDispatcher.php",
+            "line": 47,
+            "function": "exportarOperaciones",
+            "class": "App\\Http\\Controllers\\ClienteController",
+            "type": "->"
+        },
+        "13": {
+            "file": "/home/fran/Desktop/intermedius/api/vendor/laravel/framework/src/Illuminate/Routing/Route.php",
+            "line": 266,
+            "function": "dispatch",
+            "class": "Illuminate\\Routing\\ControllerDispatcher",
+            "type": "->"
+        },
+        "14": {
+            "file": "/home/fran/Desktop/intermedius/api/vendor/laravel/framework/src/Illuminate/Routing/Route.php",
+            "line": 212,
+            "function": "runController",
+            "class": "Illuminate\\Routing\\Route",
+            "type": "->"
+        },
+        "15": {
+            "file": "/home/fran/Desktop/intermedius/api/vendor/laravel/framework/src/Illuminate/Routing/Router.php",
+            "line": 808,
+            "function": "run",
+            "class": "Illuminate\\Routing\\Route",
+            "type": "->"
+        },
+        "16": {
+            "file": "/home/fran/Desktop/intermedius/api/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php",
+            "line": 170,
+            "function": "{closure:Illuminate\\Routing\\Router::runRouteWithinStack():807}",
+            "class": "Illuminate\\Routing\\Router",
+            "type": "->"
+        },
+        "17": {
+            "file": "/home/fran/Desktop/intermedius/api/vendor/laravel/framework/src/Illuminate/Routing/Middleware/SubstituteBindings.php",
+            "line": 51,
+            "function": "{closure:Illuminate\\Pipeline\\Pipeline::prepareDestination():168}",
+            "class": "Illuminate\\Pipeline\\Pipeline",
+            "type": "->"
+        },
+        "18": {
+            "file": "/home/fran/Desktop/intermedius/api/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php",
+            "line": 209,
+            "function": "handle",
+            "class": "Illuminate\\Routing\\Middleware\\SubstituteBindings",
+            "type": "->"
+        },
+        "19": {
+            "file": "/home/fran/Desktop/intermedius/api/vendor/laravel/framework/src/Illuminate/Auth/Middleware/Authenticate.php",
+            "line": 64,
+            "function": "{closure:{closure:Illuminate\\Pipeline\\Pipeline::carry():184}:185}",
+            "class": "Illuminate\\Pipeline\\Pipeline",
+            "type": "->"
+        },
+        "20": {
+            "file": "/home/fran/Desktop/intermedius/api/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php",
+            "line": 209,
+            "function": "handle",
+            "class": "Illuminate\\Auth\\Middleware\\Authenticate",
+            "type": "->"
+        },
+        "21": {
+            "file": "/home/fran/Desktop/intermedius/api/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php",
+            "line": 127,
+            "function": "{closure:{closure:Illuminate\\Pipeline\\Pipeline::carry():184}:185}",
+            "class": "Illuminate\\Pipeline\\Pipeline",
+            "type": "->"
+        },
+        "22": {
+            "file": "/home/fran/Desktop/intermedius/api/vendor/laravel/framework/src/Illuminate/Routing/Router.php",
+            "line": 807,
+            "function": "then",
+            "class": "Illuminate\\Pipeline\\Pipeline",
+            "type": "->"
+        },
+        "23": {
+            "file": "/home/fran/Desktop/intermedius/api/vendor/laravel/framework/src/Illuminate/Routing/Router.php",
+            "line": 786,
+            "function": "runRouteWithinStack",
+            "class": "Illuminate\\Routing\\Router",
+            "type": "->"
+        },
+        "24": {
+            "file": "/home/fran/Desktop/intermedius/api/vendor/laravel/framework/src/Illuminate/Routing/Router.php",
+            "line": 750,
+            "function": "runRoute",
+            "class": "Illuminate\\Routing\\Router",
+            "type": "->"
+        },
+        "25": {
+            "file": "/home/fran/Desktop/intermedius/api/vendor/laravel/framework/src/Illuminate/Routing/Router.php",
+            "line": 739,
+            "function": "dispatchToRoute",
+            "class": "Illuminate\\Routing\\Router",
+            "type": "->"
+        },
+        "26": {
+            "file": "/home/fran/Desktop/intermedius/api/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php",
+            "line": 201,
+            "function": "dispatch",
+            "class": "Illuminate\\Routing\\Router",
+            "type": "->"
+        },
+        "27": {
+            "file": "/home/fran/Desktop/intermedius/api/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php",
+            "line": 170,
+            "function": "{closure:Illuminate\\Foundation\\Http\\Kernel::dispatchToRouter():198}",
+            "class": "Illuminate\\Foundation\\Http\\Kernel",
+            "type": "->"
+        },
+        "28": {
+            "file": "/home/fran/Desktop/intermedius/api/vendor/laravel/framework/src/Illuminate/Http/Middleware/HandleCors.php",
+            "line": 62,
+            "function": "{closure:Illuminate\\Pipeline\\Pipeline::prepareDestination():168}",
+            "class": "Illuminate\\Pipeline\\Pipeline",
+            "type": "->"
+        },
+        "29": {
+            "file": "/home/fran/Desktop/intermedius/api/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php",
+            "line": 209,
+            "function": "handle",
+            "class": "Illuminate\\Http\\Middleware\\HandleCors",
+            "type": "->"
+        },
+        "30": {
+            "file": "/home/fran/Desktop/intermedius/api/vendor/laravel/framework/src/Illuminate/Pipeline/Pipeline.php",
+            "line": 127,
+            "function": "{closure:{closure:Illuminate\\Pipeline\\Pipeline::carry():184}:185}",
+            "class": "Illuminate\\Pipeline\\Pipeline",
+            "type": "->"
+        },
+        "31": {
+            "file": "/home/fran/Desktop/intermedius/api/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php",
+            "line": 176,
+            "function": "then",
+            "class": "Illuminate\\Pipeline\\Pipeline",
+            "type": "->"
+        },
+        "32": {
+            "file": "/home/fran/Desktop/intermedius/api/vendor/laravel/framework/src/Illuminate/Foundation/Http/Kernel.php",
+            "line": 145,
+            "function": "sendRequestThroughRouter",
+            "class": "Illuminate\\Foundation\\Http\\Kernel",
+            "type": "->"
+        },
+        "33": {
+            "file": "/home/fran/Desktop/intermedius/api/vendor/laravel/framework/src/Illuminate/Foundation/Application.php",
+            "line": 1220,
+            "function": "handle",
+            "class": "Illuminate\\Foundation\\Http\\Kernel",
+            "type": "->"
+        },
+        "34": {
+            "file": "/home/fran/Desktop/intermedius/api/public/index.php",
+            "line": 17,
+            "function": "handleRequest",
+            "class": "Illuminate\\Foundation\\Application",
+            "type": "->"
+        },
+        "35": {
+            "file": "/home/fran/Desktop/intermedius/api/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php",
+            "line": 23,
+            "function": "require_once"
+        }
+    }
+}
