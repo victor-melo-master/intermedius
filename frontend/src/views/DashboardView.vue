@@ -209,7 +209,7 @@ const refUltimoTs = computed(() => {
 
 const refStale = computed(() => {
   if (!refUltimoTs.value) return false
-  return (ahora.value - refUltimoTs.value) > 30 * 60 * 1000
+  return (ahora.value - refUltimoTs.value) > 2 * 60 * 1000
 })
 
 const refRelativo = computed(() => {
@@ -269,7 +269,14 @@ function aplicarFiltros() {
 }
 
 // ── Ciclo de vida ──
-let refInterval = null
+let refTimer = null
+
+function scheduleRefresh() {
+  refTimer = setTimeout(async () => {
+    await fetchTasasReferencia()
+    scheduleRefresh()
+  }, 1 * 60 * 1000)
+}
 
 onMounted(async () => {
   await Promise.all([
@@ -277,11 +284,10 @@ onMounted(async () => {
     fetchResumen(),
     fetchOperadores(),
   ])
-  // Refrescar tasas de referencia cada 5 minutos
-  refInterval = setInterval(fetchTasasReferencia, 5 * 60 * 1000)
+  scheduleRefresh()
 })
 
 onUnmounted(() => {
-  if (refInterval) clearInterval(refInterval)
+  if (refTimer) clearTimeout(refTimer)
 })
 </script>

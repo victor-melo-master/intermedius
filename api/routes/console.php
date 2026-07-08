@@ -13,12 +13,13 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote')->hourly();
 
 Schedule::job(new SincronizarTasasJob())
-    ->everyTenMinutes()
+    ->everyMinute()
     ->withoutOverlapping()
     ->name('sincronizar-tasas');
 
 Schedule::job(new SincronizarTasasReferenciaJob())
-    ->everyFifteenMinutes()
+    ->everyMinute()
+    ->withoutOverlapping()
     ->name('sincronizar-tasas-referencia');
 
 Schedule::job(new AlertarTasasFaltantesJob())

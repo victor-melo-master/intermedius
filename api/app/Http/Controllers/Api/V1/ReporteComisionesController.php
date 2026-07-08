@@ -8,6 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Illuminate\Support\Carbon;
 
 class ReporteComisionesController extends Controller
 {
@@ -20,8 +21,8 @@ class ReporteComisionesController extends Controller
             'hasta' => ['required', 'date', 'after_or_equal:desde'],
         ]);
 
-        $desde = \Carbon\Carbon::parse($request->input('desde'))->startOfDay();
-        $hasta = \Carbon\Carbon::parse($request->input('hasta'))->endOfDay();
+        $desde = Carbon::parse($request->input('desde'))->startOfDay();
+        $hasta = Carbon::parse($request->input('hasta'))->endOfDay();
 
         $reporte = $this->service->generar($desde, $hasta);
 
@@ -36,8 +37,8 @@ class ReporteComisionesController extends Controller
             'formato' => ['required', 'in:excel,pdf'],
         ]);
 
-        $desde   = \Carbon\Carbon::parse($request->input('desde'))->startOfDay();
-        $hasta   = \Carbon\Carbon::parse($request->input('hasta'))->endOfDay();
+        $desde   = Carbon::parse($request->input('desde'))->startOfDay();
+        $hasta   = Carbon::parse($request->input('hasta'))->endOfDay();
         $formato = $request->input('formato');
 
         $path = $formato === 'excel'
@@ -63,7 +64,7 @@ class ReporteComisionesController extends Controller
                 'url'           => Storage::url($f),
                 'nombre'        => basename($f),
                 'tamano_bytes'  => Storage::size($f),
-                'modificado_en' => \Carbon\Carbon::createFromTimestamp(Storage::lastModified($f))->toIso8601String(),
+                'modificado_en' => Carbon::createFromTimestamp(Storage::lastModified($f))->toIso8601String(),
             ])
             ->sortByDesc('modificado_en')
             ->values();

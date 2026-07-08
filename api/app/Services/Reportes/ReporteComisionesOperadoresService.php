@@ -3,7 +3,7 @@
 namespace App\Services\Reportes;
 
 use App\Models\ComisionOperacion;
-use Illuminate\Support\Carbon;
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
@@ -17,7 +17,7 @@ class ReporteComisionesOperadoresService
      *
      * @return Collection<array{titular_id, titular, total_operaciones, total_comisiones_usd, detalle}>
      */
-    public function generar(Carbon $desde, Carbon $hasta): Collection
+    public function generar($desde, $hasta): Collection
     {
         $comisiones = ComisionOperacion::whereHas('operacion', function ($q) use ($desde, $hasta) {
             $q->whereBetween('fecha', [$desde->toDateString(), $hasta->toDateString()]);
@@ -46,7 +46,7 @@ class ReporteComisionesOperadoresService
      * Exporta el reporte a Excel.
      * Retorna el path relativo en storage (usable con Storage::url()).
      */
-    public function exportarExcel(Carbon $desde, Carbon $hasta): string
+    public function exportarExcel($desde, $hasta): string
     {
         $datos  = $this->generar($desde, $hasta);
         $mes    = $desde->format('Y-m');
@@ -67,7 +67,7 @@ class ReporteComisionesOperadoresService
      * Exporta el reporte a PDF.
      * Retorna el path relativo en storage (usable con Storage::url()).
      */
-    public function exportarPdf(Carbon $desde, Carbon $hasta): string
+    public function exportarPdf($desde, $hasta): string
     {
         $datos  = $this->generar($desde, $hasta);
         $mes    = $desde->format('Y-m');
