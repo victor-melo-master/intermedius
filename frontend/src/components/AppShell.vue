@@ -78,6 +78,7 @@ const baseNav = [
   { path: '/cuentas', label: 'Cuentas', icon: '🏦' },
   { path: '/bancos', label: 'Bancos', icon: '🏛️' },
   { path: '/reportes', label: 'Reportes', icon: '📉' },
+  { path: '/comisiones', label: 'Comisiones', icon: '💰' },
 ]
 
 const canPool = computed(() => {
