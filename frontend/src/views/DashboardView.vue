@@ -1,4 +1,3 @@
-// src/views/DashboardView.vue
 <template>
   <div class="space-y-5">
     <!-- ── Sección 1: Tasas de referencia (discreta) ───────────────────── -->
@@ -14,6 +13,16 @@
         </span>
       </template>
       <span v-else>Tasas de referencia no disponibles</span>
+    </div>
+
+    <!-- ── Alertas ─────────────────────────────────────────────────────── -->
+    <div v-if="alertas.operaciones_sin_tasa_referencia_hoy || alertas.pares_sin_tasa_vigente?.length" class="flex flex-wrap gap-2">
+      <span v-if="alertas.operaciones_sin_tasa_referencia_hoy" class="bg-red-50 text-red-700 border border-red-200 px-3 py-1 rounded-full text-xs font-medium">
+        ⚠️ {{ alertas.operaciones_sin_tasa_referencia_hoy }} op. sin tasa de referencia hoy
+      </span>
+      <span v-if="alertas.pares_sin_tasa_vigente?.length" class="bg-amber-50 text-amber-700 border border-amber-200 px-3 py-1 rounded-full text-xs font-medium">
+        📋 Falta publicar tasa: {{ alertas.pares_sin_tasa_vigente.join(', ') }}
+      </span>
     </div>
 
     <!-- Encabezado -->
@@ -183,9 +192,10 @@ const resumenError = ref('')
 const loadingResumen = ref(false)
 const operadores = ref([])
 const ahora = ref(Date.now())
+const alertas = ref({})
 
 function hoyStr() {
-  return new Date().toLocaleDateString('en-CA') // YYYY-MM-DD en hora local
+  return new Date().toLocaleDateString('en-CA')
 }
 
 const filtros = reactive({
@@ -270,6 +280,15 @@ async function fetchOperadores() {
   }
 }
 
+async function fetchAlertas() {
+  try {
+    const { data } = await api.get('/dashboard/general')
+    alertas.value = data.alertas || {}
+  } catch {
+    alertas.value = {}
+  }
+}
+
 function aplicarFiltros() {
   fetchResumen()
 }
@@ -289,6 +308,7 @@ onMounted(async () => {
     fetchTasasReferencia(),
     fetchResumen(),
     fetchOperadores(),
+    fetchAlertas(),
   ])
   scheduleRefresh()
 })
