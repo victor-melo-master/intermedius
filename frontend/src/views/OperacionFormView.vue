@@ -31,8 +31,8 @@
           ⚠️ No hay cuentas configuradas.
         </div>
         <template v-else>
-          <CuentaSelector v-model="form.cuenta_usd_id" :label="`${form.tipo === 'venta' ? 'Cuenta ' + monedaSel + ' desde donde entregas' : 'Cuenta ' + monedaSel + ' donde recibes'}`" :placeholder="'Seleccionar cuenta ' + monedaSel" :cuentas="cuentasForeign" :empty-message="'No hay cuentas en ' + monedaSel" :cuenta-label="cuentaLabel" />
-          <CuentaSelector v-model="form.cuenta_ves_id" :label="`${form.tipo === 'venta' ? 'Cuenta ' + quoteCodigo + ' donde recibes' : 'Cuenta ' + quoteCodigo + ' desde donde pagas'}`" :placeholder="'Seleccionar cuenta ' + quoteCodigo" :cuentas="cuentasQuote" :empty-message="'No hay cuentas en ' + quoteCodigo" :cuenta-label="cuentaLabel" />
+          <CuentaSelector v-model="form.cuenta_usd_id" :label="`${form.tipo === 'venta' ? 'Cuenta ' + monedaSel + ' desde donde entregas' : 'Cuenta ' + monedaSel + ' donde recibes'}`" :placeholder="'Seleccionar cuenta ' + monedaSel" :cuentas="cuentasForeign" :empty-message="'No hay cuentas en ' + monedaSel" :cuenta-label="cuentaLabel" :bancos="bancos" />
+          <CuentaSelector v-model="form.cuenta_ves_id" :label="`${form.tipo === 'venta' ? 'Cuenta ' + quoteCodigo + ' donde recibes' : 'Cuenta ' + quoteCodigo + ' desde donde pagas'}`" :placeholder="'Seleccionar cuenta ' + quoteCodigo" :cuentas="cuentasQuote" :empty-message="'No hay cuentas en ' + quoteCodigo" :cuenta-label="cuentaLabel" :bancos="bancos" />
           <div>
             <label class="block text-sm text-gray-600 mb-1">Estado de entrega</label>
             <select v-model="form.estado_entrega" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none bg-white">
@@ -68,6 +68,7 @@
 import { reactive, ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { useTasasStore } from '../stores/tasas.js'
+import { useBancosStore } from '../stores/bancos.js'
 import { useAuthStore } from '../stores/auth.js'
 import { useOperacionesStore } from '../stores/operaciones.js'
 import api from '../api/axios.js'
@@ -82,8 +83,11 @@ import AppErrorState from '../components/AppErrorState.vue'
 
 const route = useRoute()
 const tasas = useTasasStore()
+const bancosStore = useBancosStore()
 const auth = useAuthStore()
 const ops = useOperacionesStore()
+
+const bancos = ref([])
 
 const editId = computed(() => route.params.id || null)
 const esEdicion = computed(() => !!editId.value)
@@ -311,6 +315,8 @@ function registrarOtra() {
 
 onMounted(async () => {
   await tasas.fetchVigentes()
+  await bancosStore.fetchAll()
+  bancos.value = bancosStore.list
   try { const { data } = await api.get('/cuentas'); cuentas.value = Array.isArray(data) ? data : (data.data || []) } catch { cuentas.value = [] }
   finally { loadingCuentas.value = false }
 

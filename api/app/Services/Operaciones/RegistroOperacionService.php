@@ -127,13 +127,14 @@ class RegistroOperacionService
             $operacion->load(['movimientos.cuenta.banco', 'movimientos.moneda', 'operador.titular', 'tipoOperacion']);
             $this->comisionesService->aplicarAOperacion($operacion);
 
-            $cuentaIds = collect($payload['movimientos'])
-                ->pluck('cuenta_id')
-                ->unique()
-                ->values()
-                ->all();
-
-            RecalcularSaldoCuentaJob::dispatch($cuentaIds);
+            // Actualizar saldo de cuentas afectadas automáticamente
+            foreach ($payload['movimientos'] as $movData) {
+                $cuenta = Cuenta::find($movData['cuenta_id']);
+                if ($cuenta && $cuenta->saldo_cache_at) {
+                    $nuevoSaldo = bcadd($cuenta->saldo_cache, $movData['monto'], 4);
+                    $cuenta->update(['saldo_cache' => $nuevoSaldo]);
+                }
+            }
 
             if ($tipo->afecta_fifo) {
                 ProcesarFifoOperacionJob::dispatch($operacion->id);
@@ -514,15 +515,15 @@ public function actualizar(Operacion $operacion, array $payload, \App\Models\Use
                 ->log('Operación editada');
         }
 
-        // ── 7. Despachar jobs ───────────────────────────────────────────
-        $cuentaIds = collect($payload['movimientos'] ?? $operacion->movimientos)
-            ->pluck('cuenta_id')
-            ->unique()
-            ->values()
-            ->all();
-
-        if (!empty($cuentaIds)) {
-            RecalcularSaldoCuentaJob::dispatch($cuentaIds);
+        // ── 7. Actualizar saldo de cuentas afectadas ───────────────────
+        if (!empty($payload['movimientos'])) {
+            foreach ($payload['movimientos'] as $movData) {
+                $cuenta = Cuenta::find($movData['cuenta_id']);
+                if ($cuenta && $cuenta->saldo_cache_at) {
+                    $nuevoSaldo = bcadd($cuenta->saldo_cache, $movData['monto'], 4);
+                    $cuenta->update(['saldo_cache' => $nuevoSaldo]);
+                }
+            }
         }
 
         if ($tipo->afecta_fifo) {
@@ -590,6 +591,15 @@ public function actualizar(Operacion $operacion, array $payload, \App\Models\Use
             // Aplicar comisiones si corresponde
             $operacion->load(['movimientos.cuenta.banco', 'movimientos.moneda', 'operador.titular', 'tipoOperacion']);
             $this->comisionesService->aplicarAOperacion($operacion);
+
+            // Actualizar saldo de cuentas afectadas automáticamente
+            foreach ($payload['movimientos'] as $movData) {
+                $cuenta = Cuenta::find($movData['cuenta_id']);
+                if ($cuenta && $cuenta->saldo_cache_at) {
+                    $nuevoSaldo = bcadd($cuenta->saldo_cache, $movData['monto'], 4);
+                    $cuenta->update(['saldo_cache' => $nuevoSaldo]);
+                }
+            }
 
             return $operacion->fresh(['movimientos.cuenta', 'tipoOperacion']);
         });

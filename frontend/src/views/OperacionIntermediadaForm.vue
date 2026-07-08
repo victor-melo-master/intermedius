@@ -21,8 +21,8 @@
       <!-- Cuentas Emisor -->
       <div class="bg-white border border-gray-200 rounded-xl p-5 space-y-4">
         <h3 class="font-semibold text-gray-700">Cuentas Emisor</h3>
-        <CuentaSelector v-model="cuentaEmisorDivisa" :label="'Cuenta ' + moneda + ' del emisor (recibe divisa)'" :placeholder="'Seleccionar cuenta ' + moneda" :cuentas="cuentasDivisa" :empty-message="'No hay cuentas en ' + moneda" :cuenta-label="cuentaLabel" />
-        <CuentaSelector v-model="cuentaEmisorVes" label="Cuenta VES del emisor (paga al cliente)" placeholder="Seleccionar cuenta VES" :cuentas="cuentasVes" empty-message="No hay cuentas en VES" :cuenta-label="cuentaLabel" />
+        <CuentaSelector v-model="cuentaEmisorDivisa" :label="'Cuenta ' + moneda + ' del emisor (recibe divisa)'" :placeholder="'Seleccionar cuenta ' + moneda" :cuentas="cuentasDivisa" :empty-message="'No hay cuentas en ' + moneda" :cuenta-label="cuentaLabel" :bancos="bancos" />
+        <CuentaSelector v-model="cuentaEmisorVes" label="Cuenta VES del emisor (paga al cliente)" placeholder="Seleccionar cuenta VES" :cuentas="cuentasVes" empty-message="No hay cuentas en VES" :cuenta-label="cuentaLabel" :bancos="bancos" />
       </div>
 
       <!-- Cliente Receptor (compra) -->
@@ -34,8 +34,8 @@
       <!-- Cuentas Receptor -->
       <div class="bg-white border border-gray-200 rounded-xl p-5 space-y-4">
         <h3 class="font-semibold text-gray-700">Cuentas Receptor</h3>
-        <CuentaSelector v-model="cuentaReceptorDivisa" :label="'Cuenta ' + moneda + ' del receptor (entrega divisa)'" :placeholder="'Seleccionar cuenta ' + moneda" :cuentas="cuentasDivisa" :empty-message="'No hay cuentas en ' + moneda" :cuenta-label="cuentaLabel" />
-        <CuentaSelector v-model="cuentaReceptorVes" label="Cuenta VES del receptor (recibe del cliente)" placeholder="Seleccionar cuenta VES" :cuentas="cuentasVes" empty-message="No hay cuentas en VES" :cuenta-label="cuentaLabel" />
+        <CuentaSelector v-model="cuentaReceptorDivisa" :label="'Cuenta ' + moneda + ' del receptor (entrega divisa)'" :placeholder="'Seleccionar cuenta ' + moneda" :cuentas="cuentasDivisa" :empty-message="'No hay cuentas en ' + moneda" :cuenta-label="cuentaLabel" :bancos="bancos" />
+        <CuentaSelector v-model="cuentaReceptorVes" label="Cuenta VES del receptor (recibe del cliente)" placeholder="Seleccionar cuenta VES" :cuentas="cuentasVes" empty-message="No hay cuentas en VES" :cuenta-label="cuentaLabel" :bancos="bancos" />
       </div>
 
       <!-- Monto -->
@@ -91,6 +91,7 @@
 <script setup>
 import { reactive, ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '../stores/auth.js'
+import { useBancosStore } from '../stores/bancos.js'
 import { useOperacionesStore } from '../stores/operaciones.js'
 import ClienteSelector from '../components/ClienteSelector.vue'
 import CuentaSelector from '../components/CuentaSelector.vue'
@@ -98,7 +99,10 @@ import AppErrorState from '../components/AppErrorState.vue'
 import api from '../api/axios.js'
 
 const auth = useAuthStore()
+const bancosStore = useBancosStore()
 const ops = useOperacionesStore()
+
+const bancos = ref([])
 
 const moneda = ref('USD')
 const saving = ref(false)
@@ -189,6 +193,8 @@ async function submit() {
 }
 
 onMounted(async () => {
+  await bancosStore.fetchAll()
+  bancos.value = bancosStore.list
   try {
     const { data } = await api.get('/cuentas')
     cuentas.value = Array.isArray(data) ? data : (data.data || [])

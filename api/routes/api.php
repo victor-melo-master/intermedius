@@ -41,6 +41,8 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('bancos',           BancoController::class);
         Route::apiResource('monedas',          MonedaController::class);
         Route::apiResource('cuentas',          CuentaController::class);
+        Route::post('cuentas/{cuenta}/saldo', [CuentaController::class, 'cargarSaldo'])
+            ->middleware('role:admin|super_admin');
         Route::apiResource('clientes',         ClienteController::class);
         Route::get('clientes/{cliente}/cuentas', [ClienteController::class, 'cuentas']);
         Route::apiResource('categorias-gasto', CategoriaGastoController::class)

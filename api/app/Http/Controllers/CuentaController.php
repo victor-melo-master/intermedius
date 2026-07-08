@@ -53,4 +53,20 @@ class CuentaController extends Controller
 
         return response()->json(null, 204);
     }
+
+    public function cargarSaldo(Request $request, Cuenta $cuenta): JsonResponse
+    {
+        $this->authorize('update', $cuenta);
+
+        $request->validate([
+            'saldo' => ['required', 'numeric', 'min:0'],
+        ]);
+
+        $cuenta->update([
+            'saldo_cache'    => $request->saldo,
+            'saldo_cache_at' => now(),
+        ]);
+
+        return response()->json($cuenta->fresh(['banco', 'moneda']));
+    }
 }
