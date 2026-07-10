@@ -88,36 +88,36 @@
     </div>
 
     <!-- ── Sin operaciones ──────────────────────────────────────────────── -->
-    <div v-else-if="resumen && resumen.operaciones.total === 0"
+    <div v-else-if="resumen && resumen.operaciones && resumen.operaciones.total === 0"
       class="bg-white border border-gray-200 rounded-xl p-10 text-center">
       <span class="text-4xl block mb-3">📊</span>
       <p class="text-gray-500">Sin operaciones para este período</p>
     </div>
 
     <!-- ── Resumen ──────────────────────────────────────────────────────── -->
-    <template v-else-if="resumen">
+    <template v-else-if="resumen && resumen.operaciones">
       <!-- Tarjetas -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
           <p class="text-xs text-gray-500">Total operaciones</p>
-          <p class="text-3xl font-bold text-gray-800 mt-1">{{ resumen.operaciones.total }}</p>
+          <p class="text-3xl font-bold text-gray-800 mt-1">{{ resumen.operaciones.total ?? 0 }}</p>
         </div>
         <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm space-y-1">
           <p class="text-xs text-gray-500 mb-1">Desglose</p>
-          <p class="text-sm flex justify-between"><span class="text-gray-500">Compras</span><span class="font-semibold text-teal-600">{{ resumen.operaciones.compras }}</span></p>
-          <p class="text-sm flex justify-between"><span class="text-gray-500">Ventas</span><span class="font-semibold text-blue-600">{{ resumen.operaciones.ventas }}</span></p>
-          <p class="text-sm flex justify-between"><span class="text-gray-500">Intermediadas</span><span class="font-semibold text-purple-600">{{ resumen.operaciones.intermediadas }}</span></p>
+          <p class="text-sm flex justify-between"><span class="text-gray-500">Compras</span><span class="font-semibold text-teal-600">{{ resumen.operaciones.compras ?? 0 }}</span></p>
+          <p class="text-sm flex justify-between"><span class="text-gray-500">Ventas</span><span class="font-semibold text-blue-600">{{ resumen.operaciones.ventas ?? 0 }}</span></p>
+          <p class="text-sm flex justify-between"><span class="text-gray-500">Intermediadas</span><span class="font-semibold text-purple-600">{{ resumen.operaciones.intermediadas ?? 0 }}</span></p>
         </div>
         <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
           <p class="text-xs text-gray-500">Ganancia bruta</p>
-          <p class="text-xl font-bold text-green-600">{{ formatUsd(resumen.ganancias.bruta_usd) }}</p>
+          <p class="text-xl font-bold text-green-600">{{ formatUsd(resumen.ganancias?.bruta_usd) }}</p>
           <p class="text-xs text-gray-500 mt-2">Ganancia neta</p>
-          <p class="text-lg font-bold text-green-700">{{ formatUsd(resumen.ganancias.neta_usd) }}</p>
+          <p class="text-lg font-bold text-green-700">{{ formatUsd(resumen.ganancias?.neta_usd) }}</p>
         </div>
         <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
           <p class="text-xs text-gray-500">Efectivo pendiente</p>
-          <p class="text-3xl font-bold text-amber-600 mt-1">{{ resumen.efectivo_pendiente.count }}</p>
-          <p class="text-sm font-semibold text-amber-700 mt-1">{{ formatUsd(resumen.efectivo_pendiente.monto_usd) }}</p>
+          <p class="text-3xl font-bold text-amber-600 mt-1">{{ resumen.efectivo_pendiente?.count ?? 0 }}</p>
+          <p class="text-sm font-semibold text-amber-700 mt-1">{{ formatUsd(resumen.efectivo_pendiente?.monto_usd) }}</p>
         </div>
       </div>
 
@@ -126,7 +126,7 @@
         <!-- Volúmenes por moneda -->
         <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
           <h3 class="font-semibold text-gray-700 text-sm mb-3">Volúmenes por moneda</h3>
-          <div v-if="resumen.volumenes.length === 0" class="text-xs text-gray-400 py-2">Sin volúmenes</div>
+          <div v-if="!resumen.volumenes || resumen.volumenes.length === 0" class="text-xs text-gray-400 py-2">Sin volúmenes</div>
           <table v-else class="w-full text-sm">
             <thead>
               <tr class="text-left text-xs text-gray-400 border-b border-gray-100">
@@ -148,7 +148,7 @@
         <!-- Actividad por operador -->
         <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
           <h3 class="font-semibold text-gray-700 text-sm mb-3">Actividad por operador</h3>
-          <div v-if="resumen.por_operador.length === 0" class="text-xs text-gray-400 py-2">Sin actividad</div>
+          <div v-if="!resumen.por_operador || resumen.por_operador.length === 0" class="text-xs text-gray-400 py-2">Sin actividad</div>
           <table v-else class="w-full text-sm">
             <thead>
               <tr class="text-left text-xs text-gray-400 border-b border-gray-100">
@@ -160,7 +160,7 @@
             <tbody>
               <tr v-for="o in resumen.por_operador" :key="o.operador" class="border-b border-gray-50 last:border-0">
                 <td class="py-2 font-semibold text-gray-700">{{ o.operador }}</td>
-                <td class="py-2 text-right text-gray-600">{{ o.total_operaciones }}</td>
+                <td class="py-2 text-right text-gray-600">{{ o.total_operaciones ?? 0 }}</td>
                 <td class="py-2 text-right font-semibold text-gray-800">{{ formatUsd(o.volumen_usd) }}</td>
               </tr>
             </tbody>
@@ -177,46 +177,26 @@
 </template>
 
 <script setup>
-/**
- * DashboardView — Panel principal con resumen operativo del día.
- * Muestra tasas de referencia (BCV, Binance P2P), alertas, filtros por fecha/moneda/operador,
- * tarjetas de totales, volúmenes por moneda y actividad por operador.
- * Las tasas se refrescan automáticamente cada minuto.
- */
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '../stores/auth.js'
 import api from '../api/axios.js'
 
-/** Store de autenticación */
 const auth = useAuthStore()
 
-/** Fecha actual formateada para el saludo */
 const hoy = computed(() => new Date().toLocaleDateString('es-VE', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }))
 
-/** Tasas de referencia (BCV, Binance P2P) */
 const refTasas = ref(null)
-/** Datos del resumen operativo */
 const resumen = ref(null)
-/** Mensaje de error al cargar resumen */
 const resumenError = ref('')
-/** Indica carga del resumen */
 const loadingResumen = ref(false)
-/** Lista de operadores para el filtro */
 const operadores = ref([])
-/** Timestamp actual para calcular frescura de tasas */
 const ahora = ref(Date.now())
-/** Alertas del dashboard (operaciones sin tasa, pares sin publicar) */
 const alertas = ref({})
 
-/**
- * Devuelve la fecha de hoy en formato ISO (YYYY-MM-DD).
- * @returns {string}
- */
 function hoyStr() {
   return new Date().toLocaleDateString('en-CA')
 }
 
-/** Filtros del resumen operativo */
 const filtros = reactive({
   fecha_desde: hoyStr(),
   fecha_hasta: hoyStr(),
@@ -224,28 +204,15 @@ const filtros = reactive({
   operador_id: '',
 })
 
-/**
- * Formatea un número como USD (con $ y 2 decimales).
- * @param {number|string} n
- * @returns {string}
- */
 function formatUsd(n) {
   return '$' + new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(parseFloat(n) || 0)
 }
-
-/**
- * Formatea un número como Bs. (con 2 decimales).
- * @param {number|string} n
- * @returns {string}
- */
 function formatVes(n) {
   return 'Bs. ' + new Intl.NumberFormat('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(parseFloat(n) || 0)
 }
 
-/** Indica si hay al menos una tasa de referencia disponible */
 const hayReferencia = computed(() => !!(refTasas.value?.bcv || refTasas.value?.binance_p2p))
 
-/** Timestamp del dato de referencia más reciente */
 const refUltimoTs = computed(() => {
   const fechas = [refTasas.value?.bcv?.capturado_en, refTasas.value?.binance_p2p?.capturado_en]
     .filter(Boolean)
@@ -253,13 +220,11 @@ const refUltimoTs = computed(() => {
   return fechas.length ? Math.max(...fechas) : null
 })
 
-/** Indica si los datos de referencia están desactualizados (> 2 minutos) */
 const refStale = computed(() => {
   if (!refUltimoTs.value) return false
   return (ahora.value - refUltimoTs.value) > 2 * 60 * 1000
 })
 
-/** Texto relativo de la última actualización (ej: "hace 3 min") */
 const refRelativo = computed(() => {
   if (!refUltimoTs.value) return ''
   const diff = Math.max(0, Math.floor((ahora.value - refUltimoTs.value) / 1000))
@@ -271,10 +236,6 @@ const refRelativo = computed(() => {
   return `hace ${Math.floor(h / 24)} d`
 })
 
-/**
- * Obtiene las tasas de referencia del dashboard.
- * @returns {Promise<void>}
- */
 async function fetchTasasReferencia() {
   try {
     const { data } = await api.get('/dashboard/tasas-referencia')
@@ -285,10 +246,6 @@ async function fetchTasasReferencia() {
   }
 }
 
-/**
- * Obtiene el resumen operativo según los filtros actuales.
- * @returns {Promise<void>}
- */
 async function fetchResumen() {
   loadingResumen.value = true
   resumenError.value = ''
@@ -309,10 +266,6 @@ async function fetchResumen() {
   }
 }
 
-/**
- * Obtiene la lista de operadores para el filtro.
- * @returns {Promise<void>}
- */
 async function fetchOperadores() {
   try {
     const { data } = await api.get('/usuarios')
@@ -323,10 +276,6 @@ async function fetchOperadores() {
   }
 }
 
-/**
- * Obtiene las alertas generales del dashboard.
- * @returns {Promise<void>}
- */
 async function fetchAlertas() {
   try {
     const { data } = await api.get('/dashboard/general')
@@ -336,15 +285,12 @@ async function fetchAlertas() {
   }
 }
 
-/** Aplica los filtros y recarga el resumen */
 function aplicarFiltros() {
   fetchResumen()
 }
 
-/** Timer para refresco automático de tasas */
 let refTimer = null
 
-/** Programa el refresco de tasas cada 60 segundos */
 function scheduleRefresh() {
   refTimer = setTimeout(async () => {
     await fetchTasasReferencia()
@@ -352,7 +298,6 @@ function scheduleRefresh() {
   }, 1 * 60 * 1000)
 }
 
-/** Carga datos iniciales al montar y programa refresco */
 onMounted(async () => {
   await Promise.all([
     fetchTasasReferencia(),
@@ -363,7 +308,6 @@ onMounted(async () => {
   scheduleRefresh()
 })
 
-/** Limpia el timer al desmontar */
 onUnmounted(() => {
   if (refTimer) clearTimeout(refTimer)
 })
