@@ -30,7 +30,7 @@ RUN apt-get update && apt-get install -y \
         intl \
         xml \
         redis \
-        xdebug \
+        # xdebug \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # ── Composer ──────────────────────────────────────────────────────────
