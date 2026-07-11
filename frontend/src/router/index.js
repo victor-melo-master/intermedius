@@ -51,6 +51,7 @@ const routes = [
       { path: 'usuarios', name: 'Usuarios', component: () => import('../views/UsuariosView.vue') },
       /** Gestión de comisiones. */
       { path: 'comisiones', name: 'Comisiones', component: () => import('../views/ComisionesView.vue') },
+      { path: '/:pathMatch(.*)*', name: 'NotFound', component: () => import('../views/NotFoundView.vue') }
     ]
   }
 ]
@@ -64,10 +65,10 @@ const router = createRouter({
 /** Guard de navegación: verifica autenticación y redirige según el estado. */
 router.beforeEach(async (to) => {
   const auth = useAuthStore()
-  
+
   // Iniciar verificación en paralelo, sin esperar
   if (!auth.initialized) auth.init()
-  
+
   // No bloquear: verificar solo si hay token
   if (to.meta.requiresAuth && !auth.token) return '/login'
   if (to.path === '/login' && auth.token) return '/dashboard'

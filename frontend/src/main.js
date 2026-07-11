@@ -5,6 +5,7 @@
  */
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
+import { setupErrorHandler } from './errorHandler.js'
 import App from './App.vue'
 import router from './router'
 import './index.css'
@@ -14,5 +15,4 @@ app.use(createPinia())
 app.use(router)
 app.mount('#app')
 
-import { setupErrorHandler } from './errorHandler.js'
 setupErrorHandler(app)
