@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Notifications\VerifyEmailNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -56,6 +57,9 @@ class UserController extends Controller
         ]);
 
         $usuario->assignRole($validated['rol']);
+
+        // Enviar email de verificación
+        $usuario->notify(new VerifyEmailNotification());
 
         return response()->json($this->formatUser($usuario->load('titular')), 201);
     }

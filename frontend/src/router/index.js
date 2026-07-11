@@ -11,6 +11,7 @@ import { useAuthStore } from '../stores/auth.js'
 const routes = [
   /** Ruta pública: pantalla de inicio de sesión. */
   { path: '/login', name: 'Login', component: () => import('../views/LoginView.vue') },
+  { path: '/email/verify', name: 'EmailVerify', component: () => import('../views/EmailVerifyView.vue') },
   /** Ruta padre: layout con AppShell que envuelve todas las secciones protegidas. */
   {
     path: '/',

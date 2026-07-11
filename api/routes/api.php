@@ -37,6 +37,11 @@ Route::prefix('v1')->group(function () {
     // ─────────────────────────────────────────────────────────────────
     Route::post('auth/login', [AuthController::class, 'login'])
         ->middleware('throttle:5,1');
+    Route::post('auth/verificar-email', [AuthController::class, 'verificarEmail'])
+        ->middleware('throttle:10,1');
+    Route::get('email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])
+        ->name('verification.verify')
+        ->middleware('signed');
 
     // ─────────────────────────────────────────────────────────────────
     // Rutas protegidas con Sanctum

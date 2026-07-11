@@ -23,6 +23,7 @@ class AdminUserSeeder extends Seeder
                 'name' => 'Admin Principal',
                 'password' => bcrypt($password),
                 'activo' => true,
+                'email_verified_at' => now(),
             ]
         );
 

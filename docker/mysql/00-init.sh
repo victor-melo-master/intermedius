@@ -532,8 +532,8 @@ INSERT INTO roles (name, guard_name, created_at, updated_at) VALUES
 ('contador', 'web', NOW(), NOW()),
 ('lectura', 'web', NOW(), NOW());
 
-INSERT INTO users (name, email, password, activo, created_at, updated_at) VALUES
-('Admin Principal', 'admin@test.com', '$2y$12$MG35Y8Ei4AGqy3Glw4OMaOzRnqux1O5S0pw62Rs9IjjpMs2lVjLay', 1, NOW(), NOW());
+INSERT INTO users (name, email, password, activo, email_verified_at, created_at, updated_at) VALUES
+('Admin Principal', 'admin@test.com', '$2y$12$MG35Y8Ei4AGqy3Glw4OMaOzRnqux1O5S0pw62Rs9IjjpMs2lVjLay', 1, NOW(), NOW(), NOW());
 
 INSERT INTO model_has_roles (role_id, model_type, model_id)
 SELECT r.id, 'App\\Models\\User', u.id

@@ -98,6 +98,61 @@ class AuthController extends Controller
         return response()->json($this->usuarioConRol($request->user()));
     }
 
+    /**
+     * Verifica el correo electrónico de un usuario (POST desde SPA).
+     *
+     * @param Request $request Debe incluir 'email' y 'hash' (sha1 del email)
+     * @return JsonResponse
+     */
+    public function verificarEmail(Request $request): JsonResponse
+    {
+        $request->validate([
+            'email' => ['required', 'email'],
+            'hash'  => ['required', 'string'],
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+
+        if (! $user) {
+            return response()->json(['message' => 'Usuario no encontrado.'], 404);
+        }
+
+        if (! hash_equals(sha1($user->getEmailForVerification()), $request->hash)) {
+            return response()->json(['message' => 'Token de verificación inválido.'], 403);
+        }
+
+        if ($user->hasVerifiedEmail()) {
+            return response()->json(['message' => 'El correo ya estaba verificado.']);
+        }
+
+        $user->markEmailAsVerified();
+
+        return response()->json(['message' => 'Correo verificado exitosamente.']);
+    }
+
+    /**
+     * Verifica el correo electrónico de un usuario (GET con URL firmada, endpoint legacy).
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function verifyEmail(Request $request): JsonResponse
+    {
+        $user = User::findOrFail($request->id);
+
+        if (! hash_equals(sha1($user->getEmailForVerification()), $request->hash)) {
+            return response()->json(['message' => 'Token de verificación inválido.'], 403);
+        }
+
+        if ($user->hasVerifiedEmail()) {
+            return response()->json(['message' => 'El correo ya estaba verificado.']);
+        }
+
+        $user->markEmailAsVerified();
+
+        return response()->json(['message' => 'Correo verificado exitosamente.']);
+    }
+
     private function usuarioConRol(User $usuario): array
     {
         return [
