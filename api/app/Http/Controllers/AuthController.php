@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Auth\LoginRequest;
 use App\Models\User;
+use App\Models\LoginAttempt;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Controlador de autenticación de usuarios.
@@ -21,7 +23,31 @@ class AuthController extends Controller
      */
     public function login(LoginRequest $request): JsonResponse
     {
-        if (! Auth::attempt($request->only('email', 'password'))) {
+        // ── Verificar bloqueo por intentos fallidos ──────────────────
+        $recentAttempts = LoginAttempt::where('email', $request->email)
+            ->where('attempted_at', '>', now()->subMinutes(15))
+            ->where('successful', false)
+            ->count();
+
+        if ($recentAttempts >= 5) {
+            return response()->json([
+                'message' => 'Demasiados intentos fallidos. Intente de nuevo en 15 minutos.',
+            ], 429);
+        }
+
+        // ── Intentar autenticación ──────────────────────────────────
+        $credentials = $request->only('email', 'password');
+        $authenticated = Auth::attempt($credentials);
+
+        // ── Registrar intento ───────────────────────────────────────
+        LoginAttempt::create([
+            'email'       => $request->email,
+            'ip_address'  => $request->ip(),
+            'attempted_at'=> now(),
+            'successful'  => $authenticated,
+        ]);
+
+        if (! $authenticated) {
             return response()->json(['message' => 'Credenciales incorrectas.'], 401);
         }
 

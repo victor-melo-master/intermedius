@@ -41,7 +41,7 @@ class UserController extends Controller
         $validated = $request->validate([
             'name'       => ['required', 'string', 'max:255'],
             'email'      => ['required', 'email', 'unique:users,email'],
-            'password'   => ['required', 'string', Password::min(8)],
+            'password'   => ['required', 'string', Password::min(12)->mixedCase()->numbers()->symbols()->uncompromised()],
             'rol'        => ['required', 'string', 'in:super_admin,admin,operador,contador,lectura'],
             'titular_id' => ['nullable', 'integer', 'exists:titulares,id'],
             'activo'     => ['boolean'],
@@ -72,7 +72,7 @@ class UserController extends Controller
         $validated = $request->validate([
             'name'       => ['sometimes', 'required', 'string', 'max:255'],
             'email'      => ['sometimes', 'required', 'email', Rule::unique('users', 'email')->ignore($usuario->id)],
-            'password'   => ['nullable', 'string', Password::min(8)],
+            'password'   => ['nullable', 'string', Password::min(12)->mixedCase()->numbers()->symbols()->uncompromised()],
             'rol'        => ['sometimes', 'required', 'string', 'in:super_admin,admin,operador,contador,lectura'],
             'titular_id' => ['nullable', 'integer', 'exists:titulares,id'],
             'activo'     => ['sometimes', 'boolean'],
