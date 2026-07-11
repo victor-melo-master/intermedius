@@ -69,6 +69,9 @@ class UserController extends Controller
      */
     public function update(Request $request, User $usuario): JsonResponse
     {
+        if ($request->filled('password')) {
+            $usuario->tokens()->delete();
+        }
         $validated = $request->validate([
             'name'       => ['sometimes', 'required', 'string', 'max:255'],
             'email'      => ['sometimes', 'required', 'email', Rule::unique('users', 'email')->ignore($usuario->id)],

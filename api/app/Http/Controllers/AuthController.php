@@ -54,6 +54,11 @@ class AuthController extends Controller
         /** @var User $usuario */
         $usuario = Auth::user();
 
+        if (is_null($usuario->email_verified_at)) {
+            Auth::logout();
+            return response()->json(['message' => 'Debe verificar su correo electrónico antes de iniciar sesión.'], 403);
+        }
+
         if (! $usuario->activo) {
             Auth::logout();
             return response()->json(['message' => 'Usuario inactivo.'], 403);

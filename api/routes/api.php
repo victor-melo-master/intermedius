@@ -36,13 +36,15 @@ Route::prefix('v1')->group(function () {
     // Autenticación (públicas)
     // ─────────────────────────────────────────────────────────────────
     Route::post('auth/login', [AuthController::class, 'login'])
-    ->middleware('throttle:5,1');
+        ->middleware('throttle:5,1');
+
     // ─────────────────────────────────────────────────────────────────
     // Rutas protegidas con Sanctum
     // ─────────────────────────────────────────────────────────────────
     Route::middleware('auth:sanctum')->group(function () {
 
-        Route::post('auth/logout', [AuthController::class, 'logout']);
+        Route::post('auth/logout', [AuthController::class, 'logout'])
+            ->middleware('throttle:10,1');
         Route::get('auth/me',     [AuthController::class, 'me']);
 
         // ── Catálogos ────────────────────────────────────────────────
@@ -125,9 +127,10 @@ Route::prefix('v1')->group(function () {
             Route::get('reportes/comisiones-operadores/historico',    [ReporteComisionesController::class, 'historico']);
         });
 
-        // ── Gestión de usuarios (solo admin|super_admin) ─────────────
+        // ── Gestión de usuarios (solo admin|super_admin, con rate limiting) ──
         Route::middleware('role:admin|super_admin')->group(function () {
-            Route::apiResource('usuarios', UserController::class);
+            Route::apiResource('usuarios', UserController::class)
+                ->middleware('throttle:10,1');
         });
 
         // ── Bitácora (solo super_admin) ──────────────────────────────
