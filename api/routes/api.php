@@ -48,24 +48,26 @@ Route::prefix('v1')->group(function () {
         Route::get('auth/me',     [AuthController::class, 'me']);
 
         // ── Catálogos ────────────────────────────────────────────────
-        Route::apiResource('titulares',        TitularController::class);
-        Route::apiResource('bancos',           BancoController::class);
-        Route::apiResource('monedas',          MonedaController::class);
-        Route::apiResource('cuentas',          CuentaController::class);
-        Route::post('cuentas/{cuenta}/saldo', [CuentaController::class, 'cargarSaldo'])
-            ->middleware('role:admin|super_admin');
-        Route::apiResource('clientes',         ClienteController::class);
-        Route::get('clientes/{cliente}/cuentas', [ClienteController::class, 'cuentas']);
-        Route::get('clientes/{cliente}/operaciones', [ClienteController::class, 'operaciones']);
-        Route::post('clientes/{cliente}/operaciones/exportar', [ClienteController::class, 'exportarOperaciones']);
-        Route::post('clientes/{cliente}/restaurar', [ClienteController::class, 'restaurar'])
-            ->middleware('role:admin|super_admin');
-        Route::apiResource('categorias-gasto', CategoriaGastoController::class)
-            ->parameters(['categorias-gasto' => 'categoria_gasto']);
+        Route::middleware('throttle:60,1')->group(function () {
+            Route::apiResource('titulares',        TitularController::class);
+            Route::apiResource('bancos',           BancoController::class);
+            Route::apiResource('monedas',          MonedaController::class);
+            Route::apiResource('cuentas',          CuentaController::class);
+            Route::post('cuentas/{cuenta}/saldo', [CuentaController::class, 'cargarSaldo'])
+                ->middleware('role:admin|super_admin');
+            Route::apiResource('clientes',         ClienteController::class);
+            Route::get('clientes/{cliente}/cuentas', [ClienteController::class, 'cuentas']);
+            Route::get('clientes/{cliente}/operaciones', [ClienteController::class, 'operaciones']);
+            Route::post('clientes/{cliente}/operaciones/exportar', [ClienteController::class, 'exportarOperaciones']);
+            Route::post('clientes/{cliente}/restaurar', [ClienteController::class, 'restaurar'])
+                ->middleware('role:admin|super_admin');
+            Route::apiResource('categorias-gasto', CategoriaGastoController::class)
+                ->parameters(['categorias-gasto' => 'categoria_gasto']);
 
-        // ── Tasas de mercado ─────────────────────────────────────────
-        Route::get('tasas/actuales',  [TasasController::class, 'actuales']);
-        Route::get('tasas/historico', [TasasController::class, 'historico']);
+            // ── Tasas de mercado ─────────────────────────────────────────
+            Route::get('tasas/actuales',  [TasasController::class, 'actuales']);
+            Route::get('tasas/historico', [TasasController::class, 'historico']);
+        });
 
         // ── Comisiones aplicadas por operación (DEBE IR ANTES del apiResource de operaciones) ──
         Route::prefix('operaciones/{operacion}/comisiones')->group(function () {
@@ -77,7 +79,8 @@ Route::prefix('v1')->group(function () {
 
         // ── Operaciones (ledger contable) ────────────────────────────
         Route::apiResource('operaciones', OperacionController::class)
-            ->parameters(['operaciones' => 'operacion']);
+            ->parameters(['operaciones' => 'operacion'])
+            ->middleware('throttle:30,1');
         Route::patch('operaciones/{operacion}/verificar', [OperacionController::class, 'verificar']);
         Route::delete('operaciones/{operacion}', [OperacionController::class, 'destroy']);
 
@@ -98,9 +101,9 @@ Route::prefix('v1')->group(function () {
         });
 
         // ── Gastos (subtipo de operaciones) ──────────────────────────
-        Route::get('gastos',                [GastoController::class, 'index']);
-        Route::post('gastos',               [GastoController::class, 'store']);
-        Route::get('gastos/{operacion}',    [GastoController::class, 'show']);
+        Route::get('gastos',                [GastoController::class, 'index'])->middleware('throttle:30,1');
+        Route::post('gastos',               [GastoController::class, 'store'])->middleware('throttle:30,1');
+        Route::get('gastos/{operacion}',    [GastoController::class, 'show'])->middleware('throttle:30,1');
 
         // ── Configuración: tasas vigentes (lectura para todos) ───────
         Route::prefix('configuracion')->group(function () {
@@ -140,7 +143,8 @@ Route::prefix('v1')->group(function () {
                     ->orderByDesc('created_at');
 
                 if ($request->filled('modelo')) {
-                    $query->where('subject_type', 'like', '%' . $request->input('modelo') . '%');
+                    $safeModelo = addcslashes($request->input('modelo'), '%_');
+                    $query->where('subject_type', 'like', '%' . $safeModelo . '%');
                 }
                 if ($request->filled('user_id')) {
                     $query->where('causer_id', $request->integer('user_id'));

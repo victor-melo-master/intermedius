@@ -312,6 +312,18 @@ const cuentaForm = reactive({
   activa: true,
 })
 
+// Historial
+const historial = ref([])
+const historialPaginacion = ref({})
+const historialCargado = ref(false)
+const loadingHistorial = ref(false)
+const exportando = ref(false)
+const historialFiltros = reactive({
+  fecha_desde: '',
+  fecha_hasta: '',
+  tipo_codigo: '',
+})
+
 /**
  * Carga la lista de clientes según la pestalla activa (activos o papelera).
  * Aplica el filtro de búsqueda si existe.
@@ -464,23 +476,23 @@ async function submitCuenta() {
   }
 }
 
-// ── Historial de transacciones ──
-/** Lista de operaciones del historial */
-const historial = ref([])
-/** Metadatos de paginación del historial (current_page, last_page, etc.) */
-const historialPaginacion = ref({})
-/** Indica si el historial ya fue cargado alguna vez */
-const historialCargado = ref(false)
-/** Indica carga del historial */
-const loadingHistorial = ref(false)
-/** Indica si se está exportando el PDF */
-const exportando = ref(false)
-/** Filtros del historial de transacciones */
-const historialFiltros = reactive({
-  fecha_desde: '',
-  fecha_hasta: '',
-  tipo_codigo: '',
-})
+// // ── Historial de transacciones ──
+// /** Lista de operaciones del historial */
+// const historial = ref([])
+// /** Metadatos de paginación del historial (current_page, last_page, etc.) */
+// const historialPaginacion = ref({})
+// /** Indica si el historial ya fue cargado alguna vez */
+// const historialCargado = ref(false)
+// /** Indica carga del historial */
+// const loadingHistorial = ref(false)
+// /** Indica si se está exportando el PDF */
+// const exportando = ref(false)
+// /** Filtros del historial de transacciones */
+// const historialFiltros = reactive({
+//   fecha_desde: '',
+//   fecha_hasta: '',
+//   tipo_codigo: '',
+// })
 
 /**
  * Carga el historial paginado de operaciones del cliente en detalle.
