@@ -467,6 +467,7 @@ Convenciones generales:
 
 - **Tabla**: `users` (por defecto de Laravel)
 - **Extiende**: `Illuminate\Foundation\Auth\User` (Authenticatable)
+- **Implementa**: `Illuminate\Contracts\Auth\MustVerifyEmail` — obliga a verificar email antes de login
 - **Traits**: `HasApiTokens` (Sanctum), `HasFactory`, `HasRoles` (Spatie Permission), `Notifiable`, `SoftDeletes`
 - **Fillable**:
   - `name` — Nombre completo del usuario.
@@ -485,8 +486,16 @@ Convenciones generales:
   - `last_login_at` → `datetime`
 - **Relaciones**:
   - `titular()` → BelongsTo `App\Models\Titular` — Titular al que pertenece el usuario.
+- **Métodos personalizados**:
+  - `sendEmailVerificationNotification()` — Envía `VerifyEmailNotification` al usuario. Laravel lo llama automáticamente al crear el usuario si implementa `MustVerifyEmail`.
 - **Scopes**: ninguno
-- **Notas**: Usa `HasRoles` de Spatie Permission para manejo de roles y permisos. Usa `HasApiTokens` de Sanctum para autenticación por API tokens. soft-delete implementado.
+- **Notas**: 
+  - Implementa `MustVerifyEmail` — el usuario no puede hacer login hasta que `email_verified_at` no sea null.
+  - `email_verified_at` se setea cuando el usuario verifica su email vía link en el correo.
+  - El email contiene un link al frontend (`/email/verify?email=X&hash=Y`) que llama al POST `/api/v1/auth/verificar-email`.
+  - Usa `HasRoles` de Spatie Permission para manejo de roles y permisos.
+  - Usa `HasApiTokens` de Sanctum para autenticación por API tokens.
+  - Soft-delete implementado.
 
 ---
 

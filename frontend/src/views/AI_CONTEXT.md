@@ -6,6 +6,14 @@
 - Submit: `auth.login()` → si éxito, guarda token en localStorage, redirige a `/operaciones`
 - Error: muestra mensaje de error (credenciales inválidas o usuario inactivo)
 
+## `EmailVerifyView`
+- Ruta: `/email/verify` (pública, sin auth)
+- Lee `email` y `hash` de query params (`route.query.email`, `route.query.hash`)
+- Llama `POST /api/v1/auth/verificar-email` con `{email, hash}`
+- Estados: cargando → éxito (mensaje + link a login) → error (mensaje + opción de reenviar)
+- Flujo completo: usuario recibe email → hace clic en link → se verifica automáticamente
+- Si hash inválido o usuario no existe, muestra error
+
 ## `OperacionesView`
 - Ruta: `/operaciones`
 - Listado de operaciones con filtros: fecha_desde, fecha_hasta, tipo_codigo, estado

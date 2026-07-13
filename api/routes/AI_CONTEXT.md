@@ -8,11 +8,13 @@ Todas las rutas bajo prefix `/api/v1`.
 
 ### Autenticación
 
-| Método | URI | Controlador | Middleware |
-|---|---|---|---|
-| POST | /auth/login | AuthController@login | público |
-| POST | /auth/logout | AuthController@logout | auth:sanctum |
-| GET | /auth/me | AuthController@me | auth:sanctum |
+| Método | URI | Controlador | Middleware | Notas |
+|---|---|---|---|---|
+| POST | /auth/login | AuthController@login | público, throttle:5,1 | Rate limit por IP |
+| POST | /auth/verificar-email | AuthController@verificarEmail | público, throttle:10,1 | Verificación SPA: recibe email+hash |
+| GET | /email/verify/{id}/{hash} | AuthController@verifyEmail | signed | Endpoint legacy con URL firmada |
+| POST | /auth/logout | AuthController@logout | auth:sanctum | |
+| GET | /auth/me | AuthController@me | auth:sanctum | |
 
 ---
 

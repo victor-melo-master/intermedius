@@ -14,6 +14,7 @@
 | Path | Name | Componente |
 |---|---|---|
 | `/login` | login | `LoginView` |
+| `/email/verify` | EmailVerify | `EmailVerifyView` |
 
 ### Protegidas (require token)
 | Path | Name | Componente |

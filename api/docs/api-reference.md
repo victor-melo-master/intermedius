@@ -9,13 +9,27 @@
 ## Autenticación
 
 ### `POST /api/v1/auth/login`
-Pública.
+Pública. Rate limit: 5 intentos/min por IP.
 
 ```json
 { "email": "required|email", "password": "required|string" }
 ```
 → `200` `{ "token": "...", "user": { id, name, email, roles, titular_id, last_login_at } }`  
-→ `401` credenciales incorrectas | `403` usuario inactivo
+→ `401` credenciales incorrectas  
+→ `403` usuario inactivo o email no verificado
+
+### `POST /api/v1/auth/verificar-email`
+Pública. Rate limit: 10/min por IP. Verifica email de usuario (flujo SPA).
+
+```json
+{ "email": "required|email", "hash": "required|string" }
+```
+→ `200` `{ "message": "Correo verificado exitosamente." }`  
+→ `404` usuario no encontrado  
+→ `403` token de verificación inválido
+
+### `GET /api/v1/email/verify/{id}/{hash}`
+Endpoint legacy con URL firmada (middleware `signed`). Misma lógica que verificar-email.
 
 ### `POST /api/v1/auth/logout`
 `auth:sanctum` → `200` `{ "message": "Sesión cerrada correctamente." }`

@@ -67,6 +67,7 @@ Ver `frontend/src/router/AI_CONTEXT.md` para detalle completo.
 | Ruta | Vista | Sidebar |
 |---|---|---|
 | `/login` | LoginView | No |
+| `/email/verify` | EmailVerifyView | No |
 | `/operaciones` | OperacionesView | Sí |
 | `/operaciones/nueva` | OperacionFormView | Sí |
 | `/operaciones/nueva/intermediada` | OperacionIntermediadaForm | Sí |
@@ -153,6 +154,14 @@ En frontend se usa `auth.isAdmin` (computed que verifica `roles.includes('admin'
 - Lista: clients con `deleted_at` tienen clase `opacity-70 border-red-200`
 - Botón "Recuperar" en lista + modal detalle
 - Botón "Eliminar" en modal detalle con confirmación
+
+### Verificación de Email (EmailVerifyView)
+- Ruta pública: `/email/verify?email=X&hash=Y`
+- Lee `email` y `hash` de query params
+- Llama `POST /api/v1/auth/verificar-email` con `{email, hash}`
+- Muestra estado: cargando → éxito → error
+- Flujo: usuario recibe email con link → hace clic → se verifica automáticamente
+- Si hash inválido o usuario no existe, muestra error con opción de reenviar
 
 ### Cuentas tipo efectivo
 - Selector de tipo al inicio del formulario

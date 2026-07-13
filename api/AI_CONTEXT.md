@@ -113,7 +113,7 @@ Ver `api/routes/AI_CONTEXT.md` para lista completa de las ~89 rutas.
 
 | Grupo | Prefix | Rutas |
 |---|---|---|
-| Autenticación | `/auth` | login (pública), logout, me |
+| Autenticación | `/auth` | login (pública), logout, me, verificar-email (pública), email/verify/{id}/{hash} (firmada) |
 | Catálogos CRUD | `/titulares`, `/bancos`, `/monedas`, `/cuentas`, `/clientes`, `/categorias-gasto` | 6 apiResource c/u |
 | Clientes extra | `/clientes/{id}/cuentas`, `/clientes/{id}/operaciones`, `/clientes/{id}/operaciones/exportar`, `/clientes/{id}/restaurar` | 4 rutas adicionales |
 | Cuentas extra | `/cuentas/{cuenta}/saldo` | 1 ruta |
@@ -166,6 +166,28 @@ Ver `api/app/Http/Controllers/AI_CONTEXT.md` para detalle completo de los 20 con
 - Paginación: `Model::query()->...->paginate(50)`
 - Filtros: `when($request->filled('q'), ...)`, `when($request->boolean('inactivos'), ...)`
 - Route Model Binding con scope bindings en algunos casos (PoolController usa `operacion:pool_pendiente`)
+
+### Flujo de Verificación de Email
+
+El sistema implementa verificación de email para nuevos usuarios con flujo SPA:
+
+```
+1. Admin crea usuario → UserController::store()
+2. $usuario->notify(new VerifyEmailNotification()) → envía email
+3. Email contiene link: {APP_FRONTEND_URL}/email/verify?email=X&hash=Y
+4. Usuario hace clic → EmailVerifyView.vue lee query params
+5. Frontend llama POST /api/v1/auth/verificar-email {email, hash}
+6. AuthController::verificarEmail() valida hash con sha1(email)
+7. $user->markEmailAsVerified() → email_verified_at = now()
+8. Login verifica email_verified_at antes de conceder token
+```
+
+**Archivos clave:**
+- `app/Notifications/VerifyEmailNotification.php` — genera URL al frontend con hash SHA1
+- `app/Http/Controllers/AuthController.php` — método `verificarEmail()` (POST) y `verifyEmail()` (GET legacy)
+- `app/Models/User.php` — `implements MustVerifyEmail` + `sendEmailVerificationNotification()`
+- `routes/api.php` — `POST auth/verificar-email` (pública, throttle:10,1) + `GET email/verify/{id}/{hash}` (firmada)
+- `config/app.php` — `'frontend_url' => env('APP_FRONTEND_URL', 'http://localhost:3000')`
 
 ---
 

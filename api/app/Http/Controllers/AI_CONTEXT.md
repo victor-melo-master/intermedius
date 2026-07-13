@@ -12,15 +12,21 @@
 ## Web Controllers (raíz)
 
 ### `App\Http\Controllers\AuthController`
-- **Rutas**: `/api/v1/auth/login` (pública), `/api/v1/auth/logout`, `/api/v1/auth/me`
+- **Rutas**: `/api/v1/auth/login` (pública), `/api/v1/auth/logout`, `/api/v1/auth/me`, `/api/v1/auth/verificar-email` (pública), `/api/v1/email/verify/{id}/{hash}` (firmada)
 
 | Método | Endpoint | Propósito | Request | Middleware | Policy |
 |---|---|---|---|---|---|
-| login | POST /auth/login | Autentica usuario con email/password. Verifica que el usuario esté activo. Actualiza `last_login_at`. Crea y devuelve token Sanctum con datos del usuario y roles. | `LoginRequest` | público (ninguno) | — |
+| login | POST /auth/login | Autentica usuario con email/password. Verifica que el usuario esté activo y tenga `email_verified_at`. Actualiza `last_login_at`. Crea y devuelve token Sanctum con datos del usuario y roles. | `LoginRequest` | público (ninguno) | — |
 | logout | POST /auth/logout | Revoca el token de acceso actual del usuario autenticado. | `Request` (vacío) | `auth:sanctum` | — |
 | me | GET /auth/me | Devuelve los datos del usuario autenticado (id, name, email, roles, titular_id, last_login_at). | `Request` (vacío) | `auth:sanctum` | — |
+| verificarEmail | POST /auth/verificar-email | Verifica email de usuario (flujo SPA). Recibe `email` + `hash` (SHA1 del email), valida con `hash_equals()`, marca `email_verified_at`. Rate limit: 10/min. | `Request` (validación inline: email, hash) | público, throttle:10,1 | — |
+| verifyEmail | GET /email/verify/{id}/{hash} | Verifica email (endpoint legacy con URL firmada). Recibe `id` + `hash` de ruta, valida y marca verificado. | `Request` (parámetros ruta) | `signed` | — |
 
-**Lógica importante**: Si el usuario no está `activo` en login, retorna 403. Usa `createToken('api-token')` de Sanctum.
+**Lógica importante**:
+- Si el usuario no está `activo` en login, retorna 403.
+- Si `email_verified_at` es null en login, retorna 403 con mensaje "Debe verificar su correo".
+- `verificarEmail` usa `hash_equals()` para comparación segura del hash.
+- `verifyEmail` es endpoint legacy mantenido para compatibilidad.
 
 ---
 
