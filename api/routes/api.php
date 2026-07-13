@@ -29,6 +29,7 @@ use App\Http\Controllers\Api\V1\Configuracion\ComisionMetodoPagoController;
 use App\Http\Controllers\Api\V1\Configuracion\ComisionOperacionController;
 use App\Http\Controllers\TasasController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\V1\DocumentoController;
 
 Route::prefix('v1')->group(function () {
 
@@ -51,6 +52,12 @@ Route::prefix('v1')->group(function () {
         Route::post('auth/logout', [AuthController::class, 'logout'])
             ->middleware('throttle:10,1');
         Route::get('auth/me',     [AuthController::class, 'me']);
+
+        // Documentos del cliente
+        Route::get('clientes/{cliente}/documentos', [DocumentoController::class, 'index']);
+        Route::post('clientes/{cliente}/documentos', [DocumentoController::class, 'store']);
+        Route::delete('documentos/{documento}', [DocumentoController::class, 'destroy']);
+
 
         // ── Catálogos ────────────────────────────────────────────────
         Route::middleware('throttle:60,1')->group(function () {
