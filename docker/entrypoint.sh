@@ -28,8 +28,14 @@ if [ -n "$DB_HOST" ]; then
 fi
 
 if [ -n "$AWS_ENDPOINT" ] && [ "$FILESYSTEM_DISK" = "s3" ]; then
-    echo "Verificando bucket MinIO..."
+    echo "Esperando a MinIO..."
+    until curl -sf "${AWS_ENDPOINT}/minio/health/live" >/dev/null 2>&1; do
+        sleep 1
+    done
+    echo "MinIO disponible."
+    echo "Verificando bucket ${AWS_BUCKET}..."
     php -r "
+    require 'vendor/autoload.php';
     \$s3 = new Aws\S3\S3Client([
         'version' => 'latest',
         'region'  => '${AWS_DEFAULT_REGION:-us-east-1}',
@@ -39,11 +45,11 @@ if [ -n "$AWS_ENDPOINT" ] && [ "$FILESYSTEM_DISK" = "s3" ]; then
     ]);
     if (!\$s3->doesBucketExist('${AWS_BUCKET}')) {
         \$s3->createBucket(['Bucket' => '${AWS_BUCKET}']);
-        echo 'Bucket ${AWS_BUCKET} creado.\n';
+        echo \"Bucket ${AWS_BUCKET} creado.\n\";
     } else {
-        echo 'Bucket ${AWS_BUCKET} ya existe.\n';
+        echo \"Bucket ${AWS_BUCKET} ya existe.\n\";
     }
-    " || echo "No se pudo verificar MinIO. ¿Está corriendo?"
+    "
 fi
 
 exec "$@"

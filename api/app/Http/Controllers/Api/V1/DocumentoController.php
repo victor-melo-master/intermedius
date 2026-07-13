@@ -8,6 +8,8 @@ use App\Models\Documento;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Laravel\Sanctum\PersonalAccessToken;
+use Throwable;
 
 class DocumentoController extends Controller
 {
@@ -30,7 +32,7 @@ class DocumentoController extends Controller
         $extension = $archivo->getClientOriginalExtension();
         $ruta = "clientes/{$clienteFolder}/{$request->tipo}_" . time() . ".{$extension}";
 
-        Storage::disk('s3')->put($ruta, file_get_contents($archivo));
+        Storage::disk('s3')->put($ruta, $archivo->get());
 
         $documento = Documento::create([
             'cliente_id'     => $cliente->id,
@@ -50,5 +52,42 @@ class DocumentoController extends Controller
         Storage::disk('s3')->delete($documento->ruta);
         $documento->delete();
         return response()->json(null, 204);
+    }
+
+    public function download(Request $request, Documento $documento)
+    {
+        $token = $request->query('token');
+        if (!$token || !PersonalAccessToken::findToken($token)) {
+            abort(401);
+        }
+
+        if (!Storage::disk('s3')->exists($documento->ruta)) {
+            abort(404, 'Archivo no encontrado.');
+        }
+
+        $file = Storage::disk('s3')->get($documento->ruta);
+
+        return response($file, 200)
+            ->header('Content-Type', $documento->mime_type ?? 'application/octet-stream')
+            ->header('Content-Disposition', 'attachment; filename="' . $documento->nombre_archivo . '"');
+    }
+
+    /**
+     * Devuelve el contenido del documento para previsualización.
+     */
+    public function preview(Request $request, Documento $documento)
+    {
+        $token = $request->query('token');
+        if (!$token || !PersonalAccessToken::findToken($token)) {
+            abort(401);
+        }
+
+        if (!Storage::disk('s3')->exists($documento->ruta)) {
+            abort(404, 'Archivo no encontrado.');
+        }
+
+        $file = Storage::disk('s3')->get($documento->ruta);
+
+        return response($file, 200)->header('Content-Type', $documento->mime_type ?? 'application/octet-stream');
     }
 }

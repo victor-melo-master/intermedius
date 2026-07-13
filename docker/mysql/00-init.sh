@@ -1,12 +1,46 @@
 #!/bin/bash
+# ============================================================
+# Script de inicialización de la base de datos Intermedius
+# ------------------------------------------------------------
+# Versión idempotente y robusta.
+# Se detiene si falla algún comando (set -e).
+# Valida que las variables de entorno necesarias estén definidas.
+# Todas las tablas usan CREATE TABLE IF NOT EXISTS para evitar
+# errores en ejecuciones repetidas.
+# Las inserciones de datos usan INSERT IGNORE o ON DUPLICATE KEY
+# para ser seguras en múltiples ejecuciones.
+# ============================================================
 set -e
+
+# Validación de variables de entorno indispensables
+: "${MYSQL_ROOT_PASSWORD:?Falta la variable MYSQL_ROOT_PASSWORD}"
+: "${MYSQL_DATABASE:?Falta la variable MYSQL_DATABASE}"
 
 echo "=== Inicializando base de datos Intermedius ==="
 
+# Crear la base de datos si no existe (idempotente)
+mysql -u root -p"$MYSQL_ROOT_PASSWORD" -e "CREATE DATABASE IF NOT EXISTS \`$MYSQL_DATABASE\` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;"
+
 mysql -u root -p"$MYSQL_ROOT_PASSWORD" "$MYSQL_DATABASE" <<'EOSQL'
+-- Desactivamos temporalmente las claves foráneas para poder crear las tablas
+-- en cualquier orden sin conflictos.
 SET FOREIGN_KEY_CHECKS=0;
 
-CREATE TABLE `activity_log` (
+-- ------------------------------------------------------
+-- Tablas del sistema (cada una con IF NOT EXISTS)
+-- ------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS `login_attempts` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `email` varchar(255) NOT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `attempted_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `successful` tinyint(1) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  KEY `login_attempts_email_attempted_at_index` (`email`, `attempted_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS `activity_log` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `log_name` varchar(255) DEFAULT NULL,
   `description` text NOT NULL,
@@ -23,9 +57,9 @@ CREATE TABLE `activity_log` (
   KEY `subject` (`subject_type`,`subject_id`),
   KEY `causer` (`causer_type`,`causer_id`),
   KEY `activity_log_log_name_index` (`log_name`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE `bancos` (
+CREATE TABLE IF NOT EXISTS `bancos` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `nombre` varchar(255) NOT NULL,
   `codigo` varchar(255) DEFAULT NULL,
@@ -35,23 +69,23 @@ CREATE TABLE `bancos` (
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `bancos_nombre_unique` (`nombre`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE `cache` (
+CREATE TABLE IF NOT EXISTS `cache` (
   `key` varchar(255) NOT NULL,
   `value` mediumtext NOT NULL,
   `expiration` int(11) NOT NULL,
   PRIMARY KEY (`key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE `cache_locks` (
+CREATE TABLE IF NOT EXISTS `cache_locks` (
   `key` varchar(255) NOT NULL,
   `owner` varchar(255) NOT NULL,
   `expiration` int(11) NOT NULL,
   PRIMARY KEY (`key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE `categorias_gasto` (
+CREATE TABLE IF NOT EXISTS `categorias_gasto` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `nombre` varchar(255) NOT NULL,
   `titular_id` bigint(20) unsigned DEFAULT NULL,
@@ -64,7 +98,7 @@ CREATE TABLE `categorias_gasto` (
   CONSTRAINT `categorias_gasto_titular_id_foreign` FOREIGN KEY (`titular_id`) REFERENCES `titulares` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE `clientes` (
+CREATE TABLE IF NOT EXISTS `clientes` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `nombre` varchar(255) NOT NULL,
   `alias` varchar(255) DEFAULT NULL,
@@ -80,9 +114,9 @@ CREATE TABLE `clientes` (
   `deleted_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   FULLTEXT KEY `clientes_nombre_alias_fulltext` (`nombre`,`alias`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE `comisiones_cuenta` (
+CREATE TABLE IF NOT EXISTS `comisiones_cuenta` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `cuenta_id` bigint(20) unsigned DEFAULT NULL,
   `banco_id` bigint(20) unsigned DEFAULT NULL,
@@ -106,7 +140,7 @@ CREATE TABLE `comisiones_cuenta` (
   CONSTRAINT `comisiones_cuenta_moneda_id_foreign` FOREIGN KEY (`moneda_id`) REFERENCES `monedas` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE `comisiones_metodo_pago` (
+CREATE TABLE IF NOT EXISTS `comisiones_metodo_pago` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `nombre_metodo` varchar(80) NOT NULL,
   `cuenta_id` bigint(20) unsigned DEFAULT NULL,
@@ -127,7 +161,7 @@ CREATE TABLE `comisiones_metodo_pago` (
   CONSTRAINT `comisiones_metodo_pago_moneda_id_foreign` FOREIGN KEY (`moneda_id`) REFERENCES `monedas` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE `comisiones_operacion` (
+CREATE TABLE IF NOT EXISTS `comisiones_operacion` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `operacion_id` bigint(20) unsigned NOT NULL,
   `tipo` enum('cuenta','operador','metodo_pago','manual') NOT NULL,
@@ -155,7 +189,7 @@ CREATE TABLE `comisiones_operacion` (
   CONSTRAINT `comisiones_operacion_operacion_id_foreign` FOREIGN KEY (`operacion_id`) REFERENCES `operaciones` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE `comisiones_operador` (
+CREATE TABLE IF NOT EXISTS `comisiones_operador` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `titular_id` bigint(20) unsigned NOT NULL,
   `tipo_operacion_id` bigint(20) unsigned DEFAULT NULL,
@@ -179,7 +213,7 @@ CREATE TABLE `comisiones_operador` (
   CONSTRAINT `comisiones_operador_titular_id_foreign` FOREIGN KEY (`titular_id`) REFERENCES `titulares` (`id`) ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE `cuentas` (
+CREATE TABLE IF NOT EXISTS `cuentas` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `titular_id` bigint(20) unsigned DEFAULT NULL,
   `cliente_id` bigint(20) unsigned DEFAULT NULL,
@@ -204,9 +238,9 @@ CREATE TABLE `cuentas` (
   CONSTRAINT `cuentas_cliente_id_foreign` FOREIGN KEY (`cliente_id`) REFERENCES `clientes` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
   CONSTRAINT `cuentas_moneda_id_foreign` FOREIGN KEY (`moneda_id`) REFERENCES `monedas` (`id`),
   CONSTRAINT `cuentas_titular_id_foreign` FOREIGN KEY (`titular_id`) REFERENCES `titulares` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE `failed_jobs` (
+CREATE TABLE IF NOT EXISTS `failed_jobs` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `uuid` varchar(255) NOT NULL,
   `connection` text NOT NULL,
@@ -218,7 +252,7 @@ CREATE TABLE `failed_jobs` (
   UNIQUE KEY `failed_jobs_uuid_unique` (`uuid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE `job_batches` (
+CREATE TABLE IF NOT EXISTS `job_batches` (
   `id` varchar(255) NOT NULL,
   `name` varchar(255) NOT NULL,
   `total_jobs` int(11) NOT NULL,
@@ -232,7 +266,7 @@ CREATE TABLE `job_batches` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE `jobs` (
+CREATE TABLE IF NOT EXISTS `jobs` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `queue` varchar(255) NOT NULL,
   `payload` longtext NOT NULL,
@@ -242,16 +276,16 @@ CREATE TABLE `jobs` (
   `created_at` int(10) unsigned NOT NULL,
   PRIMARY KEY (`id`),
   KEY `jobs_queue_index` (`queue`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE `migrations` (
+CREATE TABLE IF NOT EXISTS `migrations` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `migration` varchar(255) NOT NULL,
   `batch` int(11) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=33 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE `model_has_permissions` (
+CREATE TABLE IF NOT EXISTS `model_has_permissions` (
   `permission_id` bigint(20) unsigned NOT NULL,
   `model_type` varchar(255) NOT NULL,
   `model_id` bigint(20) unsigned NOT NULL,
@@ -260,7 +294,7 @@ CREATE TABLE `model_has_permissions` (
   CONSTRAINT `model_has_permissions_permission_id_foreign` FOREIGN KEY (`permission_id`) REFERENCES `permissions` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE `model_has_roles` (
+CREATE TABLE IF NOT EXISTS `model_has_roles` (
   `role_id` bigint(20) unsigned NOT NULL,
   `model_type` varchar(255) NOT NULL,
   `model_id` bigint(20) unsigned NOT NULL,
@@ -269,7 +303,7 @@ CREATE TABLE `model_has_roles` (
   CONSTRAINT `model_has_roles_role_id_foreign` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE `monedas` (
+CREATE TABLE IF NOT EXISTS `monedas` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `codigo` varchar(10) NOT NULL,
   `nombre` varchar(255) NOT NULL,
@@ -282,9 +316,9 @@ CREATE TABLE `monedas` (
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `monedas_codigo_unique` (`codigo`)
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE `movimientos` (
+CREATE TABLE IF NOT EXISTS `movimientos` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `operacion_id` bigint(20) unsigned NOT NULL,
   `cuenta_id` bigint(20) unsigned NOT NULL,
@@ -303,9 +337,9 @@ CREATE TABLE `movimientos` (
   CONSTRAINT `movimientos_cuenta_id_foreign` FOREIGN KEY (`cuenta_id`) REFERENCES `cuentas` (`id`) ON UPDATE CASCADE,
   CONSTRAINT `movimientos_moneda_id_foreign` FOREIGN KEY (`moneda_id`) REFERENCES `monedas` (`id`) ON UPDATE CASCADE,
   CONSTRAINT `movimientos_operacion_id_foreign` FOREIGN KEY (`operacion_id`) REFERENCES `operaciones` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE `operaciones` (
+CREATE TABLE IF NOT EXISTS `operaciones` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `fecha` date NOT NULL,
   `tipo_operacion_id` bigint(20) unsigned NOT NULL,
@@ -367,16 +401,16 @@ CREATE TABLE `operaciones` (
   CONSTRAINT `operaciones_tasa_diaria_id_foreign` FOREIGN KEY (`tasa_diaria_id`) REFERENCES `tasas_diarias` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
   CONSTRAINT `operaciones_tipo_operacion_id_foreign` FOREIGN KEY (`tipo_operacion_id`) REFERENCES `tipos_operacion` (`id`) ON UPDATE CASCADE,
   CONSTRAINT `operaciones_verificado_por_id_foreign` FOREIGN KEY (`verificado_por_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE `password_reset_tokens` (
+CREATE TABLE IF NOT EXISTS `password_reset_tokens` (
   `email` varchar(255) NOT NULL,
   `token` varchar(255) NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE `permissions` (
+CREATE TABLE IF NOT EXISTS `permissions` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL,
   `guard_name` varchar(255) NOT NULL,
@@ -386,7 +420,7 @@ CREATE TABLE `permissions` (
   UNIQUE KEY `permissions_name_guard_name_unique` (`name`,`guard_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE `personal_access_tokens` (
+CREATE TABLE IF NOT EXISTS `personal_access_tokens` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `tokenable_type` varchar(255) NOT NULL,
   `tokenable_id` bigint(20) unsigned NOT NULL,
@@ -401,9 +435,9 @@ CREATE TABLE `personal_access_tokens` (
   UNIQUE KEY `personal_access_tokens_token_unique` (`token`),
   KEY `personal_access_tokens_tokenable_type_tokenable_id_index` (`tokenable_type`,`tokenable_id`),
   KEY `personal_access_tokens_expires_at_index` (`expires_at`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE `role_has_permissions` (
+CREATE TABLE IF NOT EXISTS `role_has_permissions` (
   `permission_id` bigint(20) unsigned NOT NULL,
   `role_id` bigint(20) unsigned NOT NULL,
   PRIMARY KEY (`permission_id`,`role_id`),
@@ -412,7 +446,7 @@ CREATE TABLE `role_has_permissions` (
   CONSTRAINT `role_has_permissions_role_id_foreign` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE `roles` (
+CREATE TABLE IF NOT EXISTS `roles` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL,
   `guard_name` varchar(255) NOT NULL,
@@ -420,9 +454,9 @@ CREATE TABLE `roles` (
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `roles_name_guard_name_unique` (`name`,`guard_name`)
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE `sessions` (
+CREATE TABLE IF NOT EXISTS `sessions` (
   `id` varchar(255) NOT NULL,
   `user_id` bigint(20) unsigned DEFAULT NULL,
   `ip_address` varchar(45) DEFAULT NULL,
@@ -434,7 +468,7 @@ CREATE TABLE `sessions` (
   KEY `sessions_last_activity_index` (`last_activity`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE `tasas_diarias` (
+CREATE TABLE IF NOT EXISTS `tasas_diarias` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `fecha` date NOT NULL,
   `moneda_base_id` bigint(20) unsigned NOT NULL,
@@ -457,9 +491,9 @@ CREATE TABLE `tasas_diarias` (
   CONSTRAINT `tasas_diarias_definida_por_id_foreign` FOREIGN KEY (`definida_por_id`) REFERENCES `users` (`id`) ON UPDATE CASCADE,
   CONSTRAINT `tasas_diarias_moneda_base_id_foreign` FOREIGN KEY (`moneda_base_id`) REFERENCES `monedas` (`id`) ON UPDATE CASCADE,
   CONSTRAINT `tasas_diarias_moneda_cotizada_id_foreign` FOREIGN KEY (`moneda_cotizada_id`) REFERENCES `monedas` (`id`) ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE `tasas_mercado` (
+CREATE TABLE IF NOT EXISTS `tasas_mercado` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `fuente` varchar(30) NOT NULL,
   `moneda_base_id` bigint(20) unsigned NOT NULL,
@@ -476,9 +510,9 @@ CREATE TABLE `tasas_mercado` (
   KEY `tasas_mercado_capturado_en_index` (`capturado_en`),
   CONSTRAINT `tasas_mercado_moneda_base_id_foreign` FOREIGN KEY (`moneda_base_id`) REFERENCES `monedas` (`id`) ON UPDATE CASCADE,
   CONSTRAINT `tasas_mercado_moneda_cotizada_id_foreign` FOREIGN KEY (`moneda_cotizada_id`) REFERENCES `monedas` (`id`) ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE `tipos_operacion` (
+CREATE TABLE IF NOT EXISTS `tipos_operacion` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `codigo` varchar(30) NOT NULL,
   `nombre` varchar(255) NOT NULL,
@@ -490,9 +524,9 @@ CREATE TABLE `tipos_operacion` (
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `tipos_operacion_codigo_unique` (`codigo`)
-) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE `titulares` (
+CREATE TABLE IF NOT EXISTS `titulares` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `nombre` varchar(255) NOT NULL,
   `alias` varchar(255) DEFAULT NULL,
@@ -504,7 +538,7 @@ CREATE TABLE `titulares` (
   UNIQUE KEY `titulares_nombre_unique` (`nombre`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE `users` (
+CREATE TABLE IF NOT EXISTS `users` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `titular_id` bigint(20) unsigned DEFAULT NULL,
   `name` varchar(255) NOT NULL,
@@ -521,10 +555,15 @@ CREATE TABLE `users` (
   UNIQUE KEY `users_email_unique` (`email`),
   KEY `users_titular_id_foreign` (`titular_id`),
   CONSTRAINT `users_titular_id_foreign` FOREIGN KEY (`titular_id`) REFERENCES `titulares` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
-INSERT INTO roles (name, guard_name, created_at, updated_at) VALUES
+-- ============================================================
+-- Datos iniciales (inserciones seguras)
+-- ============================================================
+
+-- Roles del sistema (INSERT IGNORE evita error si ya existen)
+INSERT IGNORE INTO roles (name, guard_name, created_at, updated_at) VALUES
 ('super_admin', 'web', NOW(), NOW()),
 ('admin', 'web', NOW(), NOW()),
 ('operador', 'web', NOW(), NOW()),
@@ -532,17 +571,18 @@ INSERT INTO roles (name, guard_name, created_at, updated_at) VALUES
 ('contador', 'web', NOW(), NOW()),
 ('lectura', 'web', NOW(), NOW());
 
-INSERT INTO users (name, email, password, activo, email_verified_at, created_at, updated_at) VALUES
+-- Usuario administrador por defecto (INSERT IGNORE)
+-- Contraseña: debe ser cambiada inmediatamente en producción.
+INSERT IGNORE INTO users (name, email, password, activo, email_verified_at, created_at, updated_at) VALUES
 ('Admin Principal', 'admin@test.com', '$2y$12$MG35Y8Ei4AGqy3Glw4OMaOzRnqux1O5S0pw62Rs9IjjpMs2lVjLay', 1, NOW(), NOW(), NOW());
 
-INSERT INTO model_has_roles (role_id, model_type, model_id)
+-- Asignación del rol super_admin al usuario administrador (INSERT IGNORE)
+INSERT IGNORE INTO model_has_roles (role_id, model_type, model_id)
 SELECT r.id, 'App\\Models\\User', u.id
 FROM roles r, users u
 WHERE r.name = 'super_admin' AND u.email = 'admin@test.com';
 
--- ============================================================
--- TIPOS DE OPERACIÓN
--- ============================================================
+-- Tipos de operación (ON DUPLICATE KEY actualiza si ya existe)
 INSERT INTO `tipos_operacion` (`codigo`, `nombre`, `afecta_cliente`, `afecta_fifo`, `genera_ganancia`, `activo`, `created_at`, `updated_at`) VALUES
 ('venta_usd',       'Venta de USD',           1, 1, 1, 1, NOW(), NOW()),
 ('compra_usd',      'Compra de USD',          1, 1, 0, 1, NOW(), NOW()),
@@ -555,9 +595,7 @@ INSERT INTO `tipos_operacion` (`codigo`, `nombre`, `afecta_cliente`, `afecta_fif
 ('ajuste_apertura', 'Ajuste de apertura',     0, 1, 0, 1, NOW(), NOW())
 ON DUPLICATE KEY UPDATE `nombre` = VALUES(`nombre`);
 
--- ============================================================
--- MONEDAS
--- ============================================================
+-- Monedas predefinidas
 INSERT INTO `monedas` (`codigo`, `nombre`, `simbolo`, `es_fiat`, `es_cripto`, `decimales`, `activa`, `created_at`, `updated_at`) VALUES
 ('VES', 'Bolívar Venezolano', 'Bs.', 1, 0, 2, 1, NOW(), NOW()),
 ('USD', 'Dólar Estadounidense', '$', 1, 0, 2, 1, NOW(), NOW()),
@@ -566,8 +604,27 @@ INSERT INTO `monedas` (`codigo`, `nombre`, `simbolo`, `es_fiat`, `es_cripto`, `d
 ('COP', 'Peso Colombiano', '$', 1, 0, 2, 1, NOW(), NOW())
 ON DUPLICATE KEY UPDATE `nombre` = VALUES(`nombre`);
 
+-- Tabla documentos (ya incluía IF NOT EXISTS)
+CREATE TABLE IF NOT EXISTS `documentos` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `cliente_id` bigint(20) unsigned NOT NULL,
+  `nombre_archivo` varchar(255) NOT NULL,
+  `ruta` varchar(255) NOT NULL,
+  `tipo` varchar(10) NOT NULL DEFAULT "otro",
+  `mime_type` varchar(100) NOT NULL,
+  `tamano` bigint(20) unsigned NOT NULL,
+  `subido_por_id` bigint(20) unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `documentos_cliente_id_foreign` (`cliente_id`),
+  KEY `documentos_subido_por_id_foreign` (`subido_por_id`),
+  CONSTRAINT `documentos_cliente_id_foreign` FOREIGN KEY (`cliente_id`) REFERENCES `clientes` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `documentos_subido_por_id_foreign` FOREIGN KEY (`subido_por_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Reactivamos las claves foráneas
 SET FOREIGN_KEY_CHECKS=1;
 EOSQL
-
 
 echo "=== Inicialización completada ==="

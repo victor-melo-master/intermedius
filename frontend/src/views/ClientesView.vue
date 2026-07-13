@@ -14,7 +14,6 @@
     </div>
 
     <AppLoadingSpinner v-if="clientes.loading" />
-    <!-- Toggle activos / papelera -->
     <div class="flex gap-2" v-if="auth.user?.roles?.includes('admin') || auth.user?.roles?.includes('super_admin')">
       <button @click="mostrarPapelera = false; cargarLista()" class="text-sm px-3 py-1.5 rounded-lg transition" :class="mostrarPapelera ? 'bg-gray-100 text-gray-600' : 'bg-blue-600 text-white'">Activos</button>
       <button @click="mostrarPapelera = true; cargarLista()" class="text-sm px-3 py-1.5 rounded-lg transition" :class="mostrarPapelera ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-600'">🗑 Papelera</button>
@@ -109,6 +108,34 @@
           </div>
         </div>
 
+        <!-- Documentos -->
+        <div class="border-t-2 border-gray-300 pt-6 pb-2 mt-4">
+          <div class="flex items-center justify-between mb-4">
+            <h4 class="font-semibold text-gray-800 text-base">Documentos</h4>
+            <label class="text-xs bg-blue-600 text-white px-2 py-1 rounded-lg hover:bg-blue-700 cursor-pointer">
+              + Subir documento
+              <input type="file" accept="image/*,.pdf" class="hidden" @change="subirDocumento" />
+            </label>
+          </div>
+          <AppLoadingSpinner v-if="loadingDocumentos" />
+          <AppEmptyState v-else-if="documentos.length === 0" icon="📄" message="No hay documentos." />
+          <div v-else class="space-y-3">
+            <div v-for="doc in documentos" :key="doc.id" class="bg-gray-50 border border-gray-200 rounded-lg p-3 flex items-center justify-between">
+              <div class="flex items-center gap-2 cursor-pointer" @click="abrirDocumento(doc)">
+                <span class="text-lg">{{ doc.tipo === 'cedula' ? '🪪' : doc.tipo === 'rif' ? '📋' : '📄' }}</span>
+                <div>
+                  <p class="font-medium text-sm truncate max-w-[200px] hover:text-blue-600 underline">{{ doc.nombre_archivo }}</p>
+                  <p class="text-xs text-gray-400">{{ formatTamano(doc.tamano) }} · {{ doc.tipo }}</p>
+                </div>
+              </div>
+              <div class="flex flex-col items-end gap-1">
+                <a :href="documentoDownloadUrlById(doc)" class="text-xs text-blue-600 hover:text-blue-800">⬇ Descargar</a>
+                <button @click="eliminarDocumento(doc)" class="text-xs text-red-600 hover:text-red-800">🗑 Eliminar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Historial de transacciones -->
         <div class="border-t-2 border-gray-300 pt-6 pb-2 mt-4">
           <div class="flex items-center justify-between mb-4">
@@ -118,7 +145,6 @@
             </button>
           </div>
 
-          <!-- Filtros -->
           <div class="grid grid-cols-2 gap-2 mb-3">
             <div>
               <label class="text-[10px] text-gray-400">Desde</label>
@@ -142,7 +168,6 @@
             {{ loadingHistorial ? 'Cargando...' : 'Buscar' }}
           </button>
 
-          <!-- Tabla de operaciones -->
           <div v-if="historial.length > 0" class="overflow-x-auto">
             <table class="w-full text-xs">
               <thead>
@@ -166,7 +191,6 @@
                 </tr>
               </tbody>
             </table>
-            <!-- Paginación simple -->
             <div v-if="historialPaginacion.last_page > 1" class="flex justify-between items-center mt-2 text-xs">
               <button @click="cargarHistorial(historialPaginacion.current_page - 1)" :disabled="!historialPaginacion.prev_page_url" class="text-blue-600 disabled:text-gray-300">&lt; Anterior</button>
               <span class="text-gray-500">Pág {{ historialPaginacion.current_page }} / {{ historialPaginacion.last_page }}</span>
@@ -187,7 +211,6 @@
           <button @click="showCuentaForm = false" class="text-gray-400 hover:text-gray-600">✕</button>
         </div>
         <form @submit.prevent="submitCuenta" class="space-y-3">
-          <!-- Tipo de cuenta (siempre primero) -->
           <div>
             <label class="text-sm text-gray-600 mb-1 block">Tipo de cuenta *</label>
             <select v-model="cuentaForm.tipo" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
@@ -202,7 +225,6 @@
             </select>
           </div>
 
-          <!-- Banco (solo si no es efectivo) -->
           <div v-if="cuentaForm.tipo !== 'efectivo'">
             <label class="text-sm text-gray-600 mb-1 block">Banco</label>
             <select v-model="cuentaForm.banco_id" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
@@ -211,7 +233,6 @@
             </select>
           </div>
 
-          <!-- Moneda (siempre visible) -->
           <div>
             <label class="text-sm text-gray-600 mb-1 block">Moneda</label>
             <select v-model="cuentaForm.moneda_id" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
@@ -222,7 +243,6 @@
 
           <input v-model="cuentaForm.alias" required placeholder="Alias * (ej: Banesco USD)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
 
-          <!-- Número de cuenta (solo si no es efectivo) -->
           <input v-if="cuentaForm.tipo !== 'efectivo'" v-model="cuentaForm.numero_cuenta" placeholder="Número de cuenta (opcional)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
           <textarea v-model="cuentaForm.notas" rows="2" placeholder="Notas (opcional)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none"></textarea>
           <label class="flex items-center gap-2 text-sm text-gray-600">
@@ -237,6 +257,41 @@
         </form>
       </div>
     </div>
+
+    <!-- Modal de previsualización de documento -->
+    <!-- Modal de previsualización de documento -->
+<div v-if="showDocumentoModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="showDocumentoModal = false">
+  <div class="absolute inset-0 bg-black/60"></div>
+  <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 relative z-10">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-bold text-lg">{{ documentoPreview?.nombre_archivo }}</h3>
+      <button @click="showDocumentoModal = false" class="text-gray-400 hover:text-gray-600 text-xl leading-none">✕</button>
+    </div>
+    <div class="flex flex-col items-center justify-center">
+      <!-- Spinner mientras carga la URL -->
+      <div v-if="loadingPreviewUrl" class="text-center py-8">
+        <div class="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+        <p class="text-gray-500 text-sm mt-2">Cargando previsualización...</p>
+      </div>
+      <!-- Imagen -->
+      <img v-else-if="esImagen(documentoPreview) && documentoPreviewUrl"
+           :src="documentoPreviewUrl"
+           alt="Documento"
+           class="max-w-full max-h-[70vh] rounded-lg shadow-md" />
+      <!-- No imagen -->
+      <div v-else-if="!loadingPreviewUrl" class="text-center py-8">
+        <span class="text-5xl block mb-4">📄</span>
+        <p class="text-gray-500">No se puede previsualizar este tipo de archivo.</p>
+      </div>
+      <!-- Botón de descarga -->
+      <a v-if="documentoDownloadUrl"
+         :href="documentoDownloadUrl"
+         class="mt-4 inline-block px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">
+        Descargar archivo
+      </a>
+    </div>
+  </div>
+</div>
   </div>
 </template>
 
@@ -245,9 +300,9 @@
  * ClientesView — CRUD de clientes con soft-delete y papelera.
  * Permite crear, editar, eliminar (archivar) y restaurar clientes.
  * Incluye detalle con cuentas bancarias asociadas, historial de transacciones
- * con filtros por fecha/tipo, paginación y exportación a PDF.
+ * con filtros por fecha/tipo, paginación, exportación a PDF, y gestión de documentos (subir, listar, eliminar, previsualizar).
  */
-import { ref, reactive, watch, onMounted } from 'vue'
+import { ref, reactive, computed, watch, onMounted } from 'vue'
 import { useClientesStore } from '../stores/clientes.js'
 import { useAuthStore } from '../stores/auth.js'
 import { useBancosStore } from '../stores/bancos.js'
@@ -323,6 +378,34 @@ const historialFiltros = reactive({
   fecha_hasta: '',
   tipo_codigo: '',
 })
+
+// Documentos
+const documentos = ref([])
+const loadingDocumentos = ref(false)
+const showDocumentoModal = ref(false)
+const documentoPreview = ref(null)
+// Agrega estas dos líneas junto a las otras variables de documentos
+const documentoPreviewUrl = ref('')
+const loadingPreviewUrl = ref(false)
+
+const documentoDownloadUrl = computed(() => {
+  if (!documentoPreview.value) return null
+  const token = localStorage.getItem('token')
+  return `${import.meta.env.VITE_API_URL}/documentos/${documentoPreview.value.id}/download?token=${token}`
+})
+
+function abrirDocumento(doc) {
+  documentoPreview.value = doc
+  const token = localStorage.getItem('token')
+  documentoPreviewUrl.value = `${import.meta.env.VITE_API_URL}/documentos/${doc.id}/preview?token=${token}`
+  showDocumentoModal.value = true
+  loadingPreviewUrl.value = false
+}
+
+function documentoDownloadUrlById(doc) {
+  const token = localStorage.getItem('token')
+  return `${import.meta.env.VITE_API_URL}/documentos/${doc.id}/download?token=${token}`
+}
 
 /**
  * Carga la lista de clientes según la pestalla activa (activos o papelera).
@@ -476,24 +559,6 @@ async function submitCuenta() {
   }
 }
 
-// // ── Historial de transacciones ──
-// /** Lista de operaciones del historial */
-// const historial = ref([])
-// /** Metadatos de paginación del historial (current_page, last_page, etc.) */
-// const historialPaginacion = ref({})
-// /** Indica si el historial ya fue cargado alguna vez */
-// const historialCargado = ref(false)
-// /** Indica carga del historial */
-// const loadingHistorial = ref(false)
-// /** Indica si se está exportando el PDF */
-// const exportando = ref(false)
-// /** Filtros del historial de transacciones */
-// const historialFiltros = reactive({
-//   fecha_desde: '',
-//   fecha_hasta: '',
-//   tipo_codigo: '',
-// })
-
 /**
  * Carga el historial paginado de operaciones del cliente en detalle.
  * @param {number} [page=1] - Número de página
@@ -549,7 +614,6 @@ function formatMonto(op, moneda) {
 
 /**
  * Exporta el historial de operaciones del cliente a PDF.
- * Usa axios directo para evitar interceptores que rompan el blob.
  * @returns {Promise<void>}
  */
 async function exportarPDF() {
@@ -591,9 +655,74 @@ async function exportarPDF() {
   }
 }
 
-/** Cuando se abre el detalle, carga automáticamente el historial */
+// ── Funciones de Documentos ──
+
+/** Carga la lista de documentos del cliente actual. */
+async function cargarDocumentos() {
+  if (!detailCliente.value) return
+  loadingDocumentos.value = true
+  try {
+    const { data } = await api.get(`/clientes/${detailCliente.value.id}/documentos`)
+    documentos.value = Array.isArray(data) ? data : (data.data || [])
+  } catch {
+    documentos.value = []
+  } finally {
+    loadingDocumentos.value = false
+  }
+}
+
+/** Sube un documento al servidor. */
+async function subirDocumento(event) {
+  const file = event.target.files[0]
+  if (!file || !detailCliente.value) return
+
+  let tipo = 'otro'
+  if (/cedula|ced/i.test(file.name)) tipo = 'cedula'
+  if (/rif/i.test(file.name)) tipo = 'rif'
+
+  const formData = new FormData()
+  formData.append('archivo', file)
+  formData.append('tipo', tipo)
+
+  try {
+    await api.post(`/clientes/${detailCliente.value.id}/documentos`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+    cargarDocumentos()
+  } catch (err) {
+    alert(err.response?.data?.message || 'Error al subir documento')
+  }
+  event.target.value = ''
+}
+
+/** Elimina un documento del servidor. */
+async function eliminarDocumento(doc) {
+  if (!confirm(`¿Eliminar "${doc.nombre_archivo}"?`)) return
+  try {
+    await api.delete(`/documentos/${doc.id}`)
+    cargarDocumentos()
+  } catch (err) {
+    alert(err.response?.data?.message || 'Error al eliminar documento')
+  }
+}
+
+/** Verifica si el documento es una imagen por su tipo MIME. */
+function esImagen(doc) {
+  return doc?.mime_type?.startsWith('image/')
+}
+
+/** Formatea el tamaño de un archivo a una unidad legible. */
+function formatTamano(bytes) {
+  if (!bytes) return '0 B'
+  const sizes = ['B', 'KB', 'MB']
+  const i = Math.floor(Math.log(bytes) / Math.log(1024))
+  return (bytes / Math.pow(1024, i)).toFixed(1) + ' ' + sizes[i]
+}
+
+/** Cuando se abre el detalle, carga automáticamente el historial y los documentos */
 watch(showDetail, (val) => {
   if (val && detailCliente.value) {
+    cargarDocumentos()
     cargarHistorial()
   }
 })

@@ -45,6 +45,12 @@ Route::prefix('v1')->group(function () {
         ->middleware('signed');
 
     // ─────────────────────────────────────────────────────────────────
+    // Documentos (públicos, autenticados por token en query param)
+    // ─────────────────────────────────────────────────────────────────
+    Route::get('documentos/{documento}/preview', [DocumentoController::class, 'preview']);
+    Route::get('documentos/{documento}/download', [DocumentoController::class, 'download']);
+
+    // ─────────────────────────────────────────────────────────────────
     // Rutas protegidas con Sanctum
     // ─────────────────────────────────────────────────────────────────
     Route::middleware('auth:sanctum')->group(function () {
@@ -57,7 +63,6 @@ Route::prefix('v1')->group(function () {
         Route::get('clientes/{cliente}/documentos', [DocumentoController::class, 'index']);
         Route::post('clientes/{cliente}/documentos', [DocumentoController::class, 'store']);
         Route::delete('documentos/{documento}', [DocumentoController::class, 'destroy']);
-
 
         // ── Catálogos ────────────────────────────────────────────────
         Route::middleware('throttle:60,1')->group(function () {
