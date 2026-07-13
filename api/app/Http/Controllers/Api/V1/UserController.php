@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Notifications\VerifyEmailNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -41,7 +42,7 @@ class UserController extends Controller
         $validated = $request->validate([
             'name'       => ['required', 'string', 'max:255'],
             'email'      => ['required', 'email', 'unique:users,email'],
-            'password'   => ['required', 'string', Password::min(8)],
+            'password'   => ['required', 'string', Password::min(12)->mixedCase()->numbers()->symbols()->uncompromised()],
             'rol'        => ['required', 'string', 'in:super_admin,admin,operador,contador,lectura'],
             'titular_id' => ['nullable', 'integer', 'exists:titulares,id'],
             'activo'     => ['boolean'],
@@ -57,6 +58,9 @@ class UserController extends Controller
 
         $usuario->assignRole($validated['rol']);
 
+        // Enviar email de verificación
+        $usuario->notify(new VerifyEmailNotification());
+
         return response()->json($this->formatUser($usuario->load('titular')), 201);
     }
 
@@ -69,10 +73,13 @@ class UserController extends Controller
      */
     public function update(Request $request, User $usuario): JsonResponse
     {
+        if ($request->filled('password')) {
+            $usuario->tokens()->delete();
+        }
         $validated = $request->validate([
             'name'       => ['sometimes', 'required', 'string', 'max:255'],
             'email'      => ['sometimes', 'required', 'email', Rule::unique('users', 'email')->ignore($usuario->id)],
-            'password'   => ['nullable', 'string', Password::min(8)],
+            'password'   => ['nullable', 'string', Password::min(12)->mixedCase()->numbers()->symbols()->uncompromised()],
             'rol'        => ['sometimes', 'required', 'string', 'in:super_admin,admin,operador,contador,lectura'],
             'titular_id' => ['nullable', 'integer', 'exists:titulares,id'],
             'activo'     => ['sometimes', 'boolean'],

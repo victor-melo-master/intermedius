@@ -59,9 +59,9 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = ''
     try {
       const { data } = await api.post('/auth/login', { email, password })
-      token.value = data.token
+      token.value = data.token || data.data?.token || data
+localStorage.setItem('token', token.value)
       user.value = data.user
-      localStorage.setItem('token', data.token)
       return true
     } catch (err) {
       error.value = err.response?.data?.message || 'Credenciales incorrectas'

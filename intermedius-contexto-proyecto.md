@@ -36,16 +36,9 @@
 - **Document Root Plesk:** apunta a `api/public`
 - **Base de datos:** `intermedius_casa_cambio` en MariaDB local
 
-**Credenciales de BD (temporales, cambiar post-deploy):**
-- DB_HOST: localhost
-- DB_DATABASE: intermedius_casa_cambio
-- DB_USERNAME: laravel_user
-- DB_PASSWORD: MSlx0^k64vop!2025
+**Credenciales de BD:** Ver `api/.env` en el servidor de producción (nunca commitear credenciales reales).
 
-**Usuario admin del sistema:**
-- Email: admin@test.com
-- Password: password123
-- Rol: super_admin
+**Usuario admin del sistema:** Crear vía `php artisan db:seed --class=AdminUserSeeder` en producción. Usar contraseña fuerte (min 12 chars, mixed case, números, símbolos).
 
 ---
 

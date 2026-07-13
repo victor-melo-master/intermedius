@@ -11,6 +11,7 @@ import { useAuthStore } from '../stores/auth.js'
 const routes = [
   /** Ruta pública: pantalla de inicio de sesión. */
   { path: '/login', name: 'Login', component: () => import('../views/LoginView.vue') },
+  { path: '/email/verify', name: 'EmailVerify', component: () => import('../views/EmailVerifyView.vue') },
   /** Ruta padre: layout con AppShell que envuelve todas las secciones protegidas. */
   {
     path: '/',
@@ -51,6 +52,7 @@ const routes = [
       { path: 'usuarios', name: 'Usuarios', component: () => import('../views/UsuariosView.vue') },
       /** Gestión de comisiones. */
       { path: 'comisiones', name: 'Comisiones', component: () => import('../views/ComisionesView.vue') },
+      { path: '/:pathMatch(.*)*', name: 'NotFound', component: () => import('../views/NotFoundView.vue') }
     ]
   }
 ]
@@ -64,10 +66,12 @@ const router = createRouter({
 /** Guard de navegación: verifica autenticación y redirige según el estado. */
 router.beforeEach(async (to) => {
   const auth = useAuthStore()
-  if (!auth.initialized) await auth.init()
 
-  if (to.meta.requiresAuth && !auth.isAuthenticated) return '/login'
-  if (to.path === '/login' && auth.isAuthenticated) return '/dashboard'
+  // Iniciar verificación en paralelo, sin esperar
+  if (!auth.initialized) auth.init()
+
+  // No bloquear: verificar solo si hay token
+  if (to.meta.requiresAuth && !auth.token) return '/login'
+  if (to.path === '/login' && auth.token) return '/dashboard'
 })
-
 export default router

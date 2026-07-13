@@ -71,9 +71,11 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth.js'
+import { useInactivityTimer } from '../composables/useInactivityTimer.js'
 
 const router = useRouter()
 const auth = useAuthStore()
+useInactivityTimer()
 
 /** @type {import('vue').Ref<boolean>} - Controla la apertura del drawer móvil */
 const drawer = ref(false)

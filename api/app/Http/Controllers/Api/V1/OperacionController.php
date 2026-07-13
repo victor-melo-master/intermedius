@@ -88,12 +88,12 @@ class OperacionController extends Controller
 {
     $this->authorize('view', $operacion);
 
-    \Log::info('Show operacion', [
-        'id' => $operacion->id,
-        'fecha' => $operacion->fecha,
-        'estatus' => $operacion->estatus,
-        'tasa' => $operacion->tasa_aplicada,
-    ]);
+    // \Log::info('Show operacion', [
+    //     'id' => $operacion->id,
+    //     'fecha' => $operacion->fecha,
+    //     'estatus' => $operacion->estatus,
+    //     'tasa' => $operacion->tasa_aplicada,
+    // ]);
 
     $operacion->load([
         'movimientos.cuenta.titular',
@@ -108,10 +108,10 @@ class OperacionController extends Controller
         'pagador',
     ]);
 
-    \Log::info('Show operacion after load', [
-        'movimientos_count' => $operacion->movimientos->count(),
-        'tipo_operacion' => $operacion->tipoOperacion?->codigo,
-    ]);
+    // \Log::info('Show operacion after load', [
+    //     'movimientos_count' => $operacion->movimientos->count(),
+    //     'tipo_operacion' => $operacion->tipoOperacion?->codigo,
+    // ]);
 
     return new OperacionResource($operacion);
 }
