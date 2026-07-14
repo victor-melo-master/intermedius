@@ -60,4 +60,9 @@ class Cliente extends Model
     {
         return $this->hasMany(Cuenta::class);
     }
+
+    public function documentos(): HasMany
+    {
+        return $this->hasMany(Documento::class);
+    }
 }

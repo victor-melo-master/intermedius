@@ -24,7 +24,9 @@ if [ -n "$DB_HOST" ]; then
         sleep 1
     done
     echo "MariaDB disponible."
-    php artisan migrate --force || true
+    if [ "$RUN_MIGRATIONS" = "true" ]; then
+        php artisan migrate --force || true
+    fi
 fi
 
 if [ -n "$AWS_ENDPOINT" ] && [ "$FILESYSTEM_DISK" = "s3" ]; then

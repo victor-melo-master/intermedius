@@ -98,6 +98,7 @@ services:
       AWS_USE_PATH_STYLE_ENDPOINT: "true"
       FILESYSTEM_DISK: s3
       PHP_IDE_CONFIG: "serverName=intermedius"
+      RUN_MIGRATIONS: "true"
     volumes:
       - ./api:/var/www
       - api_vendor:/var/www/vendor
