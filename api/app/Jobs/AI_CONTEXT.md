@@ -331,3 +331,63 @@
 
 ### Estado actual
 - **No implementado** — es un placeholder para Fase 3 del proyecto
+
+---
+
+## `VerificarSlaPoolJob`
+- **File**: `api/app/Jobs/VerificarSlaPoolJob.php`
+- **Schedule**: Cada minuto, `->withoutOverlapping()`, name `verificar-sla-pool`
+- **Tries**: default (1)
+- **Timeout**: default
+- **Queue**: default
+- **Dispatcher**: `Schedule::job(new VerificarSlaPoolJob())->everyMinute()->withoutOverlapping()` desde `routes/console.php`
+
+### Lógica
+1. `$threshold = now()->subMinutes(5)` — operaciones con más de 5 min de espera
+2. Query:
+   ```php
+   Operacion::where('estado_pool', 'pendiente')
+       ->whereNull('sla_notificado_en')
+       ->where('created_at', '<=', $threshold)
+       ->get()
+   ```
+   - Solo operaciones **realmente pendientes** en el pool (`estado_pool = 'pendiente'`)
+   - Excluye las que ya fueron notificadas (`sla_notificado_en IS NULL`)
+   - Excluye las que no superan el umbral de 5 minutos
+3. Si no hay operaciones → `return` (sin logging)
+4. Por cada operación:
+   - Calcula `$minutosEspera` (casteado a `int`)
+   - `PoolNotifier::slaExcedida()` — log de advertencia
+   - `event(new SlaExcedida(...))` — broadcast Reverb al canal `pool` con nombre `sla.excedida`
+   - `$operacion->update(['sla_notificado_en' => now()])` — marca para no repetir la alarma
+   - `Log::warning` con detalle de la operación
+
+### Componentes involucrados
+- `App\Models\Operacion` — consulta operaciones en pool pendiente
+- `App\Services\Pool\PoolNotifier` — log de SLA excedido
+- `App\Events\SlaExcedida` — broadcast event (canal `pool`, nombre `sla.excedida`)
+- Reverb (WebSocket server) — recibe broadcast y lo envía a clientes Echo
+
+### Broadcast (SlaExcedida)
+- **Canal**: `pool` (público, sin autenticación)
+- **Nombre**: `sla.excedida`
+- **Payload**: `{ operacion_id, minutos_espera, created_at }`
+- **Driver**: Reverb (vía Pusher protocol), escucha en `reverb:8080` (interno Docker) / `localhost:8080` (frontend)
+- **Frontend**: Echo escucha `channel('pool').listen('.sla.excedida', ...)` en `AppShell.vue`, dispara evento `window` `sla-excedida` que `PoolAlarm.vue` captura para mostrar modal + sonido
+
+### Dependencias infraestructura
+- **Reverb** debe estar corriendo (servicio `reverb` en docker-compose, puerto 8080)
+- **Horizon** debe procesar la cola `default` (servicio `horizon` en docker-compose)
+- **Redis** como backend de cola y caché
+
+### Consideraciones
+- Usa `Queueable` trait (requerido por `Schedule::job()` para `onConnection()`/`onQueue()`)
+- `sla_notificado_en` está en `$fillable` del modelo y casteado como `datetime`
+- La alarma suena **1 vez por operación** gracias al filtro `whereNull('sla_notificado_en')`
+- La migración `add_sla_notificado_en_to_operaciones_table` agrega la columna
+
+### Logging
+- `Log::warning` por cada operación que excede SLA
+
+### Excepciones
+- Ninguna capturada explícitamente — si falla broadcast, el job se marca como `failed` en Horizon

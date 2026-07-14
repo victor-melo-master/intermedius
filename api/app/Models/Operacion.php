@@ -147,6 +147,7 @@ class Operacion extends Model
             'tasa_venta'             => 'decimal:8',
             'estado_pool'            => 'string',
             'estado'                 => 'string',
+            'sla_notificado_en'      => 'datetime',
         ];
     }
 

@@ -442,3 +442,17 @@ ReporteComisionesOperadoresService  (independiente, solo ComisionOperacion + Exc
 | `Cuenta` | `moneda_id`, `banco_id`, `alias`, `activa`, `saldo_cache`, `saldo_cache_at` |
 | `TipoOperacion` | `codigo`, `genera_ganancia`, `afecta_fifo` |
 | `TasaMercado` | `fuente`, `valor`, `capturado_en` |
+
+---
+
+## `PoolNotifier`
+
+- **File**: `api/app/Services/Pool/PoolNotifier.php`
+- **Namespace**: `App\Services\Pool`
+- **Propósito**: Notificaciones de eventos del pool de pagos (asignación, pago, cancelación, SLA).
+- **Métodos**:
+  - `operacionesAsignadas(Collection $operaciones, User $pagador)` → Log `info` con IDs de operaciones y pagador
+  - `operacionPagada(Operacion $operacion, User $pagador)` → Log `info`
+  - `operacionCancelada(Operacion $operacion, User $usuario, string $motivo)` → Log `warning`
+  - `slaExcedida(Operacion $operacion, int $minutosEspera)` → Log `warning` con minutos de espera
+- **Estado actual**: Solo log por ahora. Puede extenderse a email/push/WebSocket. La notificación en tiempo real al frontend se maneja vía `SlaExcedida` event (broadcast Reverb).

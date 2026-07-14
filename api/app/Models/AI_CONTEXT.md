@@ -322,8 +322,10 @@ Convenciones generales:
   - `pagada_at` — Timestamp de pago efectivo.
   - `cancelada_at` — Timestamp de cancelación.
   - `motivo_cancelacion` — Razón de la cancelación.
+  - `sla_notificado_en` — Timestamp de cuándo se notificó la alarma de SLA (null = no notificada).
 - **Casts**:
   - `fecha` → `date`
+  - `sla_notificado_en` → `datetime`
   - `verificado_at` → `datetime`
   - `asignada_at` → `datetime`
   - `pagada_at` → `datetime`
@@ -359,7 +361,7 @@ Convenciones generales:
 - **Scopes**:
   - `scopePendientes(Builder $query)` — Filtra operaciones con `estado_pool = 'pendiente'`.
   - `scopeAsignadasA(Builder $query, int $userId)` — Filtra operaciones asignadas a un usuario específico (`pagador_id = userId` y `estado_pool = 'asignada'`).
-- **Notas**: Es el modelo más grande y complejo del sistema. Contiene campos de ganancias en USD y VES, control de pool de pagos, verificación y cancelación. soft-delete implementado.
+- **Notas**: Es el modelo más grande y complejo del sistema. Contiene campos de ganancias en USD y VES, control de pool de pagos, verificación y cancelación. `sla_notificado_en` evita que la alarma de SLA se repita cada minuto. soft-delete implementado.
 
 ---
 

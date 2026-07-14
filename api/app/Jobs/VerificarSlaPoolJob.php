@@ -30,9 +30,13 @@ class VerificarSlaPoolJob implements ShouldQueue
 
         foreach ($operaciones as $operacion) {
             $minutosEspera = (int) $operacion->created_at->diffInMinutes(now());
+
             $notifier->slaExcedida($operacion, $minutosEspera);
+
             event(new \App\Events\SlaExcedida($operacion, $minutosEspera));
+
             $operacion->update(['sla_notificado_en' => now()]);
+
             Log::warning("SLA excedida para operación {$operacion->id} con {$minutosEspera} minutos de espera.");
         }
     }
