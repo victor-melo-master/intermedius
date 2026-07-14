@@ -345,7 +345,7 @@ async function submit() {
       if (!tx.cuenta_origen_id || !tx.cuenta_destino_id || !tx.moneda_id || !parseFloat(tx.monto)) continue
       const monto = Math.abs(parseFloat(tx.monto))
       const comision = Math.abs(parseFloat(tx.comision_monto)) || 0
-      movimientos.push({ cuenta_id: Number(tx.cuenta_origen_id), monto: -(monto + comision) })
+      movimientos.push({ cuenta_id: Number(tx.cuenta_origen_id), monto: -monto })
       movimientos.push({ cuenta_id: Number(tx.cuenta_destino_id), monto })
       totalComision += comision
     }
