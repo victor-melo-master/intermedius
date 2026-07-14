@@ -2,11 +2,13 @@
 
 namespace Tests\Unit\Services;
 
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
 use App\Services\Tasas\TasasMercadoService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Tests\TestCase;
 
+#[IgnoreDeprecations]
 class TasasMercadoServiceTest extends TestCase
 {
     private TasasMercadoService $service;

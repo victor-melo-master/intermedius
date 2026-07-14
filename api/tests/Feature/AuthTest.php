@@ -2,12 +2,14 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
 use App\Models\LoginAttempt;
 use App\Models\User;
 use Database\Seeders\CatalogosBaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
+#[IgnoreDeprecations]
 class AuthTest extends TestCase
 {
     use RefreshDatabase;

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
 use App\Models\CategoriaGasto;
 use App\Models\Cuenta;
 use App\Models\Moneda;
@@ -14,6 +15,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
+#[IgnoreDeprecations]
 class GastoEndpointTest extends TestCase
 {
     use RefreshDatabase;

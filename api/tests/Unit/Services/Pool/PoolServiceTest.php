@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Services\Pool;
 
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
 use App\Models\Cuenta;
 use App\Models\Moneda;
 use App\Models\Operacion;
@@ -17,6 +18,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
+#[IgnoreDeprecations]
 class PoolServiceTest extends TestCase
 {
     use RefreshDatabase;

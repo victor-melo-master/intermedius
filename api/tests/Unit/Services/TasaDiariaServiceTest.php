@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Services;
 
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
 use App\Models\Moneda;
 use App\Models\TasaDiaria;
 use App\Models\User;
@@ -10,6 +11,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
+#[IgnoreDeprecations]
 class TasaDiariaServiceTest extends TestCase
 {
     use RefreshDatabase;

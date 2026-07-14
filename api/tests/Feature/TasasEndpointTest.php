@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
 use App\Models\Moneda;
 use App\Models\TasaMercado;
 use App\Models\User;
@@ -11,6 +12,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
+#[IgnoreDeprecations]
 class TasasEndpointTest extends TestCase
 {
     use RefreshDatabase;

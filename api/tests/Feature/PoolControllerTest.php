@@ -2,12 +2,14 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
 use App\Models\Operacion;
 use App\Models\User;
 use Database\Seeders\CatalogosBaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
+#[IgnoreDeprecations]
 class PoolControllerTest extends TestCase
 {
     use RefreshDatabase;

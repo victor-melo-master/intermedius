@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
 use App\Models\Moneda;
 use App\Models\TasaDiaria;
 use App\Models\User;
@@ -9,6 +10,7 @@ use Database\Seeders\CatalogosBaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
+#[IgnoreDeprecations]
 class TasaDiariaEndpointTest extends TestCase
 {
     use RefreshDatabase;

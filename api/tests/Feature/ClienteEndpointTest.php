@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
 use App\Models\Cliente;
 use App\Models\Cuenta;
 use App\Models\Moneda;
@@ -11,6 +12,7 @@ use Database\Seeders\CatalogosBaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
+#[IgnoreDeprecations]
 class ClienteEndpointTest extends TestCase
 {
     use RefreshDatabase;
