@@ -2,10 +2,8 @@
 
 namespace Tests\Unit;
 
-use PHPUnit\Framework\Attributes\IgnoreDeprecations;
 use PHPUnit\Framework\TestCase;
 
-#[IgnoreDeprecations]
 class ExampleTest extends TestCase
 {
     /**

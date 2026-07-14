@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use PHPUnit\Framework\Attributes\IgnoreDeprecations;
 use App\Models\Cuenta;
 use App\Models\Titular;
 use App\Models\User;
@@ -10,7 +9,6 @@ use Database\Seeders\CatalogosBaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-#[IgnoreDeprecations]
 class TitularEndpointTest extends TestCase
 {
     use RefreshDatabase;

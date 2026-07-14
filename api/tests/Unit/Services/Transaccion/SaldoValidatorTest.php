@@ -2,7 +2,6 @@
 
 namespace Tests\Unit\Services\Transaccion;
 
-use PHPUnit\Framework\Attributes\IgnoreDeprecations;
 use App\Models\Cuenta;
 use App\Models\Moneda;
 use App\Models\Movimiento;
@@ -13,7 +12,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
-#[IgnoreDeprecations]
 class SaldoValidatorTest extends TestCase
 {
     use RefreshDatabase;

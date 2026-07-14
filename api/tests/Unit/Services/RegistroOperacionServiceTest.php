@@ -2,7 +2,6 @@
 
 namespace Tests\Unit\Services;
 
-use PHPUnit\Framework\Attributes\IgnoreDeprecations;
 use App\Jobs\ProcesarFifoOperacionJob;
 use App\Jobs\RecalcularSaldoCuentaJob;
 use App\Models\Cuenta;
@@ -17,7 +16,6 @@ use Illuminate\Support\Facades\Queue;
 use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
-#[IgnoreDeprecations]
 class RegistroOperacionServiceTest extends TestCase
 {
     use RefreshDatabase;

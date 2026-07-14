@@ -3,10 +3,8 @@
 namespace Tests\Feature;
 
 // use Illuminate\Foundation\Testing\RefreshDatabase;
-use PHPUnit\Framework\Attributes\IgnoreDeprecations;
 use Tests\TestCase;
 
-#[IgnoreDeprecations]
 class ExampleTest extends TestCase
 {
     /**

@@ -2,7 +2,6 @@
 
 namespace Tests\Unit\Services\Pool;
 
-use PHPUnit\Framework\Attributes\IgnoreDeprecations;
 use App\Models\Operacion;
 use App\Models\TipoOperacion;
 use App\Models\User;
@@ -12,7 +11,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
-#[IgnoreDeprecations]
 class PoolValidatorTest extends TestCase
 {
     use RefreshDatabase;

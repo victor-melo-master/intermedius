@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use PHPUnit\Framework\Attributes\IgnoreDeprecations;
 use App\Models\Titular;
 use App\Models\User;
 use App\Notifications\VerifyEmailNotification;
@@ -11,7 +10,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
-#[IgnoreDeprecations]
 class UserEndpointTest extends TestCase
 {
     use RefreshDatabase;

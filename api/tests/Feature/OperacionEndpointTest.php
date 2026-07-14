@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use PHPUnit\Framework\Attributes\IgnoreDeprecations;
 use App\Models\Cuenta;
 use App\Models\Moneda;
 use App\Models\Operacion;
@@ -14,7 +13,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
-#[IgnoreDeprecations]
 class OperacionEndpointTest extends TestCase
 {
     use RefreshDatabase;

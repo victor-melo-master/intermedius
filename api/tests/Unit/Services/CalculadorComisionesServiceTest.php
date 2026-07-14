@@ -2,7 +2,6 @@
 
 namespace Tests\Unit\Services;
 
-use PHPUnit\Framework\Attributes\IgnoreDeprecations;
 use App\Models\ComisionCuenta;
 use App\Models\ComisionOperacion;
 use App\Models\ComisionOperador;
@@ -19,7 +18,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
-#[IgnoreDeprecations]
 class CalculadorComisionesServiceTest extends TestCase
 {
     use RefreshDatabase;

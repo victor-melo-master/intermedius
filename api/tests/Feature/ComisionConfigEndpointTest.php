@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use PHPUnit\Framework\Attributes\IgnoreDeprecations;
 use App\Models\Cuenta;
 use App\Models\Moneda;
 use App\Models\Titular;
@@ -12,7 +11,6 @@ use Database\Seeders\CatalogosBaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-#[IgnoreDeprecations]
 class ComisionConfigEndpointTest extends TestCase
 {
     use RefreshDatabase;
