@@ -193,10 +193,78 @@ return new class extends Migration
             $table->integer('orden')->default(0);
             $table->timestamps();
         });
+        Schema::create('comisiones_operacion', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('operacion_id')->constrained('operaciones')->cascadeOnDelete();
+            $table->string('tipo');
+            $table->nullableMorphs('origen');
+            $table->string('descripcion', 200);
+            $table->decimal('monto', 20, 4);
+            $table->foreignId('moneda_id')->constrained('monedas');
+            $table->decimal('monto_usd_equivalente', 20, 4);
+            $table->foreignId('movimiento_id')->nullable()->constrained('movimientos')->nullOnDelete();
+            $table->foreignId('editada_por_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->timestamp('editada_at')->nullable();
+            $table->text('razon_edicion')->nullable();
+            $table->index(['operacion_id', 'tipo']);
+            $table->timestamps();
+        });
+        Schema::create('comisiones_cuenta', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('cuenta_id')->nullable()->constrained('cuentas');
+            $table->foreignId('banco_id')->nullable()->constrained('bancos');
+            $table->string('descripcion', 100);
+            $table->string('tipo_calculo');
+            $table->decimal('valor', 20, 8);
+            $table->foreignId('moneda_id')->constrained('monedas');
+            $table->string('aplica_a');
+            $table->date('vigente_desde');
+            $table->date('vigente_hasta')->nullable();
+            $table->boolean('activa')->default(true);
+            $table->index(['cuenta_id', 'activa']);
+            $table->index(['banco_id', 'activa']);
+            $table->index(['vigente_desde', 'vigente_hasta']);
+            $table->timestamps();
+        });
+        Schema::create('comisiones_operador', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('titular_id')->constrained('titulares');
+            $table->foreignId('tipo_operacion_id')->nullable()->constrained('tipos_operacion');
+            $table->string('descripcion', 100);
+            $table->string('tipo_calculo');
+            $table->decimal('valor', 20, 8);
+            $table->foreignId('moneda_id')->constrained('monedas');
+            $table->string('base_calculo')->default('monto_operacion');
+            $table->date('vigente_desde');
+            $table->date('vigente_hasta')->nullable();
+            $table->boolean('activa')->default(true);
+            $table->index(['titular_id', 'activa']);
+            $table->index(['vigente_desde', 'vigente_hasta']);
+            $table->timestamps();
+        });
+        Schema::create('comisiones_metodo_pago', function (Blueprint $table) {
+            $table->id();
+            $table->string('nombre_metodo', 80);
+            $table->foreignId('cuenta_id')->nullable()->constrained('cuentas');
+            $table->string('descripcion', 100);
+            $table->string('tipo_calculo');
+            $table->decimal('valor', 20, 8);
+            $table->foreignId('moneda_id')->constrained('monedas');
+            $table->date('vigente_desde');
+            $table->date('vigente_hasta')->nullable();
+            $table->boolean('activa')->default(true);
+            $table->index(['nombre_metodo', 'activa']);
+            $table->index(['cuenta_id', 'activa']);
+            $table->timestamps();
+        });
     }
 
     public function down(): void
     {
+        Schema::dropIfExists('comisiones_metodo_pago');
+        Schema::dropIfExists('comisiones_operador');
+        Schema::dropIfExists('comisiones_cuenta');
+        Schema::dropIfExists('comisiones_operacion');
         Schema::dropIfExists('transacciones');
         Schema::dropIfExists('movimientos');
         Schema::dropIfExists('operaciones');
