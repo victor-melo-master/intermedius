@@ -47,10 +47,17 @@
             :cuenta-destino-id="tx.cuenta_destino_id"
             :moneda-id="tx.moneda_id"
             :monto="tx.monto"
+            :comision-tipo="tx.comision_tipo"
+            :comision-monto="tx.comision_monto"
+            :cliente-id="clienteSeleccionado.id || null"
+            :moneda-foreign-id="monedaForeignId"
+            :moneda-quote-id="monedaQuoteId"
             @update:cuentaOrigenId="tx.cuenta_origen_id = $event"
             @update:cuentaDestinoId="tx.cuenta_destino_id = $event"
             @update:monedaId="tx.moneda_id = $event"
             @update:monto="tx.monto = $event"
+            @update:comisionTipo="tx.comision_tipo = $event"
+            @update:comisionMonto="tx.comision_monto = $event"
             @remove="eliminarTransaccion(i)"
           />
         </template>
@@ -72,44 +79,6 @@
         </div>
       </div>
 
-      <!-- Comisión a nivel de operación -->
-      <div class="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
-        <div class="flex items-center justify-between">
-          <h3 class="font-semibold text-gray-700">Comisión de la operación</h3>
-          <button type="button" @click="form.genera_comision = !form.genera_comision"
-            class="relative w-12 h-6 rounded-full transition shrink-0"
-            :class="form.genera_comision ? 'bg-blue-600' : 'bg-gray-300'">
-            <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform"
-              :class="form.genera_comision ? 'translate-x-6' : ''"></span>
-          </button>
-        </div>
-
-        <template v-if="form.genera_comision">
-          <div>
-            <label class="block text-sm text-gray-600 mb-1">Tipo de comisión</label>
-            <select v-model="form.tipo_comision"
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none bg-white">
-              <option value="pago_movil">Pago móvil (0.3%)</option>
-              <option value="otros_bancos">Transferencia otros bancos (0.3%)</option>
-              <option value="mismo_banco">Transferencia mismo banco (0%)</option>
-              <option value="manual">Manual (monto libre)</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-sm text-gray-600 mb-1">Monto de comisión ({{ quoteSimbolo }})</label>
-            <input v-model="form.monto_comision" type="number" step="0.01" placeholder="0.00"
-              :disabled="form.tipo_comision === 'mismo_banco'"
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none disabled:bg-gray-100 disabled:text-gray-400" />
-            <p v-if="['pago_movil', 'otros_bancos'].includes(form.tipo_comision)" class="text-xs text-gray-400 mt-1">
-              Sugerido: 0.3% del monto en divisa (puedes ajustarlo manualmente)
-            </p>
-            <p v-else-if="form.tipo_comision === 'mismo_banco'" class="text-xs text-gray-400 mt-1">
-              Sin comisión para transferencias entre cuentas del mismo banco.
-            </p>
-          </div>
-        </template>
-      </div>
-
       <div class="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
         <label class="block text-sm text-gray-600 mb-1">Descripción</label>
         <textarea v-model="form.descripcion" rows="2" placeholder="Notas opcionales"
@@ -119,6 +88,13 @@
       <ResumenOperacion v-if="resumenVisible" :items="resumenItems" />
 
       <AppErrorState v-if="error" :message="error" :retry="false" />
+
+      <div v-if="!formularioValido && erroresValidacion.length" class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-sm text-amber-700 space-y-1">
+        <p class="font-medium">Completa los siguientes campos:</p>
+        <ul class="list-disc list-inside">
+          <li v-for="err in erroresValidacion" :key="err">{{ err }}</li>
+        </ul>
+      </div>
 
       <button type="submit" :disabled="saving || !formularioValido"
         class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-semibold py-3 rounded-xl transition flex items-center justify-center gap-2">
@@ -197,14 +173,13 @@ const monedaQuoteId = computed(() => {
 
 let txCounter = 0
 function nuevaTx() {
-  return { _key: ++txCounter, cuenta_origen_id: null, cuenta_destino_id: null, moneda_id: null, monto: '' }
+  return { _key: ++txCounter, cuenta_origen_id: null, cuenta_destino_id: null, moneda_id: null, monto: '', comision_tipo: 'manual', comision_monto: '' }
 }
 
 const form = reactive({
   tipo: 'compra', fecha: today, monto_usd: '', bolivares: '', tasa: '',
   descripcion: '',
   transacciones: [nuevaTx(), nuevaTx()],
-  genera_comision: false, tipo_comision: 'pago_movil', monto_comision: '',
 })
 
 const clienteTieneCuentas = computed(() => {
@@ -224,35 +199,52 @@ const resumenTransacciones = computed(() => {
     agrupado[tx.moneda_id] = (agrupado[tx.moneda_id] || 0) + parseFloat(tx.monto)
   }
   const result = []
-  for (const [monedaId, total] of Object.entries(agrupado)) {
-    const moneda = monedas.value.find(m => m.id == monedaId)
-    const codigo = moneda?.codigo || '?'
-    let esperado = 0
-    if (monedaId == monedaForeignId.value) esperado = parseFloat(form.monto_usd) || 0
-    else if (monedaId == monedaQuoteId.value) esperado = parseFloat(form.bolivares) || 0
+  for (const [monedaId, esperado, label] of [
+    [monedaForeignId.value, parseFloat(form.monto_usd) || 0, `Total ${monedaSel.value}`],
+    [monedaQuoteId.value, parseFloat(form.bolivares) || 0, `Total ${quoteCodigo.value}`],
+  ]) {
+    if (!monedaId) continue
+    const total = agrupado[monedaId] || 0
     const diff = Math.abs(total - esperado)
     result.push({
-      label: `Total ${codigo}`,
+      label,
       total: total.toFixed(2),
       esperado: esperado.toFixed(2),
       diferencia: diff.toFixed(2),
-      ok: diff < 0.01,
+      ok: total > 0 && diff < 0.01,
     })
   }
   return result
 })
 
-const formularioValido = computed(() => {
-  if (!form.tasa || parseFloat(form.tasa) <= 0) return false
-  if (!clienteSeleccionado.value.id) return false
-  if (form.transacciones.length === 0) return false
-  for (const tx of form.transacciones) {
-    if (!tx.cuenta_origen_id || !tx.cuenta_destino_id || !tx.moneda_id || !parseFloat(tx.monto)) return false
+const erroresValidacion = computed(() => {
+  const errs = []
+  if (!form.tasa || parseFloat(form.tasa) <= 0) errs.push('Ingresa una tasa de cambio')
+  if (!clienteSeleccionado.value.id) errs.push('Selecciona un cliente')
+  if (!parseFloat(form.monto_usd)) errs.push(`Ingresa el monto en ${monedaSel.value}`)
+  if (!parseFloat(form.bolivares)) errs.push(`Ingresa el monto en ${quoteCodigo.value}`)
+  const txCompleta = form.transacciones.some(tx => tx.cuenta_origen_id && tx.cuenta_destino_id && tx.moneda_id && parseFloat(tx.monto) > 0)
+  if (!txCompleta) errs.push('Completa al menos una transacción (moneda, salida, entrada, monto)')
+  else {
+    const hasForeign = form.transacciones.some(tx => tx.moneda_id == monedaForeignId.value && parseFloat(tx.monto) > 0)
+    const hasQuote = form.transacciones.some(tx => tx.moneda_id == monedaQuoteId.value && parseFloat(tx.monto) > 0)
+    if (!hasForeign) errs.push(`Agrega al menos una transacción en ${monedaSel.value} (${quoteCodigo.value})`)
+    if (!hasQuote) errs.push(`Agrega al menos una transacción en ${quoteCodigo.value} (${monedaSel.value})`)
+    for (const tx of form.transacciones) {
+      if (!tx.cuenta_origen_id) errs.push(`Transacción #${form.transacciones.indexOf(tx) + 1}: selecciona cuenta de salida`)
+      if (!tx.cuenta_destino_id) errs.push(`Transacción #${form.transacciones.indexOf(tx) + 1}: selecciona cuenta de entrada`)
+    }
   }
-  if (resumenTransacciones.value.some(r => !r.ok)) return false
-  if (tasaDesfavorable.value && !form.descripcion.trim()) return false
-  return true
+  if (resumenTransacciones.value.some(r => !r.ok)) {
+    for (const r of resumenTransacciones.value) {
+      if (!r.ok) errs.push(`${r.label}: los montos no cuadran (esperado ${r.esperado}, total ${r.total})`)
+    }
+  }
+  if (tasaDesfavorable.value && !form.descripcion.trim()) errs.push('Agrega una descripción (la tasa es desfavorable)')
+  return [...new Set(errs)]
 })
+
+const formularioValido = computed(() => erroresValidacion.value.length === 0)
 
 const resumenVisible = computed(() => {
   return form.tasa && clienteSeleccionado.value.id && form.transacciones.some(tx => tx.cuenta_origen_id && tx.monto)
@@ -265,8 +257,9 @@ const resumenItems = computed(() => {
     { label: 'Tasa', value: parseFloat(form.tasa).toFixed(2) },
     { label: 'Transacciones', value: `${form.transacciones.length} fila(s)` },
   ]
-  if (form.genera_comision && parseFloat(form.monto_comision) > 0) {
-    items.push({ label: 'Comisión', value: `${quoteSimbolo.value} ${formatMoney(form.monto_comision)} (${form.tipo_comision})` })
+  const totalComision = form.transacciones.reduce((s, tx) => s + (Math.abs(parseFloat(tx.comision_monto)) || 0), 0)
+  if (totalComision > 0) {
+    items.push({ label: 'Comisión total', value: `${quoteSimbolo.value} ${formatMoney(totalComision)}` })
   }
   return items
 })
@@ -315,9 +308,6 @@ async function cargarOperacion() {
   }
 
   form.descripcion = op.descripcion || ''
-  form.genera_comision = op.genera_comision || false
-  form.tipo_comision = op.tipo_comision || 'pago_movil'
-  form.monto_comision = op.monto_comision ? parseFloat(op.monto_comision).toString() : ''
 
   const movs = op.movimientos || []
   const movsForeign = movs.filter(m => m.moneda?.codigo === monedaSel.value)
@@ -335,6 +325,7 @@ async function cargarOperacion() {
       cuenta_destino_id: signo === 'destino' ? mov.cuenta_id : null,
       moneda_id: mov.moneda_id,
       monto: Math.abs(parseFloat(mov.monto)).toString(),
+      comision_monto: '',
     })
   }
   if (form.transacciones.length === 0) form.transacciones = [nuevaTx(), nuevaTx()]
@@ -348,18 +339,18 @@ async function submit() {
   error.value = ''
   saving.value = true
   try {
-    const transacciones = []
+    const movimientos = []
+    let totalComision = 0
     for (const tx of form.transacciones) {
       if (!tx.cuenta_origen_id || !tx.cuenta_destino_id || !tx.moneda_id || !parseFloat(tx.monto)) continue
-      transacciones.push({
-        cuenta_origen_id: Number(tx.cuenta_origen_id),
-        cuenta_destino_id: Number(tx.cuenta_destino_id),
-        moneda_id: Number(tx.moneda_id),
-        monto: Math.abs(parseFloat(tx.monto)),
-      })
+      const monto = Math.abs(parseFloat(tx.monto))
+      const comision = Math.abs(parseFloat(tx.comision_monto)) || 0
+      movimientos.push({ cuenta_id: Number(tx.cuenta_origen_id), monto: -(monto + comision) })
+      movimientos.push({ cuenta_id: Number(tx.cuenta_destino_id), monto })
+      totalComision += comision
     }
 
-    if (transacciones.length < 1) { error.value = 'Debes configurar al menos una transacción completa.'; return }
+    if (movimientos.length < 2) { error.value = 'Debes configurar al menos una transacción completa.'; return }
 
     const body = {
       fecha: form.fecha,
@@ -367,15 +358,14 @@ async function submit() {
       operador_id: Number(auth.user.id),
       tasa_aplicada: parseFloat(form.tasa),
       descripcion: form.descripcion.trim() || null,
-      transacciones,
+      movimientos,
     }
 
     if (clienteSeleccionado.value.id) body.cliente_id = Number(clienteSeleccionado.value.id)
 
-    if (form.genera_comision && parseFloat(form.monto_comision) > 0) {
+    if (totalComision > 0) {
       body.genera_comision = true
-      body.monto_comision = parseFloat(form.monto_comision)
-      body.tipo_comision = form.tipo_comision
+      body.monto_comision = totalComision
     } else {
       body.genera_comision = false
       body.monto_comision = 0
@@ -400,7 +390,7 @@ function registrarOtra() {
   successRef.value = ''; error.value = ''; clienteSeleccionado.value = { id: '', nombre: '' }
   Object.assign(form, {
     monto_usd: '', bolivares: '', tasa: tasaSugerida.value || '',
-    descripcion: '', genera_comision: false, tipo_comision: 'pago_movil', monto_comision: '',
+    descripcion: '',
     transacciones: [nuevaTx(), nuevaTx()],
   })
   tasas.fetchVigentes()

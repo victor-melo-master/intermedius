@@ -1,60 +1,70 @@
-# components/ — AI Context
+# Seeding de desarrollo — Intermedius
 
-## `AppShell`
-- Layout principal con sidebar y navbar
-- Sidebar: logo, nav items (icono + nombre), logout
-- Nav items: `baseNav` array con todas las rutas principales + `canPool` (condicional por rol)
-- `drawer` ref: toggle sidebar en mobile
-- `logout()`: llama auth.logout(), redirige a /login
-- Estilo: sidebar fijo `w-64`, contenido `ml-64`, responsive con overlay en mobile
+## Seeders disponibles
 
-## `AppPageHeader`
-- Props: `title` (string), `actionLabel` (string, vacío oculta botón)
-- Emits: `action` (click en botón)
-- Render: título a la izquierda, botón azul a la derecha
+| Seeder | Contenido | Ejecución |
+|--------|-----------|-----------|
+| `CatalogosBaseSeeder` | Monedas, roles, permisos, tipos de operación, categorías de gasto | `php artisan db:seed --class=CatalogosBaseSeeder` |
+| `AdminUserSeeder` | Admin `admin@test.com` (pass aleatorio visible en consola) | Se ejecuta automáticamente con `db:seed` |
+| `DesarrolloSedeer` | Bancos (10 VE + 3 US), titular/cliente Intermedius, ~10 cuentas con saldos, 6 tasas diarias, 2 clientes de prueba, usuario `intermedius@test.com` / `password123` (super_admin) | `php artisan db:seed --class=DesarrolloSedeer` |
 
-## `AppLoadingSpinner`
-- Sin props. Render: spinner animado centrado con texto "Cargando..."
-- Estilo: `w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin`
+## Ejecución completa (todo)
 
-## `AppErrorState`
-- Props: `message` (string), `retry` (boolean, default true)
-- Emits: `retry`
-- Render: icono ⚠️, mensaje de error, botón "Reintentar" (solo si retry=true)
+```bash
+docker compose exec api php artisan db:seed
+```
 
-## `AppEmptyState`
-- Props: `icon` (string, default "📭"), `message` (string), `subtitle` (string opcional)
-- Render: icono grande, mensaje, subtitle opcional
+Esto ejecuta: `CatalogosBaseSeeder` → `AdminUserSeeder` → `DesarrolloSedeer`
 
-## `ClienteSelector`
-- Model: `modelValue` (objeto cliente con id y nombre)
-- Emits: `update:modelValue`, `select`
-- Props: `clienteTieneCuentas` (boolean opcional)
-- Lógica: búsqueda async con debounce 400ms via store `fetchAll()`
-- UI: input de búsqueda + dropdown de resultados, tecla Escape cierra
+## Verificación rápida
 
-## `CuentaSelector`
-- Model: `modelValue` (id de cuenta)
-- Props: `monedaId` (filtro opcional), `clienteId` (filtro opcional), `titularId`, `soloActivas`, `label`, `placeholder`
-- Lógica: fetch cuentas, filtra por moneda/cliente/titular, computed `cuentasFiltradas`
-- Muestra: alias + banco + moneda + saldo
+```bash
+# Conteo de registros por tabla
+docker compose exec api php artisan tinker --execute="echo json_encode([
+  'bancos'        => \App\Models\Banco::count(),
+  'titulares'     => \App\Models\Titular::count(),
+  'clientes'      => \App\Models\Cliente::count(),
+  'cuentas'       => \App\Models\Cuenta::count(),
+  'tasas_hoy'     => \App\Models\TasaDiaria::whereDate('fecha', now()->toDateString())->count(),
+  'users'         => \App\Models\User::count(),
+], JSON_PRETTY_PRINT);"
 
-## `TipoOperacionSelector`
-- Model: `modelValue` (código del tipo)
-- Props: `tipo`, `moneda`, `monto`, `label`
-- Emits: `update:modelValue`, `select`
-- Lógica: filtra tipos según parámetros de operación
+# Listar cuentas de Intermedius
+docker compose exec api php artisan tinker --execute="\App\Models\Cuenta::where('titular_id', 1)->get()->pluck('alias')"
 
-## `CalculadoraBidireccional`
-- Props: 11 props (monedaOrigen, monedaDestino, tasaCompra, tasaVenta, etc.)
-- Emits: 3 emits (actualizar montos)
-- Lógica: cálculo bidireccional (origen → destino y viceversa)
+# Probar login con usuario de desarrollo
+# POST /api/login { "email": "intermedius@test.com", "password": "password123" }
+```
 
-## `ComisionToggle`
-- Props: 5 props (toggle state, monto, tipo comisión, moneda, readonly)
-- Emits: 3 emits (toggle change, monto change)
-- UI: toggle switch + input de monto condicional
+## Cuentas creadas por DesarrolloSedeer
 
-## `ResumenOperacion`
-- Props: `items` (array de objetos con label, value, highlight)
-- Render: tarjeta con items en columna, valor destacado si highlight=true
+### Intermedius (titular_id=1, cliente_id=1)
+| Alias | Banco | Moneda | Saldo |
+|-------|-------|--------|-------|
+| Intermedius - Bank of America (USD) | Bank of America | USD | \$1,000 |
+| Intermedius - Chase (USD) | Chase | USD | \$1,000 |
+| Intermedius - Wells Fargo (USD) | Wells Fargo | USD | \$1,000 |
+| Intermedius - Efectivo USD | — | USD | \$2,000 |
+| Intermedius - Efectivo EUR | — | EUR | \$1,000 |
+| Intermedius - Efectivo COP | — | COP | \$1,000 |
+| Intermedius - Efectivo USDT | — | USDT | \$1,000 |
+| Intermedius - Banesco (VES) | Banesco | VES | Bs. 1,000,000 |
+| Intermedius - Mercantil (VES) | Mercantil | VES | Bs. 1,000,000 |
+| Intermedius - Provincial (VES) | Provincial | VES | Bs. 1,000,000 |
+
+### Clientes de prueba
+| Nombre | Documento | Cuenta VES |
+|--------|-----------|------------|
+| María Pérez | V-12345678 | 1 cuenta en banco VE aleatorio |
+| Carlos Gómez | V-87654321 | 1 cuenta en banco VE aleatorio |
+
+## Tasas diarias (vigentes hoy)
+
+| Par | Compra | Venta |
+|-----|--------|-------|
+| USD/VES | 40.50 | 41.00 |
+| EUR/VES | 44.00 | 44.50 |
+| COP/VES | 0.010 | 0.011 |
+| USDT/VES | 40.30 | 40.80 |
+| USD/EUR | 0.92 | 0.93 |
+| USD/COP | 3,800 | 3,850 |
