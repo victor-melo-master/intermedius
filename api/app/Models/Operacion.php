@@ -112,6 +112,7 @@ class Operacion extends Model
         'origen',
         'origen_referencia',
         'estado_pool',
+        'estado',
         'pagador_id',
         'asignada_at',
         'pagada_at',
@@ -143,6 +144,8 @@ class Operacion extends Model
             'tasa_mercado_snapshot'  => 'decimal:8',
             'tasa_compra'            => 'decimal:8',
             'tasa_venta'             => 'decimal:8',
+            'estado_pool'            => 'string',
+            'estado'                 => 'string',
         ];
     }
 
@@ -243,5 +246,12 @@ class Operacion extends Model
         public function clienteReceptor(): BelongsTo
     {
         return $this->belongsTo(Cliente::class, 'cliente_receptor_id');
+    }
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Transaccion>
+     */
+    public function transacciones(): HasMany
+    {
+        return $this->hasMany(Transaccion::class)->orderBy('orden');
     }
 }

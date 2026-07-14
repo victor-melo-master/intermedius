@@ -6,6 +6,7 @@ use App\Models\Banco;
 use App\Models\Moneda;
 use App\Models\TipoOperacion;
 use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 class CatalogosBaseSeeder extends Seeder
@@ -17,6 +18,21 @@ class CatalogosBaseSeeder extends Seeder
         foreach ($roles as $rol) {
             Role::firstOrCreate(['name' => $rol, 'guard_name' => 'web']);
         }
+
+        // Permisos del pool
+        $permisosPool = ['pool.tomar', 'pool.pagar', 'pool.cancelar'];
+        foreach ($permisosPool as $name) {
+            Permission::firstOrCreate(['name' => $name, 'guard_name' => 'web']);
+        }
+
+        Role::where('name', 'pagador')->first()
+            ->givePermissionTo(['pool.tomar', 'pool.pagar']);
+
+        Role::where('name', 'admin')->first()
+            ->givePermissionTo(['pool.tomar', 'pool.pagar', 'pool.cancelar']);
+
+        Role::where('name', 'super_admin')->first()
+            ->givePermissionTo(['pool.tomar', 'pool.pagar', 'pool.cancelar']);
 
         // Monedas
         $monedas = [

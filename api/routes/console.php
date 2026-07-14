@@ -15,6 +15,7 @@ use App\Jobs\GenerarReporteMensualComisionesJob;
 use App\Jobs\SincronizarTasasJob;
 use App\Jobs\AutoArchivarClientesInactivos;
 use App\Jobs\SincronizarTasasReferenciaJob;
+use App\Jobs\VerificarSlaPoolJob;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -50,3 +51,8 @@ Schedule::job(new AutoArchivarClientesInactivos())
     ->weeklyOn(0, '03:00')
     ->withoutOverlapping()
     ->name('auto-archivar-clientes-inactivos');
+
+Schedule::job(new VerificarSlaPoolJob())
+    ->everyMinute()
+    ->withoutOverlapping()
+    ->name('verificar-sla-pool');

@@ -370,6 +370,7 @@ CREATE TABLE IF NOT EXISTS `operaciones` (
   `referencia` varchar(100) DEFAULT NULL,
   `descripcion` text DEFAULT NULL,
   `estatus` enum('verificado','en_revision','sin_verificar') NOT NULL DEFAULT 'sin_verificar',
+  `estado` enum('en_espera','en_proceso','concluida','cancelada') NOT NULL DEFAULT 'en_espera',
   `estado_pool` enum('pendiente','asignada','pagada','cancelada') NOT NULL DEFAULT 'pendiente',
   `pagador_id` bigint(20) unsigned DEFAULT NULL,
   `asignada_at` timestamp NULL DEFAULT NULL,
@@ -571,6 +572,25 @@ INSERT IGNORE INTO roles (name, guard_name, created_at, updated_at) VALUES
 ('contador', 'web', NOW(), NOW()),
 ('lectura', 'web', NOW(), NOW());
 
+-- Permisos del pool (INSERT IGNORE)
+INSERT IGNORE INTO permissions (name, guard_name, created_at, updated_at) VALUES
+('pool.tomar', 'web', NOW(), NOW()),
+('pool.pagar', 'web', NOW(), NOW()),
+('pool.cancelar', 'web', NOW(), NOW());
+
+-- Asignar permisos a roles (INSERT IGNORE)
+INSERT IGNORE INTO role_has_permissions (permission_id, role_id)
+SELECT p.id, r.id FROM permissions p, roles r
+WHERE p.name = 'pool.tomar' AND r.name IN ('pagador', 'admin', 'super_admin');
+
+INSERT IGNORE INTO role_has_permissions (permission_id, role_id)
+SELECT p.id, r.id FROM permissions p, roles r
+WHERE p.name = 'pool.pagar' AND r.name IN ('pagador', 'admin', 'super_admin');
+
+INSERT IGNORE INTO role_has_permissions (permission_id, role_id)
+SELECT p.id, r.id FROM permissions p, roles r
+WHERE p.name = 'pool.cancelar' AND r.name IN ('admin', 'super_admin');
+
 -- Usuario administrador por defecto (INSERT IGNORE)
 -- Contraseña: debe ser cambiada inmediatamente en producción.
 INSERT IGNORE INTO users (name, email, password, activo, email_verified_at, created_at, updated_at) VALUES
@@ -621,6 +641,34 @@ CREATE TABLE IF NOT EXISTS `documentos` (
   KEY `documentos_subido_por_id_foreign` (`subido_por_id`),
   CONSTRAINT `documentos_cliente_id_foreign` FOREIGN KEY (`cliente_id`) REFERENCES `clientes` (`id`) ON DELETE CASCADE,
   CONSTRAINT `documentos_subido_por_id_foreign` FOREIGN KEY (`subido_por_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS `transacciones` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `operacion_id` bigint(20) unsigned NOT NULL,
+  `cuenta_origen_id` bigint(20) unsigned NOT NULL,
+  `cuenta_destino_id` bigint(20) unsigned NOT NULL,
+  `moneda_id` bigint(20) unsigned NOT NULL,
+  `monto` decimal(20,4) NOT NULL,
+  `estado` enum('pendiente','validada','rechazada','cancelada') NOT NULL DEFAULT 'pendiente',
+  `motivo_rechazo` text DEFAULT NULL,
+  `comprobante` varchar(255) DEFAULT NULL,
+  `validada_en` timestamp NULL DEFAULT NULL,
+  `validada_por_id` bigint(20) unsigned DEFAULT NULL,
+  `orden` smallint(5) unsigned NOT NULL DEFAULT 1,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `transacciones_operacion_id_foreign` (`operacion_id`),
+  KEY `transacciones_cuenta_origen_id_foreign` (`cuenta_origen_id`),
+  KEY `transacciones_cuenta_destino_id_foreign` (`cuenta_destino_id`),
+  KEY `transacciones_moneda_id_foreign` (`moneda_id`),
+  KEY `transacciones_validada_por_id_foreign` (`validada_por_id`),
+  CONSTRAINT `transacciones_operacion_id_foreign` FOREIGN KEY (`operacion_id`) REFERENCES `operaciones` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `transacciones_cuenta_origen_id_foreign` FOREIGN KEY (`cuenta_origen_id`) REFERENCES `cuentas` (`id`),
+  CONSTRAINT `transacciones_cuenta_destino_id_foreign` FOREIGN KEY (`cuenta_destino_id`) REFERENCES `cuentas` (`id`),
+  CONSTRAINT `transacciones_moneda_id_foreign` FOREIGN KEY (`moneda_id`) REFERENCES `monedas` (`id`),
+  CONSTRAINT `transacciones_validada_por_id_foreign` FOREIGN KEY (`validada_por_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Reactivamos las claves foráneas
