@@ -20,8 +20,6 @@
       </div>
     </div>
 
-    <PoolAlarm />
-
     <div class="grid grid-cols-4 gap-4 mb-6">
       <div class="bg-white p-4 rounded-lg shadow border-l-4 border-yellow-400">
         <div class="text-sm text-gray-500">En Espera</div>
@@ -64,7 +62,6 @@
 import { ref, onMounted, computed } from 'vue'
 import { usePoolStore } from '@/stores/pool'
 import PoolList from '@/components/pool/PoolList.vue'
-import PoolAlarm from '@/components/pool/PoolAlarm.vue'
 
 const store = usePoolStore()
 

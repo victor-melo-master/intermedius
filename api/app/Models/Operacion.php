@@ -118,6 +118,7 @@ class Operacion extends Model
         'pagada_at',
         'cancelada_at',
         'motivo_cancelacion',
+        'sla_notificado_en',
     ];
 
     protected function casts(): array

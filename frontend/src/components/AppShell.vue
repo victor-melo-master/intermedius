@@ -58,6 +58,7 @@
         <router-view />
       </main>
     </div>
+    <PoolAlarm />
   </div>
 </template>
 
@@ -68,10 +69,12 @@
  *
  * @component
  */
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth.js'
 import { useInactivityTimer } from '../composables/useInactivityTimer.js'
+import PoolAlarm from './pool/PoolAlarm.vue'
+import echo from '../plugins/echo'
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -118,4 +121,14 @@ function logout() {
   auth.logout()
   router.push('/login')
 }
+
+onMounted(() => {
+  echo.channel('pool').listen('.sla.excedida', (data) => {
+    window.dispatchEvent(new CustomEvent('sla-excedida', { detail: data }))
+  })
+})
+
+onUnmounted(() => {
+  echo.leave('pool')
+})
 </script>
