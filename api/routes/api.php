@@ -66,9 +66,12 @@ Route::prefix('v1')->group(function () {
 
         // ── Catálogos ────────────────────────────────────────────────
         Route::middleware('throttle:60,1')->group(function () {
-            Route::apiResource('titulares',        TitularController::class);
-            Route::apiResource('bancos',           BancoController::class);
-            Route::apiResource('monedas',          MonedaController::class);
+            Route::apiResource('titulares',        TitularController::class)
+                ->parameters(['titulares' => 'titular']);
+            Route::apiResource('bancos',           BancoController::class)
+                ->parameters(['bancos' => 'banco']);
+            Route::apiResource('monedas',          MonedaController::class)
+                ->parameters(['monedas' => 'moneda']);
             Route::apiResource('cuentas',          CuentaController::class);
             Route::post('cuentas/{cuenta}/saldo', [CuentaController::class, 'cargarSaldo'])
                 ->middleware('role:admin|super_admin');

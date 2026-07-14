@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Transaccion extends Model
 {
+    use HasFactory;
+
     protected $table = 'transacciones';
 
     protected $fillable = [
@@ -23,10 +26,13 @@ class Transaccion extends Model
         'orden',
     ];
 
-    protected $casts = [
-        'monto' => 'decimal:4',
-        'validada_en' => 'datetime',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'monto' => 'decimal:4',
+            'validada_en' => 'datetime',
+        ];
+    }
 
     public function operacion(): BelongsTo
     {

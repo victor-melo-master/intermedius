@@ -13,13 +13,13 @@ use App\Services\Pool\PoolNotifier;
 use App\Services\Pool\PoolService;
 use App\Services\Transaccion\TransaccionService;
 use Database\Seeders\CatalogosBaseSeeder;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
 class PoolFlowTest extends TestCase
 {
-    use DatabaseTransactions;
+    use RefreshDatabase;
 
     private PoolService $poolService;
     private TransaccionService $transaccionService;

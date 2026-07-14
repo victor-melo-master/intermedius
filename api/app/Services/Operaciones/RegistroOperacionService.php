@@ -132,13 +132,17 @@ class RegistroOperacionService
             $this->comisionesService->aplicarAOperacion($operacion);
 
             // Actualizar saldo de cuentas afectadas automáticamente
+            $cuentaIdsAfectadas = [];
             foreach ($payload['movimientos'] as $movData) {
+                $cuentaIdsAfectadas[] = $movData['cuenta_id'];
                 $cuenta = Cuenta::find($movData['cuenta_id']);
                 if ($cuenta && $cuenta->saldo_cache_at) {
                     $nuevoSaldo = bcadd($cuenta->saldo_cache, $movData['monto'], 4);
                     $cuenta->update(['saldo_cache' => $nuevoSaldo]);
                 }
             }
+
+            RecalcularSaldoCuentaJob::dispatch(array_unique($cuentaIdsAfectadas));
 
             if ($tipo->afecta_fifo) {
                 ProcesarFifoOperacionJob::dispatch($operacion->id);
@@ -521,13 +525,16 @@ public function actualizar(Operacion $operacion, array $payload, \App\Models\Use
 
         // ── 7. Actualizar saldo de cuentas afectadas ───────────────────
         if (!empty($payload['movimientos'])) {
+            $cuentaIdsAfectadas = [];
             foreach ($payload['movimientos'] as $movData) {
+                $cuentaIdsAfectadas[] = $movData['cuenta_id'];
                 $cuenta = Cuenta::find($movData['cuenta_id']);
                 if ($cuenta && $cuenta->saldo_cache_at) {
                     $nuevoSaldo = bcadd($cuenta->saldo_cache, $movData['monto'], 4);
                     $cuenta->update(['saldo_cache' => $nuevoSaldo]);
                 }
             }
+            RecalcularSaldoCuentaJob::dispatch(array_unique($cuentaIdsAfectadas));
         }
 
         if ($tipo->afecta_fifo) {
@@ -597,13 +604,16 @@ public function actualizar(Operacion $operacion, array $payload, \App\Models\Use
             $this->comisionesService->aplicarAOperacion($operacion);
 
             // Actualizar saldo de cuentas afectadas automáticamente
+            $cuentaIdsAfectadas = [];
             foreach ($payload['movimientos'] as $movData) {
+                $cuentaIdsAfectadas[] = $movData['cuenta_id'];
                 $cuenta = Cuenta::find($movData['cuenta_id']);
                 if ($cuenta && $cuenta->saldo_cache_at) {
                     $nuevoSaldo = bcadd($cuenta->saldo_cache, $movData['monto'], 4);
                     $cuenta->update(['saldo_cache' => $nuevoSaldo]);
                 }
             }
+            RecalcularSaldoCuentaJob::dispatch(array_unique($cuentaIdsAfectadas));
 
             return $operacion->fresh(['movimientos.cuenta', 'tipoOperacion']);
         });

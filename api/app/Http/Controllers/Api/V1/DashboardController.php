@@ -136,7 +136,8 @@ class DashboardController extends Controller
                 'operador:id,name',
                 'movimientos.moneda:id,codigo',
             ])
-            ->whereBetween('fecha', [$desde, $hasta])
+            ->whereDate('fecha', '>=', $desde)
+            ->whereDate('fecha', '<=', $hasta)
             ->when($operadorId, fn ($q) => $q->where('operador_id', $operadorId))
             ->when($moneda, fn ($q) => $q->whereHas('movimientos.moneda', fn ($mq) => $mq->where('codigo', $moneda)))
             ->get();
