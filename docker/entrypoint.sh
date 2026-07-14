@@ -24,10 +24,9 @@ if [ -n "$DB_HOST" ]; then
         sleep 1
     done
     echo "MariaDB disponible."
-    php artisan migrate --force || true
-
-    echo "Sembrando datos iniciales..."
-    mysql -h"$DB_HOST" -P"${DB_PORT:-3306}" -u"$DB_USERNAME" -p"$DB_PASSWORD" "$DB_DATABASE" < /docker-entrypoint-initdb.d/seed.sql 2>/dev/null || true
+    if [ "$RUN_MIGRATIONS" = "true" ]; then
+        php artisan migrate --force || true
+    fi
 fi
 
 if [ -n "$AWS_ENDPOINT" ] && [ "$FILESYSTEM_DISK" = "s3" ]; then
