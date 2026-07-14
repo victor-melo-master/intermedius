@@ -22,11 +22,22 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         // $middleware->statefulApi();
         $middleware->alias([
-            'role'       => \Spatie\Permission\Middleware\RoleMiddleware::class,
-            'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
+            'role'        => \Spatie\Permission\Middleware\RoleMiddleware::class,
+            'permission'  => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
         ]);
+
+        $middleware->redirectGuestsTo(function ($request) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json(['message' => 'No autenticado.'], 401);
+            }
+            return route('login');
+        });
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        $exceptions->renderable(function (\Illuminate\Auth\AuthenticationException $e, \Illuminate\Http\Request $request) {
+            if ($request->is('api/*')) {
+                return response()->json(['message' => 'No autenticado.'], 401);
+            }
+        });
     })->create();
