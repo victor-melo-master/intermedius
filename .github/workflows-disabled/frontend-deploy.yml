@@ -1,0 +1,41 @@
+# name: Frontend Build & Deploy
+
+# on:
+#   push:
+#     branches: [ main, master ]
+#     paths:
+#       - 'frontend/**'
+#   workflow_dispatch:
+
+# jobs:
+#   build:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v4
+
+#       - name: Setup Node
+#         uses: actions/setup-node@v4
+#         with:
+#           node-version: '20'
+
+#       - name: Install dependencies
+#         working-directory: ./frontend
+#         run: npm ci
+
+#       - name: Build
+#         working-directory: ./frontend
+#         run: npm run build
+
+#       - name: Deploy to VPS (SSH)
+#         uses: appleboy/ssh-action@v1.0.3
+#         with:
+#           host: ${{ secrets.SSH_HOST }}
+#           username: ${{ secrets.SSH_USER }}
+#           key: ${{ secrets.SSH_PRIVATE_KEY }}
+#           port: ${{ secrets.SSH_PORT }}
+#           script: |
+#             cd /www/wwwroot/admin.intermediusg.com
+#             git pull origin main
+#             cd frontend
+#             npm install --production
+#             npm run build
