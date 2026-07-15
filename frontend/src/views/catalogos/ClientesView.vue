@@ -35,7 +35,7 @@
           <p v-if="c.telefono" class="text-xs text-gray-400">{{ c.telefono }}</p>
         </div>
         <div class="text-right shrink-0">
-          <p class="text-sm font-bold" :class="(c.saldo_cache_usd || 0) >= 0 ? 'text-green-600' : 'text-red-600'">${{ format(c.saldo_cache_usd) }}</p>
+          <p class="text-sm font-bold" :class="(c.saldo_cache_usd || 0) >= 0 ? 'text-green-600' : 'text-red-600'">${{ formatMoney(c.saldo_cache_usd) }}</p>
           <span v-if="c.deleted_at" class="text-[10px] bg-red-50 text-red-600 px-2 py-0.5 rounded-full">Eliminado</span>
           <span v-else-if="!c.activo" class="text-[10px] bg-red-50 text-red-600 px-2 py-0.5 rounded-full">Inactivo</span>
           <div class="mt-1 flex gap-2 justify-end">
@@ -86,7 +86,7 @@
           <p v-if="detailCliente?.telefono" class="text-sm text-gray-500"><span class="font-medium text-gray-700">Teléfono:</span> {{ detailCliente.telefono }}</p>
           <p v-if="detailCliente?.email" class="text-sm text-gray-500"><span class="font-medium text-gray-700">Email:</span> {{ detailCliente.email }}</p>
           <p v-if="detailCliente?.notas" class="text-sm text-gray-500"><span class="font-medium text-gray-700">Notas:</span> {{ detailCliente.notas }}</p>
-          <p class="text-sm text-gray-500"><span class="font-medium text-gray-700">Saldo:</span> <span :class="(detailCliente?.saldo_cache_usd || 0) >= 0 ? 'text-green-600' : 'text-red-600'">${{ format(detailCliente?.saldo_cache_usd) }}</span></p>
+          <p class="text-sm text-gray-500"><span class="font-medium text-gray-700">Saldo:</span> <span :class="(detailCliente?.saldo_cache_usd || 0) >= 0 ? 'text-green-600' : 'text-red-600'">${{ formatMoney(detailCliente?.saldo_cache_usd) }}</span></p>
           <button v-if="!detailCliente?.deleted_at && (auth.user?.roles?.includes('admin') || auth.user?.roles?.includes('super_admin'))" @click="eliminarCliente(detailCliente)" class="text-xs bg-red-600 text-white px-2 py-1 rounded-lg hover:bg-red-700">🗑 Eliminar cliente</button>
         </div>
 
@@ -307,6 +307,8 @@ import { useClientesStore } from '../../stores/clientes.js'
 import { useAuthStore } from '../../stores/auth.js'
 import { useBancosStore } from '../../stores/bancos.js'
 import { useTasasStore } from '../../stores/tasas.js'
+import { useFormatting } from '@/composables/useFormatting'
+import { useApiError } from '@/composables/useApiError'
 import api from '../../api/axios.js'
 import AppPageHeader from '../../components/common/AppPageHeader.vue'
 import AppLoadingSpinner from '../../components/common/AppLoadingSpinner.vue'
@@ -321,6 +323,8 @@ const auth = useAuthStore()
 const bancos = useBancosStore()
 /** Store de tasas (para monedas) */
 const tasas = useTasasStore()
+const { formatTamano, formatMoney } = useFormatting()
+const { parseError } = useApiError()
 
 /** Término de búsqueda por nombre o alias */
 const search = ref('')
@@ -425,15 +429,6 @@ function debounceSearch() {
   debounce = setTimeout(() => cargarLista(), 400)
 }
 
-/**
- * Formatea un número a string con 2 decimales.
- * @param {number} n
- * @returns {string}
- */
-function format(n) {
-  return new Intl.NumberFormat('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n || 0)
-}
-
 /** Abre el modal en modo creación */
 function openCreate() {
   editingId.value = null
@@ -481,7 +476,7 @@ async function submit() {
       cargarLista()
       Object.assign(form, { nombre: '', alias: '', telefono: '', email: '', notas: '' })
   } catch (err) {
-    formError.value = err.response?.data?.message || err.message
+    formError.value = parseError(err)
   } finally {
     saving.value = false
   }
@@ -548,12 +543,7 @@ async function submitCuenta() {
     const { data } = await api.get(`/clientes/${detailCliente.value.id}/cuentas`)
     clienteCuentas.value = Array.isArray(data) ? data : (data.data || [])
   } catch (err) {
-    const data = err.response?.data
-    if (data?.errors) {
-      cuentaFormError.value = Object.values(data.errors).flat().join('\n')
-    } else {
-      cuentaFormError.value = data?.message || err.message
-    }
+    cuentaFormError.value = parseError(err)
   } finally {
     savingCuenta.value = false
   }
@@ -609,7 +599,7 @@ function formatFecha(fecha) {
 function formatMonto(op, moneda) {
   const mov = op.movimientos?.find(m => m.moneda?.codigo === moneda)
   if (!mov) return '—'
-  return new Intl.NumberFormat('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Math.abs(parseFloat(mov.monto)))
+  return formatMoney(Math.abs(parseFloat(mov.monto)))
 }
 
 /**
@@ -690,7 +680,7 @@ async function subirDocumento(event) {
     })
     cargarDocumentos()
   } catch (err) {
-    alert(err.response?.data?.message || 'Error al subir documento')
+    alert(parseError(err))
   }
   event.target.value = ''
 }
@@ -702,21 +692,13 @@ async function eliminarDocumento(doc) {
     await api.delete(`/documentos/${doc.id}`)
     cargarDocumentos()
   } catch (err) {
-    alert(err.response?.data?.message || 'Error al eliminar documento')
+    alert(parseError(err))
   }
 }
 
 /** Verifica si el documento es una imagen por su tipo MIME. */
 function esImagen(doc) {
   return doc?.mime_type?.startsWith('image/')
-}
-
-/** Formatea el tamaño de un archivo a una unidad legible. */
-function formatTamano(bytes) {
-  if (!bytes) return '0 B'
-  const sizes = ['B', 'KB', 'MB']
-  const i = Math.floor(Math.log(bytes) / Math.log(1024))
-  return (bytes / Math.pow(1024, i)).toFixed(1) + ' ' + sizes[i]
 }
 
 /** Cuando se abre el detalle, carga automáticamente el historial y los documentos */
@@ -739,7 +721,7 @@ async function eliminarCliente(c) {
     showDetail.value = false
     cargarLista()
   } catch (err) {
-    alert(err.response?.data?.message || 'Error al eliminar cliente')
+    alert(parseError(err))
   }
 }
 
@@ -754,7 +736,7 @@ async function restaurarCliente(c) {
     await clientes.restore(c.id)
     cargarLista()
   } catch (err) {
-    alert(err.response?.data?.message || 'Error al recuperar cliente')
+    alert(parseError(err))
   }
 }
 

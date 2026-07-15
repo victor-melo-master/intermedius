@@ -95,6 +95,7 @@
  * con tasas de compra y venta diferenciadas, 4 movimientos y ganancia estimada.
  */
 import { reactive, ref, computed, onMounted } from 'vue'
+import { useApiError } from '@/composables/useApiError'
 import { useAuthStore } from '../../stores/auth.js'
 import { useBancosStore } from '../../stores/bancos.js'
 import { useOperacionesStore } from '../../stores/operaciones.js'
@@ -109,6 +110,7 @@ const auth = useAuthStore()
 const bancosStore = useBancosStore()
 /** Store de operaciones */
 const ops = useOperacionesStore()
+const { parseError } = useApiError()
 
 /** Lista de bancos */
 const bancos = ref([])
@@ -214,8 +216,7 @@ async function submit() {
     const op = created.data || created
     successRef.value = `#${op.id || ''}`
   } catch (err) {
-    const data = err.response?.data
-    error.value = data?.errors ? Object.values(data.errors).flat().join('\n') : data?.message || err.message
+    error.value = parseError(err)
   } finally {
     saving.value = false
   }

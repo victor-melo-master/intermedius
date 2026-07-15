@@ -102,11 +102,14 @@
  * asociadas a monedas y cuentas, con fechas de vigencia.
  */
 import { ref, reactive, onMounted } from 'vue'
+import { useApiError } from '@/composables/useApiError'
 import api from '../../api/axios.js'
 import AppPageHeader from '../../components/common/AppPageHeader.vue'
 import AppLoadingSpinner from '../../components/common/AppLoadingSpinner.vue'
 import AppErrorState from '../../components/common/AppErrorState.vue'
 import AppEmptyState from '../../components/common/AppEmptyState.vue'
+
+const { parseError } = useApiError()
 
 /** Lista de comisiones cargadas */
 const comisiones = ref([])
@@ -154,7 +157,7 @@ async function fetchComisiones() {
     const paginated = data.data || data
     comisiones.value = paginated.data || []
   } catch (err) {
-    error.value = err.response?.data?.message || err.message
+    error.value = parseError(err)
   } finally {
     loading.value = false
   }
@@ -246,12 +249,7 @@ async function submit() {
     closeForm()
     fetchComisiones()
   } catch (err) {
-    const data = err.response?.data
-    if (data?.errors) {
-      formError.value = Object.values(data.errors).flat().join('\n')
-    } else {
-      formError.value = data?.message || err.message
-    }
+    formError.value = parseError(err)
   } finally {
     saving.value = false
   }
@@ -269,7 +267,7 @@ async function deactivateComision(c) {
     await api.delete(`/configuracion/comisiones-metodo-pago/${c.id}`)
     fetchComisiones()
   } catch (err) {
-    alert(err.response?.data?.message || 'Error al desactivar')
+    alert(parseError(err))
   } finally {
     savingId.value = null
   }

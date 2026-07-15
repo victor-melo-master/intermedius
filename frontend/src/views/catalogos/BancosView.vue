@@ -87,6 +87,7 @@
  * Modal inline para el formulario de creación/edición.
  */
 import { ref, reactive, onMounted } from 'vue'
+import { useApiError } from '@/composables/useApiError'
 import { useBancosStore } from '../../stores/bancos.js'
 import AppPageHeader from '../../components/common/AppPageHeader.vue'
 import AppLoadingSpinner from '../../components/common/AppLoadingSpinner.vue'
@@ -95,6 +96,7 @@ import AppEmptyState from '../../components/common/AppEmptyState.vue'
 
 /** Store de bancos */
 const bancos = useBancosStore()
+const { parseError } = useApiError()
 /** Controla visibilidad del modal de formulario */
 const showForm = ref(false)
 /** Indica si hay una operación de guardado en curso */
@@ -170,12 +172,7 @@ async function submit() {
     closeForm()
     bancos.fetchAll()
   } catch (err) {
-    const data = err.response?.data
-    if (data?.errors) {
-      formError.value = Object.values(data.errors).flat().join('\n')
-    } else {
-      formError.value = data?.message || err.message
-    }
+    formError.value = parseError(err)
   } finally {
     saving.value = false
   }

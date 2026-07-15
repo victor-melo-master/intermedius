@@ -198,6 +198,7 @@
  * crear titulares y bancos inline, y cargar saldo a cuentas.
  */
 import { ref, reactive, onMounted } from 'vue'
+import { useApiError } from '@/composables/useApiError'
 import api from '../../api/axios.js'
 import { useAuthStore } from '../../stores/auth.js'
 import { useTitularesStore } from '../../stores/titulares.js'
@@ -211,6 +212,7 @@ import ClienteSelector from '../../components/clientes/ClienteSelector.vue'
 
 /** Store de autenticación */
 const auth = useAuthStore()
+const { parseError } = useApiError()
 /** Store de titulares */
 const titulares = useTitularesStore()
 /** Store de bancos */
@@ -285,7 +287,7 @@ async function fetchCuentas() {
     const { data } = await api.get('/cuentas')
     cuentas.value = Array.isArray(data) ? data : (data.data || [])
   } catch (err) {
-    error.value = err.response?.data?.message || err.message
+    error.value = parseError(err)
   } finally {
     loading.value = false
   }
@@ -328,7 +330,7 @@ async function submitTitularInline() {
     showTitularInline.value = false
     Object.assign(titularForm, { nombre: '', alias: '', telefono: '', email: '', activo: true })
   } catch (err) {
-    titularInlineError.value = err.response?.data?.message || err.message
+    titularInlineError.value = parseError(err)
   } finally {
     savingInline.value = false
   }
@@ -353,7 +355,7 @@ async function submitBancoInline() {
     showBancoInline.value = false
     Object.assign(bancoForm, { nombre: '', codigo: '', pais: 'VE', activo: true })
   } catch (err) {
-    bancoInlineError.value = err.response?.data?.message || err.message
+    bancoInlineError.value = parseError(err)
   } finally {
     savingInline.value = false
   }
@@ -392,12 +394,7 @@ async function submit() {
     closeForm()
     fetchCuentas()
   } catch (err) {
-    const data = err.response?.data
-    if (data?.errors) {
-      formError.value = Object.values(data.errors).flat().join('\n')
-    } else {
-      formError.value = data?.message || err.message
-    }
+    formError.value = parseError(err)
   } finally {
     saving.value = false
   }
@@ -427,8 +424,7 @@ async function submitSaldo() {
     showSaldoModal.value = false
     await fetchCuentas()
   } catch (err) {
-    const data = err.response?.data
-    saldoError.value = data?.errors ? Object.values(data.errors).flat().join('\n') : data?.message || err.message
+    saldoError.value = parseError(err)
   } finally {
     savingSaldo.value = false
   }

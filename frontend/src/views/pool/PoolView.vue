@@ -145,9 +145,13 @@
  */
 import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { usePoolStore } from '../../stores/pool.js'
+import { useFormatting } from '@/composables/useFormatting'
+import { useApiError } from '@/composables/useApiError'
 
 /** Store del pool de pagos */
 const store = usePoolStore()
+const { formatMoney, formatHora } = useFormatting()
+const { parseError } = useApiError()
 /** Pestaña activa: 'pool' | 'mias' */
 const tab = ref('pool')
 /** ID de la orden sobre la que se está ejecutando una acción */
@@ -252,25 +256,6 @@ function tipoBadge(op) {
 }
 
 /**
- * Formatea un número con 2 decimales.
- * @param {number|string} n
- * @returns {string}
- */
-function formatMoney(n) {
-  return new Intl.NumberFormat('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(parseFloat(n) || 0)
-}
-
-/**
- * Formatea una fecha/hora ISO a dd/mm hh:mm.
- * @param {string} d - Fecha ISO
- * @returns {string}
- */
-function formatHora(d) {
-  if (!d) return ''
-  return new Date(d).toLocaleString('es-VE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
-}
-
-/**
  * Toma una orden del pool y la asigna al operador actual.
  * @param {Object} op - Operación a tomar
  * @returns {Promise<void>}
@@ -282,8 +267,7 @@ async function tomar(op) {
     showToast('Orden tomada. Está en "Mis órdenes".')
     await Promise.all([store.fetchPool(), store.fetchMisOrdenes()])
   } catch (err) {
-    const msg = err.response?.data?.message || 'No se pudo tomar la orden'
-    showToast(msg, true)
+    showToast(parseError(err), true)
     await store.fetchPool()
   } finally {
     acting.value = null
@@ -302,7 +286,7 @@ async function soltar(op) {
     showToast('Orden devuelta al pool.')
     await Promise.all([store.fetchMisOrdenes(), store.fetchPool()])
   } catch (err) {
-    showToast(err.response?.data?.message || 'No se pudo soltar la orden', true)
+    showToast(parseError(err), true)
   } finally {
     acting.value = null
   }
@@ -320,7 +304,7 @@ async function pagar(op) {
     showToast('Orden marcada como pagada.')
     await store.fetchMisOrdenes()
   } catch (err) {
-    showToast(err.response?.data?.message || 'No se pudo marcar como pagada', true)
+    showToast(parseError(err), true)
   } finally {
     acting.value = null
   }

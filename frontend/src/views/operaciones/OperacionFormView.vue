@@ -94,6 +94,8 @@ import { useOperaciones } from '@/composables/useOperaciones'
 import { useCuentas } from '@/composables/useCuentas'
 import { useTitulares } from '@/composables/useTitulares'
 import { useNotification } from '@/composables/useNotification'
+import { useFormatting } from '@/composables/useFormatting'
+import { useApiError } from '@/composables/useApiError'
 import api from '@/api/axios'
 
 import OperacionFormCabecera from '@/components/operaciones/form/OperacionFormCabecera.vue'
@@ -110,7 +112,9 @@ const cuentasComposable = useCuentas()
 const { loading: loadingCuentas, fetchAll: fetchCuentas } = cuentasComposable
 const titulares = useTitulares()
 const intermediusTitularId = ref(null)
+const { formatMoney } = useFormatting()
 const notifier = useNotification()
+const { parseError } = useApiError()
 
 const monedas = ref([])
 const cuentas = ref([])
@@ -241,10 +245,6 @@ const resumenItems = computed(() => {
   }
   return items
 })
-
-function formatMoney(n) {
-  return new Intl.NumberFormat('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(parseFloat(n) || 0)
-}
 
 function agregarTransaccion() { form.transacciones.push(nuevaTx()) }
 function eliminarTransaccion(index) { if (form.transacciones.length <= 1) return; form.transacciones.splice(index, 1) }
@@ -380,8 +380,7 @@ async function submit() {
     successRef.value = op?.referencia ? `(${op.referencia})` : `#${op?.id || ''}`
     notifier.success('Operación registrada exitosamente')
   } catch (err) {
-    const data = err.response?.data
-    error.value = data?.errors ? Object.values(data.errors).flat().join('\n') : data?.message || err.message
+    error.value = parseError(err)
     notifier.error(error.value)
   } finally {
     saving.value = false

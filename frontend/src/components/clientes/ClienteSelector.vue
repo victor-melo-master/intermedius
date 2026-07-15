@@ -235,6 +235,7 @@
  * @emit {string|number} cuenta-agregada - Evento emitido al agregar una cuenta, con el ID del cliente
  */
 import { ref, reactive, computed, onMounted, nextTick } from 'vue'
+import { useApiError } from '@/composables/useApiError'
 import { useClientesStore } from '../../stores/clientes.js'
 import { useBancosStore } from '../../stores/bancos.js'
 import { useTasasStore } from '../../stores/tasas.js'
@@ -253,6 +254,7 @@ const props = defineProps({
 const clientesStore = useClientesStore()
 const bancosStore = useBancosStore()
 const tasasStore = useTasasStore()
+const { parseError } = useApiError()
 
 /** @type {import('vue').Ref<string>} - Texto de búsqueda */
 const search = ref('')
@@ -464,10 +466,7 @@ async function createCliente() {
     closeModal()
     emit('cuenta-agregada', cliente.id)
   } catch (err) {
-    const data = err.response?.data
-    createError.value = data?.errors
-      ? Object.values(data.errors).flat().join('\n')
-      : data?.message || err.message
+    createError.value = parseError(err)
   } finally {
     creating.value = false
   }
@@ -507,10 +506,7 @@ async function addCuentaToCliente() {
     showCuentaModal.value = false
     emit('cuenta-agregada', selectedCliente.value.id)
   } catch (err) {
-    const data = err.response?.data
-    cuentaError.value = data?.errors
-      ? Object.values(data.errors).flat().join('\n')
-      : data?.message || err.message
+    cuentaError.value = parseError(err)
   } finally {
     savingCuenta.value = false
   }

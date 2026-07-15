@@ -129,11 +129,15 @@
  * badges de roles y selector de titular.
  */
 import { ref, reactive, onMounted } from 'vue'
+import { useFormatting } from '@/composables/useFormatting'
+import { useApiError } from '@/composables/useApiError'
 import api from '../../api/axios.js'
 import { useUsuariosStore } from '../../stores/usuarios.js'
 
 /** Store de usuarios */
 const usuarios = useUsuariosStore()
+const { formatDate } = useFormatting()
+const { parseError } = useApiError()
 /** Lista de titulares para el selector del formulario */
 const titulares = ref([])
 /** Controla visibilidad del modal */
@@ -169,16 +173,6 @@ const roleBadgeClass = (rol) => ({
   'contador':    'bg-green-100 text-green-700',
   'lectura':     'bg-gray-100 text-gray-600',
 }[rol] || 'bg-gray-100 text-gray-600')
-
-/**
- * Formatea una fecha ISO a dd/mm/aaaa hh:mm.
- * @param {string} d - Fecha ISO
- * @returns {string}
- */
-function formatDate(d) {
-  if (!d) return ''
-  return new Date(d).toLocaleDateString('es-VE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-}
 
 /**
  * Abre el modal en modo creación o edición.
@@ -220,7 +214,7 @@ async function handleToggle(u) {
     await usuarios.toggleActivo(u)
     usuarios.fetchAll()
   } catch (err) {
-    alert(err.response?.data?.message || err.message)
+    alert(parseError(err))
   }
 }
 
@@ -248,12 +242,7 @@ async function submit() {
     closeForm()
     usuarios.fetchAll()
   } catch (err) {
-    const data = err.response?.data
-    if (data?.errors) {
-      formError.value = Object.values(data.errors).flat().join('\n')
-    } else {
-      formError.value = data?.message || err.message
-    }
+    formError.value = parseError(err)
   } finally {
     saving.value = false
   }

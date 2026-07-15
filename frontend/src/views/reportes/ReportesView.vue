@@ -44,7 +44,7 @@
           <p class="font-semibold text-sm">{{ item.operador || item.nombre || 'Operador' }}</p>
           <p class="text-xs text-gray-500">{{ item.cantidad_operaciones || item.total_operaciones || 0 }} operaciones</p>
         </div>
-        <p class="text-lg font-bold text-blue-600">${{ format(item.total_comisiones || 0) }}</p>
+        <p class="text-lg font-bold text-blue-600">${{ formatMoney(item.total_comisiones || 0) }}</p>
       </div>
     </div>
   </div>
@@ -57,7 +57,12 @@
  * Los datos se muestran en tarjetas y se pueden exportar a Excel.
  */
 import { ref } from 'vue'
+import { useFormatting } from '@/composables/useFormatting'
+import { useApiError } from '@/composables/useApiError'
 import api from '../../api/axios.js'
+
+const { formatMoney } = useFormatting()
+const { parseError } = useApiError()
 
 /** Fecha de inicio del reporte (primer día del mes actual) */
 const desde = ref(new Date().toISOString().slice(0, 8) + '01')
@@ -75,15 +80,6 @@ const data = ref([])
 const loaded = ref(false)
 
 /**
- * Formatea un número con 2 decimales.
- * @param {number|string} n
- * @returns {string}
- */
-function format(n) {
-  return new Intl.NumberFormat('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n)
-}
-
-/**
  * Consulta el reporte de comisiones por operador en el rango de fechas.
  * @returns {Promise<void>}
  */
@@ -98,7 +94,7 @@ async function buscar() {
     data.value = res.data || []
     loaded.value = true
   } catch (err) {
-    error.value = err.response?.data?.message || err.message
+    error.value = parseError(err)
     loaded.value = true
   } finally {
     loading.value = false
@@ -120,7 +116,7 @@ async function exportar() {
     })
     alert('Reporte generado. Revisa tu email o el servidor.')
   } catch (err) {
-    error.value = err.response?.data?.message || err.message
+    error.value = parseError(err)
   } finally {
     exporting.value = false
   }

@@ -42,7 +42,7 @@
               <tr v-for="m in ops.detail.movimientos" :key="m.id" class="border-b border-gray-50 last:border-0">
                 <td class="py-2 text-gray-700">{{ m.cuenta?.alias || `Cuenta #${m.cuenta_id}` }}</td>
                 <td class="py-2 text-right font-medium" :class="m.monto >= 0 ? 'text-green-600' : 'text-red-600'">
-                  {{ format(m.monto) }} {{ m.moneda?.codigo }}
+                  {{ formatMoney(m.monto) }} {{ m.moneda?.codigo }}
                 </td>
                 <td class="py-2 text-right text-gray-500">{{ m.tasa_a_usd }}</td>
               </tr>
@@ -55,7 +55,7 @@
       <div class="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
         <h3 class="font-semibold text-gray-700">Métricas</h3>
         <div class="grid grid-cols-2 gap-4">
-          <div><p class="text-xs text-gray-500">Ganancia neta USD</p><p class="text-lg font-bold" :class="(ops.detail.ganancia_neta_usd || 0) >= 0 ? 'text-green-600' : 'text-red-600'">${{ format(ops.detail.ganancia_neta_usd) }}</p></div>
+          <div><p class="text-xs text-gray-500">Ganancia neta USD</p><p class="text-lg font-bold" :class="(ops.detail.ganancia_neta_usd || 0) >= 0 ? 'text-green-600' : 'text-red-600'">${{ formatMoney(ops.detail.ganancia_neta_usd) }}</p></div>
           <div><p class="text-xs text-gray-500">Tasa aplicada</p><p class="text-lg font-bold text-blue-600">{{ ops.detail.tasa_aplicada }}</p></div>
         </div>
       </div>
@@ -122,6 +122,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useOperacionesStore } from '../../stores/operaciones.js'
 import { useAuthStore } from '../../stores/auth.js'
+import { useFormatting } from '@/composables/useFormatting'
 import AppLoadingSpinner from '../../components/common/AppLoadingSpinner.vue'
 import AppErrorState from '../../components/common/AppErrorState.vue'
 
@@ -131,6 +132,7 @@ const route = useRoute()
 const router = useRouter()
 /** Store de operaciones */
 const ops = useOperacionesStore()
+const { formatMoney } = useFormatting()
 /** Store de autenticación (permisos) */
 const auth = useAuthStore()
 /** Indica si se está verificando la operación */
@@ -150,15 +152,6 @@ const puedeEditar = computed(() => {
   if (op.estado_pool === 'cancelada') return false
   return true
 })
-
-/**
- * Formatea un número con 2 decimales.
- * @param {number|string} n
- * @returns {string}
- */
-function format(n) {
-  return new Intl.NumberFormat('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n || 0)
-}
 
 /** Verifica la operación actual (cambia estatus a verificado) */
 async function verificar() {

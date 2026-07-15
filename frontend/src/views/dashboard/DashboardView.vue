@@ -179,9 +179,13 @@
 <script setup>
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '../../stores/auth.js'
+import { useFormatting } from '@/composables/useFormatting'
+import { useApiError } from '@/composables/useApiError'
 import api from '../../api/axios.js'
 
 const auth = useAuthStore()
+const { formatUsd, formatVes } = useFormatting()
+const { parseError } = useApiError()
 
 const hoy = computed(() => new Date().toLocaleDateString('es-VE', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }))
 
@@ -203,13 +207,6 @@ const filtros = reactive({
   moneda: '',
   operador_id: '',
 })
-
-function formatUsd(n) {
-  return '$' + new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(parseFloat(n) || 0)
-}
-function formatVes(n) {
-  return 'Bs. ' + new Intl.NumberFormat('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(parseFloat(n) || 0)
-}
 
 const hayReferencia = computed(() => !!(refTasas.value?.bcv || refTasas.value?.binance_p2p))
 
@@ -259,7 +256,7 @@ async function fetchResumen() {
     const { data } = await api.get('/dashboard/resumen', { params })
     resumen.value = data
   } catch (err) {
-    resumenError.value = err.response?.data?.message || err.message
+    resumenError.value = parseError(err)
     resumen.value = null
   } finally {
     loadingResumen.value = false

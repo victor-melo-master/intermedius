@@ -72,10 +72,12 @@
  * Modal inline para formulario de creación/edición.
  */
 import { ref, reactive, onMounted } from 'vue'
+import { useApiError } from '@/composables/useApiError'
 import { useTitularesStore } from '../../stores/titulares.js'
 
 /** Store de titulares */
 const titulares = useTitularesStore()
+const { parseError } = useApiError()
 /** Controla visibilidad del modal */
 const showForm = ref(false)
 /** Indica guardado en curso */
@@ -151,12 +153,7 @@ async function submit() {
     closeForm()
     titulares.fetchAll()
   } catch (err) {
-    const data = err.response?.data
-    if (data?.errors) {
-      formError.value = Object.values(data.errors).flat().join('\n')
-    } else {
-      formError.value = data?.message || err.message
-    }
+    formError.value = parseError(err)
   } finally {
     saving.value = false
   }

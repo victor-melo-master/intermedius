@@ -38,13 +38,13 @@
             <div class="grid grid-cols-2 gap-4">
               <div>
                 <p class="text-xs text-gray-500 mb-0.5">Compra sugerida</p>
-                <p class="text-xl font-bold text-teal-600">{{ format(t.tasa_compra) }}</p>
-                <p v-if="t.tasa_compra_minima" class="text-[11px] text-gray-400 mt-0.5">Mín: {{ format(t.tasa_compra_minima) }}</p>
+                <p class="text-xl font-bold text-teal-600">{{ formatRate(t.tasa_compra) }}</p>
+                <p v-if="t.tasa_compra_minima" class="text-[11px] text-gray-400 mt-0.5">Mín: {{ formatRate(t.tasa_compra_minima) }}</p>
               </div>
               <div>
                 <p class="text-xs text-gray-500 mb-0.5">Venta sugerida</p>
-                <p class="text-xl font-bold text-blue-600">{{ format(t.tasa_venta) }}</p>
-                <p v-if="t.tasa_venta_minima" class="text-[11px] text-gray-400 mt-0.5">Mín: {{ format(t.tasa_venta_minima) }}</p>
+                <p class="text-xl font-bold text-blue-600">{{ formatRate(t.tasa_venta) }}</p>
+                <p v-if="t.tasa_venta_minima" class="text-[11px] text-gray-400 mt-0.5">Mín: {{ formatRate(t.tasa_venta_minima) }}</p>
               </div>
             </div>
             <p class="text-[11px] text-gray-400 mt-3 pt-2 border-t border-gray-100">{{ publicada(t.vigente_desde) }}</p>
@@ -131,11 +131,15 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useTasasStore } from '../../stores/tasas.js'
 import { useAuthStore } from '../../stores/auth.js'
+import { useFormatting } from '@/composables/useFormatting'
+import { useApiError } from '@/composables/useApiError'
 
 /** Store de tasas */
 const tasas = useTasasStore()
 /** Store de autenticación (permisos) */
 const auth = useAuthStore()
+const { formatRate } = useFormatting()
+const { parseError } = useApiError()
 
 /** Controla visibilidad del modal */
 const showForm = ref(false)
@@ -202,15 +206,6 @@ const hayTasasHoy = computed(() => tasas.vigentes.some(t => esHoy(t.vigente_desd
 const puedeGuardar = computed(() =>
   selectedBaseId.value && Object.values(pairs).some(p => p?.active)
 )
-
-/**
- * Formatea un número de tasa con 2-4 decimales (local es-VE).
- * @param {number|string} n
- * @returns {string}
- */
-function format(n) {
-  return new Intl.NumberFormat('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 4 }).format(parseFloat(n) || 0)
-}
 
 /**
  * Verifica si una fecha ISO corresponde al día de hoy.
@@ -336,10 +331,7 @@ async function submit() {
     showForm.value = false
     await tasas.fetchVigentes()
   } catch (err) {
-    const data = err.response?.data
-    formError.value = data?.errors
-      ? Object.values(data.errors).flat().join('\n')
-      : (data?.message || err.message)
+    formError.value = parseError(err)
   } finally {
     saving.value = false
   }

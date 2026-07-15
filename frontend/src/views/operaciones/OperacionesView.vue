@@ -136,10 +136,12 @@
  */
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useOperacionesStore } from '../../stores/operaciones.js'
+import { useFormatting } from '@/composables/useFormatting'
 import api from '../../api/axios.js'
 
 /** Store de operaciones */
 const ops = useOperacionesStore()
+const { formatMoney, formatRate, formatDate } = useFormatting()
 /** Controla visibilidad del modal de filtros */
 const showFilter = ref(false)
 
@@ -270,34 +272,6 @@ function montoUsd(op) {
 function bolivares(op) {
   const mov = (op.movimientos || []).find(m => m.moneda?.codigo === 'VES')
   return mov ? Math.abs(parseFloat(mov.monto)) : 0
-}
-
-/**
- * Formatea un número con 2 decimales.
- * @param {number|string} n
- * @returns {string}
- */
-function formatMoney(n) {
-  return new Intl.NumberFormat('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(parseFloat(n) || 0)
-}
-
-/**
- * Formatea un número de tasa con 2-4 decimales.
- * @param {number|string} n
- * @returns {string}
- */
-function formatRate(n) {
-  return new Intl.NumberFormat('en', { minimumFractionDigits: 2, maximumFractionDigits: 4 }).format(parseFloat(n) || 0)
-}
-
-/**
- * Formatea una fecha ISO a dd/mm/aaaa hh:mm.
- * @param {string} d - Fecha ISO
- * @returns {string}
- */
-function formatDate(d) {
-  if (!d) return ''
-  return new Date(d).toLocaleString('es-VE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
 /** Aplica los filtros y recarga la lista de operaciones */
