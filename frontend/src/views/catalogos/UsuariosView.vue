@@ -53,71 +53,65 @@
       </div>
     </div>
 
-    <!-- Modal usuario -->
-    <div v-if="showForm" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center" @click.self="closeForm">
-      <div class="absolute inset-0 bg-black/40"></div>
-      <div class="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-md p-6 relative z-10 max-h-[90vh] overflow-y-auto">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="font-bold text-lg">{{ editing ? 'Editar usuario' : 'Nuevo usuario' }}</h3>
-          <button @click="closeForm" class="text-gray-400 hover:text-gray-600">✕</button>
+    <AppFormModal v-model="showForm" :title="editing ? 'Editar usuario' : 'Nuevo usuario'" @close="closeForm">
+      <form @submit.prevent="submit" class="space-y-3">
+        <!-- Nombre -->
+        <input v-model="form.name" required placeholder="Nombre *"
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+
+        <!-- Email -->
+        <input v-model="form.email" type="email" required placeholder="Email *"
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+
+        <!-- Password -->
+        <div>
+          <input v-model="form.password" type="password"
+            :placeholder="editing ? 'Nueva contraseña (dejar vacío para no cambiar)' : 'Contraseña *'"
+            :required="!editing"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+          <p v-if="editing" class="text-xs text-gray-400 mt-1">Dejar en blanco para mantener la contraseña actual.</p>
         </div>
-        <form @submit.prevent="submit" class="space-y-3">
-          <!-- Nombre -->
-          <input v-model="form.name" required placeholder="Nombre *"
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
 
-          <!-- Email -->
-          <input v-model="form.email" type="email" required placeholder="Email *"
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+        <!-- Rol -->
+        <div>
+          <label class="text-sm text-gray-600 mb-1 block">Rol *</label>
+          <select v-model="form.rol" required
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+            <option value="">Seleccionar rol</option>
+            <option value="super_admin">super_admin</option>
+            <option value="admin">admin</option>
+            <option value="operador">operador</option>
+            <option value="contador">contador</option>
+            <option value="lectura">lectura</option>
+          </select>
+        </div>
 
-          <!-- Password -->
-          <div>
-            <input v-model="form.password" type="password"
-              :placeholder="editing ? 'Nueva contraseña (dejar vacío para no cambiar)' : 'Contraseña *'"
-              :required="!editing"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-            <p v-if="editing" class="text-xs text-gray-400 mt-1">Dejar en blanco para mantener la contraseña actual.</p>
-          </div>
+        <!-- Titular (opcional) -->
+        <div>
+          <label class="text-sm text-gray-600 mb-1 block">Titular asociado (opcional)</label>
+          <select v-model="form.titular_id"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+            <option :value="null">Sin titular</option>
+            <option v-for="t in titulares" :key="t.id" :value="t.id">{{ t.alias }} — {{ t.nombre }}</option>
+          </select>
+        </div>
 
-          <!-- Rol -->
-          <div>
-            <label class="text-sm text-gray-600 mb-1 block">Rol *</label>
-            <select v-model="form.rol" required
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-              <option value="">Seleccionar rol</option>
-              <option value="super_admin">super_admin</option>
-              <option value="admin">admin</option>
-              <option value="operador">operador</option>
-              <option value="contador">contador</option>
-              <option value="lectura">lectura</option>
-            </select>
-          </div>
+        <!-- Activo -->
+        <label class="flex items-center gap-2 text-sm text-gray-600">
+          <input v-model="form.activo" type="checkbox" class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+          Activo
+        </label>
 
-          <!-- Titular (opcional) -->
-          <div>
-            <label class="text-sm text-gray-600 mb-1 block">Titular asociado (opcional)</label>
-            <select v-model="form.titular_id"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-              <option :value="null">Sin titular</option>
-              <option v-for="t in titulares" :key="t.id" :value="t.id">{{ t.alias }} — {{ t.nombre }}</option>
-            </select>
-          </div>
-
-          <!-- Activo -->
-          <label class="flex items-center gap-2 text-sm text-gray-600">
-            <input v-model="form.activo" type="checkbox" class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-            Activo
-          </label>
-
-          <div v-if="formError" class="bg-red-50 text-red-600 text-sm p-3 rounded-lg whitespace-pre-line">{{ formError }}</div>
-          <button type="submit" :disabled="saving"
-            class="w-full bg-blue-600 text-white font-semibold py-2.5 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition flex items-center justify-center gap-2">
-            <span v-if="saving" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-            {{ saving ? 'Guardando...' : (editing ? 'Guardar cambios' : 'Crear usuario') }}
-          </button>
-        </form>
-      </div>
-    </div>
+        <div v-if="formError" class="bg-red-50 text-red-600 text-sm p-3 rounded-lg whitespace-pre-line">{{ formError }}</div>
+      </form>
+      <template #footer>
+        <button @click="submit" :disabled="saving"
+          class="w-full bg-blue-600 text-white font-semibold py-2.5 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition flex items-center justify-center gap-2">
+          <span v-if="saving" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+          {{ saving ? 'Guardando...' : (editing ? 'Guardar cambios' : 'Crear usuario') }}
+        </button>
+      </template>
+    </AppFormModal>
   </div>
 </template>
 
@@ -133,6 +127,7 @@ import { useFormatting } from '@/composables/useFormatting'
 import { useApiError } from '@/composables/useApiError'
 import api from '../../api/axios.js'
 import { useUsuariosStore } from '../../stores/usuarios.js'
+import AppFormModal from '@/components/common/AppFormModal.vue'
 
 /** Store de usuarios */
 const usuarios = useUsuariosStore()

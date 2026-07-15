@@ -31,67 +31,61 @@
       </div>
     </div>
 
-    <!-- Modal -->
-    <div v-if="showForm" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center" @click.self="closeForm">
-      <div class="absolute inset-0 bg-black/40"></div>
-      <div class="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-md p-6 relative z-10 max-h-[90vh] overflow-y-auto">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="font-bold text-lg">{{ editingId ? 'Editar comisión' : 'Nueva comisión' }}</h3>
-          <button @click="closeForm" class="text-gray-400 hover:text-gray-600">✕</button>
+    <AppFormModal v-model="showForm" :title="editingId ? 'Editar comisión' : 'Nueva comisión'" @close="closeForm">
+      <form @submit.prevent="submit" class="space-y-3">
+        <input v-model="form.nombre_metodo" required placeholder="Nombre del método *" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+        <input v-model="form.descripcion" required placeholder="Descripción *" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+
+        <div>
+          <label class="text-sm text-gray-600 mb-1 block">Tipo de cálculo</label>
+          <select v-model="form.tipo_calculo" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+            <option value="porcentaje">Porcentaje</option>
+            <option value="monto_fijo">Monto fijo</option>
+          </select>
         </div>
-        <form @submit.prevent="submit" class="space-y-3">
-          <input v-model="form.nombre_metodo" required placeholder="Nombre del método *" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-          <input v-model="form.descripcion" required placeholder="Descripción *" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
 
-          <div>
-            <label class="text-sm text-gray-600 mb-1 block">Tipo de cálculo</label>
-            <select v-model="form.tipo_calculo" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-              <option value="porcentaje">Porcentaje</option>
-              <option value="monto_fijo">Monto fijo</option>
-            </select>
-          </div>
+        <input v-model="form.valor" type="number" step="0.0001" required :placeholder="form.tipo_calculo === 'porcentaje' ? 'Ej: 0.3' : 'Ej: 5.00'" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
 
-          <input v-model="form.valor" type="number" step="0.0001" required :placeholder="form.tipo_calculo === 'porcentaje' ? 'Ej: 0.3' : 'Ej: 5.00'" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+        <div>
+          <label class="text-sm text-gray-600 mb-1 block">Moneda</label>
+          <select v-model="form.moneda_id" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+            <option value="">Seleccionar moneda</option>
+            <option v-for="m in monedas" :key="m.id" :value="m.id">{{ m.codigo }} — {{ m.nombre }}</option>
+          </select>
+        </div>
 
-          <div>
-            <label class="text-sm text-gray-600 mb-1 block">Moneda</label>
-            <select v-model="form.moneda_id" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-              <option value="">Seleccionar moneda</option>
-              <option v-for="m in monedas" :key="m.id" :value="m.id">{{ m.codigo }} — {{ m.nombre }}</option>
-            </select>
-          </div>
+        <div>
+          <label class="text-sm text-gray-600 mb-1 block">Cuenta (opcional)</label>
+          <select v-model="form.cuenta_id" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+            <option value="">Todas las cuentas</option>
+            <option v-for="c in cuentas" :key="c.id" :value="c.id">{{ c.alias }} ({{ c.moneda?.codigo }})</option>
+          </select>
+        </div>
 
-          <div>
-            <label class="text-sm text-gray-600 mb-1 block">Cuenta (opcional)</label>
-            <select v-model="form.cuenta_id" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-              <option value="">Todas las cuentas</option>
-              <option v-for="c in cuentas" :key="c.id" :value="c.id">{{ c.alias }} ({{ c.moneda?.codigo }})</option>
-            </select>
-          </div>
+        <div>
+          <label class="text-sm text-gray-600 mb-1 block">Vigente desde</label>
+          <input v-model="form.vigente_desde" type="date" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+        </div>
 
-          <div>
-            <label class="text-sm text-gray-600 mb-1 block">Vigente desde</label>
-            <input v-model="form.vigente_desde" type="date" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-          </div>
+        <div>
+          <label class="text-sm text-gray-600 mb-1 block">Vigente hasta (opcional)</label>
+          <input v-model="form.vigente_hasta" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+        </div>
 
-          <div>
-            <label class="text-sm text-gray-600 mb-1 block">Vigente hasta (opcional)</label>
-            <input v-model="form.vigente_hasta" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-          </div>
+        <label class="flex items-center gap-2 text-sm text-gray-600">
+          <input v-model="form.activa" type="checkbox" class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+          Activa
+        </label>
 
-          <label class="flex items-center gap-2 text-sm text-gray-600">
-            <input v-model="form.activa" type="checkbox" class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-            Activa
-          </label>
-
-          <AppErrorState v-if="formError" :message="formError" :retry="false" />
-          <button type="submit" :disabled="saving" class="w-full bg-blue-600 text-white font-semibold py-2.5 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition flex items-center justify-center gap-2">
-            <span v-if="saving" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-            {{ saving ? 'Guardando...' : (editingId ? 'Guardar cambios' : 'Crear comisión') }}
-          </button>
-        </form>
-      </div>
-    </div>
+        <AppErrorState v-if="formError" :message="formError" :retry="false" />
+      </form>
+      <template #footer>
+        <button @click="submit" :disabled="saving" class="w-full bg-blue-600 text-white font-semibold py-2.5 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition flex items-center justify-center gap-2">
+          <span v-if="saving" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+          {{ saving ? 'Guardando...' : (editingId ? 'Guardar cambios' : 'Crear comisión') }}
+        </button>
+      </template>
+    </AppFormModal>
   </div>
 </template>
 
@@ -108,6 +102,7 @@ import AppPageHeader from '../../components/common/AppPageHeader.vue'
 import AppLoadingSpinner from '../../components/common/AppLoadingSpinner.vue'
 import AppErrorState from '../../components/common/AppErrorState.vue'
 import AppEmptyState from '../../components/common/AppEmptyState.vue'
+import AppFormModal from '@/components/common/AppFormModal.vue'
 
 const { parseError } = useApiError()
 

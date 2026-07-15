@@ -47,83 +47,77 @@
       </router-link>
     </div>
 
-    <!-- Filter modal -->
-    <div v-if="showFilter" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center" @click.self="showFilter = false">
-      <div class="absolute inset-0 bg-black/40"></div>
-      <div class="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-md p-6 relative z-10 max-h-[90vh] overflow-y-auto">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="font-bold text-lg">Filtrar operaciones</h3>
-          <button @click="showFilter = false" class="text-gray-400 hover:text-gray-600">✕</button>
+    <AppFormModal v-model="showFilter" title="Filtrar operaciones">
+      <div class="space-y-4">
+        <!-- Tipo -->
+        <div>
+          <label class="block text-sm font-medium text-gray-600 mb-1">Tipo</label>
+          <select v-model="filters.tipo_codigo" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white">
+            <option value="">Todos</option>
+            <option value="compra_usd">Compra de USD</option>
+            <option value="venta_usd">Venta de USD</option>
+            <option value="cambio">Cambio / Intermediada</option>
+          </select>
         </div>
-        <div class="space-y-4">
-          <!-- Tipo -->
+        <!-- Estatus -->
+        <div>
+          <label class="block text-sm font-medium text-gray-600 mb-1">Estatus</label>
+          <select v-model="filters.estatus" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white">
+            <option value="">Todos</option>
+            <option value="sin_verificar">Sin verificar</option>
+            <option value="en_revision">En revisión</option>
+            <option value="verificado">Verificado / Completa</option>
+          </select>
+        </div>
+        <!-- Fechas -->
+        <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-sm font-medium text-gray-600 mb-1">Tipo</label>
-            <select v-model="filters.tipo_codigo" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white">
-              <option value="">Todos</option>
-              <option value="compra_usd">Compra de USD</option>
-              <option value="venta_usd">Venta de USD</option>
-              <option value="cambio">Cambio / Intermediada</option>
-            </select>
+            <label class="block text-sm font-medium text-gray-600 mb-1">Desde</label>
+            <input v-model="filters.fecha_desde" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
           </div>
-          <!-- Estatus -->
           <div>
-            <label class="block text-sm font-medium text-gray-600 mb-1">Estatus</label>
-            <select v-model="filters.estatus" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white">
-              <option value="">Todos</option>
-              <option value="sin_verificar">Sin verificar</option>
-              <option value="en_revision">En revisión</option>
-              <option value="verificado">Verificado / Completa</option>
-            </select>
-          </div>
-          <!-- Fechas -->
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-sm font-medium text-gray-600 mb-1">Desde</label>
-              <input v-model="filters.fecha_desde" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-600 mb-1">Hasta</label>
-              <input v-model="filters.fecha_hasta" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
-            </div>
-          </div>
-          <!-- Moneda -->
-          <div>
-            <label class="block text-sm font-medium text-gray-600 mb-1">Moneda</label>
-            <select v-model="filters.moneda" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white">
-              <option value="">Todas</option>
-              <option value="USD">USD</option>
-              <option value="USDT">USDT</option>
-              <option value="EUR">EUR</option>
-              <option value="COP">COP</option>
-            </select>
-          </div>
-          <!-- Cliente -->
-          <div class="relative">
-            <label class="block text-sm font-medium text-gray-600 mb-1">Cliente</label>
-            <div v-if="filters.cliente_id" class="flex items-center justify-between bg-blue-50 rounded-lg px-3 py-2">
-              <span class="text-sm text-blue-700">{{ filters.cliente_nombre }}</span>
-              <button @click="clearClienteFilter" class="text-xs text-blue-500">Cambiar</button>
-            </div>
-            <template v-else>
-              <input v-model="clienteSearch" @input="onClienteSearch" type="text" placeholder="Buscar cliente..."
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
-              <div v-if="clienteSearch && clienteResults.length"
-                class="absolute z-20 left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-40 overflow-y-auto">
-                <button v-for="c in clienteResults" :key="c.id" @click="selectClienteFilter(c)"
-                  class="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 border-b border-gray-100 last:border-0">
-                  {{ c.nombre }}
-                </button>
-              </div>
-            </template>
+            <label class="block text-sm font-medium text-gray-600 mb-1">Hasta</label>
+            <input v-model="filters.fecha_hasta" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
           </div>
         </div>
-        <div class="flex gap-3 mt-6">
+        <!-- Moneda -->
+        <div>
+          <label class="block text-sm font-medium text-gray-600 mb-1">Moneda</label>
+          <select v-model="filters.moneda" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white">
+            <option value="">Todas</option>
+            <option value="USD">USD</option>
+            <option value="USDT">USDT</option>
+            <option value="EUR">EUR</option>
+            <option value="COP">COP</option>
+          </select>
+        </div>
+        <!-- Cliente -->
+        <div class="relative">
+          <label class="block text-sm font-medium text-gray-600 mb-1">Cliente</label>
+          <div v-if="filters.cliente_id" class="flex items-center justify-between bg-blue-50 rounded-lg px-3 py-2">
+            <span class="text-sm text-blue-700">{{ filters.cliente_nombre }}</span>
+            <button @click="clearClienteFilter" class="text-xs text-blue-500">Cambiar</button>
+          </div>
+          <template v-else>
+            <input v-model="clienteSearch" @input="onClienteSearch" type="text" placeholder="Buscar cliente..."
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+            <div v-if="clienteSearch && clienteResults.length"
+              class="absolute z-20 left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-40 overflow-y-auto">
+              <button v-for="c in clienteResults" :key="c.id" @click="selectClienteFilter(c)"
+                class="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 border-b border-gray-100 last:border-0">
+                {{ c.nombre }}
+              </button>
+            </div>
+          </template>
+        </div>
+      </div>
+      <template #footer>
+        <div class="flex gap-3">
           <button @click="clearFilters" class="flex-1 py-2.5 text-sm text-gray-600 hover:bg-gray-100 rounded-xl transition">Limpiar</button>
           <button @click="applyFilters" class="flex-1 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-xl hover:bg-blue-700 transition">Aplicar</button>
         </div>
-      </div>
-    </div>
+      </template>
+    </AppFormModal>
   </div>
 </template>
 
@@ -138,6 +132,7 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useOperacionesStore } from '../../stores/operaciones.js'
 import { useFormatting } from '@/composables/useFormatting'
 import api from '../../api/axios.js'
+import AppFormModal from '@/components/common/AppFormModal.vue'
 
 /** Store de operaciones */
 const ops = useOperacionesStore()

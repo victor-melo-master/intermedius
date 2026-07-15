@@ -32,161 +32,150 @@
       </div>
     </div>
 
-    <!-- Modal cuenta -->
-    <div v-if="showForm" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center" @click.self="closeForm">
-      <div class="absolute inset-0 bg-black/40"></div>
-      <div class="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-md p-6 relative z-10 max-h-[90vh] overflow-y-auto">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="font-bold text-lg">Nueva cuenta</h3>
-          <button @click="closeForm" class="text-gray-400 hover:text-gray-600">✕</button>
+    <AppFormModal v-model="showForm" title="Nueva cuenta" @close="closeForm">
+      <form @submit.prevent="submit" class="space-y-3">
+        <!-- Cliente (opcional) -->
+        <ClienteSelector v-model="clienteSeleccionado" />
+
+        <!-- Tipo de cuenta (siempre primero) -->
+        <div>
+          <label class="text-sm text-gray-600 mb-1 block">Tipo de cuenta *</label>
+          <select v-model="form.tipo" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+            <option value="">Seleccionar tipo</option>
+            <option value="banco">Banco</option>
+            <option value="plataforma">Plataforma</option>
+            <option value="cash">Cash</option>
+            <option value="zelle">Zelle</option>
+            <option value="wallet">Wallet</option>
+            <option value="efectivo">Efectivo</option>
+            <option value="otro">Otro</option>
+          </select>
         </div>
-        <form @submit.prevent="submit" class="space-y-3">
-          <!-- Cliente (opcional) -->
-          <ClienteSelector v-model="clienteSeleccionado" />
 
-          <!-- Tipo de cuenta (siempre primero) -->
-          <div>
-            <label class="text-sm text-gray-600 mb-1 block">Tipo de cuenta *</label>
-            <select v-model="form.tipo" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-              <option value="">Seleccionar tipo</option>
-              <option value="banco">Banco</option>
-              <option value="plataforma">Plataforma</option>
-              <option value="cash">Cash</option>
-              <option value="zelle">Zelle</option>
-              <option value="wallet">Wallet</option>
-              <option value="efectivo">Efectivo</option>
-              <option value="otro">Otro</option>
+        <!-- Titular y Banco (solo si no se seleccionó cliente y el tipo no es efectivo) -->
+        <template v-if="!clienteSeleccionado.id">
+          <div v-if="form.tipo !== 'efectivo'">
+            <div class="flex items-center justify-between mb-1">
+              <label class="text-sm text-gray-600">Titular</label>
+              <button type="button" @click="showTitularInline = !showTitularInline" class="text-xs text-blue-600 hover:text-blue-800 font-medium">+ Nuevo titular</button>
+            </div>
+            <select v-model="form.titular_id" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+              <option value="">Seleccionar titular</option>
+              <option v-for="t in titulares.list" :key="t.id" :value="t.id">{{ t.alias }}</option>
             </select>
+            <div v-if="showTitularInline" class="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
+              <p class="text-sm font-medium text-gray-700 mb-2">Crear titular</p>
+              <div class="space-y-2">
+                <input v-model="titularForm.nombre" placeholder="Nombre completo" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
+                <input v-model="titularForm.alias" placeholder="Alias" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
+                <div class="flex gap-2">
+                  <button type="button" @click="submitTitularInline" :disabled="savingInline" class="flex-1 bg-blue-600 text-white text-sm font-medium py-1.5 rounded-lg hover:bg-blue-700 disabled:bg-blue-300">Crear</button>
+                  <button type="button" @click="showTitularInline = false" class="flex-1 bg-gray-200 text-gray-700 text-sm font-medium py-1.5 rounded-lg hover:bg-gray-300">Cancelar</button>
+                </div>
+                <AppErrorState v-if="titularInlineError" :message="titularInlineError" :retry="false" />
+              </div>
+            </div>
           </div>
 
-          <!-- Titular y Banco (solo si no se seleccionó cliente y el tipo no es efectivo) -->
-          <template v-if="!clienteSeleccionado.id">
-            <div v-if="form.tipo !== 'efectivo'">
-              <div class="flex items-center justify-between mb-1">
-                <label class="text-sm text-gray-600">Titular</label>
-                <button type="button" @click="showTitularInline = !showTitularInline" class="text-xs text-blue-600 hover:text-blue-800 font-medium">+ Nuevo titular</button>
-              </div>
-              <select v-model="form.titular_id" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-                <option value="">Seleccionar titular</option>
-                <option v-for="t in titulares.list" :key="t.id" :value="t.id">{{ t.alias }}</option>
-              </select>
-              <div v-if="showTitularInline" class="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                <p class="text-sm font-medium text-gray-700 mb-2">Crear titular</p>
-                <div class="space-y-2">
-                  <input v-model="titularForm.nombre" placeholder="Nombre completo" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
-                  <input v-model="titularForm.alias" placeholder="Alias" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
-                  <div class="flex gap-2">
-                    <button type="button" @click="submitTitularInline" :disabled="savingInline" class="flex-1 bg-blue-600 text-white text-sm font-medium py-1.5 rounded-lg hover:bg-blue-700 disabled:bg-blue-300">Crear</button>
-                    <button type="button" @click="showTitularInline = false" class="flex-1 bg-gray-200 text-gray-700 text-sm font-medium py-1.5 rounded-lg hover:bg-gray-300">Cancelar</button>
-                  </div>
-                  <AppErrorState v-if="titularInlineError" :message="titularInlineError" :retry="false" />
-                </div>
-              </div>
+          <div v-if="form.tipo !== 'efectivo'">
+            <div class="flex items-center justify-between mb-1">
+              <label class="text-sm text-gray-600">Banco</label>
+              <button type="button" @click="showBancoInline = !showBancoInline" class="text-xs text-blue-600 hover:text-blue-800 font-medium">+ Nuevo banco</button>
             </div>
-
-            <div v-if="form.tipo !== 'efectivo'">
-              <div class="flex items-center justify-between mb-1">
-                <label class="text-sm text-gray-600">Banco</label>
-                <button type="button" @click="showBancoInline = !showBancoInline" class="text-xs text-blue-600 hover:text-blue-800 font-medium">+ Nuevo banco</button>
-              </div>
-              <select v-model="form.banco_id" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-                <option value="">Seleccionar banco</option>
-                <option v-for="b in bancos.list" :key="b.id" :value="b.id">{{ b.nombre }} ({{ b.codigo }})</option>
-              </select>
-              <div v-if="showBancoInline" class="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                <p class="text-sm font-medium text-gray-700 mb-2">Crear banco</p>
-                <div class="space-y-2">
-                  <input v-model="bancoForm.nombre" placeholder="Nombre del banco" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
-                  <input v-model="bancoForm.codigo" placeholder="Código (ej: BANESCO)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
-                  <input v-model="bancoForm.pais" placeholder="País (default: VE)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
-                  <div class="flex gap-2">
-                    <button type="button" @click="submitBancoInline" :disabled="savingInline" class="flex-1 bg-blue-600 text-white text-sm font-medium py-1.5 rounded-lg hover:bg-blue-700 disabled:bg-blue-300">Crear</button>
-                    <button type="button" @click="showBancoInline = false" class="flex-1 bg-gray-200 text-gray-700 text-sm font-medium py-1.5 rounded-lg hover:bg-gray-300">Cancelar</button>
-                  </div>
-                  <AppErrorState v-if="bancoInlineError" :message="bancoInlineError" :retry="false" />
-                </div>
-              </div>
-            </div>
-          </template>
-
-          <!-- Cuando hay cliente: banco solo si no es efectivo -->
-          <template v-if="clienteSeleccionado.id">
-            <div v-if="form.tipo !== 'efectivo'">
-              <div class="flex items-center justify-between mb-1">
-                <label class="text-sm text-gray-600">Banco</label>
-                <button type="button" @click="showBancoInline = !showBancoInline" class="text-xs text-blue-600 hover:text-blue-800 font-medium">+ Nuevo banco</button>
-              </div>
-              <select v-model="form.banco_id" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-                <option value="">Seleccionar banco</option>
-                <option v-for="b in bancos.list" :key="b.id" :value="b.id">{{ b.nombre }} ({{ b.codigo }})</option>
-              </select>
-              <div v-if="showBancoInline" class="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                <p class="text-sm font-medium text-gray-700 mb-2">Crear banco</p>
-                <div class="space-y-2">
-                  <input v-model="bancoForm.nombre" placeholder="Nombre del banco" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
-                  <input v-model="bancoForm.codigo" placeholder="Código (ej: BANESCO)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
-                  <input v-model="bancoForm.pais" placeholder="País (default: VE)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
-                  <div class="flex gap-2">
-                    <button type="button" @click="submitBancoInline" :disabled="savingInline" class="flex-1 bg-blue-600 text-white text-sm font-medium py-1.5 rounded-lg hover:bg-blue-700 disabled:bg-blue-300">Crear</button>
-                    <button type="button" @click="showBancoInline = false" class="flex-1 bg-gray-200 text-gray-700 text-sm font-medium py-1.5 rounded-lg hover:bg-gray-300">Cancelar</button>
-                  </div>
-                  <AppErrorState v-if="bancoInlineError" :message="bancoInlineError" :retry="false" />
-                </div>
-              </div>
-            </div>
-          </template>
-
-          <!-- Moneda (siempre visible) -->
-          <div>
-            <label class="text-sm text-gray-600 mb-1 block">Moneda</label>
-            <select v-model="form.moneda_id" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-              <option value="">Seleccionar moneda</option>
-              <option v-for="m in tasas.monedas" :key="m.id" :value="m.id">{{ m.codigo }} — {{ m.nombre }}</option>
+            <select v-model="form.banco_id" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+              <option value="">Seleccionar banco</option>
+              <option v-for="b in bancos.list" :key="b.id" :value="b.id">{{ b.nombre }} ({{ b.codigo }})</option>
             </select>
+            <div v-if="showBancoInline" class="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
+              <p class="text-sm font-medium text-gray-700 mb-2">Crear banco</p>
+              <div class="space-y-2">
+                <input v-model="bancoForm.nombre" placeholder="Nombre del banco" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
+                <input v-model="bancoForm.codigo" placeholder="Código (ej: BANESCO)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
+                <input v-model="bancoForm.pais" placeholder="País (default: VE)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
+                <div class="flex gap-2">
+                  <button type="button" @click="submitBancoInline" :disabled="savingInline" class="flex-1 bg-blue-600 text-white text-sm font-medium py-1.5 rounded-lg hover:bg-blue-700 disabled:bg-blue-300">Crear</button>
+                  <button type="button" @click="showBancoInline = false" class="flex-1 bg-gray-200 text-gray-700 text-sm font-medium py-1.5 rounded-lg hover:bg-gray-300">Cancelar</button>
+                </div>
+                <AppErrorState v-if="bancoInlineError" :message="bancoInlineError" :retry="false" />
+              </div>
+            </div>
           </div>
+        </template>
 
-          <input v-model="form.alias" required placeholder="Alias * (ej: Banesco Karol USD)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+        <!-- Cuando hay cliente: banco solo si no es efectivo -->
+        <template v-if="clienteSeleccionado.id">
+          <div v-if="form.tipo !== 'efectivo'">
+            <div class="flex items-center justify-between mb-1">
+              <label class="text-sm text-gray-600">Banco</label>
+              <button type="button" @click="showBancoInline = !showBancoInline" class="text-xs text-blue-600 hover:text-blue-800 font-medium">+ Nuevo banco</button>
+            </div>
+            <select v-model="form.banco_id" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+              <option value="">Seleccionar banco</option>
+              <option v-for="b in bancos.list" :key="b.id" :value="b.id">{{ b.nombre }} ({{ b.codigo }})</option>
+            </select>
+            <div v-if="showBancoInline" class="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
+              <p class="text-sm font-medium text-gray-700 mb-2">Crear banco</p>
+              <div class="space-y-2">
+                <input v-model="bancoForm.nombre" placeholder="Nombre del banco" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
+                <input v-model="bancoForm.codigo" placeholder="Código (ej: BANESCO)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
+                <input v-model="bancoForm.pais" placeholder="País (default: VE)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
+                <div class="flex gap-2">
+                  <button type="button" @click="submitBancoInline" :disabled="savingInline" class="flex-1 bg-blue-600 text-white text-sm font-medium py-1.5 rounded-lg hover:bg-blue-700 disabled:bg-blue-300">Crear</button>
+                  <button type="button" @click="showBancoInline = false" class="flex-1 bg-gray-200 text-gray-700 text-sm font-medium py-1.5 rounded-lg hover:bg-gray-300">Cancelar</button>
+                </div>
+                <AppErrorState v-if="bancoInlineError" :message="bancoInlineError" :retry="false" />
+              </div>
+            </div>
+          </div>
+        </template>
 
-          <input v-if="form.tipo !== 'efectivo'" v-model="form.numero_cuenta" placeholder="Número de cuenta (opcional)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-          <textarea v-model="form.notas" rows="2" placeholder="Notas (opcional)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none"></textarea>
+        <!-- Moneda (siempre visible) -->
+        <div>
+          <label class="text-sm text-gray-600 mb-1 block">Moneda</label>
+          <select v-model="form.moneda_id" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+            <option value="">Seleccionar moneda</option>
+            <option v-for="m in tasas.monedas" :key="m.id" :value="m.id">{{ m.codigo }} — {{ m.nombre }}</option>
+          </select>
+        </div>
 
-          <label class="flex items-center gap-2 text-sm text-gray-600">
-            <input v-model="form.activa" type="checkbox" class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-            Activa
-          </label>
+        <input v-model="form.alias" required placeholder="Alias * (ej: Banesco Karol USD)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
 
-          <AppErrorState v-if="formError" :message="formError" :retry="false" />
-          <button type="submit" :disabled="saving" class="w-full bg-blue-600 text-white font-semibold py-2.5 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition flex items-center justify-center gap-2">
-            <span v-if="saving" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-            {{ saving ? 'Guardando...' : 'Crear cuenta' }}
-          </button>
-        </form>
-      </div>
-    </div>
+        <input v-if="form.tipo !== 'efectivo'" v-model="form.numero_cuenta" placeholder="Número de cuenta (opcional)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+        <textarea v-model="form.notas" rows="2" placeholder="Notas (opcional)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none"></textarea>
+
+        <label class="flex items-center gap-2 text-sm text-gray-600">
+          <input v-model="form.activa" type="checkbox" class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+          Activa
+        </label>
+
+        <AppErrorState v-if="formError" :message="formError" :retry="false" />
+      </form>
+      <template #footer>
+        <button @click="submit" :disabled="saving" class="w-full bg-blue-600 text-white font-semibold py-2.5 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition flex items-center justify-center gap-2">
+          <span v-if="saving" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+          {{ saving ? 'Guardando...' : 'Crear cuenta' }}
+        </button>
+      </template>
+    </AppFormModal>
 
     <!-- Modal cargar saldo -->
     <Teleport to="body">
-      <div v-if="showSaldoModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="showSaldoModal = false">
-        <div class="absolute inset-0 bg-black/40"></div>
-        <div class="bg-white rounded-2xl w-full max-w-sm p-6 relative z-10">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="font-bold text-lg">Cargar saldo</h3>
-            <button @click="showSaldoModal = false" class="text-gray-400 hover:text-gray-600 text-xl leading-none">✕</button>
+      <AppFormModal v-model="showSaldoModal" title="Cargar saldo">
+        <form @submit.prevent="submitSaldo" class="space-y-3">
+          <p class="text-sm text-gray-600">{{ saldoTarget?.alias }} ({{ saldoTarget?.moneda?.codigo }})</p>
+          <div>
+            <label class="block text-sm text-gray-600 mb-1">Nuevo saldo</label>
+            <input v-model="saldoInput" type="number" step="0.01" required class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" />
           </div>
-          <form @submit.prevent="submitSaldo" class="space-y-3">
-            <p class="text-sm text-gray-600">{{ saldoTarget?.alias }} ({{ saldoTarget?.moneda?.codigo }})</p>
-            <div>
-              <label class="block text-sm text-gray-600 mb-1">Nuevo saldo</label>
-              <input v-model="saldoInput" type="number" step="0.01" required class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" />
-            </div>
-            <AppErrorState v-if="saldoError" :message="saldoError" :retry="false" />
-            <button type="submit" :disabled="savingSaldo"
-              class="w-full bg-blue-600 text-white font-semibold py-2.5 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition">
-              {{ savingSaldo ? 'Guardando...' : 'Guardar saldo' }}
-            </button>
-          </form>
-        </div>
-      </div>
+          <AppErrorState v-if="saldoError" :message="saldoError" :retry="false" />
+        </form>
+        <template #footer>
+          <button @click="submitSaldo" :disabled="savingSaldo"
+            class="w-full bg-blue-600 text-white font-semibold py-2.5 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition">
+            {{ savingSaldo ? 'Guardando...' : 'Guardar saldo' }}
+          </button>
+        </template>
+      </AppFormModal>
     </Teleport>
   </div>
 </template>
@@ -209,6 +198,7 @@ import AppLoadingSpinner from '../../components/common/AppLoadingSpinner.vue'
 import AppErrorState from '../../components/common/AppErrorState.vue'
 import AppEmptyState from '../../components/common/AppEmptyState.vue'
 import ClienteSelector from '../../components/clientes/ClienteSelector.vue'
+import AppFormModal from '@/components/common/AppFormModal.vue'
 
 /** Store de autenticación */
 const auth = useAuthStore()

@@ -37,31 +37,25 @@
       </div>
     </div>
 
-    <!-- Modal titular -->
-    <div v-if="showForm" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center" @click.self="closeForm">
-      <div class="absolute inset-0 bg-black/40"></div>
-      <div class="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-md p-6 relative z-10">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="font-bold text-lg">{{ editing ? 'Editar titular' : 'Nuevo titular' }}</h3>
-          <button @click="closeForm" class="text-gray-400 hover:text-gray-600">✕</button>
-        </div>
-        <form @submit.prevent="submit" class="space-y-3">
-          <input v-model="form.nombre" required placeholder="Nombre completo *" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-          <input v-model="form.alias" required placeholder="Alias * (ej: Karol)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-          <input v-model="form.telefono" placeholder="Teléfono" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-          <input v-model="form.email" type="email" placeholder="Email" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-          <label class="flex items-center gap-2 text-sm text-gray-600">
-            <input v-model="form.activo" type="checkbox" class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-            Activo
-          </label>
-          <div v-if="formError" class="bg-red-50 text-red-600 text-sm p-3 rounded-lg">{{ formError }}</div>
-          <button type="submit" :disabled="saving" class="w-full bg-blue-600 text-white font-semibold py-2.5 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition flex items-center justify-center gap-2">
-            <span v-if="saving" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-            {{ saving ? 'Guardando...' : (editing ? 'Guardar cambios' : 'Crear titular') }}
-          </button>
-        </form>
-      </div>
-    </div>
+    <AppFormModal v-model="showForm" :title="editing ? 'Editar titular' : 'Nuevo titular'" @close="closeForm">
+      <form @submit.prevent="submit" class="space-y-3">
+        <input v-model="form.nombre" required placeholder="Nombre completo *" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+        <input v-model="form.alias" required placeholder="Alias * (ej: Karol)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+        <input v-model="form.telefono" placeholder="Teléfono" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+        <input v-model="form.email" type="email" placeholder="Email" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+        <label class="flex items-center gap-2 text-sm text-gray-600">
+          <input v-model="form.activo" type="checkbox" class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+          Activo
+        </label>
+        <div v-if="formError" class="bg-red-50 text-red-600 text-sm p-3 rounded-lg">{{ formError }}</div>
+      </form>
+      <template #footer>
+        <button @click="submit" :disabled="saving" class="w-full bg-blue-600 text-white font-semibold py-2.5 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition flex items-center justify-center gap-2">
+          <span v-if="saving" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+          {{ saving ? 'Guardando...' : (editing ? 'Guardar cambios' : 'Crear titular') }}
+        </button>
+      </template>
+    </AppFormModal>
   </div>
 </template>
 
@@ -74,6 +68,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useApiError } from '@/composables/useApiError'
 import { useTitularesStore } from '../../stores/titulares.js'
+import AppFormModal from '@/components/common/AppFormModal.vue'
 
 /** Store de titulares */
 const titulares = useTitularesStore()

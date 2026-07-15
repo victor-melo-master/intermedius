@@ -84,29 +84,24 @@
 
     <!-- Modal motivo de edición -->
     <Teleport to="body">
-      <div v-if="showEditModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="showEditModal = false">
-        <div class="absolute inset-0 bg-black/40"></div>
-        <div class="bg-white rounded-2xl w-full max-w-md p-6 relative z-10">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="font-bold text-lg">Editar operación #{{ ops.detail?.id }}</h3>
-            <button @click="showEditModal = false" class="text-gray-400 hover:text-gray-600 text-xl leading-none">✕</button>
+      <AppFormModal v-model="showEditModal" :title="'Editar operación #' + (ops.detail?.id || '')">
+        <form @submit.prevent="guardarEdicion" class="space-y-4">
+          <p class="text-sm text-gray-500">Vas a modificar esta operación. ¿Cuál es el motivo del cambio?</p>
+          <textarea v-model="motivoEdicion" rows="3" required placeholder="Ej: El cliente cambió el monto, o no hay fondos en la cuenta A..."
+            class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none resize-none"></textarea>
+          <AppErrorState v-if="editError" :message="editError" :retry="false" />
+        </form>
+        <template #footer>
+          <div class="flex gap-3">
+            <button type="button" @click="showEditModal = false"
+              class="flex-1 py-2.5 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition">Cancelar</button>
+            <button @click="guardarEdicion" :disabled="!motivoEdicion.trim()"
+              class="flex-1 py-2.5 bg-amber-500 text-white text-sm font-medium rounded-xl hover:bg-amber-600 transition">
+              Continuar a edición
+            </button>
           </div>
-          <form @submit.prevent="guardarEdicion" class="space-y-4">
-            <p class="text-sm text-gray-500">Vas a modificar esta operación. ¿Cuál es el motivo del cambio?</p>
-            <textarea v-model="motivoEdicion" rows="3" required placeholder="Ej: El cliente cambió el monto, o no hay fondos en la cuenta A..."
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none resize-none"></textarea>
-            <AppErrorState v-if="editError" :message="editError" :retry="false" />
-            <div class="flex gap-3">
-              <button type="button" @click="showEditModal = false"
-                class="flex-1 py-2.5 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition">Cancelar</button>
-              <button type="submit" :disabled="!motivoEdicion.trim()"
-                class="flex-1 py-2.5 bg-amber-500 text-white text-sm font-medium rounded-xl hover:bg-amber-600 transition">
-                Continuar a edición
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
+        </template>
+      </AppFormModal>
     </Teleport>
   </div>
 </template>
@@ -125,6 +120,7 @@ import { useAuthStore } from '../../stores/auth.js'
 import { useFormatting } from '@/composables/useFormatting'
 import AppLoadingSpinner from '../../components/common/AppLoadingSpinner.vue'
 import AppErrorState from '../../components/common/AppErrorState.vue'
+import AppFormModal from '@/components/common/AppFormModal.vue'
 
 /** Ruta actual (contiene params.id) */
 const route = useRoute()

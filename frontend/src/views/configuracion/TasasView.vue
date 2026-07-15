@@ -53,71 +53,62 @@
       </div>
     </template>
 
-    <!-- Modal publicar / editar -->
-    <div v-if="showForm" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center" @click.self="showForm = false">
-      <div class="absolute inset-0 bg-black/40"></div>
-      <div class="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-lg p-6 relative z-10 max-h-[92vh] overflow-y-auto">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="font-bold text-lg">{{ isEdit ? 'Editar tasa' : 'Publicar tasa del día' }}</h3>
-          <button @click="showForm = false" class="text-gray-400 hover:text-gray-600">✕</button>
-        </div>
+    <AppFormModal v-model="showForm" :title="isEdit ? 'Editar tasa' : 'Publicar tasa del día'">
+      <!-- Paso 1: moneda base -->
+      <p class="text-sm font-medium text-gray-600 mb-2">1. Moneda base</p>
+      <div class="grid grid-cols-4 gap-2 mb-5">
+        <button v-for="m in baseOptions" :key="m.id" type="button" @click="selectBase(m.id)"
+          class="py-3 rounded-xl border-2 text-center transition"
+          :class="selectedBaseId === m.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'">
+          <span class="block text-xl">{{ iconoMoneda(m.codigo) }}</span>
+          <span class="block text-xs font-semibold mt-0.5" :class="selectedBaseId === m.id ? 'text-blue-700' : 'text-gray-600'">{{ m.codigo }}</span>
+        </button>
+      </div>
 
-        <!-- Paso 1: moneda base -->
-        <p class="text-sm font-medium text-gray-600 mb-2">1. Moneda base</p>
-        <div class="grid grid-cols-4 gap-2 mb-5">
-          <button v-for="m in baseOptions" :key="m.id" type="button" @click="selectBase(m.id)"
-            class="py-3 rounded-xl border-2 text-center transition"
-            :class="selectedBaseId === m.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'">
-            <span class="block text-xl">{{ iconoMoneda(m.codigo) }}</span>
-            <span class="block text-xs font-semibold mt-0.5" :class="selectedBaseId === m.id ? 'text-blue-700' : 'text-gray-600'">{{ m.codigo }}</span>
-          </button>
-        </div>
-
-        <!-- Paso 2: pares -->
-        <template v-if="selectedBaseId">
-          <p class="text-sm font-medium text-gray-600 mb-2">2. Configurar pares</p>
-          <div class="space-y-3">
-            <div v-for="ref in referenceMonedas" :key="ref.id" class="border border-gray-200 rounded-xl p-3"
-              :class="pairs[ref.id]?.active ? 'bg-white' : 'bg-gray-50'">
-              <label class="flex items-center justify-between cursor-pointer">
-                <span class="font-semibold text-sm text-gray-700">{{ baseCodigo }} / {{ ref.codigo }}</span>
-                <input type="checkbox" v-model="pairs[ref.id].active" class="accent-blue-600 w-5 h-5" />
-              </label>
-              <div v-if="pairs[ref.id]?.active" class="grid grid-cols-2 gap-2 mt-3">
-                <div>
-                  <label class="block text-[11px] text-gray-500 mb-1">Tasa compra *</label>
-                  <input v-model="pairs[ref.id].tasa_compra" type="number" step="0.00000001" inputmode="decimal" placeholder="0.00"
-                    class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-                </div>
-                <div>
-                  <label class="block text-[11px] text-gray-500 mb-1">Mín. compra</label>
-                  <input v-model="pairs[ref.id].tasa_compra_minima" type="number" step="0.00000001" inputmode="decimal" placeholder="opcional"
-                    class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-                </div>
-                <div>
-                  <label class="block text-[11px] text-gray-500 mb-1">Tasa venta *</label>
-                  <input v-model="pairs[ref.id].tasa_venta" type="number" step="0.00000001" inputmode="decimal" placeholder="0.00"
-                    class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-                </div>
-                <div>
-                  <label class="block text-[11px] text-gray-500 mb-1">Mín. venta</label>
-                  <input v-model="pairs[ref.id].tasa_venta_minima" type="number" step="0.00000001" inputmode="decimal" placeholder="opcional"
-                    class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-                </div>
+      <!-- Paso 2: pares -->
+      <template v-if="selectedBaseId">
+        <p class="text-sm font-medium text-gray-600 mb-2">2. Configurar pares</p>
+        <div class="space-y-3">
+          <div v-for="ref in referenceMonedas" :key="ref.id" class="border border-gray-200 rounded-xl p-3"
+            :class="pairs[ref.id]?.active ? 'bg-white' : 'bg-gray-50'">
+            <label class="flex items-center justify-between cursor-pointer">
+              <span class="font-semibold text-sm text-gray-700">{{ baseCodigo }} / {{ ref.codigo }}</span>
+              <input type="checkbox" v-model="pairs[ref.id].active" class="accent-blue-600 w-5 h-5" />
+            </label>
+            <div v-if="pairs[ref.id]?.active" class="grid grid-cols-2 gap-2 mt-3">
+              <div>
+                <label class="block text-[11px] text-gray-500 mb-1">Tasa compra *</label>
+                <input v-model="pairs[ref.id].tasa_compra" type="number" step="0.00000001" inputmode="decimal" placeholder="0.00"
+                  class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+              </div>
+              <div>
+                <label class="block text-[11px] text-gray-500 mb-1">Mín. compra</label>
+                <input v-model="pairs[ref.id].tasa_compra_minima" type="number" step="0.00000001" inputmode="decimal" placeholder="opcional"
+                  class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+              </div>
+              <div>
+                <label class="block text-[11px] text-gray-500 mb-1">Tasa venta *</label>
+                <input v-model="pairs[ref.id].tasa_venta" type="number" step="0.00000001" inputmode="decimal" placeholder="0.00"
+                  class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+              </div>
+              <div>
+                <label class="block text-[11px] text-gray-500 mb-1">Mín. venta</label>
+                <input v-model="pairs[ref.id].tasa_venta_minima" type="number" step="0.00000001" inputmode="decimal" placeholder="opcional"
+                  class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
               </div>
             </div>
           </div>
-        </template>
+        </div>
+      </template>
 
-        <div v-if="formError" class="bg-red-50 text-red-600 text-sm p-3 rounded-lg mt-4 whitespace-pre-line">{{ formError }}</div>
+      <div v-if="formError" class="bg-red-50 text-red-600 text-sm p-3 rounded-lg mt-4 whitespace-pre-line">{{ formError }}</div>
 
-        <button type="button" @click="submit" :disabled="saving || !puedeGuardar"
-          class="w-full mt-5 bg-blue-600 text-white font-semibold py-2.5 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition flex items-center justify-center gap-2">
-          <span v-if="saving" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-          {{ saving ? 'Guardando...' : (isEdit ? 'Actualizar' : 'Publicar') }}
-        </button>
-      </div>
-    </div>
+      <button type="button" @click="submit" :disabled="saving || !puedeGuardar"
+        class="w-full mt-5 bg-blue-600 text-white font-semibold py-2.5 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition flex items-center justify-center gap-2">
+        <span v-if="saving" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+        {{ saving ? 'Guardando...' : (isEdit ? 'Actualizar' : 'Publicar') }}
+      </button>
+    </AppFormModal>
   </div>
 </template>
 
@@ -133,6 +124,7 @@ import { useTasasStore } from '../../stores/tasas.js'
 import { useAuthStore } from '../../stores/auth.js'
 import { useFormatting } from '@/composables/useFormatting'
 import { useApiError } from '@/composables/useApiError'
+import AppFormModal from '@/components/common/AppFormModal.vue'
 
 /** Store de tasas */
 const tasas = useTasasStore()

@@ -46,28 +46,22 @@
       </div>
     </div>
 
-    <!-- Modal crear/editar cliente -->
-    <div v-if="showForm" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center" @click.self="showForm = false">
-      <div class="absolute inset-0 bg-black/40"></div>
-      <div class="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-md p-6 relative z-10 max-h-[90vh] overflow-y-auto">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="font-bold text-lg">{{ editingId ? 'Editar cliente' : 'Nuevo cliente' }}</h3>
-          <button @click="showForm = false" class="text-gray-400 hover:text-gray-600">✕</button>
-        </div>
-        <form @submit.prevent="submit" class="space-y-3">
-          <input v-model="form.nombre" required placeholder="Nombre *" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-          <input v-model="form.alias" placeholder="Alias" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-          <input v-model="form.telefono" placeholder="Teléfono" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-          <input v-model="form.email" type="email" placeholder="Email" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-          <textarea v-model="form.notas" rows="2" placeholder="Notas" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none"></textarea>
-          <AppErrorState v-if="formError" :message="formError" :retry="false" />
-          <button type="submit" :disabled="saving" class="w-full bg-blue-600 text-white font-semibold py-2.5 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition flex items-center justify-center gap-2">
-            <span v-if="saving" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-            {{ saving ? 'Guardando...' : (editingId ? 'Guardar cambios' : 'Crear cliente') }}
-          </button>
-        </form>
-      </div>
-    </div>
+    <AppFormModal v-model="showForm" :title="editingId ? 'Editar cliente' : 'Nuevo cliente'">
+      <form @submit.prevent="submit" class="space-y-3">
+        <input v-model="form.nombre" required placeholder="Nombre *" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+        <input v-model="form.alias" placeholder="Alias" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+        <input v-model="form.telefono" placeholder="Teléfono" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+        <input v-model="form.email" type="email" placeholder="Email" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+        <textarea v-model="form.notas" rows="2" placeholder="Notas" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none"></textarea>
+        <AppErrorState v-if="formError" :message="formError" :retry="false" />
+      </form>
+      <template #footer>
+        <button @click="submit" :disabled="saving" class="w-full bg-blue-600 text-white font-semibold py-2.5 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition flex items-center justify-center gap-2">
+          <span v-if="saving" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+          {{ saving ? 'Guardando...' : (editingId ? 'Guardar cambios' : 'Crear cliente') }}
+        </button>
+      </template>
+    </AppFormModal>
 
     <!-- Modal detalle del cliente -->
     <div v-if="showDetail" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center" @click.self="showDetail = false">
@@ -202,61 +196,55 @@
       </div>
     </div>
 
-    <!-- Modal crear cuenta para cliente -->
-    <div v-if="showCuentaForm" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center" @click.self="showCuentaForm = false">
-      <div class="absolute inset-0 bg-black/40"></div>
-      <div class="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-md p-6 relative z-10 max-h-[90vh] overflow-y-auto">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="font-bold text-lg">Agregar cuenta para {{ detailCliente?.nombre }}</h3>
-          <button @click="showCuentaForm = false" class="text-gray-400 hover:text-gray-600">✕</button>
+    <AppFormModal v-model="showCuentaForm" :title="'Agregar cuenta para ' + (detailCliente?.nombre || '')">
+      <form @submit.prevent="submitCuenta" class="space-y-3">
+        <div>
+          <label class="text-sm text-gray-600 mb-1 block">Tipo de cuenta *</label>
+          <select v-model="cuentaForm.tipo" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+            <option value="">Seleccionar tipo</option>
+            <option value="banco">Banco</option>
+            <option value="plataforma">Plataforma</option>
+            <option value="cash">Cash</option>
+            <option value="zelle">Zelle</option>
+            <option value="wallet">Wallet</option>
+            <option value="efectivo">Efectivo</option>
+            <option value="otro">Otro</option>
+          </select>
         </div>
-        <form @submit.prevent="submitCuenta" class="space-y-3">
-          <div>
-            <label class="text-sm text-gray-600 mb-1 block">Tipo de cuenta *</label>
-            <select v-model="cuentaForm.tipo" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-              <option value="">Seleccionar tipo</option>
-              <option value="banco">Banco</option>
-              <option value="plataforma">Plataforma</option>
-              <option value="cash">Cash</option>
-              <option value="zelle">Zelle</option>
-              <option value="wallet">Wallet</option>
-              <option value="efectivo">Efectivo</option>
-              <option value="otro">Otro</option>
-            </select>
-          </div>
 
-          <div v-if="cuentaForm.tipo !== 'efectivo'">
-            <label class="text-sm text-gray-600 mb-1 block">Banco</label>
-            <select v-model="cuentaForm.banco_id" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-              <option value="">Seleccionar banco</option>
-              <option v-for="b in bancos.list" :key="b.id" :value="b.id">{{ b.nombre }} ({{ b.codigo }})</option>
-            </select>
-          </div>
+        <div v-if="cuentaForm.tipo !== 'efectivo'">
+          <label class="text-sm text-gray-600 mb-1 block">Banco</label>
+          <select v-model="cuentaForm.banco_id" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+            <option value="">Seleccionar banco</option>
+            <option v-for="b in bancos.list" :key="b.id" :value="b.id">{{ b.nombre }} ({{ b.codigo }})</option>
+          </select>
+        </div>
 
-          <div>
-            <label class="text-sm text-gray-600 mb-1 block">Moneda</label>
-            <select v-model="cuentaForm.moneda_id" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-              <option value="">Seleccionar moneda</option>
-              <option v-for="m in tasas.monedas" :key="m.id" :value="m.id">{{ m.codigo }} — {{ m.nombre }}</option>
-            </select>
-          </div>
+        <div>
+          <label class="text-sm text-gray-600 mb-1 block">Moneda</label>
+          <select v-model="cuentaForm.moneda_id" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+            <option value="">Seleccionar moneda</option>
+            <option v-for="m in tasas.monedas" :key="m.id" :value="m.id">{{ m.codigo }} — {{ m.nombre }}</option>
+          </select>
+        </div>
 
-          <input v-model="cuentaForm.alias" required placeholder="Alias * (ej: Banesco USD)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+        <input v-model="cuentaForm.alias" required placeholder="Alias * (ej: Banesco USD)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
 
-          <input v-if="cuentaForm.tipo !== 'efectivo'" v-model="cuentaForm.numero_cuenta" placeholder="Número de cuenta (opcional)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-          <textarea v-model="cuentaForm.notas" rows="2" placeholder="Notas (opcional)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none"></textarea>
-          <label class="flex items-center gap-2 text-sm text-gray-600">
-            <input v-model="cuentaForm.activa" type="checkbox" class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-            Activa
-          </label>
-          <AppErrorState v-if="cuentaFormError" :message="cuentaFormError" :retry="false" />
-          <button type="submit" :disabled="savingCuenta" class="w-full bg-blue-600 text-white font-semibold py-2.5 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition flex items-center justify-center gap-2">
-            <span v-if="savingCuenta" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-            {{ savingCuenta ? 'Guardando...' : 'Crear cuenta' }}
-          </button>
-        </form>
-      </div>
-    </div>
+        <input v-if="cuentaForm.tipo !== 'efectivo'" v-model="cuentaForm.numero_cuenta" placeholder="Número de cuenta (opcional)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+        <textarea v-model="cuentaForm.notas" rows="2" placeholder="Notas (opcional)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none"></textarea>
+        <label class="flex items-center gap-2 text-sm text-gray-600">
+          <input v-model="cuentaForm.activa" type="checkbox" class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+          Activa
+        </label>
+        <AppErrorState v-if="cuentaFormError" :message="cuentaFormError" :retry="false" />
+      </form>
+      <template #footer>
+        <button @click="submitCuenta" :disabled="savingCuenta" class="w-full bg-blue-600 text-white font-semibold py-2.5 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition flex items-center justify-center gap-2">
+          <span v-if="savingCuenta" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+          {{ savingCuenta ? 'Guardando...' : 'Crear cuenta' }}
+        </button>
+      </template>
+    </AppFormModal>
 
     <!-- Modal de previsualización de documento -->
     <!-- Modal de previsualización de documento -->
@@ -314,6 +302,7 @@ import AppPageHeader from '../../components/common/AppPageHeader.vue'
 import AppLoadingSpinner from '../../components/common/AppLoadingSpinner.vue'
 import AppErrorState from '../../components/common/AppErrorState.vue'
 import AppEmptyState from '../../components/common/AppEmptyState.vue'
+import AppFormModal from '@/components/common/AppFormModal.vue'
 
 /** Store de clientes */
 const clientes = useClientesStore()
