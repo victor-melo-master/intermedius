@@ -48,6 +48,11 @@
         :monto-usd="form.monto_usd"
         :monto-ves="form.bolivares"
         :resumen="resumenTransacciones"
+        :tipo-operacion="form.tipo"
+        :cliente-id="clienteSeleccionado.id || null"
+        :intermedius-titular-id="intermediusTitularId"
+        :moneda-foreign-id="monedaForeignId"
+        :moneda-quote-id="monedaQuoteId"
         @agregar="agregarTransaccion"
         @eliminar="eliminarTransaccion"
         @distribuir="distribuirMontos"
@@ -87,6 +92,7 @@ import { useTasas } from '@/composables/useTasas'
 import { useAuth } from '@/composables/useAuth'
 import { useOperaciones } from '@/composables/useOperaciones'
 import { useCuentas } from '@/composables/useCuentas'
+import { useTitulares } from '@/composables/useTitulares'
 import { useNotification } from '@/composables/useNotification'
 import api from '@/api/axios'
 
@@ -102,6 +108,8 @@ const auth = useAuth()
 const operaciones = useOperaciones()
 const cuentasComposable = useCuentas()
 const { loading: loadingCuentas, fetchAll: fetchCuentas } = cuentasComposable
+const titulares = useTitulares()
+const intermediusTitularId = ref(null)
 const notifier = useNotification()
 
 const monedas = ref([])
@@ -404,6 +412,11 @@ onMounted(async () => {
 
   await recargarCuentas()
   console.log('✅ [LOG] Cuentas cargadas:', cuentas.value?.length ?? 0)
+
+  await titulares.fetchAll()
+  const intermedius = titulares.getIntermedius()
+  intermediusTitularId.value = intermedius ? intermedius.id : null
+  console.log('✅ [LOG] Titular Intermedius ID:', intermediusTitularId.value)
 
   try {
     const response = await api.get('/monedas')

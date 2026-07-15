@@ -24,6 +24,11 @@
         :cuenta-destino-id="tx.cuenta_destino_id"
         :moneda-id="tx.moneda_id"
         :monto="tx.monto"
+        :tipo-operacion="tipoOperacion"
+        :cliente-id="clienteId"
+        :intermedius-titular-id="intermediusTitularId"
+        :moneda-foreign-id="monedaForeignId"
+        :moneda-quote-id="monedaQuoteId"
         :comision-tipo="tx.comision_tipo"
         :comision-monto="tx.comision_monto"
         @update:cuentaOrigenId="tx.cuenta_origen_id = $event"
@@ -76,6 +81,11 @@ const props = defineProps({
   montoUSD: [String, Number],
   montoVES: [String, Number],
   resumen: Array,
+  tipoOperacion: String,
+  clienteId: [String, Number],
+  intermediusTitularId: [String, Number],
+  monedaForeignId: [String, Number],
+  monedaQuoteId: [String, Number],
 })
 
 const emit = defineEmits(['agregar', 'eliminar', 'distribuir', 'limpiar'])

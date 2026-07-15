@@ -33,7 +33,7 @@
           class="w-full px-3 py-2 border border-orange-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-400 outline-none bg-white"
         >
           <option value="">Seleccionar</option>
-          <option v-for="c in cuentasFiltradas" :key="c.id" :value="c.id">
+          <option v-for="c in cuentasOrigen" :key="c.id" :value="c.id">
             {{ labelCuenta(c) }} — Saldo: {{ saldo(c) }}
           </option>
         </select>
@@ -50,7 +50,7 @@
           class="w-full px-3 py-2 border border-emerald-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-400 outline-none bg-white"
         >
           <option value="">Seleccionar</option>
-          <option v-for="c in cuentasFiltradas" :key="c.id" :value="c.id">
+          <option v-for="c in cuentasDestino" :key="c.id" :value="c.id">
             {{ labelCuenta(c) }} — Saldo: {{ saldo(c) }}
           </option>
         </select>
@@ -121,6 +121,11 @@ const props = defineProps({
   monto: [String, Number],
   comisionTipo: { type: String, default: 'sin_comision' },
   comisionMonto: [String, Number],
+  tipoOperacion: { type: String, default: 'compra' },
+  clienteId: { type: [String, Number], default: null },
+  intermediusTitularId: { type: [String, Number], default: null },
+  monedaForeignId: { type: [String, Number], default: null },
+  monedaQuoteId: { type: [String, Number], default: null },
 })
 
 defineEmits([
@@ -135,9 +140,49 @@ defineEmits([
 
 const comisionAbierta = ref(false)
 
-const cuentasFiltradas = computed(() => {
+const cuentasPorMoneda = computed(() => {
   if (!props.monedaId) return []
   return props.cuentas.filter(c => c.moneda_id == props.monedaId)
+})
+
+const cuentasOrigen = computed(() => {
+  if (!props.monedaId || !props.cuentas.length) return []
+  const esVenta = props.tipoOperacion === 'venta'
+  const esCompra = props.tipoOperacion === 'compra'
+  const esForeign = props.monedaId == props.monedaForeignId
+  const esQuote = props.monedaId == props.monedaQuoteId
+
+  if (!props.clienteId || !props.intermediusTitularId) return cuentasPorMoneda.value
+
+  if (esVenta) {
+    if (esForeign) return cuentasPorMoneda.value.filter(c => c.titular_id == props.intermediusTitularId)
+    if (esQuote) return cuentasPorMoneda.value.filter(c => c.cliente_id == props.clienteId)
+  }
+  if (esCompra) {
+    if (esForeign) return cuentasPorMoneda.value.filter(c => c.cliente_id == props.clienteId)
+    if (esQuote) return cuentasPorMoneda.value.filter(c => c.titular_id == props.intermediusTitularId)
+  }
+  return cuentasPorMoneda.value
+})
+
+const cuentasDestino = computed(() => {
+  if (!props.monedaId || !props.cuentas.length) return []
+  const esVenta = props.tipoOperacion === 'venta'
+  const esCompra = props.tipoOperacion === 'compra'
+  const esForeign = props.monedaId == props.monedaForeignId
+  const esQuote = props.monedaId == props.monedaQuoteId
+
+  if (!props.clienteId || !props.intermediusTitularId) return cuentasPorMoneda.value
+
+  if (esVenta) {
+    if (esForeign) return cuentasPorMoneda.value.filter(c => c.cliente_id == props.clienteId)
+    if (esQuote) return cuentasPorMoneda.value.filter(c => c.titular_id == props.intermediusTitularId)
+  }
+  if (esCompra) {
+    if (esForeign) return cuentasPorMoneda.value.filter(c => c.titular_id == props.intermediusTitularId)
+    if (esQuote) return cuentasPorMoneda.value.filter(c => c.cliente_id == props.clienteId)
+  }
+  return cuentasPorMoneda.value
 })
 
 const cuentaOrigenObj = computed(() => props.cuentas.find(c => c.id == props.cuentaOrigenId))
