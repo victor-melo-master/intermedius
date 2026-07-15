@@ -26,5 +26,14 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-  }
+  },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    coverage: {
+      reporter: ['text', 'json', 'html'],
+      include: ['src/composables/**/*.js', 'src/components/**/*.vue'],
+    },
+    include: ['src/**/__tests__/*.test.js'],
+  },
 })
