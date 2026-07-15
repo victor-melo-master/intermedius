@@ -87,11 +87,11 @@
  * Modal inline para el formulario de creación/edición.
  */
 import { ref, reactive, onMounted } from 'vue'
-import { useBancosStore } from '../stores/bancos.js'
-import AppPageHeader from '../components/AppPageHeader.vue'
-import AppLoadingSpinner from '../components/AppLoadingSpinner.vue'
-import AppErrorState from '../components/AppErrorState.vue'
-import AppEmptyState from '../components/AppEmptyState.vue'
+import { useBancosStore } from '../../stores/bancos.js'
+import AppPageHeader from '../../components/common/AppPageHeader.vue'
+import AppLoadingSpinner from '../../components/common/AppLoadingSpinner.vue'
+import AppErrorState from '../../components/common/AppErrorState.vue'
+import AppEmptyState from '../../components/common/AppEmptyState.vue'
 
 /** Store de bancos */
 const bancos = useBancosStore()

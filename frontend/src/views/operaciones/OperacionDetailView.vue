@@ -120,10 +120,10 @@
  */
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useOperacionesStore } from '../stores/operaciones.js'
-import { useAuthStore } from '../stores/auth.js'
-import AppLoadingSpinner from '../components/AppLoadingSpinner.vue'
-import AppErrorState from '../components/AppErrorState.vue'
+import { useOperacionesStore } from '../../stores/operaciones.js'
+import { useAuthStore } from '../../stores/auth.js'
+import AppLoadingSpinner from '../../components/common/AppLoadingSpinner.vue'
+import AppErrorState from '../../components/common/AppErrorState.vue'
 
 /** Ruta actual (contiene params.id) */
 const route = useRoute()

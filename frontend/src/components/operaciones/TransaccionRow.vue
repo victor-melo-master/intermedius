@@ -18,14 +18,14 @@
           class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white"
         >
           <option value="">Seleccionar</option>
-          <option v-for="m in monedasDisponibles" :key="m.id" :value="m.id">{{ m.codigo }} — {{ m.nombre }}</option>
+          <option v-for="m in monedas" :key="m.id" :value="m.id">{{ m.codigo }} — {{ m.nombre }}</option>
         </select>
       </div>
 
       <div>
         <label class="block text-xs text-gray-500 mb-1">
           <span class="inline-block w-2 h-2 bg-orange-400 rounded-full mr-1"></span>
-          Salida (entrega) <span class="text-orange-600 font-medium">{{ salidaLabel }}</span>
+          Salida (entrega)
         </label>
         <select
           :value="cuentaOrigenId"
@@ -33,7 +33,7 @@
           class="w-full px-3 py-2 border border-orange-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-400 outline-none bg-white"
         >
           <option value="">Seleccionar</option>
-          <option v-for="c in cuentasSalida" :key="c.id" :value="c.id">
+          <option v-for="c in cuentasFiltradas" :key="c.id" :value="c.id">
             {{ labelCuenta(c) }} — Saldo: {{ saldo(c) }}
           </option>
         </select>
@@ -42,7 +42,7 @@
       <div>
         <label class="block text-xs text-gray-500 mb-1">
           <span class="inline-block w-2 h-2 bg-emerald-400 rounded-full mr-1"></span>
-          Entrada (recibe) <span class="text-emerald-600 font-medium">{{ entradaLabel }}</span>
+          Entrada (recibe)
         </label>
         <select
           :value="cuentaDestinoId"
@@ -50,7 +50,7 @@
           class="w-full px-3 py-2 border border-emerald-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-400 outline-none bg-white"
         >
           <option value="">Seleccionar</option>
-          <option v-for="c in cuentasEntrada" :key="c.id" :value="c.id">
+          <option v-for="c in cuentasFiltradas" :key="c.id" :value="c.id">
             {{ labelCuenta(c) }} — Saldo: {{ saldo(c) }}
           </option>
         </select>
@@ -67,45 +67,49 @@
       </div>
     </div>
 
-    <!-- Comisión -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 border-t border-gray-100">
-      <div class="col-span-2">
-        <label class="block text-xs text-gray-500 mb-1">
-          <span class="inline-block w-2 h-2 bg-amber-400 rounded-full mr-1"></span>
-          Tipo de comisión
-        </label>
-        <select
-          :value="comisionTipo"
-          @change="onTipoChange"
-          class="w-full px-3 py-2 border border-amber-200 rounded-lg text-sm focus:ring-2 focus:ring-amber-400 outline-none bg-white"
-        >
-          <option value="sin_comision">Sin comisión</option>
-          <option value="manual">Manual (monto libre)</option>
-          <option value="pago_movil">Pago móvil (0.3%)</option>
-          <option value="otros_bancos">Transferencia otros bancos (0.3%)</option>
-          <option value="mismo_banco">Mismo banco (0%)</option>
-        </select>
-      </div>
-      <div class="col-span-2">
-        <label class="block text-xs text-gray-500 mb-1">Monto de comisión</label>
-        <input
-          :value="comisionMonto"
-          @input="$emit('update:comisionMonto', $event.target.value)"
-          type="number" step="0.01" min="0" placeholder="0.00"
-          :disabled="comisionTipo === 'sin_comision' || comisionTipo === 'mismo_banco'"
-          class="w-full px-3 py-2 border border-amber-200 rounded-lg text-sm focus:ring-2 focus:ring-amber-400 outline-none disabled:bg-gray-100 disabled:text-gray-400"
-        />
-        <p v-if="comisionTipo === 'sin_comision' || comisionTipo === 'mismo_banco'" class="text-xs text-gray-400 mt-0.5">Sin costo</p>
-        <p v-else-if="sugerido" class="text-xs text-gray-400 mt-0.5">Sugerido: {{ sugerido }}</p>
-      </div>
-    </div>
+    <p v-if="advertenciaSaldo" class="text-xs text-red-500">
+      ⚠️ El monto supera el saldo disponible en la cuenta de salida.
+    </p>
 
-    <p v-if="advertenciaSaldo" class="text-xs text-red-500">⚠️ El monto supera el saldo disponible en la cuenta de salida.</p>
+    <div class="border-t border-gray-100 pt-2">
+      <button type="button" @click="comisionAbierta = !comisionAbierta"
+        class="text-xs text-gray-400 hover:text-gray-600 transition flex items-center gap-1">
+        <span class="text-[10px]" :class="comisionAbierta ? 'rotate-90' : ''">▶</span>
+        {{ comisionTipo !== 'sin_comision' && parseFloat(comisionMonto) > 0 ? 'Comisión activa' : 'Comisión' }}
+      </button>
+      <template v-if="comisionAbierta">
+        <div class="mt-2 flex items-center gap-3 flex-wrap">
+          <select
+            :value="comisionTipo"
+            @change="$emit('update:comisionTipo', $event.target.value)"
+            class="text-xs px-2 py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+          >
+            <option value="sin_comision">Sin comisión</option>
+            <option value="manual">Manual</option>
+            <option value="pago_movil">Pago móvil (0.3%)</option>
+            <option value="otros_bancos">Otros bancos (0.3%)</option>
+            <option value="mismo_banco">Mismo banco (0%)</option>
+          </select>
+          <input
+            v-if="comisionTipo !== 'sin_comision' && comisionTipo !== 'mismo_banco'"
+            :value="comisionMonto"
+            @input="$emit('update:comisionMonto', $event.target.value)"
+            type="number" step="0.01" min="0" placeholder="0.00"
+            class="w-24 text-xs px-2 py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+          />
+          <span v-if="comisionTipo === 'mismo_banco'" class="text-xs text-gray-400">Sin costo</span>
+          <span v-if="comisionTipo === 'sin_comision'" class="text-xs text-gray-400">Sin comisión</span>
+          <span v-if="['pago_movil', 'otros_bancos'].includes(comisionTipo) && monto" class="text-xs text-gray-400">
+            (sugerido: {{ sugeridoComision }})
+          </span>
+        </div>
+      </template>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 const props = defineProps({
   index: Number,
@@ -115,74 +119,29 @@ const props = defineProps({
   cuentaDestinoId: [String, Number, null],
   monedaId: [String, Number, null],
   monto: [String, Number],
-  comisionTipo: { type: String, default: 'manual' },
-  comisionMonto: { type: [String, Number], default: '' },
-  clienteId: { type: [Number, String, null], default: null },
-  monedaForeignId: { type: [Number, String, null], default: null },
-  monedaQuoteId: { type: [Number, String, null], default: null },
+  comisionTipo: { type: String, default: 'sin_comision' },
+  comisionMonto: [String, Number],
 })
 
-const emit = defineEmits(['remove', 'update:cuentaOrigenId', 'update:cuentaDestinoId', 'update:monedaId', 'update:monto', 'update:comisionTipo', 'update:comisionMonto'])
+defineEmits([
+  'remove',
+  'update:cuentaOrigenId',
+  'update:cuentaDestinoId',
+  'update:monedaId',
+  'update:monto',
+  'update:comisionTipo',
+  'update:comisionMonto',
+])
 
-function onTipoChange(e) {
-  const tipo = e.target.value
-  emit('update:comisionTipo', tipo)
-  if (tipo === 'sin_comision' || tipo === 'mismo_banco') {
-    emit('update:comisionMonto', '0')
-  } else if (tipo === 'pago_movil' || tipo === 'otros_bancos') {
-    const monto = parseFloat(props.monto)
-    if (monto > 0) emit('update:comisionMonto', (monto * 0.003).toFixed(2))
-  }
-}
+const comisionAbierta = ref(false)
 
-const sugerido = computed(() => {
-  const monto = parseFloat(props.monto)
-  if (!monto || !['pago_movil', 'otros_bancos'].includes(props.comisionTipo)) return null
-  return (monto * 0.003).toFixed(2)
-})
-
-const monedasDisponibles = computed(() => {
-  return props.monedas.filter(m => m.id == props.monedaForeignId || m.id == props.monedaQuoteId)
-})
-
-const esForeign = computed(() => props.monedaId && props.monedaId == props.monedaForeignId)
-const esQuote = computed(() => props.monedaId && props.monedaId == props.monedaQuoteId)
-
-function titularAccounts(monedaId) {
-  return props.cuentas.filter(c => c.titular_id != null && c.moneda_id == monedaId)
-}
-function clientAccounts(monedaId) {
-  if (!props.clienteId) return []
-  return props.cuentas.filter(c => c.cliente_id == props.clienteId && c.moneda_id == monedaId)
-}
-
-const cuentasSalida = computed(() => {
+const cuentasFiltradas = computed(() => {
   if (!props.monedaId) return []
-  if (esForeign.value) return titularAccounts(props.monedaId)
-  if (esQuote.value) return clientAccounts(props.monedaId)
-  return []
-})
-
-const cuentasEntrada = computed(() => {
-  if (!props.monedaId) return []
-  if (esForeign.value) return clientAccounts(props.monedaId)
-  if (esQuote.value) return titularAccounts(props.monedaId)
-  return []
-})
-
-const salidaLabel = computed(() => {
-  if (esForeign.value) return '(Intermedius)'
-  if (esQuote.value) return '(Cliente)'
-  return ''
-})
-
-const entradaLabel = computed(() => {
-  if (esForeign.value) return '(Cliente)'
-  if (esQuote.value) return '(Intermedius)'
-  return ''
+  return props.cuentas.filter(c => c.moneda_id == props.monedaId)
 })
 
 const cuentaOrigenObj = computed(() => props.cuentas.find(c => c.id == props.cuentaOrigenId))
+
 const advertenciaSaldo = computed(() => {
   if (!cuentaOrigenObj.value || !props.monto) return false
   const saldo = parseFloat(cuentaOrigenObj.value.saldo_cache)
@@ -191,10 +150,14 @@ const advertenciaSaldo = computed(() => {
   return monto > saldo
 })
 
+const sugeridoComision = computed(() => {
+  const m = parseFloat(props.monto) || 0
+  return (m * 0.003).toFixed(2)
+})
+
 function labelCuenta(c) {
   const tipo = c.banco?.nombre || c.tipo || 'cuenta'
-  const quien = c.titular_id ? 'Intermedius' : (c.cliente_id ? 'Cliente' : '')
-  return `${c.alias} · ${tipo} (${c.moneda?.codigo}) ${quien ? `— ${quien}` : ''}`
+  return `${c.alias} · ${tipo} (${c.moneda?.codigo})`
 }
 
 function saldo(c) {

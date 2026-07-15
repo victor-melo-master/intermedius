@@ -72,7 +72,7 @@
  * Modal inline para formulario de creación/edición.
  */
 import { ref, reactive, onMounted } from 'vue'
-import { useTitularesStore } from '../stores/titulares.js'
+import { useTitularesStore } from '../../stores/titulares.js'
 
 /** Store de titulares */
 const titulares = useTitularesStore()

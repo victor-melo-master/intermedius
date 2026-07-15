@@ -95,13 +95,13 @@
  * con tasas de compra y venta diferenciadas, 4 movimientos y ganancia estimada.
  */
 import { reactive, ref, computed, onMounted } from 'vue'
-import { useAuthStore } from '../stores/auth.js'
-import { useBancosStore } from '../stores/bancos.js'
-import { useOperacionesStore } from '../stores/operaciones.js'
-import ClienteSelector from '../components/ClienteSelector.vue'
-import CuentaSelector from '../components/CuentaSelector.vue'
-import AppErrorState from '../components/AppErrorState.vue'
-import api from '../api/axios.js'
+import { useAuthStore } from '../../stores/auth.js'
+import { useBancosStore } from '../../stores/bancos.js'
+import { useOperacionesStore } from '../../stores/operaciones.js'
+import ClienteSelector from '../../components/clientes/ClienteSelector.vue'
+import CuentaSelector from '../../components/cuentas/CuentaSelector.vue'
+import AppErrorState from '../../components/common/AppErrorState.vue'
+import api from '../../api/axios.js'
 
 /** Store de autenticación */
 const auth = useAuthStore()

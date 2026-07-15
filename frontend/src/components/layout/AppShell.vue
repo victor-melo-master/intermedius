@@ -71,10 +71,10 @@
  */
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '../stores/auth.js'
-import { useInactivityTimer } from '../composables/useInactivityTimer.js'
-import PoolAlarm from './pool/PoolAlarm.vue'
-import echo from '../plugins/echo'
+import { useAuthStore } from '../../stores/auth.js'
+import { useInactivityTimer } from '../../composables/useInactivityTimer.js'
+import PoolAlarm from '../pool/PoolAlarm.vue'
+import echo from '../../plugins/echo'
 
 const router = useRouter()
 const auth = useAuthStore()

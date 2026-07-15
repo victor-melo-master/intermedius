@@ -198,16 +198,16 @@
  * crear titulares y bancos inline, y cargar saldo a cuentas.
  */
 import { ref, reactive, onMounted } from 'vue'
-import api from '../api/axios.js'
-import { useAuthStore } from '../stores/auth.js'
-import { useTitularesStore } from '../stores/titulares.js'
-import { useBancosStore } from '../stores/bancos.js'
-import { useTasasStore } from '../stores/tasas.js'
-import AppPageHeader from '../components/AppPageHeader.vue'
-import AppLoadingSpinner from '../components/AppLoadingSpinner.vue'
-import AppErrorState from '../components/AppErrorState.vue'
-import AppEmptyState from '../components/AppEmptyState.vue'
-import ClienteSelector from '../components/ClienteSelector.vue'
+import api from '../../api/axios.js'
+import { useAuthStore } from '../../stores/auth.js'
+import { useTitularesStore } from '../../stores/titulares.js'
+import { useBancosStore } from '../../stores/bancos.js'
+import { useTasasStore } from '../../stores/tasas.js'
+import AppPageHeader from '../../components/common/AppPageHeader.vue'
+import AppLoadingSpinner from '../../components/common/AppLoadingSpinner.vue'
+import AppErrorState from '../../components/common/AppErrorState.vue'
+import AppEmptyState from '../../components/common/AppEmptyState.vue'
+import ClienteSelector from '../../components/clientes/ClienteSelector.vue'
 
 /** Store de autenticación */
 const auth = useAuthStore()

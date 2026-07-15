@@ -102,11 +102,11 @@
  * asociadas a monedas y cuentas, con fechas de vigencia.
  */
 import { ref, reactive, onMounted } from 'vue'
-import api from '../api/axios.js'
-import AppPageHeader from '../components/AppPageHeader.vue'
-import AppLoadingSpinner from '../components/AppLoadingSpinner.vue'
-import AppErrorState from '../components/AppErrorState.vue'
-import AppEmptyState from '../components/AppEmptyState.vue'
+import api from '../../api/axios.js'
+import AppPageHeader from '../../components/common/AppPageHeader.vue'
+import AppLoadingSpinner from '../../components/common/AppLoadingSpinner.vue'
+import AppErrorState from '../../components/common/AppErrorState.vue'
+import AppEmptyState from '../../components/common/AppEmptyState.vue'
 
 /** Lista de comisiones cargadas */
 const comisiones = ref([])

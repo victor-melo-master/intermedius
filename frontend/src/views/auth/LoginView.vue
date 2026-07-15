@@ -45,7 +45,7 @@
  */
 import { reactive } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '../stores/auth.js'
+import { useAuthStore } from '../../stores/auth.js'
 
 /** Router para redirigir tras login exitoso */
 const router = useRouter()

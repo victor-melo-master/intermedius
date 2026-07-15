@@ -135,8 +135,8 @@
  * fechas, moneda y cliente (con autocomplete).
  */
 import { ref, reactive, computed, onMounted } from 'vue'
-import { useOperacionesStore } from '../stores/operaciones.js'
-import api from '../api/axios.js'
+import { useOperacionesStore } from '../../stores/operaciones.js'
+import api from '../../api/axios.js'
 
 /** Store de operaciones */
 const ops = useOperacionesStore()

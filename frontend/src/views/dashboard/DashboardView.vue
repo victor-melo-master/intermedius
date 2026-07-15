@@ -178,8 +178,8 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
-import { useAuthStore } from '../stores/auth.js'
-import api from '../api/axios.js'
+import { useAuthStore } from '../../stores/auth.js'
+import api from '../../api/axios.js'
 
 const auth = useAuthStore()
 

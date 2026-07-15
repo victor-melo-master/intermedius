@@ -129,8 +129,8 @@
  * (y mínimos opcionales). Solo administradores pueden publicar/editar tasas.
  */
 import { ref, reactive, computed, onMounted } from 'vue'
-import { useTasasStore } from '../stores/tasas.js'
-import { useAuthStore } from '../stores/auth.js'
+import { useTasasStore } from '../../stores/tasas.js'
+import { useAuthStore } from '../../stores/auth.js'
 
 /** Store de tasas */
 const tasas = useTasasStore()

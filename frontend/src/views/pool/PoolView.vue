@@ -144,7 +144,7 @@
  * El pool se refresca automáticamente cada 30 segundos.
  */
 import { ref, watch, onMounted, onUnmounted } from 'vue'
-import { usePoolStore } from '../stores/pool.js'
+import { usePoolStore } from '../../stores/pool.js'
 
 /** Store del pool de pagos */
 const store = usePoolStore()

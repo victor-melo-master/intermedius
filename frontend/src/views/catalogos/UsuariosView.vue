@@ -129,8 +129,8 @@
  * badges de roles y selector de titular.
  */
 import { ref, reactive, onMounted } from 'vue'
-import api from '../api/axios.js'
-import { useUsuariosStore } from '../stores/usuarios.js'
+import api from '../../api/axios.js'
+import { useUsuariosStore } from '../../stores/usuarios.js'
 
 /** Store de usuarios */
 const usuarios = useUsuariosStore()

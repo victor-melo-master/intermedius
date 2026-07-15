@@ -57,7 +57,7 @@
  * Los datos se muestran en tarjetas y se pueden exportar a Excel.
  */
 import { ref } from 'vue'
-import api from '../api/axios.js'
+import api from '../../api/axios.js'
 
 /** Fecha de inicio del reporte (primer día del mes actual) */
 const desde = ref(new Date().toISOString().slice(0, 8) + '01')

@@ -10,48 +10,48 @@ import { useAuthStore } from '../stores/auth.js'
 /** Definición de todas las rutas de la aplicación. */
 const routes = [
   /** Ruta pública: pantalla de inicio de sesión. */
-  { path: '/login', name: 'Login', component: () => import('../views/LoginView.vue') },
-  { path: '/email/verify', name: 'EmailVerify', component: () => import('../views/EmailVerifyView.vue') },
+  { path: '/login', name: 'Login', component: () => import('../views/auth/LoginView.vue') },
+  { path: '/email/verify', name: 'EmailVerify', component: () => import('../views/auth/EmailVerifyView.vue') },
   /** Ruta padre: layout con AppShell que envuelve todas las secciones protegidas. */
   {
     path: '/',
-    component: () => import('../components/AppShell.vue'),
+    component: () => import('../components/layout/AppShell.vue'),
     meta: { requiresAuth: true },
     children: [
       /** Redirección por defecto al dashboard. */
       { path: '', redirect: '/dashboard' },
       /** Panel principal con resumen de datos. */
-      { path: 'dashboard', name: 'Dashboard', component: () => import('../views/DashboardView.vue') },
+      { path: 'dashboard', name: 'Dashboard', component: () => import('../views/dashboard/DashboardView.vue') },
       /** Listado de operaciones registradas. */
-      { path: 'operaciones', name: 'Operaciones', component: () => import('../views/OperacionesView.vue') },
+      { path: 'operaciones', name: 'Operaciones', component: () => import('../views/operaciones/OperacionesView.vue') },
       /** Selección de moneda para nueva operación. */
-      { path: 'operaciones/nueva', name: 'OperacionMoneda', component: () => import('../views/OperacionMonedaView.vue') },
+      { path: 'operaciones/nueva', name: 'OperacionMoneda', component: () => import('../views/operaciones/OperacionMonedaView.vue') },
       /** Formulario de nueva operación para una moneda específica. */
-      { path: 'operaciones/nueva/:moneda', name: 'OperacionNueva', component: () => import('../views/OperacionFormView.vue') },
+      { path: 'operaciones/nueva/:moneda', name: 'OperacionNueva', component: () => import('../views/operaciones/OperacionFormView.vue') },
       /** Formulario de operación intermediada. */
-      { path: 'operaciones/intermediada/nueva', name: 'OperacionIntermediadaNueva', component: () => import('../views/OperacionIntermediadaForm.vue') },
+      { path: 'operaciones/intermediada/nueva', name: 'OperacionIntermediadaNueva', component: () => import('../views/operaciones/OperacionIntermediadaForm.vue') },
       /** Detalle de una operación existente. */
-      { path: 'operaciones/:id', name: 'OperacionDetail', component: () => import('../views/OperacionDetailView.vue') },
+      { path: 'operaciones/:id', name: 'OperacionDetail', component: () => import('../views/operaciones/OperacionDetailView.vue') },
       /** Edición de una operación existente. */
-      { path: 'operaciones/:id/editar', name: 'OperacionEdit', component: () => import('../views/OperacionFormView.vue') },
+      { path: 'operaciones/:id/editar', name: 'OperacionEdit', component: () => import('../views/operaciones/OperacionFormView.vue') },
       /** Vista del pool de operaciones. */
-      { path: 'pool', name: 'Pool', component: () => import('../views/PoolView.vue') },
+      { path: 'pool', name: 'Pool', component: () => import('../views/pool/PoolView.vue') },
       /** Gestión de tasas de cambio. */
-      { path: 'tasas', name: 'Tasas', component: () => import('../views/TasasView.vue') },
+      { path: 'tasas', name: 'Tasas', component: () => import('../views/configuracion/TasasView.vue') },
       /** Gestión de titulares de cuentas. */
-      { path: 'titulares', name: 'Titulares', component: () => import('../views/TitularesView.vue') },
+      { path: 'titulares', name: 'Titulares', component: () => import('../views/catalogos/TitularesView.vue') },
       /** Gestión de bancos. */
-      { path: 'bancos', name: 'Bancos', component: () => import('../views/BancosView.vue') },
+      { path: 'bancos', name: 'Bancos', component: () => import('../views/catalogos/BancosView.vue') },
       /** Gestión de clientes. */
-      { path: 'clientes', name: 'Clientes', component: () => import('../views/ClientesView.vue') },
+      { path: 'clientes', name: 'Clientes', component: () => import('../views/catalogos/ClientesView.vue') },
       /** Gestión de cuentas bancarias. */
-      { path: 'cuentas', name: 'Cuentas', component: () => import('../views/CuentasView.vue') },
+      { path: 'cuentas', name: 'Cuentas', component: () => import('../views/catalogos/CuentasView.vue') },
       /** Visualización de reportes y estadísticas. */
-      { path: 'reportes', name: 'Reportes', component: () => import('../views/ReportesView.vue') },
+      { path: 'reportes', name: 'Reportes', component: () => import('../views/reportes/ReportesView.vue') },
       /** Administración de usuarios del sistema. */
-      { path: 'usuarios', name: 'Usuarios', component: () => import('../views/UsuariosView.vue') },
+      { path: 'usuarios', name: 'Usuarios', component: () => import('../views/catalogos/UsuariosView.vue') },
       /** Gestión de comisiones. */
-      { path: 'comisiones', name: 'Comisiones', component: () => import('../views/ComisionesView.vue') },
+      { path: 'comisiones', name: 'Comisiones', component: () => import('../views/configuracion/ComisionesView.vue') },
       { path: '/:pathMatch(.*)*', name: 'NotFound', component: () => import('../views/NotFoundView.vue') }
     ]
   }

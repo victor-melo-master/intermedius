@@ -235,11 +235,11 @@
  * @emit {string|number} cuenta-agregada - Evento emitido al agregar una cuenta, con el ID del cliente
  */
 import { ref, reactive, computed, onMounted, nextTick } from 'vue'
-import { useClientesStore } from '../stores/clientes.js'
-import { useBancosStore } from '../stores/bancos.js'
-import { useTasasStore } from '../stores/tasas.js'
-import api from '../api/axios.js'
-import AppErrorState from './AppErrorState.vue'
+import { useClientesStore } from '../../stores/clientes.js'
+import { useBancosStore } from '../../stores/bancos.js'
+import { useTasasStore } from '../../stores/tasas.js'
+import api from '../../api/axios.js'
+import AppErrorState from '../common/AppErrorState.vue'
 
 const emit = defineEmits(['update:modelValue', 'cuenta-agregada'])
 

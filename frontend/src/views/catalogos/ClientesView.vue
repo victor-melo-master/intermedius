@@ -303,15 +303,15 @@
  * con filtros por fecha/tipo, paginación, exportación a PDF, y gestión de documentos (subir, listar, eliminar, previsualizar).
  */
 import { ref, reactive, computed, watch, onMounted } from 'vue'
-import { useClientesStore } from '../stores/clientes.js'
-import { useAuthStore } from '../stores/auth.js'
-import { useBancosStore } from '../stores/bancos.js'
-import { useTasasStore } from '../stores/tasas.js'
-import api from '../api/axios.js'
-import AppPageHeader from '../components/AppPageHeader.vue'
-import AppLoadingSpinner from '../components/AppLoadingSpinner.vue'
-import AppErrorState from '../components/AppErrorState.vue'
-import AppEmptyState from '../components/AppEmptyState.vue'
+import { useClientesStore } from '../../stores/clientes.js'
+import { useAuthStore } from '../../stores/auth.js'
+import { useBancosStore } from '../../stores/bancos.js'
+import { useTasasStore } from '../../stores/tasas.js'
+import api from '../../api/axios.js'
+import AppPageHeader from '../../components/common/AppPageHeader.vue'
+import AppLoadingSpinner from '../../components/common/AppLoadingSpinner.vue'
+import AppErrorState from '../../components/common/AppErrorState.vue'
+import AppEmptyState from '../../components/common/AppEmptyState.vue'
 
 /** Store de clientes */
 const clientes = useClientesStore()
