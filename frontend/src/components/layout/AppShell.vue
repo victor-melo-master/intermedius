@@ -96,10 +96,7 @@ const baseNav = [
 ]
 
 /** @type {import('vue').ComputedRef<boolean>} - Indica si el usuario puede acceder al pool de pagos */
-const canPool = computed(() => {
-  const roles = auth.user?.roles || []
-  return roles.includes('pagador') || roles.includes('admin') || roles.includes('super_admin')
-})
+const canPool = computed(() => auth.isAdmin || auth.isPagador)
 
 /** @type {import('vue').ComputedRef<Array<{path: string, label: string, icon: string}>>} - Items de navegación dinámicos según rol */
 const nav = computed(() => {

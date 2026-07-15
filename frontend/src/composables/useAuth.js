@@ -9,6 +9,22 @@ export function useAuth() {
 
   const isAuthenticated = computed(() => !!token.value && !!user.value)
 
+  const hasRole = (role) => {
+    if (!user.value?.roles) return false
+    return user.value.roles.includes(role)
+  }
+
+  const hasAnyRole = (roles) => {
+    if (!user.value?.roles) return false
+    return roles.some(role => user.value.roles.includes(role))
+  }
+
+  const isAdmin = computed(() => hasAnyRole(['admin', 'super_admin']))
+  const isPagador = computed(() => hasRole('pagador'))
+  const isOperador = computed(() => hasRole('operador'))
+  const isContador = computed(() => hasRole('contador'))
+  const isLectura = computed(() => hasRole('lectura'))
+
   const login = async (credentials) => {
     const response = await execute((signal) => api.post('/auth/login', credentials, { signal }))
     if (response?.data?.token) {
@@ -46,6 +62,13 @@ export function useAuth() {
     user,
     token,
     isAuthenticated,
+    hasRole,
+    hasAnyRole,
+    isAdmin,
+    isPagador,
+    isOperador,
+    isContador,
+    isLectura,
     login,
     logout,
     fetchMe,
