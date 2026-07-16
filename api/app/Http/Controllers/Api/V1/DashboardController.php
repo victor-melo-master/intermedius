@@ -98,7 +98,7 @@ class DashboardController extends Controller
     {
         $resultado = [];
 
-        foreach (['bcv', 'binance_p2p'] as $fuente) {
+        foreach (['bcv', 'bcv_eur', 'binance_p2p'] as $fuente) {
             $registro = TasaMercado::where('fuente', $fuente)->latest('capturado_en')->first();
 
             $resultado[$fuente] = $registro ? [

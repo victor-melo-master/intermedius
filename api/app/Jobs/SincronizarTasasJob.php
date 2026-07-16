@@ -33,13 +33,14 @@ class SincronizarTasasJob implements ShouldQueue
     {
         $resultados = [
             $service->obtenerBcv(),
+            $service->obtenerEuroBcv(),
             $service->obtenerParalelo(),
             $service->obtenerBinanceP2P('BUY'),
             $service->obtenerBinanceP2P('SELL'),
         ];
 
         // Pre-cargar los IDs de monedas para no hacer N queries
-        $monedaIds = Moneda::whereIn('codigo', ['USD', 'VES', 'USDT'])
+        $monedaIds = Moneda::whereIn('codigo', ['USD', 'VES', 'USDT', 'EUR'])
             ->pluck('id', 'codigo');
 
         $ahora = now();

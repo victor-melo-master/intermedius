@@ -69,6 +69,33 @@ class TasasMercadoService
     }
 
     /**
+     * Obtiene la tasa del Euro oficial desde dolarapi.com.
+     *
+     * @return array{fuente:string, par:string, valor:float, payload:array}|null
+     */
+    public function obtenerEuroBcv(): ?array
+    {
+        try {
+            $response = Http::timeout(10)
+                ->retry(2, 500)
+                ->get(self::DOLAR_API_BASE . '/../euros/oficial');
+
+            $response->throw();
+            $data = $response->json();
+
+            return [
+                'fuente'  => 'bcv_eur',
+                'par'     => 'EUR/VES',
+                'valor'   => (float) ($data['promedio'] ?? $data['promedioVenta'] ?? 0),
+                'payload' => $data,
+            ];
+        } catch (\Throwable $e) {
+            Log::warning('TasasMercadoService::obtenerEuroBcv falló', ['error' => $e->getMessage()]);
+            return null;
+        }
+    }
+
+    /**
      * Obtiene precios de Binance P2P para USDT/VES.
      *
      * @param  string $tradeType  'BUY' (compradores de USDT) o 'SELL' (vendedores de USDT)

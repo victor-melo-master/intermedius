@@ -44,7 +44,7 @@
                 <td class="py-2 text-right font-medium" :class="m.monto >= 0 ? 'text-green-600' : 'text-red-600'">
                   {{ formatMoney(m.monto) }} {{ m.moneda?.codigo }}
                 </td>
-                <td class="py-2 text-right text-gray-500">{{ m.tasa_a_usd }}</td>
+                <td class="py-2 text-right text-gray-500">{{ formatRate(m.tasa_a_usd) }}</td>
               </tr>
             </tbody>
           </table>
@@ -55,8 +55,8 @@
       <div class="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
         <h3 class="font-semibold text-gray-700">Métricas</h3>
         <div class="grid grid-cols-2 gap-4">
-          <div><p class="text-xs text-gray-500">Ganancia neta USD</p><p class="text-lg font-bold" :class="(ops.detail.ganancia_neta_usd || 0) >= 0 ? 'text-green-600' : 'text-red-600'">${{ formatMoney(ops.detail.ganancia_neta_usd) }}</p></div>
-          <div><p class="text-xs text-gray-500">Tasa aplicada</p><p class="text-lg font-bold text-blue-600">{{ ops.detail.tasa_aplicada }}</p></div>
+          <div><p class="text-xs text-gray-500">Ganancia neta USD</p><p class="text-lg font-bold" :class="(ops.detail.ganancia_neta_usd || 0) >= 0 ? 'text-green-600' : 'text-red-600'">{{ formatMoney(ops.detail.ganancia_neta_usd) }}</p></div>
+          <div><p class="text-xs text-gray-500">Tasa aplicada</p><p class="text-lg font-bold text-blue-600">{{ formatRate(ops.detail.tasa_aplicada) }}</p></div>
         </div>
       </div>
 
@@ -128,7 +128,7 @@ const route = useRoute()
 const router = useRouter()
 /** Store de operaciones */
 const ops = useOperacionesStore()
-const { formatMoney } = useFormatting()
+const { formatMoney, formatRate } = useFormatting()
 /** Store de autenticación (permisos) */
 const auth = useAuthStore()
 /** Indica si se está verificando la operación */
