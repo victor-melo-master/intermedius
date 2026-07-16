@@ -1,22 +1,26 @@
 # router/ — AI Context
 
-## Configuración
+> Vue Router 4 con `createWebHistory()`, 19 rutas y guard `beforeEach` para autenticación.
+
+## index.js
+
+### Configuración
 
 - **Modo**: `createWebHistory()`
-- **Guard**: `router.beforeEach` verifica token en localStorage
+- **Guard**: `router.beforeEach` verifica token en `localStorage`
   - Sin token + ruta no pública → redirect `/login`
   - Con token + ruta `/login` → redirect `/operaciones`
   - Ruta no encontrada (`/:pathMatch(.*)*`) → redirect `/operaciones`
 
-## Rutas detalladas
+### Rutas
 
-### Públicas
+#### Públicas (sin auth)
 | Path | Name | Componente |
 |---|---|---|
 | `/login` | login | `LoginView` |
 | `/email/verify` | EmailVerify | `EmailVerifyView` |
 
-### Protegidas (require token)
+#### Protegidas (requiere token)
 | Path | Name | Componente |
 |---|---|---|
 | `/operaciones` | operaciones | `OperacionesView` |
@@ -34,11 +38,26 @@
 | `/reportes` | reportes | `ReportesView` |
 | `/comisiones` | comisiones | `ComisionesView` |
 | `/usuarios` | usuarios | `UsuariosView` |
-| `/:pathMatch(.*)*` | — | redirect a `/operaciones` |
 
-### Sidebar navigation
+#### Catch-all
+| Path | Componente |
+|---|---|
+| `/:pathMatch(.*)*` | redirect → `/operaciones` |
 
-Definido en `AppShell.vue` con `baseNav` array:
+### Sidebar navigation (AppShell.vue)
+
+Definido en `baseNav` array con items:
 - Operaciones, Cuentas, Clientes, Titulares, Bancos, Tasas, Dashboard, Pool, Reportes, Comisiones, Usuarios
+- Cada item tiene: `label`, `path`, `icon` (emoji), `roles` (array de roles permitidos)
+- Filtrado por roles: `auth.checkRole(item.roles)` oculta items según el rol del usuario
 
-Íconos: emojis (📊, 🏦, 👥, etc.)
+### Roles (desde backend)
+
+| Rol | Acceso |
+|---|---|
+| `super_admin` | Total |
+| `admin` | CRUD completo, verificar, pool, config |
+| `operador` | Crear operaciones, ver catálogos |
+| `contador` | Reportes, gastos |
+| `lectura` | Solo ver |
+| `pagador` | Pool (tomar, soltar, pagar) |

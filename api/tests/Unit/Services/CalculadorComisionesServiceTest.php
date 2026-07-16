@@ -87,7 +87,7 @@ class CalculadorComisionesServiceTest extends TestCase
         $op = $this->registrarVenta();
 
         $op->refresh();
-        $this->assertEquals('0.0000', $op->total_comisiones_usd);
+        $this->assertEquals('0.00', $op->total_comisiones_usd);
         $this->assertEqualsWithDelta((float) $op->ganancia_bruta_usd, (float) $op->ganancia_neta_usd, 0.0001);
     }
 
@@ -209,7 +209,7 @@ class CalculadorComisionesServiceTest extends TestCase
         $comision->refresh();
         $op->refresh();
 
-        $this->assertEquals('8.0000', $comision->monto);
+        $this->assertEquals('8.00', $comision->monto);
         $this->assertEquals($admin->id, $comision->editada_por_id);
         $this->assertNotNull($comision->editada_at);
         $this->assertEqualsWithDelta(8.0, (float) $op->total_comisiones_usd, 0.01);

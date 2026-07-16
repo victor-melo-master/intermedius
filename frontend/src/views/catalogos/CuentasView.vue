@@ -203,6 +203,7 @@ import AppFormModal from '@/components/common/AppFormModal.vue'
 /** Store de autenticación */
 const auth = useAuthStore()
 const { parseError } = useApiError()
+const { roundTo } = useFormatting()
 /** Store de titulares */
 const titulares = useTitularesStore()
 /** Store de bancos */
@@ -410,7 +411,7 @@ async function submitSaldo() {
   savingSaldo.value = true
   saldoError.value = ''
   try {
-    await api.post(`/cuentas/${saldoTarget.value.id}/saldo`, { saldo: parseFloat(saldoInput.value) })
+    await api.post(`/cuentas/${saldoTarget.value.id}/saldo`, { saldo: roundTo(parseFloat(saldoInput.value)) })
     showSaldoModal.value = false
     await fetchCuentas()
   } catch (err) {

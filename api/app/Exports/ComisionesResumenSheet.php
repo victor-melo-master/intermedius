@@ -46,7 +46,7 @@ class ComisionesResumenSheet implements FromCollection, WithHeadings, WithTitle
         return $this->datos->map(fn ($row) => [
             $row['titular'],
             $row['total_operaciones'],
-            number_format($row['total_comisiones_usd'], 4),
+            number_format($row['total_comisiones_usd'], 2),
             $periodo,
         ]);
     }

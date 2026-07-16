@@ -1,4 +1,10 @@
 export function useFormatting() {
+  const roundTo = (value, decimals = 2) => {
+    const num = parseFloat(value)
+    if (isNaN(num)) return 0
+    return Math.round((num + Number.EPSILON) * Math.pow(10, decimals)) / Math.pow(10, decimals)
+  }
+
   const formatMoney = (value, currency = 'USD', decimals = 2) => {
     const num = parseFloat(value)
     if (isNaN(num)) return '0.00'
@@ -69,6 +75,7 @@ export function useFormatting() {
   }
 
   return {
+    roundTo,
     formatMoney,
     formatVes,
     formatRate,

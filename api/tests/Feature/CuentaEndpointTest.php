@@ -216,7 +216,7 @@ class CuentaEndpointTest extends TestCase
             ]);
 
         $response->assertStatus(200)
-            ->assertJsonPath('saldo_cache', '1500.5');
+            ->assertJsonPath('saldo_cache', '1500.50');
     }
 
     public function test_cargar_saldo_requiere_admin(): void

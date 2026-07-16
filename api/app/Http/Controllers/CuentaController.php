@@ -104,7 +104,7 @@ class CuentaController extends Controller
         ]);
 
         $cuenta->update([
-            'saldo_cache'    => $request->saldo,
+            'saldo_cache'    => round((float) $request->saldo, 2),
             'saldo_cache_at' => now(),
         ]);
 

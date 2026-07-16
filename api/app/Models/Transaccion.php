@@ -29,7 +29,7 @@ class Transaccion extends Model
     protected function casts(): array
     {
         return [
-            'monto' => 'decimal:4',
+            'monto' => 'decimal:2',
             'validada_en' => 'datetime',
         ];
     }

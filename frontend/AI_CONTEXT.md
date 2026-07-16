@@ -12,6 +12,7 @@
 | Estado | Pinia (9 stores) |
 | Router | Vue Router 4 (19 rutas, guard beforeEach) |
 | HTTP | Axios (interceptor de token) |
+| WebSocket | Laravel Echo + Reverb/Pusher |
 | CSS | Tailwind CSS (utility-first) |
 | Build | Vite |
 
@@ -28,16 +29,20 @@ frontend/
 ├── package.json
 ├── .env
 └── src/
-    ├── main.js                    → Entry point (createApp, use pinia, use router)
-    ├── App.vue                    → Componente raíz
-    ├── index.css                  → Tailwind directives + estilos globales
+    ├── main.js                    → Entry point (createApp, plugins, mount)
+    ├── App.vue                    → Componente raíz (<router-view />)
+    ├── index.css                  → Tailwind directives
+    ├── errorHandler.js            → Global error handler
     ├── api/
     │   └── axios.js               → Instancia axios con interceptors
     ├── router/
     │   └── index.js               → 19 rutas + beforeEach guard
+    ├── plugins/
+    │   └── echo.js                → Laravel Echo + Reverb (WebSocket)
     ├── stores/                    → 9 Pinia stores
-    ├── components/                → 11 componentes reutilizables
-    └── views/                     → 16 vistas/páginas
+    ├── composables/               → 10 composables reutilizables
+    ├── components/                → 20 componentes reutilizables
+    └── views/                     → 19 vistas/páginas
 ```
 
 ---
@@ -60,7 +65,27 @@ Ver `frontend/src/stores/AI_CONTEXT.md` para detalle completo.
 
 ---
 
-## 4. Rutas
+## 4. Composables
+
+Ver `frontend/src/composables/AI_CONTEXT.md` para detalle completo.
+
+| Composable | Propósito |
+|---|---|
+| `useApi` | Core: AbortController, loading/error/data refs |
+| `useAuth` | Login, logout, fetchMe con useApi |
+| `useOperaciones` | Operaciones CRUD + verificar |
+| `usePool` | Pool con computed filters + acciones |
+| `useClientes` | Clientes CRUD + search + restore |
+| `useCuentas` | Cuentas fetch + filtros por moneda/cliente/titular |
+| `useTasas` | Tasas vigentes + historial + getTasaPar |
+| `useBancos` | Bancos CRUD |
+| `useTitulares` | Titulares fetch + getIntermedius |
+| `useNotification` | Toast notifications (success/error/warning/info) |
+| `useInactivityTimer` | Auto-logout por inactividad (30 min) |
+
+---
+
+## 5. Rutas
 
 Ver `frontend/src/router/AI_CONTEXT.md` para detalle completo.
 
@@ -86,7 +111,7 @@ Ver `frontend/src/router/AI_CONTEXT.md` para detalle completo.
 
 ---
 
-## 5. Componentes
+## 6. Componentes
 
 Ver `frontend/src/components/AI_CONTEXT.md` para detalle completo.
 
@@ -103,14 +128,34 @@ Ver `frontend/src/components/AI_CONTEXT.md` para detalle completo.
 | `CalculadoraBidireccional` | Calculadora de tasas (origen/destino) |
 | `ComisionToggle` | Toggle + input de comisión en formulario |
 | `ResumenOperacion` | Resumen pre-confirmación |
+| `TransaccionRow` | Fila de transacción (cuenta origen/destino, monto, comisión) |
+| `PoolTimer` | Timer regresivo de expiración de orden |
+| `PoolList` | Lista de órdenes del pool |
+| `PoolAlarm` | Alerta sonora/visual para nuevas órdenes |
+| `PoolActions` | Botones de acción del pool |
+| `OperacionFormCabecera` | Cabecera del formulario de operación |
+| `OperacionFormTransacciones` | Grid de transacciones |
+| `OperacionFormComision` | Toggle + inputs de comisión |
+| `OperacionFormResumen` | Resumen del formulario |
 
 ---
 
-## 6. Convenciones de código
+## 7. Plugins
+
+Ver `frontend/src/plugins/AI_CONTEXT.md` para detalle completo.
+
+| Plugin | Propósito |
+|---|---|
+| `echo.js` | Laravel Echo + Reverb (WebSocket broadcaster) |
+
+---
+
+## 8. Convenciones de código
 
 ### Naming
 - Archivos: PascalCase para `.vue`, camelCase para `.js`
 - Stores: `use{Name}Store` + `defineStore('name', fn)`
+- Composables: `use{Name}` (función nombrada)
 - Componentes: PascalCase, single-file components con `<script setup>`
 - Eventos: kebab-case en template, camelCase en emit
 
@@ -170,7 +215,7 @@ En frontend se usa `auth.isAdmin` (computed que verifica `roles.includes('admin'
 
 ---
 
-## 7. Archivos por directorio
+## 9. Archivos por directorio
 
 | Directorio | Archivo AI_CONTEXT |
 |---|---|
@@ -181,3 +226,5 @@ En frontend se usa `auth.isAdmin` (computed que verifica `roles.includes('admin'
 | `frontend/src/views/` | `frontend/src/views/AI_CONTEXT.md` |
 | `frontend/src/router/` | `frontend/src/router/AI_CONTEXT.md` |
 | `frontend/src/api/` | `frontend/src/api/AI_CONTEXT.md` |
+| `frontend/src/composables/` | `frontend/src/composables/AI_CONTEXT.md` |
+| `frontend/src/plugins/` | `frontend/src/plugins/AI_CONTEXT.md` |

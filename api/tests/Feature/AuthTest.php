@@ -6,6 +6,7 @@ use App\Models\LoginAttempt;
 use App\Models\User;
 use Database\Seeders\CatalogosBaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 class AuthTest extends TestCase
@@ -19,6 +20,7 @@ class AuthTest extends TestCase
     {
         parent::setUp();
         $this->seed(CatalogosBaseSeeder::class);
+        Cache::flush();
 
         $this->user = User::factory()->create([
             'email' => 'test@example.com',

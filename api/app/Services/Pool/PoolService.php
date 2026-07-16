@@ -120,9 +120,9 @@ class PoolService
                 'operacion_id'          => $operacion->id,
                 'cuenta_id'             => $tx->cuenta_origen_id,
                 'moneda_id'             => $tx->moneda_id,
-                'monto'                 => -$tx->monto,
+                'monto'                 => -(float) $tx->monto,
                 'tasa_a_usd'            => $tasaAplicada,
-                'monto_usd_equivalente' => -$tx->monto * $tasaAplicada,
+                'monto_usd_equivalente' => round(-(float) $tx->monto * (float) $tasaAplicada, 2),
                 'orden'                 => $tx->orden * 2 - 1,
             ]);
 
@@ -130,9 +130,9 @@ class PoolService
                 'operacion_id'          => $operacion->id,
                 'cuenta_id'             => $tx->cuenta_destino_id,
                 'moneda_id'             => $tx->moneda_id,
-                'monto'                 => $tx->monto,
+                'monto'                 => (float) $tx->monto,
                 'tasa_a_usd'            => $tasaAplicada,
-                'monto_usd_equivalente' => $tx->monto * $tasaAplicada,
+                'monto_usd_equivalente' => round((float) $tx->monto * (float) $tasaAplicada, 2),
                 'orden'                 => $tx->orden * 2,
             ]);
         }

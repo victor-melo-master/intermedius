@@ -58,8 +58,8 @@ class ComisionOperacion extends Model
     protected function casts(): array
     {
         return [
-            'monto'                 => 'decimal:4',
-            'monto_usd_equivalente' => 'decimal:4',
+            'monto'                 => 'decimal:2',
+            'monto_usd_equivalente' => 'decimal:2',
             'editada_at'            => 'datetime',
         ];
     }

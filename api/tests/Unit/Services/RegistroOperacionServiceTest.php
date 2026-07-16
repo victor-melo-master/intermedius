@@ -246,7 +246,7 @@ class RegistroOperacionServiceTest extends TestCase
         // ganancia_ves = 100 × (36.50 − 36.42) = 8.00 Bs
         $this->assertEqualsWithDelta(8.00, (float) $operacion->ganancia_bruta_ves, 0.01);
         // ganancia_usd = 8.00 / 36.50 = 0.2192 USD
-        $this->assertEqualsWithDelta(0.2192, (float) $operacion->ganancia_bruta_usd, 0.0001);
+        $this->assertEqualsWithDelta(0.22, (float) $operacion->ganancia_bruta_usd, 0.01);
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -265,7 +265,7 @@ class RegistroOperacionServiceTest extends TestCase
 
         $operacion = $this->service->registrar($payload);
 
-        $this->assertEquals('0.0000', $operacion->ganancia_bruta_usd);
+        $this->assertEquals('0.00', $operacion->ganancia_bruta_usd);
         $this->assertEquals('0.00', $operacion->ganancia_bruta_ves);
     }
 
@@ -398,7 +398,7 @@ class RegistroOperacionServiceTest extends TestCase
         // ganancia_ves = 100 × (36.42 − 36.20) = 22.00 Bs
         $this->assertEqualsWithDelta(22.00, (float) $operacion->ganancia_bruta_ves, 0.01);
         // ganancia_usd = 22.00 / 36.42 = 0.6041 USD
-        $this->assertEqualsWithDelta(0.6041, (float) $operacion->ganancia_bruta_usd, 0.001);
+        $this->assertEqualsWithDelta(0.60, (float) $operacion->ganancia_bruta_usd, 0.01);
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -446,7 +446,7 @@ class RegistroOperacionServiceTest extends TestCase
             ],
         ]);
 
-        $this->assertEquals('0.0000', $operacion->ganancia_bruta_usd);
+        $this->assertEquals('0.00', $operacion->ganancia_bruta_usd);
         $this->assertEquals('0.00', $operacion->ganancia_bruta_ves);
     }
 }

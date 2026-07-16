@@ -39,7 +39,7 @@ class ReporteComisionesOperadoresService
                     'titular_id'            => $titular?->id,
                     'titular'               => $titular?->nombre ?? 'Desconocido',
                     'total_operaciones'     => $grupo->pluck('operacion_id')->unique()->count(),
-                    'total_comisiones_usd'  => round($grupo->sum('monto_usd_equivalente'), 4),
+                    'total_comisiones_usd'  => round($grupo->sum('monto_usd_equivalente'), 2),
                     'detalle'               => $grupo->values(),
                 ];
             })

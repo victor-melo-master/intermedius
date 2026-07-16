@@ -43,9 +43,9 @@ class ComisionesDetalleSheet implements FromCollection, WithHeadings, WithTitle
             $c->operacion_id,
             optional($c->operacion)->fecha?->format('d/m/Y'),
             $c->descripcion,
-            number_format($c->monto, 4),
+            number_format($c->monto, 2),
             optional($c->moneda)->codigo,
-            number_format($c->monto_usd_equivalente, 4),
+            number_format($c->monto_usd_equivalente, 2),
         ]);
     }
 }

@@ -96,6 +96,7 @@
  */
 import { reactive, ref, computed, onMounted } from 'vue'
 import { useApiError } from '@/composables/useApiError'
+import { useFormatting } from '@/composables/useFormatting'
 import { useAuthStore } from '../../stores/auth.js'
 import { useBancosStore } from '../../stores/bancos.js'
 import { useOperacionesStore } from '../../stores/operaciones.js'
@@ -111,6 +112,7 @@ const bancosStore = useBancosStore()
 /** Store de operaciones */
 const ops = useOperacionesStore()
 const { parseError } = useApiError()
+const { roundTo } = useFormatting()
 
 /** Lista de bancos */
 const bancos = ref([])
@@ -194,21 +196,21 @@ async function submit() {
   saving.value = true
   error.value = ''
   try {
-    const monto = parseFloat(form.monto)
+    const monto = roundTo(parseFloat(form.monto))
     const body = {
       fecha: new Date().toISOString().split('T')[0],
       tipo_codigo: 'intermediada',
       operador_id: Number(auth.user.id),
       cliente_emisor_id: Number(clienteEmisor.value.id),
       cliente_receptor_id: Number(clienteReceptor.value.id),
-      tasa_compra: parseFloat(form.tasa_compra),
-      tasa_venta: parseFloat(form.tasa_venta),
+      tasa_compra: roundTo(parseFloat(form.tasa_compra)),
+      tasa_venta: roundTo(parseFloat(form.tasa_venta)),
       descripcion: form.descripcion,
       movimientos: [
         { cuenta_id: Number(cuentaEmisorDivisa.value), monto: -monto, tasa_a_usd: 1 },
-        { cuenta_id: Number(cuentaEmisorVes.value), monto: monto * tasaCompra.value, tasa_a_usd: 1 / tasaCompra.value },
+        { cuenta_id: Number(cuentaEmisorVes.value), monto: roundTo(monto * tasaCompra.value), tasa_a_usd: roundTo(1 / tasaCompra.value, 8) },
         { cuenta_id: Number(cuentaReceptorDivisa.value), monto: monto, tasa_a_usd: 1 },
-        { cuenta_id: Number(cuentaReceptorVes.value), monto: -(monto * tasaVenta.value), tasa_a_usd: 1 / tasaVenta.value },
+        { cuenta_id: Number(cuentaReceptorVes.value), monto: roundTo(-(monto * tasaVenta.value)), tasa_a_usd: roundTo(1 / tasaVenta.value, 8) },
       ],
     }
 

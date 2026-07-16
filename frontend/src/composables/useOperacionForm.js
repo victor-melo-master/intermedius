@@ -19,7 +19,7 @@ export function useOperacionForm() {
   const titulares = useTitulares()
   const notifier = useNotification()
   const { parseError } = useApiError()
-  const { formatMoney } = useFormatting()
+  const { formatMoney, roundTo } = useFormatting()
 
   const monedas = ref([])
   const cuentas = ref([])
@@ -245,9 +245,9 @@ export function useOperacionForm() {
 
       for (const tx of form.transacciones) {
         if (!tx.cuenta_origen_id || !tx.cuenta_destino_id || !tx.moneda_id || !parseFloat(tx.monto)) continue
-        const monto = Math.abs(parseFloat(tx.monto))
-        const comision = parseFloat(tx.comision_monto) || 0
-        movimientos.push({ cuenta_id: Number(tx.cuenta_origen_id), monto: -(monto + comision) })
+        const monto = roundTo(Math.abs(parseFloat(tx.monto)))
+        const comision = roundTo(parseFloat(tx.comision_monto) || 0)
+        movimientos.push({ cuenta_id: Number(tx.cuenta_origen_id), monto: -roundTo(monto + comision) })
         movimientos.push({ cuenta_id: Number(tx.cuenta_destino_id), monto })
         totalComision += comision
       }
@@ -257,11 +257,13 @@ export function useOperacionForm() {
         return
       }
 
+      totalComision = roundTo(totalComision)
+
       const body = {
         fecha: form.fecha,
         tipo_codigo: tipoCodigo.value,
         operador_id: Number(auth.user.value.id),
-        tasa_aplicada: parseFloat(form.tasa),
+        tasa_aplicada: roundTo(parseFloat(form.tasa)),
         descripcion: form.descripcion.trim() || null,
         movimientos,
       }

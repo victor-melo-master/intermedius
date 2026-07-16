@@ -110,7 +110,7 @@ class RegistroOperacionService
                     'moneda_id'             => $cuenta->moneda_id,
                     'monto'                 => $movData['monto'],
                     'tasa_a_usd'            => $movData['tasa_a_usd'],
-                    'monto_usd_equivalente' => round($movData['monto'] * $movData['tasa_a_usd'], 4),
+                    'monto_usd_equivalente' => round($movData['monto'] * $movData['tasa_a_usd'], 2),
                     'orden'                 => $index + 1,
                 ]);
             }
@@ -137,7 +137,7 @@ class RegistroOperacionService
                 $cuentaIdsAfectadas[] = $movData['cuenta_id'];
                 $cuenta = Cuenta::find($movData['cuenta_id']);
                 if ($cuenta && $cuenta->saldo_cache_at) {
-                    $nuevoSaldo = bcadd($cuenta->saldo_cache, $movData['monto'], 4);
+                    $nuevoSaldo = bcadd($cuenta->saldo_cache, $movData['monto'], 2);
                     $cuenta->update(['saldo_cache' => $nuevoSaldo]);
                 }
             }
@@ -323,7 +323,7 @@ class RegistroOperacionService
                 $gananciaVes = $montoUsdVendido * ((float) $operacion->tasa_aplicada - (float) $operacion->tasa_mercado_snapshot);
                 $gananciaUsd = $gananciaVes / (float) $operacion->tasa_aplicada;
 
-                return ['usd' => round($gananciaUsd, 4), 'ves' => round($gananciaVes, 2)];
+                return ['usd' => round($gananciaUsd, 2), 'ves' => round($gananciaVes, 2)];
 
             case 'compra_usd':
                 /*
@@ -346,7 +346,7 @@ class RegistroOperacionService
                 $gananciaVes = $montoUsdComprado * ((float) $operacion->tasa_mercado_snapshot - (float) $operacion->tasa_aplicada);
                 $gananciaUsd = $gananciaVes / (float) $operacion->tasa_mercado_snapshot;
 
-                return ['usd' => round($gananciaUsd, 4), 'ves' => round($gananciaVes, 2)];
+                return ['usd' => round($gananciaUsd, 2), 'ves' => round($gananciaVes, 2)];
 
             case 'comision':
                 /*
@@ -371,7 +371,7 @@ class RegistroOperacionService
                         : 0.0;
                 }
 
-                return ['usd' => round($gananciaUsd, 4), 'ves' => round((float) $gananciaVes, 2)];
+                return ['usd' => round($gananciaUsd, 2), 'ves' => round((float) $gananciaVes, 2)];
 
             case 'cambio':
                 /*
@@ -479,7 +479,7 @@ public function actualizar(Operacion $operacion, array $payload, \App\Models\Use
                     'moneda_id'             => $cuenta->moneda_id,
                     'monto'                 => $movData['monto'],
                     'tasa_a_usd'            => $movData['tasa_a_usd'],
-                    'monto_usd_equivalente' => round($movData['monto'] * $movData['tasa_a_usd'], 4),
+                    'monto_usd_equivalente' => round($movData['monto'] * $movData['tasa_a_usd'], 2),
                     'orden'                 => $index + 1,
                 ]);
             }
@@ -530,7 +530,7 @@ public function actualizar(Operacion $operacion, array $payload, \App\Models\Use
                 $cuentaIdsAfectadas[] = $movData['cuenta_id'];
                 $cuenta = Cuenta::find($movData['cuenta_id']);
                 if ($cuenta && $cuenta->saldo_cache_at) {
-                    $nuevoSaldo = bcadd($cuenta->saldo_cache, $movData['monto'], 4);
+                    $nuevoSaldo = bcadd($cuenta->saldo_cache, $movData['monto'], 2);
                     $cuenta->update(['saldo_cache' => $nuevoSaldo]);
                 }
             }
@@ -586,7 +586,7 @@ public function actualizar(Operacion $operacion, array $payload, \App\Models\Use
                     'moneda_id'             => $cuenta->moneda_id,
                     'monto'                 => $movData['monto'],
                     'tasa_a_usd'            => $movData['tasa_a_usd'] ?? 1,
-                    'monto_usd_equivalente' => round($movData['monto'] * ($movData['tasa_a_usd'] ?? 1), 4),
+                    'monto_usd_equivalente' => round($movData['monto'] * ($movData['tasa_a_usd'] ?? 1), 2),
                     'orden'                 => $index + 1,
                 ]);
             }
@@ -609,7 +609,7 @@ public function actualizar(Operacion $operacion, array $payload, \App\Models\Use
                 $cuentaIdsAfectadas[] = $movData['cuenta_id'];
                 $cuenta = Cuenta::find($movData['cuenta_id']);
                 if ($cuenta && $cuenta->saldo_cache_at) {
-                    $nuevoSaldo = bcadd($cuenta->saldo_cache, $movData['monto'], 4);
+                    $nuevoSaldo = bcadd($cuenta->saldo_cache, $movData['monto'], 2);
                     $cuenta->update(['saldo_cache' => $nuevoSaldo]);
                 }
             }
@@ -668,7 +668,7 @@ public function actualizar(Operacion $operacion, array $payload, \App\Models\Use
         $gananciaUsd = $tasaVenta > 0 ? $gananciaVes / $tasaVenta : 0;
 
         return [
-            'usd' => round($gananciaUsd, 4),
+            'usd' => round($gananciaUsd, 2),
             'ves' => round($gananciaVes, 2),
         ];
     }

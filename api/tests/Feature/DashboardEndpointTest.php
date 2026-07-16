@@ -12,6 +12,7 @@ use App\Models\Titular;
 use App\Models\User;
 use Database\Seeders\CatalogosBaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 class DashboardEndpointTest extends TestCase
@@ -25,6 +26,7 @@ class DashboardEndpointTest extends TestCase
     {
         parent::setUp();
         $this->seed(CatalogosBaseSeeder::class);
+        Cache::flush();
 
         $this->admin = User::factory()->create(['activo' => true]);
         $this->admin->assignRole('admin');

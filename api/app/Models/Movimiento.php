@@ -43,9 +43,9 @@ class Movimiento extends Model
     protected function casts(): array
     {
         return [
-            'monto'                => 'decimal:4',
+            'monto'                => 'decimal:2',
             'tasa_a_usd'           => 'decimal:8',
-            'monto_usd_equivalente' => 'decimal:4',
+            'monto_usd_equivalente' => 'decimal:2',
         ];
     }
 

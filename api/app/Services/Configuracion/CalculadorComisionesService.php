@@ -52,7 +52,7 @@ class CalculadorComisionesService
                     : (float) $com->valor;
 
                 $montoUsd = $com->moneda_id === $mov->moneda_id
-                    ? round($monto * (float) $mov->tasa_a_usd, 4)
+                    ? round($monto * (float) $mov->tasa_a_usd, 2)
                     : $this->convertirAUsd($monto, $com->moneda_id, $op->fecha);
 
                 $porcentajeStr = $com->tipo_calculo === 'porcentaje' ? "{$com->valor}%" : "fijo {$com->valor}";
@@ -61,7 +61,7 @@ class CalculadorComisionesService
                     'tipo'                  => 'cuenta',
                     'origen_model'          => $com,
                     'descripcion'           => "{$com->descripcion} sobre {$mov->cuenta->alias}: {$porcentajeStr}",
-                    'monto'                 => round($monto, 4),
+                    'monto'                 => round($monto, 2),
                     'moneda_id'             => $com->moneda_id,
                     'monto_usd_equivalente' => $montoUsd,
                     'movimiento_id'         => $mov->id,
@@ -98,9 +98,9 @@ class CalculadorComisionesService
                     'tipo'                  => 'operador',
                     'origen_model'          => $com,
                     'descripcion'           => "Comisión operador {$operador->name} ({$com->descripcion})",
-                    'monto'                 => round($monto, 4),
+                    'monto'                 => round($monto, 2),
                     'moneda_id'             => $com->moneda_id,
-                    'monto_usd_equivalente' => round($montoUsd, 4),
+                    'monto_usd_equivalente' => round($montoUsd, 2),
                     'movimiento_id'         => null,
                 ]);
             }
@@ -134,9 +134,9 @@ class CalculadorComisionesService
                 'tipo'                  => 'metodo_pago',
                 'origen_model'          => $com,
                 'descripcion'           => "Fee {$com->nombre_metodo}",
-                'monto'                 => round($monto, 4),
+                'monto'                 => round($monto, 2),
                 'moneda_id'             => $com->moneda_id,
-                'monto_usd_equivalente' => round($montoUsd, 4),
+                'monto_usd_equivalente' => round($montoUsd, 2),
                 'movimiento_id'         => null,
             ]);
         }
@@ -181,7 +181,7 @@ class CalculadorComisionesService
         $op->loadMissing('comisiones.moneda');
         $comisiones = ComisionOperacion::where('operacion_id', $op->id)->with('moneda')->get();
 
-        $totalUsd = round($comisiones->sum('monto_usd_equivalente'), 4);
+        $totalUsd = round($comisiones->sum('monto_usd_equivalente'), 2);
 
         // VES: suma directa si moneda es VES, conversión vía tasa operativa para otros
         $tasaVes = (float) ($op->tasa_aplicada ?? $op->tasa_sugerida ?? 0);
@@ -197,7 +197,7 @@ class CalculadorComisionesService
         $op->update([
             'total_comisiones_usd' => $totalUsd,
             'total_comisiones_ves' => round($totalVes, 2),
-            'ganancia_neta_usd'    => round((float) $op->ganancia_bruta_usd - $totalUsd, 4),
+            'ganancia_neta_usd'    => round((float) $op->ganancia_bruta_usd - $totalUsd, 2),
             'ganancia_neta_ves'    => round((float) $op->ganancia_bruta_ves - $totalVes, 2),
         ]);
     }
@@ -258,7 +258,7 @@ class CalculadorComisionesService
         $tasa = $this->tasaService->obtenerVigente($monedaId, $usdId, $fecha->endOfDay());
 
         if ($tasa) {
-            return round($monto / (float) $tasa->tasa_venta, 4);
+            return round($monto / (float) $tasa->tasa_venta, 2);
         }
 
         // Fallback: tasa de mercado más reciente
@@ -267,6 +267,6 @@ class CalculadorComisionesService
             ->orderByDesc('capturado_en')
             ->value('valor');
 
-        return $tasaMercado ? round($monto / (float) $tasaMercado, 4) : 0.0;
+        return $tasaMercado ? round($monto / (float) $tasaMercado, 2) : 0.0;
     }
 }
