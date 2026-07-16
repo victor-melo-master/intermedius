@@ -64,7 +64,7 @@
           >✕ Limpiar</button>
         </div>
         <p v-if="modoActual === 'calcular_tasa'" class="text-xs text-blue-500 mt-1">Calculado automáticamente</p>
-        <p v-else-if="tasaSugerida" class="text-xs text-gray-400 mt-1">Sugerida del día: <span class="font-medium text-gray-600">{{ fmt(tasaSugerida) }}</span></p>
+        <p v-else-if="tasaSugerida" class="text-xs text-gray-400 mt-1">Sugerida del día: <span class="font-medium text-gray-600">{{ formatTasa(tasaSugerida) }}</span></p>
         <p v-else class="text-xs text-amber-500 mt-1">No hay tasa {{ parStr }} publicada hoy.</p>
       </div>
     </div>

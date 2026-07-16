@@ -78,22 +78,22 @@
             <div v-if="pairs[ref.id]?.active" class="grid grid-cols-2 gap-2 mt-3">
               <div>
                 <label class="block text-[11px] text-gray-500 mb-1">Tasa compra *</label>
-                <input v-model="pairs[ref.id].tasa_compra" type="number" step="0.00000001" inputmode="decimal" placeholder="0.00"
+                <input v-model="pairs[ref.id].tasa_compra" type="number" step="0.01" inputmode="decimal" placeholder="0.00"
                   class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
               </div>
               <div>
                 <label class="block text-[11px] text-gray-500 mb-1">Mín. compra</label>
-                <input v-model="pairs[ref.id].tasa_compra_minima" type="number" step="0.00000001" inputmode="decimal" placeholder="opcional"
+                <input v-model="pairs[ref.id].tasa_compra_minima" type="number" step="0.01" inputmode="decimal" placeholder="opcional"
                   class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
               </div>
               <div>
                 <label class="block text-[11px] text-gray-500 mb-1">Tasa venta *</label>
-                <input v-model="pairs[ref.id].tasa_venta" type="number" step="0.00000001" inputmode="decimal" placeholder="0.00"
+                <input v-model="pairs[ref.id].tasa_venta" type="number" step="0.01" inputmode="decimal" placeholder="0.00"
                   class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
               </div>
               <div>
                 <label class="block text-[11px] text-gray-500 mb-1">Mín. venta</label>
-                <input v-model="pairs[ref.id].tasa_venta_minima" type="number" step="0.00000001" inputmode="decimal" placeholder="opcional"
+                <input v-model="pairs[ref.id].tasa_venta_minima" type="number" step="0.01" inputmode="decimal" placeholder="opcional"
                   class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
               </div>
             </div>

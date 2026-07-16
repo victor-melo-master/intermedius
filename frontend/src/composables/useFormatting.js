@@ -23,8 +23,8 @@ export function useFormatting() {
 
   const formatRate = (value) => {
     const num = parseFloat(value)
-    if (isNaN(num)) return '0.0000'
-    return num.toFixed(4)
+    if (isNaN(num)) return '0.00'
+    return num.toFixed(2)
   }
 
   const formatDate = (date) => {

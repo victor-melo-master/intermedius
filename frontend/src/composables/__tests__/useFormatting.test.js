@@ -28,14 +28,14 @@ describe('useFormatting', () => {
   })
 
   describe('formatRate', () => {
-    it('formatea tasas con 4 decimales', () => {
-      expect(formatRate(40.5)).toBe('40.5000')
-      expect(formatRate(41.123456)).toMatch(/^41\.123\d/)
+    it('formatea tasas con 2 decimales', () => {
+      expect(formatRate(40.5)).toBe('40.50')
+      expect(formatRate(41.123456)).toMatch(/^41\.12/)
     })
 
     it('maneja valores inválidos', () => {
-      expect(formatRate(null)).toBe('0.0000')
-      expect(formatRate('abc')).toBe('0.0000')
+      expect(formatRate(null)).toBe('0.00')
+      expect(formatRate('abc')).toBe('0.00')
     })
   })
 

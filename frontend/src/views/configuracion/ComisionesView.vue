@@ -44,7 +44,7 @@
           </select>
         </div>
 
-        <input v-model="form.valor" type="number" step="0.0001" required :placeholder="form.tipo_calculo === 'porcentaje' ? 'Ej: 0.3' : 'Ej: 5.00'" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+        <input v-model="form.valor" type="number" step="0.01" required :placeholder="form.tipo_calculo === 'porcentaje' ? 'Ej: 0.3' : 'Ej: 5.00'" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
 
         <div>
           <label class="text-sm text-gray-600 mb-1 block">Moneda</label>
