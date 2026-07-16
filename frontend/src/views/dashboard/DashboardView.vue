@@ -7,6 +7,9 @@
         <span v-if="refTasas?.bcv"><span class="font-semibold">BCV:</span> {{ formatVes(refTasas.bcv.tasa) }}</span>
         <span v-if="refTasas?.binance_p2p" class="text-gray-300">•</span>
         <span v-if="refTasas?.binance_p2p"><span class="font-semibold">Binance USDT:</span> {{ formatVes(refTasas.binance_p2p.tasa) }}</span>
+        <span v-if="spreadBcvBinance !== null" class="font-semibold" :class="spreadBcvBinance >= 0 ? 'text-green-600' : 'text-red-500'">
+          {{ formatVes(Math.abs(spreadBcvBinance)) }} ({{ spreadBcvBinancePorc?.toFixed(1) }}%)
+        </span>
         <span class="opacity-70">
           <template v-if="refStale">⚠️ Datos desactualizados</template>
           <template v-else>(actualizado {{ refRelativo }})</template>
@@ -209,6 +212,20 @@ const filtros = reactive({
 })
 
 const hayReferencia = computed(() => !!(refTasas.value?.bcv || refTasas.value?.binance_p2p))
+
+const spreadBcvBinance = computed(() => {
+  const bcv = refTasas.value?.bcv?.tasa
+  const binance = refTasas.value?.binance_p2p?.tasa
+  if (!bcv || !binance) return null
+  return binance - bcv
+})
+
+const spreadBcvBinancePorc = computed(() => {
+  const bcv = refTasas.value?.bcv?.tasa
+  const binance = refTasas.value?.binance_p2p?.tasa
+  if (!bcv || !binance) return null
+  return ((binance - bcv) / bcv) * 100
+})
 
 const refUltimoTs = computed(() => {
   const fechas = [refTasas.value?.bcv?.capturado_en, refTasas.value?.binance_p2p?.capturado_en]
