@@ -293,52 +293,72 @@ class DesarrolloSeeder extends Seeder
         $cuentaVes = Cuenta::where('alias', 'like', '%Banesco%VES%')->first()
             ?? Cuenta::where('moneda_id', $ves->id)->first();
 
-        if ($tipoVenta && $operador && $cuentaUsd && $cuentaVes) {
-            $operacion = Operacion::create([
-                'fecha'             => now()->toDateString(),
-                'tipo_operacion_id' => $tipoVenta->id,
-                'cliente_id'        => $clienteMaria?->id,
-                'operador_id'       => $operador->id,
-                'tasa_aplicada'     => 41.00,
-                'tasa_sugerida'     => 41.00,
-                'estatus'           => 'en_verificacion',
-                'estado'            => 'en_espera',
-                'estado_pool'       => 'pendiente',
-                'descripcion'       => 'Venta de USD a María - prueba verificación',
-                'origen'            => 'manual',
-            ]);
+        if ($tipoVenta && $operador && $cuentaUsd && $cuentaVes && $clienteMaria) {
+            // Cuentas del cliente María
+            $cuentaClienteUsd = Cuenta::where('cliente_id', $clienteMaria->id)
+                ->where('moneda_id', $usd->id)->first();
+            $cuentaClienteVes = Cuenta::where('cliente_id', $clienteMaria->id)
+                ->where('moneda_id', $ves->id)->first();
 
-            $operacion->movimientos()->create([
-                'cuenta_id'              => $cuentaUsd->id,
-                'moneda_id'              => $usd->id,
-                'monto'                  => -200,
-                'tasa_a_usd'             => 1,
-                'monto_usd_equivalente'  => -200,
-                'orden'                  => 1,
-                'estado'                 => 'pendiente',
-            ]);
+            if (!$cuentaClienteUsd || !$cuentaClienteVes) {
+                $this->command->warn('⚠️ No se pudo crear operación de prueba: María no tiene cuentas USD y VES.');
+            } else {
+                $operacion = Operacion::create([
+                    'fecha'             => now()->toDateString(),
+                    'tipo_operacion_id' => $tipoVenta->id,
+                    'cliente_id'        => $clienteMaria->id,
+                    'operador_id'       => $operador->id,
+                    'tasa_aplicada'     => 41.00,
+                    'tasa_sugerida'     => 41.00,
+                    'estatus'           => 'en_verificacion',
+                    'estado'            => 'en_espera',
+                    'estado_pool'       => 'pendiente',
+                    'descripcion'       => 'Venta de USD a María - prueba verificación',
+                    'origen'            => 'manual',
+                ]);
 
-            $operacion->movimientos()->create([
-                'cuenta_id'              => $cuentaVes->id,
-                'moneda_id'              => $ves->id,
-                'monto'                  => 8200,
-                'tasa_a_usd'             => 0.02439,
-                'monto_usd_equivalente'  => 200,
-                'orden'                  => 2,
-                'estado'                 => 'pendiente',
-            ]);
+                // María entrega USD → Intermedius recibe USD
+                $operacion->movimientos()->create([
+                    'cuenta_id'              => $cuentaClienteUsd->id,
+                    'moneda_id'              => $usd->id,
+                    'monto'                  => -200,
+                    'tasa_a_usd'             => 1,
+                    'monto_usd_equivalente'  => -200,
+                    'orden'                  => 1,
+                    'estado'                 => 'pendiente',
+                ]);
+                $operacion->movimientos()->create([
+                    'cuenta_id'              => $cuentaUsd->id,
+                    'moneda_id'              => $usd->id,
+                    'monto'                  => 200,
+                    'tasa_a_usd'             => 1,
+                    'monto_usd_equivalente'  => 200,
+                    'orden'                  => 2,
+                    'estado'                 => 'pendiente',
+                ]);
 
-            $operacion->movimientos()->create([
-                'cuenta_id'              => $cuentaVes->id,
-                'moneda_id'              => $ves->id,
-                'monto'                  => -100,
-                'tasa_a_usd'             => 0.02439,
-                'monto_usd_equivalente'  => -2.44,
-                'orden'                  => 3,
-                'estado'                 => 'pendiente',
-            ]);
+                // Intermedius entrega VES → María recibe VES
+                $operacion->movimientos()->create([
+                    'cuenta_id'              => $cuentaVes->id,
+                    'moneda_id'              => $ves->id,
+                    'monto'                  => -8200,
+                    'tasa_a_usd'             => 0.02439,
+                    'monto_usd_equivalente'  => -200,
+                    'orden'                  => 3,
+                    'estado'                 => 'pendiente',
+                ]);
+                $operacion->movimientos()->create([
+                    'cuenta_id'              => $cuentaClienteVes->id,
+                    'moneda_id'              => $ves->id,
+                    'monto'                  => 8200,
+                    'tasa_a_usd'             => 0.02439,
+                    'monto_usd_equivalente'  => 200,
+                    'orden'                  => 4,
+                    'estado'                 => 'pendiente',
+                ]);
 
-            $this->command->info("✅ Operación #{$operacion->id} creada en verificación con 3 movimientos pendientes");
+                $this->command->info("✅ Operación #{$operacion->id} creada en verificación con 4 movimientos (cuentas de María e Intermedius)");
+            }
         } else {
             $this->command->warn('⚠️ No se pudo crear operación de prueba: faltan datos base.');
         }
