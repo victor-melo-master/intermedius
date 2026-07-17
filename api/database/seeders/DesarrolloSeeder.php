@@ -8,6 +8,8 @@ use App\Models\Cuenta;
 use App\Models\Moneda;
 use App\Models\TasaDiaria;
 use App\Models\Titular;
+use App\Models\TipoOperacion;
+use App\Models\Operacion;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -280,6 +282,67 @@ class DesarrolloSeeder extends Seeder
         }
 
         $this->command->info('✅ Clientes de prueba creados');
+
+        // 8. Operación de prueba en verificación (venta de USD)
+        $tipoVenta = TipoOperacion::where('codigo', 'venta_usd')->first();
+        $operador = User::where('email', 'admin@test.com')->first();
+        $clienteMaria = Cliente::where('documento', 'V-12345678')->first();
+
+        $cuentaUsd = Cuenta::where('alias', 'like', '%Efectivo USD%')->first()
+            ?? Cuenta::where('moneda_id', $usd->id)->first();
+        $cuentaVes = Cuenta::where('alias', 'like', '%Banesco%VES%')->first()
+            ?? Cuenta::where('moneda_id', $ves->id)->first();
+
+        if ($tipoVenta && $operador && $cuentaUsd && $cuentaVes) {
+            $operacion = Operacion::create([
+                'fecha'             => now()->toDateString(),
+                'tipo_operacion_id' => $tipoVenta->id,
+                'cliente_id'        => $clienteMaria?->id,
+                'operador_id'       => $operador->id,
+                'tasa_aplicada'     => 41.00,
+                'tasa_sugerida'     => 41.00,
+                'estatus'           => 'en_verificacion',
+                'estado'            => 'en_espera',
+                'estado_pool'       => 'pendiente',
+                'descripcion'       => 'Venta de USD a María - prueba verificación',
+                'origen'            => 'manual',
+            ]);
+
+            $operacion->movimientos()->create([
+                'cuenta_id'              => $cuentaUsd->id,
+                'moneda_id'              => $usd->id,
+                'monto'                  => -200,
+                'tasa_a_usd'             => 1,
+                'monto_usd_equivalente'  => -200,
+                'orden'                  => 1,
+                'estado'                 => 'pendiente',
+            ]);
+
+            $operacion->movimientos()->create([
+                'cuenta_id'              => $cuentaVes->id,
+                'moneda_id'              => $ves->id,
+                'monto'                  => 8200,
+                'tasa_a_usd'             => 0.02439,
+                'monto_usd_equivalente'  => 200,
+                'orden'                  => 2,
+                'estado'                 => 'pendiente',
+            ]);
+
+            $operacion->movimientos()->create([
+                'cuenta_id'              => $cuentaVes->id,
+                'moneda_id'              => $ves->id,
+                'monto'                  => -100,
+                'tasa_a_usd'             => 0.02439,
+                'monto_usd_equivalente'  => -2.44,
+                'orden'                  => 3,
+                'estado'                 => 'pendiente',
+            ]);
+
+            $this->command->info("✅ Operación #{$operacion->id} creada en verificación con 3 movimientos pendientes");
+        } else {
+            $this->command->warn('⚠️ No se pudo crear operación de prueba: faltan datos base.');
+        }
+
         $this->command->info('🎉 Seeding completado exitosamente.');
     }
 }

@@ -285,6 +285,10 @@ CREATE TABLE `movimientos` (
   `tasa_a_usd` decimal(20,8) NOT NULL,
   `monto_usd_equivalente` decimal(20,2) NOT NULL,
   `orden` smallint(5) unsigned NOT NULL DEFAULT 1,
+  `estado` varchar(50) NOT NULL DEFAULT 'pendiente',
+  `motivo_rechazo` text DEFAULT NULL,
+  `validada_en` timestamp NULL DEFAULT NULL,
+  `validada_por_id` bigint(20) unsigned DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
@@ -292,9 +296,11 @@ CREATE TABLE `movimientos` (
   KEY `movimientos_cuenta_id_created_at_index` (`cuenta_id`,`created_at`),
   KEY `movimientos_operacion_id_orden_index` (`operacion_id`,`orden`),
   KEY `movimientos_cuenta_id_moneda_id_index` (`cuenta_id`,`moneda_id`),
+  KEY `movimientos_validada_por_id_foreign` (`validada_por_id`),
   CONSTRAINT `movimientos_cuenta_id_foreign` FOREIGN KEY (`cuenta_id`) REFERENCES `cuentas` (`id`) ON UPDATE CASCADE,
   CONSTRAINT `movimientos_moneda_id_foreign` FOREIGN KEY (`moneda_id`) REFERENCES `monedas` (`id`) ON UPDATE CASCADE,
-  CONSTRAINT `movimientos_operacion_id_foreign` FOREIGN KEY (`operacion_id`) REFERENCES `operaciones` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+  CONSTRAINT `movimientos_operacion_id_foreign` FOREIGN KEY (`operacion_id`) REFERENCES `operaciones` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `movimientos_validada_por_id_foreign` FOREIGN KEY (`validada_por_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE `operaciones` (

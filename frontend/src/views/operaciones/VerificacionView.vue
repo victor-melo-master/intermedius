@@ -1,33 +1,77 @@
 <template>
   <div class="max-w-3xl mx-auto space-y-4">
-    <!-- Header -->
-    <div class="flex items-center gap-3">
-      <button @click="$router.back()" class="p-2 hover:bg-gray-100 rounded-lg text-gray-500">←</button>
-      <div>
-        <h2 class="text-xl font-bold text-gray-800">Verificación #{{ verif.operacion?.id }}</h2>
-        <p class="text-sm text-gray-500">{{ verif.operacion?.tipo_operacion?.nombre || 'Operación' }}</p>
-      </div>
-    </div>
-
     <!-- Spinner -->
-    <div v-if="verif.loading === true" class="flex justify-center py-12">
-      <AppLoadingSpinner />
-    </div>
+    <template v-if="loading">
+      <div class="flex items-center gap-3 mb-4">
+        <button @click="$router.back()" class="p-2 hover:bg-gray-100 rounded-lg text-gray-500">←</button>
+        <h2 class="text-xl font-bold text-gray-800">Verificación</h2>
+      </div>
+      <div class="flex justify-center py-12">
+        <AppLoadingSpinner />
+      </div>
+    </template>
 
     <!-- Error -->
-    <AppErrorState
-      v-else-if="verif.error && typeof verif.error === 'string'"
-      :message="verif.error"
-      @retry="cargar"
-    />
+    <template v-else-if="error">
+      <div class="flex items-center gap-3 mb-4">
+        <button @click="$router.back()" class="p-2 hover:bg-gray-100 rounded-lg text-gray-500">←</button>
+        <h2 class="text-xl font-bold text-gray-800">Verificación</h2>
+      </div>
+      <AppErrorState :message="error" @retry="cargar" />
+    </template>
 
-    <!-- Contenido principal -->
-    <template v-else-if="mostrarContenido">
+    <!-- Sin datos -->
+    <template v-else-if="!operacion">
+      <div class="flex items-center gap-3 mb-4">
+        <button @click="$router.back()" class="p-2 hover:bg-gray-100 rounded-lg text-gray-500">←</button>
+        <h2 class="text-xl font-bold text-gray-800">Verificación</h2>
+      </div>
+      <div class="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700">
+        No se encontraron datos de operación.
+      </div>
+    </template>
+
+    <!-- Contenido -->
+    <template v-else>
+      <!-- Header -->
+      <div class="flex items-center gap-3">
+        <button @click="$router.back()" class="p-2 hover:bg-gray-100 rounded-lg text-gray-500">←</button>
+        <div class="flex-1">
+          <h2 class="text-xl font-bold text-gray-800">Verificación #{{ operacion.id }}</h2>
+          <p class="text-sm text-gray-500">{{ tipoNombre }}</p>
+        </div>
+        <span class="px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700">En verificación</span>
+      </div>
+
+      <!-- Detalles de la operación -->
+      <div class="bg-white border border-gray-200 rounded-xl p-4 space-y-2 text-sm">
+        <div v-if="operacion.cliente" class="flex justify-between">
+          <span class="text-gray-400">Cliente</span>
+          <span class="text-gray-700 font-medium">{{ operacion.cliente.nombre }}</span>
+        </div>
+        <div v-if="operacion.operador" class="flex justify-between">
+          <span class="text-gray-400">Operador</span>
+          <span class="text-gray-700 font-medium">{{ operacion.operador.name }}</span>
+        </div>
+        <div v-if="operacion.tasa_aplicada" class="flex justify-between">
+          <span class="text-gray-400">Tasa aplicada</span>
+          <span class="text-gray-700 font-medium">{{ formatRate(operacion.tasa_aplicada) }}</span>
+        </div>
+        <div v-if="operacion.descripcion" class="flex justify-between">
+          <span class="text-gray-400">Descripción</span>
+          <span class="text-gray-700 font-medium text-right max-w-[60%]">{{ operacion.descripcion }}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-gray-400">Fecha</span>
+          <span class="text-gray-700 font-medium">{{ formatDate(operacion.fecha) }}</span>
+        </div>
+      </div>
+
       <!-- Barra de progreso -->
       <div class="bg-white border border-gray-200 rounded-xl p-4">
         <div class="flex items-center justify-between mb-2">
           <span class="text-sm font-medium text-gray-700">Progreso de verificación</span>
-          <span class="text-sm text-gray-500">{{ verif.transaccionesValidadas }}/{{ verif.totalTransacciones }}</span>
+          <span class="text-sm text-gray-500">{{ movimientosValidados }}/{{ totalMovimientos }}</span>
         </div>
         <div class="w-full bg-gray-200 rounded-full h-2.5">
           <div class="bg-green-600 h-2.5 rounded-full transition-all duration-300"
@@ -36,10 +80,10 @@
       </div>
 
       <!-- Saldos de cuentas -->
-      <div v-if="Object.keys(verif.saldos).length" class="bg-white border border-gray-200 rounded-xl p-4 space-y-2">
+      <div v-if="tieneSaldos" class="bg-white border border-gray-200 rounded-xl p-4 space-y-2">
         <h3 class="font-semibold text-gray-700 text-sm">Saldos de cuentas</h3>
         <div class="grid grid-cols-2 gap-2">
-          <div v-for="(saldo, cuentaId) in verif.saldos" :key="cuentaId"
+          <div v-for="(saldo, cuentaId) in saldos" :key="cuentaId"
             class="bg-gray-50 rounded-lg p-3">
             <p class="text-xs text-gray-500">{{ saldo.alias }}</p>
             <p class="text-sm font-bold text-gray-800">{{ formatMoney(saldo.saldo, saldo.moneda) }}</p>
@@ -47,173 +91,111 @@
         </div>
       </div>
 
-      <!-- Transacciones (listado manual, sin componente) -->
+      <!-- Movimientos -->
       <div class="space-y-3">
-        <div class="flex items-center justify-between">
-          <h3 class="font-semibold text-gray-700">Transacciones</h3>
-          <button @click="showAddModal = true"
-            class="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1">
-            + Agregar
-          </button>
+        <h3 class="font-semibold text-gray-700">Movimientos</h3>
+
+        <div v-if="movimientos.length === 0" class="bg-white border border-gray-200 rounded-xl p-6 text-center text-gray-400">
+          No hay movimientos en esta operación
         </div>
 
-        <!-- Mensaje cuando no hay transacciones -->
-        <div v-if="!verif.transacciones.length" class="bg-white border border-gray-200 rounded-xl p-6 text-center text-gray-400">
-          No hay transacciones
-        </div>
-
-        <!-- Listado de transacciones (solo si hay) -->
-        <div v-for="tx in verif.transacciones" :key="tx.id"
+        <div v-for="mov in movimientos" :key="mov.id"
           class="bg-white border rounded-xl p-4 space-y-3"
-          :class="tx.estado === 'validada' ? 'border-green-200 bg-green-50/30' : 'border-gray-200'">
+          :class="mov.estado === 'validada' ? 'border-green-200 bg-green-50/30' :
+                   mov.estado === 'rechazada' ? 'border-red-200 bg-red-50/30' :
+                   'border-gray-200'">
+          <!-- Estado y acciones -->
           <div class="flex items-center justify-between">
-            <span class="px-2.5 py-0.5 rounded-full text-xs font-bold"
-              :class="tx.estado === 'validada' ? 'bg-green-100 text-green-700' :
-                       tx.estado === 'rechazada' ? 'bg-red-100 text-red-700' :
-                       'bg-yellow-100 text-yellow-700'">
-              {{ tx.estado }}
-            </span>
-            <div class="flex gap-2">
-              <button v-if="tx.estado === 'pendiente'" @click="validar(tx)"
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-bold"
+                :class="mov.estado === 'validada' ? 'bg-green-100 text-green-700' :
+                         mov.estado === 'rechazada' ? 'bg-red-100 text-red-700' :
+                         'bg-yellow-100 text-yellow-700'">
+                {{ mov.estado === 'validada' ? 'Validado' : mov.estado === 'rechazada' ? 'Rechazado' : 'Pendiente' }}
+              </span>
+              <span v-if="mov.orden" class="text-xs text-gray-400">#{{ mov.orden }}</span>
+            </div>
+            <div v-if="mov.estado === 'pendiente'" class="flex gap-2">
+              <button @click="validar(mov)"
                 class="text-xs text-green-600 hover:text-green-800 font-medium px-2 py-1 rounded-lg hover:bg-green-50">
                 Validar
               </button>
-              <button v-if="tx.estado === 'pendiente'" @click="abrirEditar(tx)"
-                class="text-xs text-amber-600 hover:text-amber-800 font-medium px-2 py-1 rounded-lg hover:bg-amber-50">
-                Editar
-              </button>
-              <button v-if="tx.estado === 'pendiente'" @click="confirmarEliminar(tx)"
+              <button @click="abrirRechazo(mov)"
                 class="text-xs text-red-600 hover:text-red-800 font-medium px-2 py-1 rounded-lg hover:bg-red-50">
-                Eliminar
+                Rechazar
               </button>
             </div>
           </div>
+
+          <!-- Detalles del movimiento -->
           <div class="grid grid-cols-2 gap-3 text-sm">
             <div>
-              <p class="text-xs text-gray-400">Origen</p>
-              <p class="text-gray-700">{{ tx.cuenta_origen?.alias || `Cuenta #${tx.cuenta_origen_id}` }}</p>
-            </div>
-            <div>
-              <p class="text-xs text-gray-400">Destino</p>
-              <p class="text-gray-700">{{ tx.cuenta_destino?.alias || `Cuenta #${tx.cuenta_destino_id}` }}</p>
-            </div>
-            <div>
-              <p class="text-xs text-gray-400">Monto</p>
-              <p class="font-bold text-gray-800">{{ formatMoney(tx.monto, tx.moneda?.codigo) }}</p>
+              <p class="text-xs text-gray-400">Cuenta</p>
+              <p class="text-gray-700">{{ mov.cuenta?.alias || `Cuenta #${mov.cuenta_id}` }}</p>
+              <p v-if="mov.cuenta?.banco?.nombre" class="text-xs text-gray-400">{{ mov.cuenta.banco.nombre }}</p>
             </div>
             <div>
               <p class="text-xs text-gray-400">Moneda</p>
-              <p class="text-gray-700">{{ tx.moneda?.codigo }}</p>
+              <p class="text-gray-700">{{ mov.moneda?.codigo }}</p>
             </div>
+            <div>
+              <p class="text-xs text-gray-400">Monto</p>
+              <p class="font-bold" :class="parseFloat(mov.monto) >= 0 ? 'text-green-600' : 'text-red-600'">
+                {{ formatMoney(mov.monto, mov.moneda?.codigo) }}
+              </p>
+            </div>
+            <div>
+              <p class="text-xs text-gray-400">Equivalente USD</p>
+              <p class="text-gray-700">{{ formatMoney(mov.monto_usd_equivalente, 'USD') }}</p>
+            </div>
+          </div>
+
+          <!-- Motivo de rechazo -->
+          <div v-if="mov.estado === 'rechazada' && mov.motivo_rechazo"
+            class="bg-red-50 border border-red-200 rounded-lg p-3">
+            <p class="text-xs font-medium text-red-700 mb-1">Motivo de rechazo:</p>
+            <p class="text-sm text-red-600">{{ mov.motivo_rechazo }}</p>
+          </div>
+
+          <!-- Validado por -->
+          <div v-if="mov.estado === 'validada' && mov.validada_por"
+            class="text-xs text-gray-400">
+            Validado por {{ mov.validada_por.name }} el {{ formatDateTime(mov.validada_en) }}
           </div>
         </div>
       </div>
 
       <!-- Botón cerrar verificación -->
       <div class="pt-2 pb-8">
-        <button @click="cerrar" :disabled="!verif.todasValidadas || cerrando"
+        <button @click="cerrar" :disabled="!todasValidados || cerrando"
           class="w-full py-3 rounded-xl font-semibold transition flex items-center justify-center gap-2"
-          :class="verif.todasValidadas
+          :class="todasValidados
             ? 'bg-green-600 hover:bg-green-700 text-white'
             : 'bg-gray-200 text-gray-400 cursor-not-allowed'">
           <span v-if="cerrando" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-          {{ cerrando ? 'Cerrando...' : verif.todasValidadas ? 'Cerrar verificación' : 'Todas las transacciones deben estar validadas' }}
+          {{ cerrando ? 'Cerrando...' : todasValidados ? 'Cerrar verificación' : 'Todos los movimientos deben estar validados' }}
         </button>
       </div>
     </template>
 
-    <!-- Fallback -->
-    <template v-else-if="verif.loading === false && !verif.operacion && !verif.error">
-      <div class="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700">
-        ⚠️ No se encontraron datos de operación.
-      </div>
-    </template>
-
-    <!-- Modal: Editar transacción -->
+    <!-- Modal: Rechazar movimiento -->
     <Teleport to="body">
-      <AppFormModal v-model="showEditModal" title="Editar transacción">
-        <form @submit.prevent="guardarEdicion" class="space-y-4">
+      <AppFormModal v-model="showRechazoModal" title="Rechazar movimiento">
+        <form @submit.prevent="confirmarRechazo" class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Cuenta origen</label>
-            <select v-model="editForm.cuenta_origen_id" required
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
-              <option v-for="c in cuentasDisponibles" :key="c.id" :value="c.id">
-                {{ c.alias }} ({{ c.moneda?.codigo }})
-              </option>
-            </select>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Motivo del rechazo</label>
+            <textarea v-model="rechazoMotivo" rows="3" required
+              class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 outline-none"
+              placeholder="Explique por qué rechaza este movimiento..."></textarea>
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Cuenta destino</label>
-            <select v-model="editForm.cuenta_destino_id" required
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
-              <option v-for="c in cuentasDisponibles" :key="c.id" :value="c.id">
-                {{ c.alias }} ({{ c.moneda?.codigo }})
-              </option>
-            </select>
-          </div>
-          <AppErrorState v-if="editError" :message="editError" :retry="false" />
         </form>
         <template #footer>
           <div class="flex gap-3">
-            <button type="button" @click="showEditModal = false"
+            <button type="button" @click="showRechazoModal = false"
               class="flex-1 py-2.5 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition">Cancelar</button>
-            <button @click="guardarEdicion" :disabled="savingEdit"
-              class="flex-1 py-2.5 bg-amber-500 text-white text-sm font-medium rounded-xl hover:bg-amber-600 transition">
-              {{ savingEdit ? 'Guardando...' : 'Guardar' }}
-            </button>
-          </div>
-        </template>
-      </AppFormModal>
-    </Teleport>
-
-    <!-- Modal: Agregar transacción -->
-    <Teleport to="body">
-      <AppFormModal v-model="showAddModal" title="Agregar transacción">
-        <form @submit.prevent="guardarNueva" class="space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Cuenta origen</label>
-            <select v-model="addForm.cuenta_origen_id" required
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
-              <option value="">Seleccionar...</option>
-              <option v-for="c in cuentasDisponibles" :key="c.id" :value="c.id">
-                {{ c.alias }} ({{ c.moneda?.codigo }})
-              </option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Cuenta destino</label>
-            <select v-model="addForm.cuenta_destino_id" required
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
-              <option value="">Seleccionar...</option>
-              <option v-for="c in cuentasDisponibles" :key="c.id" :value="c.id">
-                {{ c.alias }} ({{ c.moneda?.codigo }})
-              </option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Moneda</label>
-            <select v-model="addForm.moneda_id" required
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
-              <option value="">Seleccionar...</option>
-              <option v-for="m in monedas" :key="m.id" :value="m.id">
-                {{ m.codigo }} - {{ m.nombre }}
-              </option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Monto</label>
-            <input v-model.number="addForm.monto" type="number" step="0.01" min="0.01" required
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" />
-          </div>
-          <AppErrorState v-if="addError" :message="addError" :retry="false" />
-        </form>
-        <template #footer>
-          <div class="flex gap-3">
-            <button type="button" @click="showAddModal = false"
-              class="flex-1 py-2.5 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition">Cancelar</button>
-            <button @click="guardarNueva" :disabled="savingAdd"
-              class="flex-1 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-xl hover:bg-blue-700 transition">
-              {{ savingAdd ? 'Agregando...' : 'Agregar' }}
+            <button @click="confirmarRechazo" :disabled="!rechazoMotivo.trim() || savingRechazo"
+              class="flex-1 py-2.5 bg-red-600 text-white text-sm font-medium rounded-xl hover:bg-red-700 transition">
+              {{ savingRechazo ? 'Rechazando...' : 'Rechazar' }}
             </button>
           </div>
         </template>
@@ -229,7 +211,6 @@ import { useVerificacion } from '@/composables/useVerificacion'
 import { useFormatting } from '@/composables/useFormatting'
 import { useNotification } from '@/composables/useNotification'
 import { useApiError } from '@/composables/useApiError'
-import api from '@/api/axios'
 
 import AppLoadingSpinner from '@/components/common/AppLoadingSpinner.vue'
 import AppErrorState from '@/components/common/AppErrorState.vue'
@@ -237,134 +218,75 @@ import AppFormModal from '@/components/common/AppFormModal.vue'
 
 const route = useRoute()
 const router = useRouter()
-const verif = useVerificacion()
-const { formatMoney } = useFormatting()
+const { formatMoney, formatDateTime, formatRate, formatDate } = useFormatting()
 const notify = useNotification()
 const { parseError } = useApiError()
 
-// ------------------------------------------------------------------
-// Computed
-// ------------------------------------------------------------------
-const mostrarContenido = computed(() => {
-  return verif.loading.value === false && verif.operacion.value !== null
+const {
+  loading, error, operacion, movimientos, saldos,
+  totalMovimientos, movimientosValidados, todasValidados,
+  fetchVerificacion, validarMovimiento, rechazarMovimiento, cerrarVerificacion
+} = useVerificacion()
+
+const tipoNombre = computed(() => {
+  return operacion.value?.tipo_operacion?.nombre || operacion.value?.tipoOperacion?.nombre || 'Operación'
+})
+
+const tieneSaldos = computed(() => {
+  const s = saldos.value
+  return s && typeof s === 'object' && Object.keys(s).length > 0
 })
 
 const porcentajeProgreso = computed(() => {
-  if (!verif.totalTransacciones.value) return 0
-  return Math.round((verif.transaccionesValidadas.value / verif.totalTransacciones.value) * 100)
+  if (!totalMovimientos.value) return 0
+  return Math.round((movimientosValidados.value / totalMovimientos.value) * 100)
 })
 
-// ------------------------------------------------------------------
-// Estado
-// ------------------------------------------------------------------
 const cerrando = ref(false)
+const showRechazoModal = ref(false)
+const rechazoMovimiento = ref(null)
+const rechazoMotivo = ref('')
+const savingRechazo = ref(false)
 
-const showEditModal = ref(false)
-const editForm = ref({ cuenta_origen_id: null, cuenta_destino_id: null })
-const editTxId = ref(null)
-const editError = ref('')
-const savingEdit = ref(false)
-
-const showAddModal = ref(false)
-const addForm = ref({ cuenta_origen_id: '', cuenta_destino_id: '', moneda_id: '', monto: '' })
-const addError = ref('')
-const savingAdd = ref(false)
-
-const cuentasDisponibles = ref([])
-const monedas = ref([])
-
-// ------------------------------------------------------------------
-// Métodos
-// ------------------------------------------------------------------
 async function cargar() {
-  await verif.fetchVerificacion(route.params.id)
-  await cargarCatalogos()
+  await fetchVerificacion(route.params.id)
 }
 
-async function cargarCatalogos() {
+function abrirRechazo(mov) {
+  rechazoMovimiento.value = mov
+  rechazoMotivo.value = ''
+  showRechazoModal.value = true
+}
+
+async function validar(mov) {
   try {
-    const [cuentasRes, monedasRes] = await Promise.all([
-      api.get('/cuentas'),
-      api.get('/monedas'),
-    ])
-    cuentasDisponibles.value = Array.isArray(cuentasRes.data) ? cuentasRes.data : cuentasRes.data?.data || []
-    monedas.value = Array.isArray(monedasRes.data) ? monedasRes.data : monedasRes.data?.data || []
-  } catch (e) {
-    console.warn('Error cargando catálogos:', e)
-  }
-}
-
-function abrirEditar(tx) {
-  editTxId.value = tx.id
-  editForm.value = {
-    cuenta_origen_id: tx.cuenta_origen_id,
-    cuenta_destino_id: tx.cuenta_destino_id,
-  }
-  editError.value = ''
-  showEditModal.value = true
-}
-
-async function guardarEdicion() {
-  savingEdit.value = true
-  editError.value = ''
-  try {
-    await verif.editarTransaccion(route.params.id, editTxId.value, editForm.value)
-    showEditModal.value = false
-    notify.success('Transacción actualizada')
-    await verif.fetchVerificacion(route.params.id)
-  } catch (err) {
-    editError.value = parseError(err)
-  } finally {
-    savingEdit.value = false
-  }
-}
-
-async function guardarNueva() {
-  savingAdd.value = true
-  addError.value = ''
-  try {
-    await verif.agregarTransaccion(route.params.id, {
-      cuenta_origen_id: addForm.value.cuenta_origen_id,
-      cuenta_destino_id: addForm.value.cuenta_destino_id,
-      moneda_id: addForm.value.moneda_id,
-      monto: addForm.value.monto,
-    })
-    showAddModal.value = false
-    addForm.value = { cuenta_origen_id: '', cuenta_destino_id: '', moneda_id: '', monto: '' }
-    notify.success('Transacción agregada')
-    await verif.fetchVerificacion(route.params.id)
-  } catch (err) {
-    addError.value = parseError(err)
-  } finally {
-    savingAdd.value = false
-  }
-}
-
-async function validar(tx) {
-  try {
-    await verif.validarTransaccion(route.params.id, tx.id)
-    notify.success('Transacción validada')
-    await verif.fetchVerificacion(route.params.id)
+    await validarMovimiento(route.params.id, mov.id)
+    notify.success('Movimiento validado')
+    await fetchVerificacion(route.params.id)
   } catch (err) {
     notify.error(parseError(err))
   }
 }
 
-async function confirmarEliminar(tx) {
-  if (!confirm(`¿Eliminar transacción de ${formatMoney(tx.monto, tx.moneda?.codigo)}?`)) return
+async function confirmarRechazo() {
+  if (!rechazoMovimiento.value || !rechazoMotivo.value.trim()) return
+  savingRechazo.value = true
   try {
-    await verif.eliminarTransaccion(route.params.id, tx.id)
-    notify.success('Transacción eliminada')
-    await verif.fetchVerificacion(route.params.id)
+    await rechazarMovimiento(route.params.id, rechazoMovimiento.value.id, rechazoMotivo.value.trim())
+    showRechazoModal.value = false
+    notify.success('Movimiento rechazado')
+    await fetchVerificacion(route.params.id)
   } catch (err) {
     notify.error(parseError(err))
+  } finally {
+    savingRechazo.value = false
   }
 }
 
 async function cerrar() {
   cerrando.value = true
   try {
-    await verif.cerrarVerificacion(route.params.id)
+    await cerrarVerificacion(route.params.id)
     notify.success('Verificación completada')
     router.push(`/operaciones/${route.params.id}`)
   } catch (err) {
@@ -374,8 +296,5 @@ async function cerrar() {
   }
 }
 
-// ------------------------------------------------------------------
-// Lifecycle
-// ------------------------------------------------------------------
 onMounted(cargar)
 </script>

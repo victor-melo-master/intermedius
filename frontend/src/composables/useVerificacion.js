@@ -8,61 +8,45 @@ export function useVerificacion() {
   const error = ref(null)
 
   const operacion = ref(null)
-  const transacciones = ref([])
+  const movimientos = ref([])
   const saldos = ref({})
-  const totalTransacciones = ref(0)
-  const transaccionesValidadas = ref(0)
-  const todasValidadas = ref(false)
+  const totalMovimientos = ref(0)
+  const movimientosValidados = ref(0)
+  const todasValidados = ref(false)
 
   const fetchVerificacion = async (id) => {
-    console.log('🔍 fetchVerificacion iniciado, ID:', id)
     loading.value = true
     error.value = null
     try {
       const response = await api.get(`/operaciones/${id}/verificacion`)
-      console.log('✅ Respuesta API:', response)
       const raw = response?.data || {}
-      console.log('📦 Datos crudos (raw):', raw)
       const data = raw.data || raw
-      console.log('📦 Datos procesados (data):', data)
 
       operacion.value = data.operacion || null
-      transacciones.value = data.transacciones || []
-      saldos.value = data.saldos || {}
-      totalTransacciones.value = data.total_transacciones || 0
-      transaccionesValidadas.value = data.transacciones_validadas || 0
-      todasValidadas.value =
-        transaccionesValidadas.value > 0 &&
-        transaccionesValidadas.value === totalTransacciones.value
-
-      console.log('📋 operacion asignada:', operacion.value)
-      console.log('📋 transacciones asignadas:', transacciones.value)
+      movimientos.value = data.movimientos || data.operacion?.movimientos || []
+      saldos.value = (data.saldos && typeof data.saldos === 'object' && !Array.isArray(data.saldos))
+        ? data.saldos : {}
+      totalMovimientos.value = data.total_movimientos || movimientos.value.length || 0
+      movimientosValidados.value = data.movimientos_validados || 0
+      todasValidados.value =
+        movimientosValidados.value > 0 &&
+        movimientosValidados.value === totalMovimientos.value
     } catch (err) {
-      console.error('❌ Error en fetchVerificacion:', err)
       error.value = parseError(err)
     } finally {
       loading.value = false
-      console.log('🔚 fetchVerificacion finalizado, loading:', loading.value)
     }
   }
 
-  const agregarTransaccion = async (operacionId, payload) => {
-    const response = await api.post(`/operaciones/${operacionId}/transacciones`, payload)
+  const validarMovimiento = async (operacionId, movimientoId) => {
+    const response = await api.patch(`/operaciones/${operacionId}/movimientos/${movimientoId}/validar`)
     return response
   }
 
-  const editarTransaccion = async (operacionId, transaccionId, payload) => {
-    const response = await api.put(`/operaciones/${operacionId}/transacciones/${transaccionId}`, payload)
-    return response
-  }
-
-  const validarTransaccion = async (operacionId, transaccionId) => {
-    const response = await api.patch(`/operaciones/${operacionId}/transacciones/${transaccionId}/validar`)
-    return response
-  }
-
-  const eliminarTransaccion = async (operacionId, transaccionId) => {
-    const response = await api.delete(`/operaciones/${operacionId}/transacciones/${transaccionId}`)
+  const rechazarMovimiento = async (operacionId, movimientoId, motivo) => {
+    const response = await api.patch(`/operaciones/${operacionId}/movimientos/${movimientoId}/rechazar`, {
+      motivo_rechazo: motivo,
+    })
     return response
   }
 
@@ -75,16 +59,14 @@ export function useVerificacion() {
     loading,
     error,
     operacion,
-    transacciones,
+    movimientos,
     saldos,
-    totalTransacciones,
-    transaccionesValidadas,
-    todasValidadas,
+    totalMovimientos,
+    movimientosValidados,
+    todasValidados,
     fetchVerificacion,
-    agregarTransaccion,
-    editarTransaccion,
-    validarTransaccion,
-    eliminarTransaccion,
+    validarMovimiento,
+    rechazarMovimiento,
     cerrarVerificacion,
   }
 }

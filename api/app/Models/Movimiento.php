@@ -38,6 +38,10 @@ class Movimiento extends Model
         'tasa_a_usd',
         'monto_usd_equivalente',
         'orden',
+        'estado',
+        'motivo_rechazo',
+        'validada_en',
+        'validada_por_id',
     ];
 
     protected function casts(): array
@@ -46,6 +50,7 @@ class Movimiento extends Model
             'monto'                => 'decimal:2',
             'tasa_a_usd'           => 'decimal:8',
             'monto_usd_equivalente' => 'decimal:2',
+            'validada_en'          => 'datetime',
         ];
     }
 
@@ -71,5 +76,10 @@ class Movimiento extends Model
     public function moneda(): BelongsTo
     {
         return $this->belongsTo(Moneda::class);
+    }
+
+    public function validadaPor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'validada_por_id');
     }
 }

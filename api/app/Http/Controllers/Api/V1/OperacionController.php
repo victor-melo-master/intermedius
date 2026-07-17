@@ -128,25 +128,21 @@ class OperacionController extends Controller
         $this->authorize('view', $operacion);
 
         $operacion->load([
-            'transacciones.cuentaOrigen.banco',
-            'transacciones.cuentaDestino.banco',
-            'transacciones.moneda',
-            'transacciones.validadaPor',
+            'movimientos.cuenta.banco',
+            'movimientos.moneda',
+            'movimientos.validadaPor',
             'tipoOperacion',
             'cliente',
             'operador',
         ]);
 
-        $saldos = [];
-        $cuentasIds = $operacion->transacciones->pluck('cuenta_origen_id')
-            ->merge($operacion->transacciones->pluck('cuenta_destino_id'))
-            ->unique()
-            ->values();
+        $saldos = (object) [];
+        $cuentasIds = $operacion->movimientos->pluck('cuenta_id')->unique()->values();
 
         foreach ($cuentasIds as $cuentaId) {
             $cuenta = \App\Models\Cuenta::with('moneda')->find($cuentaId);
             if ($cuenta) {
-                $saldos[$cuentaId] = [
+                $saldos->$cuentaId = [
                     'alias'  => $cuenta->alias,
                     'saldo'  => round($this->saldoValidator->obtenerSaldoDisponible($cuenta, $cuenta->moneda_id), 2),
                     'moneda' => $cuenta->moneda->codigo,
@@ -154,11 +150,15 @@ class OperacionController extends Controller
             }
         }
 
+        $totalMovimientos = $operacion->movimientos->count();
+        $movimientosValidados = $operacion->movimientos->where('estado', 'validada')->count();
+
         return response()->json([
-            'operacion'     => $operacion,
-            'saldos'        => $saldos,
-            'total_transacciones' => $operacion->transacciones->count(),
-            'transacciones_validadas' => $operacion->transacciones->where('estado', 'validada')->count(),
+            'operacion'              => $operacion,
+            'movimientos'            => $operacion->movimientos,
+            'saldos'                 => $saldos,
+            'total_movimientos'      => $totalMovimientos,
+            'movimientos_validados'  => $movimientosValidados,
         ]);
     }
 
@@ -200,12 +200,12 @@ class OperacionController extends Controller
             ], 422);
         }
 
-        $pendientes = $operacion->transacciones()->where('estado', '!=', 'validada')->count();
+        $pendientes = $operacion->movimientos()->where('estado', '!=', 'validada')->count();
 
         if ($pendientes > 0) {
             return response()->json([
-                'message' => "Hay {$pendientes} transacción(es) sin validar. Todas deben estar validadas para cerrar la verificación.",
-                'transacciones_pendientes' => $pendientes,
+                'message' => "Hay {$pendientes} movimiento(s) sin validar. Todos deben estar validados para cerrar la verificación.",
+                'movimientos_pendientes' => $pendientes,
             ], 422);
         }
 
@@ -222,6 +222,89 @@ class OperacionController extends Controller
             ->log('Verificación completada');
 
         return (new OperacionResource($operacion->fresh(['tipoOperacion', 'operador', 'verificadoPor'])))->response();
+    }
+
+    /**
+     * Valida un movimiento individual durante la verificación.
+     */
+    public function validarMovimiento(Request $request, Operacion $operacion, \App\Models\Movimiento $movimiento): JsonResponse
+    {
+        $this->authorize('update', $operacion);
+
+        if ($operacion->estatus !== 'en_verificacion') {
+            return response()->json(['message' => 'La operación no está en proceso de verificación.'], 422);
+        }
+
+        if ($movimiento->operacion_id !== $operacion->id) {
+            return response()->json(['message' => 'El movimiento no pertenece a esta operación.'], 404);
+        }
+
+        if ($movimiento->estado !== 'pendiente') {
+            return response()->json(['message' => 'Solo se pueden validar movimientos en estado pendiente.'], 422);
+        }
+
+        $movimiento->update([
+            'estado'          => 'validada',
+            'validada_en'     => now(),
+            'validada_por_id' => $request->user()->id,
+        ]);
+
+        activity('verificacion')
+            ->performedOn($movimiento)
+            ->causedBy($request->user())
+            ->withProperties(['operacion_id' => $operacion->id])
+            ->event('movimiento_validado')
+            ->log('Movimiento validado durante verificación');
+
+        $todasValidados = $operacion->movimientos()->where('estado', '!=', 'validada')->doesntExist();
+
+        return response()->json([
+            'movimiento'       => $movimiento->fresh(['cuenta.banco', 'moneda', 'validadaPor']),
+            'todas_validados'  => $todasValidados,
+        ]);
+    }
+
+    /**
+     * Rechaza un movimiento individual durante la verificación.
+     */
+    public function rechazarMovimiento(Request $request, Operacion $operacion, \App\Models\Movimiento $movimiento): JsonResponse
+    {
+        $this->authorize('update', $operacion);
+
+        if ($operacion->estatus !== 'en_verificacion') {
+            return response()->json(['message' => 'La operación no está en proceso de verificación.'], 422);
+        }
+
+        if ($movimiento->operacion_id !== $operacion->id) {
+            return response()->json(['message' => 'El movimiento no pertenece a esta operación.'], 404);
+        }
+
+        if ($movimiento->estado !== 'pendiente') {
+            return response()->json(['message' => 'Solo se pueden rechazar movimientos en estado pendiente.'], 422);
+        }
+
+        $request->validate([
+            'motivo_rechazo' => 'required|string|max:500',
+        ]);
+
+        $movimiento->update([
+            'estado'           => 'rechazada',
+            'motivo_rechazo'   => $request->motivo_rechazo,
+        ]);
+
+        activity('verificacion')
+            ->performedOn($movimiento)
+            ->causedBy($request->user())
+            ->withProperties([
+                'operacion_id'     => $operacion->id,
+                'motivo_rechazo'   => $request->motivo_rechazo,
+            ])
+            ->event('movimiento_rechazado')
+            ->log('Movimiento rechazado durante verificación');
+
+        return response()->json([
+            'movimiento' => $movimiento->fresh(['cuenta.banco', 'moneda', 'validadaPor']),
+        ]);
     }
 
     /**

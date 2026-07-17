@@ -106,6 +106,8 @@ Route::prefix('v1')->group(function () {
         Route::patch('operaciones/{operacion}/verificar', [OperacionController::class, 'verificar']);
         Route::get('operaciones/{operacion}/verificacion', [OperacionController::class, 'verificacion']);
         Route::post('operaciones/{operacion}/iniciar-verificacion', [OperacionController::class, 'iniciarVerificacion']);
+        Route::patch('operaciones/{operacion}/movimientos/{movimiento}/validar', [OperacionController::class, 'validarMovimiento']);
+        Route::patch('operaciones/{operacion}/movimientos/{movimiento}/rechazar', [OperacionController::class, 'rechazarMovimiento']);
         Route::delete('operaciones/{operacion}', [OperacionController::class, 'destroy']);
 
         // ── Transacciones (durante verificación) ────────────────────
