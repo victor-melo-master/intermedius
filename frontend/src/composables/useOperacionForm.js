@@ -200,8 +200,14 @@ export function useOperacionForm() {
     const movsForeign = movs.filter(m => m.moneda?.codigo === monedaSel.value)
     const movsQuote = movs.filter(m => m.moneda?.codigo === quoteCodigo.value)
 
-    form.monto_usd = movsForeign.reduce((s, m) => s + Math.abs(parseFloat(m.monto)), 0).toFixed(2)
-    form.bolivares = movsQuote.reduce((s, m) => s + Math.abs(parseFloat(m.monto)), 0).toFixed(2)
+    form.monto_usd = movsForeign
+      .filter(m => parseFloat(m.monto) > 0)
+      .reduce((s, m) => s + parseFloat(m.monto), 0)
+      .toFixed(2)
+    form.bolivares = movsQuote
+      .filter(m => parseFloat(m.monto) > 0)
+      .reduce((s, m) => s + parseFloat(m.monto), 0)
+      .toFixed(2)
 
     form.transacciones = []
     const movsPorMoneda = {}
