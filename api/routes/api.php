@@ -30,6 +30,7 @@ use App\Http\Controllers\Api\V1\Configuracion\ComisionOperacionController;
 use App\Http\Controllers\TasasController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\DocumentoController;
+use App\Http\Controllers\Api\V1\TransaccionController;
 
 Route::prefix('v1')->group(function () {
 
@@ -75,6 +76,7 @@ Route::prefix('v1')->group(function () {
             Route::apiResource('cuentas',          CuentaController::class);
             Route::post('cuentas/{cuenta}/saldo', [CuentaController::class, 'cargarSaldo'])
                 ->middleware('role:admin|super_admin');
+            Route::get('cuentas/{cuenta}/saldo-disponible', [CuentaController::class, 'saldoDisponible']);
             Route::apiResource('clientes',         ClienteController::class);
             Route::get('clientes/{cliente}/cuentas', [ClienteController::class, 'cuentas']);
             Route::get('clientes/{cliente}/operaciones', [ClienteController::class, 'operaciones']);
@@ -102,7 +104,15 @@ Route::prefix('v1')->group(function () {
             ->parameters(['operaciones' => 'operacion'])
             ->middleware('throttle:30,1');
         Route::patch('operaciones/{operacion}/verificar', [OperacionController::class, 'verificar']);
+        Route::get('operaciones/{operacion}/verificacion', [OperacionController::class, 'verificacion']);
+        Route::post('operaciones/{operacion}/iniciar-verificacion', [OperacionController::class, 'iniciarVerificacion']);
         Route::delete('operaciones/{operacion}', [OperacionController::class, 'destroy']);
+
+        // ── Transacciones (durante verificación) ────────────────────
+        Route::post('operaciones/{operacion}/transacciones', [TransaccionController::class, 'store']);
+        Route::put('operaciones/{operacion}/transacciones/{transaccion}', [TransaccionController::class, 'update']);
+        Route::patch('operaciones/{operacion}/transacciones/{transaccion}/validar', [TransaccionController::class, 'validar']);
+        Route::delete('operaciones/{operacion}/transacciones/{transaccion}', [TransaccionController::class, 'destroy']);
 
         // ── Pool de pagadores ────────────────────────────────────────
         Route::prefix('pool')->group(function () {

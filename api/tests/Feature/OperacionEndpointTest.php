@@ -397,6 +397,10 @@ class OperacionEndpointTest extends TestCase
             ->assertForbidden();
 
         $this->actingAs($this->contador)
+            ->postJson("/api/v1/operaciones/{$operacion->id}/iniciar-verificacion")
+            ->assertOk();
+
+        $this->actingAs($this->contador)
             ->patchJson("/api/v1/operaciones/{$operacion->id}/verificar")
             ->assertOk()
             ->assertJsonPath('data.estatus', 'verificado');
@@ -426,7 +430,7 @@ class OperacionEndpointTest extends TestCase
         $this->actingAs($this->contador)
             ->patchJson("/api/v1/operaciones/{$operacion->id}/verificar")
             ->assertStatus(422)
-            ->assertJson(['message' => 'La operación ya está verificada.']);
+            ->assertJson(['message' => 'La operación no está en proceso de verificación.']);
     }
 
     // ── Destroy ────────────────────────────────────────────────────────────────

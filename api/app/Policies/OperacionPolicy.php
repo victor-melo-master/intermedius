@@ -54,4 +54,12 @@ class OperacionPolicy
     {
         return $user->hasRole(['admin', 'contador']);
     }
+
+    /**
+     * Determine whether the user can update an operacion.
+     */
+    public function update(User $user, Operacion $operacion): bool
+    {
+        return $user->hasRole(['admin', 'operador', 'contador']);
+    }
 }

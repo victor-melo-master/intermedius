@@ -9,6 +9,7 @@ use App\Http\Requests\Operacion\VerificarOperacionRequest;
 use App\Http\Resources\OperacionResource;
 use App\Models\Operacion;
 use App\Services\Operaciones\RegistroOperacionService;
+use App\Services\Transaccion\SaldoValidator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -19,7 +20,10 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
  */
 class OperacionController extends Controller
 {
-    public function __construct(private readonly RegistroOperacionService $registroService) {}
+    public function __construct(
+        private readonly RegistroOperacionService $registroService,
+        private readonly SaldoValidator $saldoValidator,
+    ) {}
 
     /**
      * Lista paginada de operaciones con filtros opcionales.
@@ -117,17 +121,91 @@ class OperacionController extends Controller
 }
 
     /**
-     * Verifica una operación cambiando su estatus a 'verificado'.
-     *
-     * @param VerificarOperacionRequest $request Datos validados de verificación
-     * @param Operacion $operacion Operación a verificar
-     * @return JsonResponse Operación verificada o error 422 si ya lo estaba
+     * Retorna la vista de verificación de una operación con sus transacciones y saldos.
+     */
+    public function verificacion(Operacion $operacion): JsonResponse
+    {
+        $this->authorize('view', $operacion);
+
+        $operacion->load([
+            'transacciones.cuentaOrigen.banco',
+            'transacciones.cuentaDestino.banco',
+            'transacciones.moneda',
+            'transacciones.validadaPor',
+            'tipoOperacion',
+            'cliente',
+            'operador',
+        ]);
+
+        $saldos = [];
+        $cuentasIds = $operacion->transacciones->pluck('cuenta_origen_id')
+            ->merge($operacion->transacciones->pluck('cuenta_destino_id'))
+            ->unique()
+            ->values();
+
+        foreach ($cuentasIds as $cuentaId) {
+            $cuenta = \App\Models\Cuenta::with('moneda')->find($cuentaId);
+            if ($cuenta) {
+                $saldos[$cuentaId] = [
+                    'alias'  => $cuenta->alias,
+                    'saldo'  => round($this->saldoValidator->obtenerSaldoDisponible($cuenta, $cuenta->moneda_id), 2),
+                    'moneda' => $cuenta->moneda->codigo,
+                ];
+            }
+        }
+
+        return response()->json([
+            'operacion'     => $operacion,
+            'saldos'        => $saldos,
+            'total_transacciones' => $operacion->transacciones->count(),
+            'transacciones_validadas' => $operacion->transacciones->where('estado', 'validada')->count(),
+        ]);
+    }
+
+    /**
+     * Inicia el proceso de verificación de una operación.
+     */
+    public function iniciarVerificacion(Operacion $operacion): JsonResponse
+    {
+        $this->authorize('update', $operacion);
+
+        if ($operacion->estatus !== 'sin_verificar') {
+            return response()->json([
+                'message' => 'La operación no está en estado sin_verificar.',
+            ], 422);
+        }
+
+        $operacion->update(['estatus' => 'en_verificacion']);
+
+        activity('verificacion')
+            ->performedOn($operacion)
+            ->causedBy(\Auth::user())
+            ->event('verificacion_iniciada')
+            ->log('Proceso de verificación iniciado');
+
+        return response()->json([
+            'message' => 'Verificación iniciada.',
+            'operacion' => $operacion->fresh(['tipoOperacion', 'operador']),
+        ]);
+    }
+
+    /**
+     * Cierra la verificación de una operación (todas las transacciones deben estar validadas).
      */
     public function verificar(VerificarOperacionRequest $request, Operacion $operacion): JsonResponse
     {
-        if ($operacion->estatus === 'verificado') {
+        if ($operacion->estatus !== 'en_verificacion') {
             return response()->json([
-                'message' => 'La operación ya está verificada.',
+                'message' => 'La operación no está en proceso de verificación.',
+            ], 422);
+        }
+
+        $pendientes = $operacion->transacciones()->where('estado', '!=', 'validada')->count();
+
+        if ($pendientes > 0) {
+            return response()->json([
+                'message' => "Hay {$pendientes} transacción(es) sin validar. Todas deben estar validadas para cerrar la verificación.",
+                'transacciones_pendientes' => $pendientes,
             ], 422);
         }
 
@@ -136,6 +214,12 @@ class OperacionController extends Controller
             'verificado_at'     => now(),
             'verificado_por_id' => $request->user()->id,
         ]);
+
+        activity('verificacion')
+            ->performedOn($operacion)
+            ->causedBy($request->user())
+            ->event('verificacion_completada')
+            ->log('Verificación completada');
 
         return (new OperacionResource($operacion->fresh(['tipoOperacion', 'operador', 'verificadoPor'])))->response();
     }

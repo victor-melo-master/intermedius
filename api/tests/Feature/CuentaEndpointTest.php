@@ -254,4 +254,61 @@ class CuentaEndpointTest extends TestCase
 
         $response->assertStatus(422);
     }
+
+    // ── Saldo Disponible ──────────────────────────────────────────────────────
+
+    public function test_saldo_disponible_retorna_saldo(): void
+    {
+        $moneda = Moneda::factory()->usd()->create();
+        $titular = Titular::factory()->create();
+        $cuenta = Cuenta::factory()->create([
+            'moneda_id'     => $moneda->id,
+            'titular_id'    => $titular->id,
+            'saldo_cache'   => 500,
+            'saldo_cache_at' => now(),
+        ]);
+
+        $response = $this->actingAs($this->admin)
+            ->getJson("/api/v1/cuentas/{$cuenta->id}/saldo-disponible");
+
+        $response->assertStatus(200)
+            ->assertJsonPath('cuenta_id', $cuenta->id)
+            ->assertJsonPath('alias', $cuenta->alias)
+            ->assertJsonPath('saldo', 500);
+    }
+
+    public function test_saldo_disponible_requiere_autenticacion(): void
+    {
+        $cuenta = Cuenta::factory()->create();
+
+        $response = $this->getJson("/api/v1/cuentas/{$cuenta->id}/saldo-disponible");
+
+        $response->assertStatus(401);
+    }
+
+    public function test_saldo_disponible_operador_puede_consultar(): void
+    {
+        $moneda = Moneda::factory()->usd()->create();
+        $titular = Titular::factory()->create();
+        $cuenta = Cuenta::factory()->create([
+            'moneda_id'     => $moneda->id,
+            'titular_id'    => $titular->id,
+            'saldo_cache'   => 250,
+            'saldo_cache_at' => now(),
+        ]);
+
+        $response = $this->actingAs($this->operador)
+            ->getJson("/api/v1/cuentas/{$cuenta->id}/saldo-disponible");
+
+        $response->assertStatus(200)
+            ->assertJsonPath('saldo', 250);
+    }
+
+    public function test_saldo_disponible_404_si_no_existe(): void
+    {
+        $response = $this->actingAs($this->admin)
+            ->getJson('/api/v1/cuentas/99999/saldo-disponible');
+
+        $response->assertStatus(404);
+    }
 }

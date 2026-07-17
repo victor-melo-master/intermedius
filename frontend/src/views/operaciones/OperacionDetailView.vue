@@ -14,6 +14,7 @@
           <span class="text-sm text-gray-500">#{{ ops.detail.id }}</span>
           <span class="px-3 py-1 rounded-full text-xs font-bold"
             :class="ops.detail.estatus === 'verificado' ? 'bg-green-50 text-green-700' :
+                     ops.detail.estatus === 'en_verificacion' ? 'bg-blue-50 text-blue-700' :
                      ops.detail.estatus === 'en_revision' ? 'bg-orange-50 text-orange-700' :
                      'bg-gray-50 text-gray-700'">
             {{ ops.detail.estatus?.replace('_', ' ') }}
@@ -71,13 +72,21 @@
         </button>
 
         <button
-          v-if="auth.isAdmin && ops.detail.estatus !== 'verificado'"
-          @click="verificar"
+          v-if="auth.isAdmin && ops.detail.estatus === 'sin_verificar'"
+          @click="iniciarVerificacion"
           :disabled="verifying"
-          class="w-full bg-green-600 hover:bg-green-700 disabled:bg-green-300 text-white font-semibold py-3 rounded-xl transition flex items-center justify-center gap-2"
+          class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-semibold py-3 rounded-xl transition flex items-center justify-center gap-2"
         >
           <span v-if="verifying" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-          {{ verifying ? 'Verificando...' : 'Verificar operación' }}
+          {{ verifying ? 'Iniciando...' : 'Verificar transacciones' }}
+        </button>
+
+        <button
+          v-if="auth.isAdmin && ops.detail.estatus === 'en_verificacion'"
+          @click="irAVerificacion"
+          class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-xl transition flex items-center justify-center gap-2"
+        >
+          Continuar verificación
         </button>
       </div>
     </div>
@@ -118,6 +127,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useOperacionesStore } from '../../stores/operaciones.js'
 import { useAuthStore } from '../../stores/auth.js'
 import { useFormatting } from '@/composables/useFormatting'
+import api from '@/api/axios'
 import AppLoadingSpinner from '../../components/common/AppLoadingSpinner.vue'
 import AppErrorState from '../../components/common/AppErrorState.vue'
 import AppFormModal from '@/components/common/AppFormModal.vue'
@@ -150,13 +160,17 @@ const puedeEditar = computed(() => {
 })
 
 /** Verifica la operación actual (cambia estatus a verificado) */
-async function verificar() {
+async function iniciarVerificacion() {
   verifying.value = true
   try {
-    await ops.verificar(route.params.id)
-    await ops.fetchOne(route.params.id)
+    await api.post(`/operaciones/${route.params.id}/iniciar-verificacion`)
+    router.push(`/operaciones/${route.params.id}/verificar`)
   } catch {}
   verifying.value = false
+}
+
+function irAVerificacion() {
+  router.push(`/operaciones/${route.params.id}/verificar`)
 }
 
 /** Abre el modal para ingresar motivo de edición */

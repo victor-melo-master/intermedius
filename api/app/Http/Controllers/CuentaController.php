@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Cuenta\StoreCuentaRequest;
 use App\Http\Requests\Cuenta\UpdateCuentaRequest;
 use App\Models\Cuenta;
+use App\Services\Transaccion\SaldoValidator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -109,5 +110,26 @@ class CuentaController extends Controller
         ]);
 
         return response()->json($cuenta->fresh(['banco', 'moneda']));
+    }
+
+    /**
+     * Retorna el saldo disponible real de una cuenta para una moneda específica.
+     *
+     * @param Cuenta $cuenta
+     * @return JsonResponse
+     */
+    public function saldoDisponible(Cuenta $cuenta): JsonResponse
+    {
+        $this->authorize('view', $cuenta);
+
+        $validator = app(SaldoValidator::class);
+        $saldo = $validator->obtenerSaldoDisponible($cuenta, $cuenta->moneda_id);
+
+        return response()->json([
+            'cuenta_id' => $cuenta->id,
+            'alias'     => $cuenta->alias,
+            'moneda_id' => $cuenta->moneda_id,
+            'saldo'     => round($saldo, 2),
+        ]);
     }
 }

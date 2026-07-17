@@ -369,7 +369,7 @@ CREATE TABLE IF NOT EXISTS `operaciones` (
   `ganancia_neta_ves` decimal(20,2) NOT NULL DEFAULT 0.00,
   `referencia` varchar(100) DEFAULT NULL,
   `descripcion` text DEFAULT NULL,
-  `estatus` enum('verificado','en_revision','sin_verificar') NOT NULL DEFAULT 'sin_verificar',
+  `estatus` enum('verificado','en_revision','sin_verificar','en_verificacion') NOT NULL DEFAULT 'sin_verificar',
   `estado` enum('en_espera','en_proceso','concluida','cancelada') NOT NULL DEFAULT 'en_espera',
   `estado_pool` enum('pendiente','asignada','pagada','cancelada') NOT NULL DEFAULT 'pendiente',
   `pagador_id` bigint(20) unsigned DEFAULT NULL,
