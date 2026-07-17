@@ -182,7 +182,7 @@ export function useOperacionForm() {
   const cargarOperacion = async () => {
     if (!esEdicion.value) return
     await operaciones.fetchOne(editId.value)
-    const op = operaciones.detail
+    const op = operaciones.detail.value
     if (!op) return
 
     const codigo = op.tipo_operacion?.codigo
@@ -287,7 +287,7 @@ export function useOperacionForm() {
         await operaciones.create(body)
       }
 
-      const op = operaciones.detail
+      const op = operaciones.detail.value
       successRef.value = op?.referencia ? `(${op.referencia})` : `#${op?.id || ''}`
       notifier.success('Operación registrada exitosamente')
     } catch (err) {
