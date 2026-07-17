@@ -204,17 +204,28 @@ export function useOperacionForm() {
     form.bolivares = movsQuote.reduce((s, m) => s + Math.abs(parseFloat(m.monto)), 0).toFixed(2)
 
     form.transacciones = []
+    const movsPorMoneda = {}
     for (const mov of movs) {
-      const signo = parseFloat(mov.monto) >= 0 ? 'destino' : 'origen'
-      form.transacciones.push({
-        _key: ++txCounter,
-        cuenta_origen_id: signo === 'origen' ? mov.cuenta_id : null,
-        cuenta_destino_id: signo === 'destino' ? mov.cuenta_id : null,
-        moneda_id: mov.moneda_id,
-        monto: Math.abs(parseFloat(mov.monto)).toString(),
-        comision_tipo: 'sin_comision',
-        comision_monto: '',
-      })
+      const c = mov.moneda_id
+      if (!movsPorMoneda[c]) movsPorMoneda[c] = []
+      movsPorMoneda[c].push(mov)
+    }
+    for (const movs of Object.values(movsPorMoneda)) {
+      const origenes = movs.filter(m => parseFloat(m.monto) < 0)
+      const destinos = movs.filter(m => parseFloat(m.monto) >= 0)
+      const pares = Math.min(origenes.length, destinos.length)
+      for (let i = 0; i < pares; i++) {
+        const monto = Math.abs(parseFloat(origenes[i].monto))
+        form.transacciones.push({
+          _key: ++txCounter,
+          cuenta_origen_id: origenes[i].cuenta_id,
+          cuenta_destino_id: destinos[i].cuenta_id,
+          moneda_id: Number(origenes[i].moneda_id),
+          monto: monto.toString(),
+          comision_tipo: 'sin_comision',
+          comision_monto: '',
+        })
+      }
     }
     if (form.transacciones.length === 0) form.transacciones = [nuevaTx(), nuevaTx()]
   }
