@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Operacion\StoreOperacionRequest;
+use App\Http\Requests\Operacion\SolicitudOperacionRequest;
 use App\Http\Requests\Operacion\UpdateOperacionRequest;
 use App\Http\Requests\Operacion\VerificarOperacionRequest;
 use App\Http\Resources\OperacionResource;
@@ -44,6 +45,7 @@ class OperacionController extends Controller
             ->when($request->filled('cliente_id'),   fn ($q) => $q->where('cliente_id', $request->cliente_id))
             ->when($request->filled('operador_id'),  fn ($q) => $q->where('operador_id', $request->operador_id))
             ->when($request->filled('estatus'),      fn ($q) => $q->where('estatus', $request->estatus))
+            ->when($request->filled('estado'),       fn ($q) => $q->where('estado', $request->estado))
             ->when($request->filled('cuenta_id'),    fn ($q) => $q->whereHas('movimientos', fn ($m) => $m->where('cuenta_id', $request->cuenta_id)))
             ->orderByDesc('fecha')
             ->orderByDesc('id');
@@ -335,7 +337,7 @@ class OperacionController extends Controller
      * Crea una solicitud de operación SIN movimientos contables.
      * La operación queda en estado 'solicitud' para que el operador agregue transacciones.
      */
-    public function solicitud(StoreOperacionRequest $request): JsonResponse
+    public function solicitud(SolicitudOperacionRequest $request): JsonResponse
     {
         $operacion = $this->registroService->crearSolicitud($request->validated());
 

@@ -59,7 +59,7 @@
             <option value="cambio">Cambio / Intermediada</option>
           </select>
         </div>
-        <!-- Estatus -->
+        <!-- Estatus (legacy) -->
         <div>
           <label class="block text-sm font-medium text-gray-600 mb-1">Estatus</label>
           <select v-model="filters.estatus" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white">
@@ -67,6 +67,17 @@
             <option value="sin_verificar">Sin verificar</option>
             <option value="en_revision">En revisión</option>
             <option value="verificado">Verificado / Completa</option>
+          </select>
+        </div>
+        <!-- Estado (flujo multi-paso) -->
+        <div>
+          <label class="block text-sm font-medium text-gray-600 mb-1">Estado</label>
+          <select v-model="filters.estado" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white">
+            <option value="">Todos</option>
+            <option value="solicitud">Solicitud</option>
+            <option value="en_progreso">En Progreso</option>
+            <option value="cerrada">Cerrada</option>
+            <option value="cancelada">Cancelada</option>
           </select>
         </div>
         <!-- Fechas -->
@@ -144,6 +155,7 @@ const showFilter = ref(false)
 const filters = reactive({
   tipo_codigo: '',
   estatus: '',
+  estado: '',
   fecha_desde: '',
   fecha_hasta: '',
   cliente_id: '',
@@ -156,7 +168,7 @@ const params = reactive({})
 
 /** Cantidad de filtros activos (para el badge del botón) */
 const activeFilterCount = computed(() =>
-  ['tipo_codigo', 'estatus', 'fecha_desde', 'fecha_hasta', 'cliente_id', 'moneda'].filter(k => filters[k]).length
+  ['tipo_codigo', 'estatus', 'estado', 'fecha_desde', 'fecha_hasta', 'cliente_id', 'moneda'].filter(k => filters[k]).length
 )
 
 /** Término de búsqueda para autocomplete de cliente en filtro */
@@ -238,6 +250,15 @@ function monedaDeOperacion(op) {
  * @returns {{ label: string, class: string }}
  */
 function estatusBadge(op) {
+  if (op.estado && op.estado !== 'en_espera') {
+    const map = {
+      cerrada:     { label: 'Cerrada',     class: 'bg-green-100 text-green-700' },
+      en_progreso: { label: 'En Progreso', class: 'bg-blue-100 text-blue-700' },
+      solicitud:   { label: 'Solicitud',   class: 'bg-yellow-100 text-yellow-700' },
+      cancelada:   { label: 'Cancelada',   class: 'bg-red-100 text-red-700' },
+    }
+    if (map[op.estado]) return map[op.estado]
+  }
   if (/pendiente/i.test(op.descripcion || '')) {
     return { label: 'Efectivo pendiente', class: 'bg-red-100 text-red-700' }
   }
@@ -256,17 +277,25 @@ function estatusBadge(op) {
  */
 function montoUsd(op) {
   const mov = (op.movimientos || []).find(m => ['USD', 'USDT'].includes(m.moneda?.codigo))
-  return mov ? Math.abs(parseFloat(mov.monto)) : 0
+  if (mov) return Math.abs(parseFloat(mov.monto))
+  const tx = (op.transacciones || []).find(t => ['USD', 'USDT'].includes(t.moneda?.codigo))
+  if (tx) return Math.abs(parseFloat(tx.monto))
+  return op.monto_solicitado ? Math.abs(parseFloat(op.monto_solicitado)) : 0
 }
 
 /**
- * Obtiene el monto en VES de una operación desde sus movimientos.
+ * Obtiene el monto en VES de una operación desde sus movimientos o transacciones.
  * @param {Object} op - Operación
  * @returns {number}
  */
 function bolivares(op) {
   const mov = (op.movimientos || []).find(m => m.moneda?.codigo === 'VES')
-  return mov ? Math.abs(parseFloat(mov.monto)) : 0
+  if (mov) return Math.abs(parseFloat(mov.monto))
+  const tx = (op.transacciones || []).find(t => t.moneda?.codigo === 'VES')
+  if (tx) return Math.abs(parseFloat(tx.monto))
+  const usd = montoUsd(op)
+  const tasa = parseFloat(op.tasa_aplicada)
+  return usd && tasa ? usd * tasa : 0
 }
 
 /** Aplica los filtros y recarga la lista de operaciones */
@@ -278,13 +307,14 @@ function applyFilters() {
   if (filters.fecha_hasta) params.fecha_hasta = filters.fecha_hasta
   if (filters.cliente_id) params.cliente_id = Number(filters.cliente_id)
   if (filters.moneda) params.moneda = filters.moneda
+  if (filters.estado) params.estado = filters.estado
   ops.fetchAll(params)
   showFilter.value = false
 }
 
 /** Limpia todos los filtros y recarga la lista */
 function clearFilters() {
-  Object.assign(filters, { tipo_codigo: '', estatus: '', fecha_desde: '', fecha_hasta: '', cliente_id: '', cliente_nombre: '', moneda: '' })
+  Object.assign(filters, { tipo_codigo: '', estatus: '', estado: '', fecha_desde: '', fecha_hasta: '', cliente_id: '', cliente_nombre: '', moneda: '' })
   Object.keys(params).forEach(k => delete params[k])
   ops.fetchAll(params)
   showFilter.value = false

@@ -34,6 +34,8 @@ const routes = [
       { path: 'operaciones/:id', name: 'OperacionDetail', component: () => import('../views/operaciones/OperacionDetailView.vue') },
       /** Verificación de una operación. */
       { path: 'operaciones/:id/verificar', name: 'Verificacion', component: () => import('../views/operaciones/VerificacionView.vue') },
+      /** Gestión multi-paso de una operación (solicitud → en_progreso → cerrada). */
+      { path: 'operaciones/:id/gestionar', name: 'GestionarOperacion', component: () => import('../views/operaciones/GestionarOperacionView.vue') },
       /** Edición de una operación existente. */
       { path: 'operaciones/:id/editar', name: 'OperacionEdit', component: () => import('../views/operaciones/OperacionFormView.vue') },
       /** Vista del pool de operaciones. */

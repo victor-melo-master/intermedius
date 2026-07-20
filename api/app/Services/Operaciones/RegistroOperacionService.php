@@ -713,6 +713,7 @@ public function actualizar(Operacion $operacion, array $payload, \App\Models\Use
             'fuente_tasa_mercado'    => $payload['fuente_tasa_mercado'] ?? null,
             'referencia'             => $payload['referencia'] ?? null,
             'descripcion'            => $payload['descripcion'] ?? null,
+            'monto_solicitado'       => $payload['monto_solicitado'] ?? null,
             'tasas_snapshot'         => $payload['tasas_snapshot'],
             'estado'                 => 'solicitud',
             'estado_pool'            => 'pendiente',

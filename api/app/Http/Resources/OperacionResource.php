@@ -29,6 +29,9 @@ class OperacionResource extends JsonResource
             'referencia'            => $this->referencia,
             'descripcion'           => $this->descripcion,
 
+            'monto_solicitado'      => $this->monto_solicitado !== null ? (string) $this->monto_solicitado : null,
+            'estado'                => $this->estado,
+
             'tasa_aplicada'         => (string) $this->tasa_aplicada,
             'tasa_compra'          => (string) $this->tasa_compra,
             'tasa_venta'           => (string) $this->tasa_venta,
@@ -103,6 +106,7 @@ class OperacionResource extends JsonResource
                 'name' => $this->verificadoPor->name,
             ] : null),
             'movimientos'           => MovimientoResource::collection($this->whenLoaded('movimientos')),
+            'transacciones'         => TransaccionResource::collection($this->whenLoaded('transacciones')),
 
             'created_at'            => $this->created_at?->toIso8601String(),
             'updated_at'            => $this->updated_at?->toIso8601String(),

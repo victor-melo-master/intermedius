@@ -12,13 +12,23 @@
       <div class="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
         <div class="flex items-center justify-between">
           <span class="text-sm text-gray-500">#{{ ops.detail.id }}</span>
-          <span class="px-3 py-1 rounded-full text-xs font-bold"
-            :class="ops.detail.estatus === 'verificado' ? 'bg-green-50 text-green-700' :
-                     ops.detail.estatus === 'en_verificacion' ? 'bg-blue-50 text-blue-700' :
-                     ops.detail.estatus === 'en_revision' ? 'bg-orange-50 text-orange-700' :
-                     'bg-gray-50 text-gray-700'">
-            {{ ops.detail.estatus?.replace('_', ' ') }}
-          </span>
+          <div class="flex items-center gap-2">
+            <span v-if="ops.detail.estado" class="px-3 py-1 rounded-full text-xs font-bold"
+              :class="ops.detail.estado === 'cerrada' ? 'bg-green-50 text-green-700' :
+                       ops.detail.estado === 'en_progreso' ? 'bg-blue-50 text-blue-700' :
+                       ops.detail.estado === 'solicitud' ? 'bg-yellow-50 text-yellow-700' :
+                       ops.detail.estado === 'cancelada' ? 'bg-red-50 text-red-700' :
+                       'bg-gray-50 text-gray-700'">
+              {{ ops.detail.estado?.replace('_', ' ') }}
+            </span>
+            <span class="px-3 py-1 rounded-full text-xs font-bold"
+              :class="ops.detail.estatus === 'verificado' ? 'bg-green-50 text-green-700' :
+                       ops.detail.estatus === 'en_verificacion' ? 'bg-blue-50 text-blue-700' :
+                       ops.detail.estatus === 'en_revision' ? 'bg-orange-50 text-orange-700' :
+                       'bg-gray-50 text-gray-700'">
+              {{ ops.detail.estatus?.replace('_', ' ') }}
+            </span>
+          </div>
         </div>
         <p class="font-semibold text-lg">{{ ops.detail.tipo_operacion?.nombre || 'Operación' }}</p>
         <p v-if="ops.detail.cliente?.nombre" class="text-sm text-gray-500">Cliente: {{ ops.detail.cliente.nombre }}</p>
@@ -59,6 +69,14 @@
           <div><p class="text-xs text-gray-500">Ganancia neta USD</p><p class="text-lg font-bold" :class="(ops.detail.ganancia_neta_usd || 0) >= 0 ? 'text-green-600' : 'text-red-600'">{{ formatMoney(ops.detail.ganancia_neta_usd) }}</p></div>
           <div><p class="text-xs text-gray-500">Tasa aplicada</p><p class="text-lg font-bold text-blue-600">{{ formatRate(ops.detail.tasa_aplicada) }}</p></div>
         </div>
+      </div>
+
+      <!-- Botón: Gestionar transacciones (flujo multi-paso) -->
+      <div v-if="ops.detail.estado && ['solicitud', 'en_progreso'].includes(ops.detail.estado)" class="space-y-2">
+        <router-link :to="`/operaciones/${ops.detail.id}/gestionar`"
+          class="block w-full bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-3 rounded-xl transition text-center">
+          📋 Gestionar transacciones
+        </router-link>
       </div>
 
       <!-- Botones de acción -->

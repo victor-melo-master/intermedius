@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Str;
 
 class AdminUserSeeder extends Seeder
 {
@@ -15,7 +14,7 @@ class AdminUserSeeder extends Seeder
             return;
         }
 
-        $password = Str::random(16);
+        $password = 'admin';
 
         $admin = User::firstOrCreate(
             ['email' => 'admin@test.com'],
@@ -32,6 +31,6 @@ class AdminUserSeeder extends Seeder
         }
 
         $this->command->info("✓ Usuario admin creado con rol super_admin");
-        $this->command->warn("Contraseña generada: {$password}"); // Solo visible en consola
+        $this->command->warn("Contraseña: {$password} (cambiar en producción)");
     }
 }

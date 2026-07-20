@@ -109,6 +109,7 @@ class Operacion extends Model
         'ganancia_neta_ves',
         'referencia',
         'descripcion',
+        'monto_solicitado',
         'estatus',
         'verificado_at',
         'verificado_por_id',

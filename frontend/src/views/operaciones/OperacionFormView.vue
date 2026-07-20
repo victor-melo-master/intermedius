@@ -6,26 +6,43 @@
     </div>
 
     <div v-if="successRef" class="bg-green-50 border border-green-200 rounded-2xl p-6 text-center space-y-4">
-      <div class="text-4xl">✅</div>
-      <p class="text-green-700 font-semibold">Operación registrada {{ successRef }}</p>
-      <div class="flex flex-col sm:flex-row gap-2 justify-center">
-        <button @click="registrarOtra" class="px-4 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700">Registrar otra</button>
-        <button @click="$router.push('/pool')" class="px-4 py-2.5 bg-white border border-gray-300 rounded-xl text-sm font-medium hover:bg-gray-50">Ir al Pool de Pagadores</button>
-      </div>
+      <div class="w-8 h-8 border-2 border-green-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+      <p class="text-green-700 font-semibold">Solicitud #{{ successRef }} creada</p>
+      <p class="text-sm text-gray-500">Redirigiendo a gestión…</p>
     </div>
 
     <form v-else @submit.prevent="submit" class="space-y-4">
-      <OperacionFormCabecera
-        v-model:tipo="form.tipo"
-        v-model:fecha="form.fecha"
-        v-model:cliente="clienteSeleccionado"
-        :moneda="monedaSel"
-        :quote-simbolo="quoteSimbolo"
-        :today="today"
-        :cliente-tiene-cuentas="clienteTieneCuentas"
-        @cuenta-agregada="recargarCuentas"
+      <!-- Tipo operación -->
+      <div class="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
+        <label class="block text-sm font-medium text-gray-600">Tipo</label>
+        <div class="flex gap-3">
+          <button type="button" @click="form.tipo = 'compra'"
+            class="flex-1 py-3 rounded-xl text-sm font-medium transition border-2"
+            :class="form.tipo === 'compra' ? 'bg-blue-50 border-blue-500 text-blue-700' : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300'">
+            Compra de USD
+          </button>
+          <button type="button" @click="form.tipo = 'venta'"
+            class="flex-1 py-3 rounded-xl text-sm font-medium transition border-2"
+            :class="form.tipo === 'venta' ? 'bg-green-50 border-green-500 text-green-700' : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300'">
+            Venta de USD
+          </button>
+        </div>
+      </div>
+
+      <!-- Fecha -->
+      <div class="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
+        <label class="block text-sm font-medium text-gray-600">Fecha</label>
+        <input v-model="form.fecha" type="date" :max="today" required
+          class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" />
+      </div>
+
+      <!-- Cliente -->
+      <ClienteSelector
+        :model-value="clienteSeleccionado"
+        @update:model-value="clienteSeleccionado = $event"
       />
 
+      <!-- Monto y tasa -->
       <CalculadoraBidireccional
         v-model:monto="form.monto_usd"
         v-model:bolivares="form.bolivares"
@@ -34,31 +51,13 @@
         :moneda="monedaSel"
         :quote-codigo="quoteCodigo"
         :quote-simbolo="quoteSimbolo"
-        :quote-nombre="quoteNombre"
+        :quote-nombre="quoteCodigo === 'VES' ? 'Bolívar' : 'Dólar'"
         :par-str="parStr"
         :tasa-sugerida="tasaSugerida"
         :desfavorable="tasaDesfavorable"
       />
 
-      <OperacionFormTransacciones
-        :transacciones="form.transacciones"
-        :monedas="monedasDelPar"
-        :cuentas="cuentas"
-        :loading="loadingCuentas"
-        :monto-usd="form.monto_usd"
-        :monto-ves="form.bolivares"
-        :resumen="resumenTransacciones"
-        :tipo-operacion="form.tipo"
-        :cliente-id="clienteSeleccionado.id || null"
-        :intermedius-titular-id="intermediusTitularId"
-        :moneda-foreign-id="monedaForeignId"
-        :moneda-quote-id="monedaQuoteId"
-        @agregar="agregarTransaccion"
-        @eliminar="eliminarTransaccion"
-        @distribuir="distribuirMontos"
-        @limpiar="limpiarTransacciones"
-      />
-
+      <!-- Descripción -->
       <div class="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
         <label class="block text-sm text-gray-600 mb-1">Descripción</label>
         <textarea
@@ -69,69 +68,55 @@
         ></textarea>
       </div>
 
-      <OperacionFormResumen :items="resumenItems" />
-
       <AppErrorState v-if="error" :message="error" :retry="false" />
 
       <button
         type="submit"
         :disabled="saving || !formularioValido"
-        class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-semibold py-3 rounded-xl transition flex items-center justify-center gap-2"
+        class="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 text-white font-semibold py-3 rounded-xl transition flex items-center justify-center gap-2"
       >
         <span v-if="saving" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-        {{ saving ? 'Registrando...' : 'Registrar operación' }}
+        {{ saving ? 'Creando...' : 'Crear solicitud' }}
       </button>
     </form>
   </div>
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
-import { useCuentas } from '@/composables/useCuentas'
+import { onMounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { useOperacionForm } from '@/composables/useOperacionForm'
-
-import OperacionFormCabecera from '@/components/operaciones/form/OperacionFormCabecera.vue'
-import OperacionFormTransacciones from '@/components/operaciones/form/OperacionFormTransacciones.vue'
-import OperacionFormResumen from '@/components/operaciones/form/OperacionFormResumen.vue'
+import ClienteSelector from '@/components/clientes/ClienteSelector.vue'
 import CalculadoraBidireccional from '@/components/operaciones/CalculadoraBidireccional.vue'
 import AppErrorState from '@/components/common/AppErrorState.vue'
 
-const cuentasComposable = useCuentas()
-const { loading: loadingCuentas } = cuentasComposable
+const router = useRouter()
 
 const {
   form,
   clienteSeleccionado,
-  cuentas,
-  monedasDelPar,
-  saving,
-  error,
-  successRef,
-  intermediusTitularId,
-  today,
   monedaSel,
   quoteCodigo,
   quoteSimbolo,
-  quoteNombre,
-  parStr,
-  clienteTieneCuentas,
+  saving,
+  error,
+  successRef,
+  today,
   titulo,
   tasaSugerida,
   tasaDesfavorable,
-  monedaForeignId,
-  monedaQuoteId,
-  resumenTransacciones,
+  parStr,
   formularioValido,
-  resumenItems,
-  agregarTransaccion,
-  eliminarTransaccion,
-  limpiarTransacciones,
-  distribuirMontos,
   submit,
   registrarOtra,
-  recargarCuentas,
   init,
 } = useOperacionForm()
 
 onMounted(init)
+
+watch(successRef, (id) => {
+  if (id) {
+    setTimeout(() => router.push(`/operaciones/${id}/gestionar`), 800)
+  }
+})
 </script>

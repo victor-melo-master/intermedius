@@ -83,5 +83,29 @@ export const useOperacionesStore = defineStore('operaciones', () => {
     return data
   }
 
-  return { list, detail, loading, error, fetchAll, fetchOne, create, update, verificar }
+  async function solicitar(body) {
+    const { data } = await api.post('/operaciones/solicitud', body)
+    detail.value = data.data || data
+    return data
+  }
+
+  async function iniciar(id) {
+    const { data } = await api.post(`/operaciones/${id}/iniciar`)
+    detail.value = data.data || data
+    return data
+  }
+
+  async function cerrar(id) {
+    const { data } = await api.post(`/operaciones/${id}/cerrar`)
+    detail.value = data.data || data
+    return data
+  }
+
+  async function cancelar(id, motivo) {
+    const { data } = await api.post(`/operaciones/${id}/cancelar`, { motivo })
+    detail.value = data.data || data
+    return data
+  }
+
+  return { list, detail, loading, error, fetchAll, fetchOne, create, update, verificar, solicitar, iniciar, cerrar, cancelar }
 })

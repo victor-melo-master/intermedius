@@ -40,6 +40,26 @@ export function useOperaciones() {
     return response
   }
 
+  const solicitar = async (payload) => {
+    const response = await execute((signal) => api.post('/operaciones/solicitud', payload, { signal }))
+    return response
+  }
+
+  const iniciar = async (id) => {
+    const response = await execute((signal) => api.post(`/operaciones/${id}/iniciar`, null, { signal }))
+    return response
+  }
+
+  const cerrar = async (id) => {
+    const response = await execute((signal) => api.post(`/operaciones/${id}/cerrar`, null, { signal }))
+    return response
+  }
+
+  const cancelar = async (id, motivo) => {
+    const response = await execute((signal) => api.post(`/operaciones/${id}/cancelar`, { motivo }, { signal }))
+    return response
+  }
+
   return {
     list,
     detail,
@@ -49,6 +69,10 @@ export function useOperaciones() {
     update,
     verificar,
     destroy,
+    solicitar,
+    iniciar,
+    cerrar,
+    cancelar,
     loading,
     error,
   }

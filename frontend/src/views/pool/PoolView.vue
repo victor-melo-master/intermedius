@@ -46,7 +46,10 @@
         <div v-for="op in store.pool" :key="op.id"
           class="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
           <div class="flex items-center justify-between gap-2 mb-3">
-            <span class="text-xs font-bold px-2.5 py-1 rounded-full" :class="tipoBadge(op).class">{{ tipoBadge(op).label }}</span>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-bold px-2.5 py-1 rounded-full" :class="tipoBadge(op).class">{{ tipoBadge(op).label }}</span>
+              <span v-if="op.estado && op.estado !== 'en_espera'" class="text-[10px] font-medium px-2 py-0.5 rounded-full" :class="estadoBadgePool(op).clase">{{ estadoBadgePool(op).label }}</span>
+            </div>
             <span class="text-xs text-gray-400">{{ formatHora(op.created_at) }}</span>
           </div>
 
@@ -253,6 +256,21 @@ function tipoBadge(op) {
     cambio:     { label: 'Cambio', class: 'bg-orange-100 text-orange-700' },
   }
   return map[codigo] || { label: op.tipo_operacion?.nombre || 'Operación', class: 'bg-gray-100 text-gray-600' }
+}
+
+/**
+ * Genera el badge visual del estado (flujo multi-paso) para el pool.
+ * @param {Object} op - Operación
+ * @returns {{ label: string, class: string }}
+ */
+function estadoBadgePool(op) {
+  const map = {
+    solicitud:   { label: 'Solicitud',   clase: 'bg-yellow-100 text-yellow-700' },
+    en_progreso: { label: 'En Progreso', clase: 'bg-blue-100 text-blue-700' },
+    cerrada:     { label: 'Cerrada',     clase: 'bg-green-100 text-green-700' },
+    cancelada:   { label: 'Cancelada',   clase: 'bg-red-100 text-red-700' },
+  }
+  return map[op.estado] || { label: op.estado, clase: 'bg-gray-100 text-gray-600' }
 }
 
 /**

@@ -106,7 +106,7 @@ CREATE TABLE IF NOT EXISTS `clientes` (
   `telefono` varchar(255) DEFAULT NULL,
   `email` varchar(255) DEFAULT NULL,
   `notas` text DEFAULT NULL,
-  `saldo_cache_usd` decimal(20,4) NOT NULL DEFAULT 0.0000,
+  `saldo_cache_usd` decimal(20,2) NOT NULL DEFAULT 0.00,
   `saldo_cache_at` timestamp NULL DEFAULT NULL,
   `activo` tinyint(1) NOT NULL DEFAULT 1,
   `created_at` timestamp NULL DEFAULT NULL,
@@ -168,9 +168,9 @@ CREATE TABLE IF NOT EXISTS `comisiones_operacion` (
   `origen_type` varchar(255) DEFAULT NULL,
   `origen_id` bigint(20) unsigned DEFAULT NULL,
   `descripcion` varchar(200) NOT NULL,
-  `monto` decimal(20,4) NOT NULL,
+  `monto` decimal(20,2) NOT NULL,
   `moneda_id` bigint(20) unsigned NOT NULL,
-  `monto_usd_equivalente` decimal(20,4) NOT NULL,
+  `monto_usd_equivalente` decimal(20,2) NOT NULL,
   `movimiento_id` bigint(20) unsigned DEFAULT NULL,
   `editada_por_id` bigint(20) unsigned DEFAULT NULL,
   `editada_at` timestamp NULL DEFAULT NULL,
@@ -222,7 +222,7 @@ CREATE TABLE IF NOT EXISTS `cuentas` (
   `alias` varchar(255) NOT NULL,
   `tipo` enum('banco','plataforma','cash','wallet','zelle','efectivo','otro') NOT NULL,
   `numero_cuenta` varchar(255) DEFAULT NULL,
-  `saldo_cache` decimal(20,4) NOT NULL DEFAULT 0.0000,
+  `saldo_cache` decimal(20,2) NOT NULL DEFAULT 0.00,
   `saldo_cache_at` timestamp NULL DEFAULT NULL,
   `activa` tinyint(1) NOT NULL DEFAULT 1,
   `notas` text DEFAULT NULL,
@@ -323,9 +323,9 @@ CREATE TABLE IF NOT EXISTS `movimientos` (
   `operacion_id` bigint(20) unsigned NOT NULL,
   `cuenta_id` bigint(20) unsigned NOT NULL,
   `moneda_id` bigint(20) unsigned NOT NULL,
-  `monto` decimal(20,4) NOT NULL,
+  `monto` decimal(20,2) NOT NULL,
   `tasa_a_usd` decimal(20,8) NOT NULL,
-  `monto_usd_equivalente` decimal(20,4) NOT NULL,
+  `monto_usd_equivalente` decimal(20,2) NOT NULL,
   `orden` smallint(5) unsigned NOT NULL DEFAULT 1,
   `estado` varchar(50) NOT NULL DEFAULT 'pendiente',
   `motivo_rechazo` text DEFAULT NULL,
@@ -358,7 +358,7 @@ CREATE TABLE IF NOT EXISTS `operaciones` (
   `tasa_compra` decimal(20,8) DEFAULT NULL,
   `tasa_venta` decimal(20,8) DEFAULT NULL,
   `genera_comision` tinyint(1) NOT NULL DEFAULT 0,
-  `monto_comision` decimal(20,4) NOT NULL DEFAULT 0.0000,
+  `monto_comision` decimal(20,2) NOT NULL DEFAULT 0.00,
   `tipo_comision` varchar(50) DEFAULT NULL,
   `tasa_sugerida` decimal(20,8) DEFAULT NULL,
   `tasa_diaria_id` bigint(20) unsigned DEFAULT NULL,
@@ -366,13 +366,13 @@ CREATE TABLE IF NOT EXISTS `operaciones` (
   `tasa_mercado_snapshot` decimal(20,8) DEFAULT NULL,
   `fuente_tasa_mercado` varchar(30) DEFAULT NULL,
   `tasas_snapshot` json DEFAULT NULL,
-  `ganancia_bruta_usd` decimal(20,4) NOT NULL DEFAULT 0.0000,
-  `ganancia_real_usd` decimal(20,4) DEFAULT NULL,
+  `ganancia_bruta_usd` decimal(20,2) NOT NULL DEFAULT 0.00,
+  `ganancia_real_usd` decimal(20,2) DEFAULT NULL,
   `ganancia_bruta_ves` decimal(20,2) NOT NULL DEFAULT 0.00,
   `ganancia_real_ves` decimal(20,2) DEFAULT NULL,
-  `total_comisiones_usd` decimal(20,4) NOT NULL DEFAULT 0.0000,
+  `total_comisiones_usd` decimal(20,2) NOT NULL DEFAULT 0.00,
   `total_comisiones_ves` decimal(20,2) NOT NULL DEFAULT 0.00,
-  `ganancia_neta_usd` decimal(20,4) NOT NULL DEFAULT 0.0000,
+  `ganancia_neta_usd` decimal(20,2) NOT NULL DEFAULT 0.00,
   `ganancia_neta_ves` decimal(20,2) NOT NULL DEFAULT 0.00,
   `referencia` varchar(100) DEFAULT NULL,
   `descripcion` text DEFAULT NULL,
@@ -634,6 +634,40 @@ INSERT INTO `monedas` (`codigo`, `nombre`, `simbolo`, `es_fiat`, `es_cripto`, `d
 ('COP', 'Peso Colombiano', '$', 1, 0, 2, 1, NOW(), NOW())
 ON DUPLICATE KEY UPDATE `nombre` = VALUES(`nombre`);
 
+-- Bancos de Venezuela
+INSERT IGNORE INTO bancos (nombre, codigo, pais, activo, created_at, updated_at) VALUES
+('Banesco',           '0134', 'VE', 1, NOW(), NOW()),
+('Mercantil',         '0105', 'VE', 1, NOW(), NOW()),
+('Banco de Venezuela','0102', 'VE', 1, NOW(), NOW()),
+('Provincial',        '0108', 'VE', 1, NOW(), NOW()),
+('Bancamiga',         '0172', 'VE', 1, NOW(), NOW()),
+('Banco del Tesoro',  '0163', 'VE', 1, NOW(), NOW()),
+('Bancaribe',         '0114', 'VE', 1, NOW(), NOW()),
+('Banco Nacional de Crédito', '0191', 'VE', 1, NOW(), NOW()),
+('Banco Plaza',       '0138', 'VE', 1, NOW(), NOW()),
+('Banco Exterior',    '0115', 'VE', 1, NOW(), NOW());
+
+-- Bancos internacionales
+INSERT IGNORE INTO bancos (nombre, codigo, pais, activo, created_at, updated_at) VALUES
+('Banesco Panamá',    NULL, 'PA', 1, NOW(), NOW()),
+('Mercantil Panamá',  NULL, 'PA', 1, NOW(), NOW()),
+('Bancolombia',       NULL, 'CO', 1, NOW(), NOW()),
+('Banco 53',          NULL, 'PA', 1, NOW(), NOW()),
+('Bank of America',   NULL, 'US', 1, NOW(), NOW()),
+('Chase',             NULL, 'US', 1, NOW(), NOW()),
+('Wells Fargo',       NULL, 'US', 1, NOW(), NOW()),
+('Truist Bank',       NULL, 'US', 1, NOW(), NOW());
+
+-- Categorías de gasto
+INSERT IGNORE INTO categorias_gasto (nombre, activa, created_at, updated_at) VALUES
+('Servicios',       1, NOW(), NOW()),
+('Alquiler',        1, NOW(), NOW()),
+('Mantenimiento',   1, NOW(), NOW()),
+('Personal',        1, NOW(), NOW()),
+('Impuestos',       1, NOW(), NOW()),
+('Comunicaciones',  1, NOW(), NOW()),
+('Varios',          1, NOW(), NOW());
+
 -- Tabla documentos (ya incluía IF NOT EXISTS)
 CREATE TABLE IF NOT EXISTS `documentos` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
@@ -659,7 +693,7 @@ CREATE TABLE IF NOT EXISTS `transacciones` (
   `cuenta_origen_id` bigint(20) unsigned NOT NULL,
   `cuenta_destino_id` bigint(20) unsigned NOT NULL,
   `moneda_id` bigint(20) unsigned NOT NULL,
-  `monto` decimal(20,4) NOT NULL,
+  `monto` decimal(20,2) NOT NULL,
   `tasa_aplicada` decimal(20,8) DEFAULT NULL,
   `tasas_snapshot` json DEFAULT NULL,
   `metodo_pago` varchar(50) DEFAULT NULL,

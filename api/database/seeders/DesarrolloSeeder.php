@@ -35,7 +35,7 @@ class DesarrolloSeeder extends Seeder
             return;
         }
 
-        // 2. Bancos de Venezuela
+        // 2. Bancos de Venezuela (nombres consistentes con CatalogosBaseSeeder)
         $bancosVzla = [
             ['nombre' => 'Banesco', 'codigo' => '0134', 'pais' => 'VE'],
             ['nombre' => 'Banco de Venezuela', 'codigo' => '0102', 'pais' => 'VE'],
@@ -43,15 +43,14 @@ class DesarrolloSeeder extends Seeder
             ['nombre' => 'Provincial', 'codigo' => '0108', 'pais' => 'VE'],
             ['nombre' => 'Bancaribe', 'codigo' => '0114', 'pais' => 'VE'],
             ['nombre' => 'Banco del Tesoro', 'codigo' => '0163', 'pais' => 'VE'],
-            ['nombre' => 'Bancamiga', 'codigo' => '0171', 'pais' => 'VE'],
+            ['nombre' => 'Bancamiga', 'codigo' => '0172', 'pais' => 'VE'],
             ['nombre' => 'Banco Nacional de Crédito', 'codigo' => '0191', 'pais' => 'VE'],
             ['nombre' => 'Banco Plaza', 'codigo' => '0138', 'pais' => 'VE'],
             ['nombre' => 'Banco Exterior', 'codigo' => '0115', 'pais' => 'VE'],
         ];
 
-        // Bancos de EE.UU.
+        // Bancos de EE.UU. (solo los que no existen en CatalogosBaseSeeder)
         $bancosUsa = [
-            ['nombre' => 'Bank of America', 'codigo' => 'BOA', 'pais' => 'US'],
             ['nombre' => 'Chase', 'codigo' => 'CHASE', 'pais' => 'US'],
             ['nombre' => 'Wells Fargo', 'codigo' => 'WF', 'pais' => 'US'],
         ];
@@ -285,7 +284,9 @@ class DesarrolloSeeder extends Seeder
 
         // 8. Operación de prueba en verificación (venta de USD)
         $tipoVenta = TipoOperacion::where('codigo', 'venta_usd')->first();
-        $operador = User::where('email', 'admin@test.com')->first();
+        $operador = User::where('email', 'admin@test.com')->first()
+            ?? User::where('email', 'intermedius@test.com')->first()
+            ?? User::first();
         $clienteMaria = Cliente::where('documento', 'V-12345678')->first();
 
         $cuentaUsd = Cuenta::where('alias', 'like', '%Efectivo USD%')->first()

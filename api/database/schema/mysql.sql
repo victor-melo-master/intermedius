@@ -309,7 +309,7 @@ CREATE TABLE `transacciones` (
   `cuenta_origen_id` bigint(20) unsigned NOT NULL,
   `cuenta_destino_id` bigint(20) unsigned NOT NULL,
   `moneda_id` bigint(20) unsigned NOT NULL,
-  `monto` decimal(20,4) NOT NULL,
+  `monto` decimal(20,2) NOT NULL,
   `tasa_aplicada` decimal(20,8) DEFAULT NULL,
   `tasas_snapshot` json DEFAULT NULL,
   `metodo_pago` varchar(50) DEFAULT NULL,
