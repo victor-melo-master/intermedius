@@ -8,6 +8,7 @@ use App\Models\Cuenta;
 use App\Models\Moneda;
 use App\Models\Operacion;
 use App\Models\TipoOperacion;
+use App\Models\Transaccion;
 use App\Services\Configuracion\CalculadorComisionesService;
 use App\Services\Configuracion\TasaDiariaService;
 use Illuminate\Support\Facades\DB;
@@ -671,5 +672,260 @@ public function actualizar(Operacion $operacion, array $payload, \App\Models\Use
             'usd' => round($gananciaUsd, 2),
             'ves' => round($gananciaVes, 2),
         ];
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // FLUJO MULTI-PASO: solicitud → en_progreso → cerrada / cancelada
+    // ═══════════════════════════════════════════════════════════════════
+
+    /**
+     * Crea una solicitud de operación SIN movimientos contables.
+     * La operación queda en estado 'solicitud' para que el operador agregue transacciones.
+     *
+     * @param array $payload Debe incluir: fecha, tipo_codigo, operador_id
+     * @return Operacion
+     */
+    public function crearSolicitud(array $payload): Operacion
+    {
+        $tipo = TipoOperacion::where('codigo', $payload['tipo_codigo'])->firstOrFail();
+
+        // Resolver tasas para snapshot
+        $tasaAplicada = (float) ($payload['tasa_aplicada'] ?? 1);
+        $payload['tasas_snapshot'] = $payload['tasas_snapshot'] ?? $this->capturarTasasSnapshot($payload, $tipo);
+
+        return Operacion::create([
+            'fecha'                  => $payload['fecha'],
+            'tipo_operacion_id'      => $tipo->id,
+            'cliente_id'             => $payload['cliente_id'] ?? null,
+            'cliente_emisor_id'      => $payload['cliente_emisor_id'] ?? null,
+            'cliente_receptor_id'    => $payload['cliente_receptor_id'] ?? null,
+            'categoria_gasto_id'     => $payload['categoria_gasto_id'] ?? null,
+            'operador_id'            => $payload['operador_id'],
+            'tasa_aplicada'          => $tasaAplicada,
+            'tasa_compra'            => $payload['tasa_compra'] ?? null,
+            'tasa_venta'             => $payload['tasa_venta'] ?? null,
+            'genera_comision'        => $payload['genera_comision'] ?? false,
+            'monto_comision'         => $payload['monto_comision'] ?? 0,
+            'tipo_comision'          => $payload['tipo_comision'] ?? null,
+            'tasa_sugerida'          => $payload['tasa_sugerida'] ?? null,
+            'sin_tasa_referencia'    => $payload['sin_tasa_referencia'] ?? false,
+            'tasa_mercado_snapshot'  => $payload['tasa_mercado_snapshot'] ?? null,
+            'fuente_tasa_mercado'    => $payload['fuente_tasa_mercado'] ?? null,
+            'referencia'             => $payload['referencia'] ?? null,
+            'descripcion'            => $payload['descripcion'] ?? null,
+            'tasas_snapshot'         => $payload['tasas_snapshot'],
+            'estado'                 => 'solicitud',
+            'estado_pool'            => 'pendiente',
+            'origen'                 => $payload['origen'] ?? 'manual',
+            'origen_referencia'      => $payload['origen_referencia'] ?? null,
+        ]);
+    }
+
+    /**
+     * Captura snapshot de tasas vigentes.
+     */
+    private function capturarTasasSnapshot(array $payload, TipoOperacion $tipo): ?array
+    {
+        $snapshot = [];
+
+        if (isset($payload['tasa_mercado_snapshot'])) {
+            $snapshot['mercado'] = (float) $payload['tasa_mercado_snapshot'];
+        }
+        if (isset($payload['tasa_aplicada'])) {
+            $snapshot['aplicada'] = (float) $payload['tasa_aplicada'];
+        }
+        if (isset($payload['tasa_compra'])) {
+            $snapshot['compra'] = (float) $payload['tasa_compra'];
+        }
+        if (isset($payload['tasa_venta'])) {
+            $snapshot['venta'] = (float) $payload['tasa_venta'];
+        }
+
+        return !empty($snapshot) ? $snapshot : null;
+    }
+
+    /**
+     * Cierra una operación en estado 'en_progreso':
+     * - Valida que tenga transacciones confirmadas
+     * - Crea movimientos contables desde las transacciones confirmadas
+     * - Calcula ganancia bruta
+     * - Aplica comisiones
+     * - Actualiza saldos y despacha jobs FIFO
+     *
+     * @throws ValidationException
+     */
+    public function cerrarOperacion(Operacion $operacion, \App\Models\User $cerrador): Operacion
+    {
+        if ($operacion->estado !== 'en_progreso') {
+            throw ValidationException::withMessages([
+                'estado' => 'Solo se pueden cerrar operaciones en estado "en_progreso".',
+            ]);
+        }
+
+        $transaccionesConfirmadas = $operacion->transacciones()
+            ->where('estado', 'confirmada')
+            ->get();
+
+        if ($transaccionesConfirmadas->isEmpty()) {
+            throw ValidationException::withMessages([
+                'transacciones' => 'Debe haber al menos una transacción confirmada para cerrar la operación.',
+            ]);
+        }
+
+        // Validar comprobante obligatorio para métodos no efectivo
+        foreach ($transaccionesConfirmadas as $t) {
+            if (($t->metodo_pago ?? '') !== 'efectivo' && empty($t->comprobante)) {
+                throw ValidationException::withMessages([
+                    'comprobante' => "La transacción #{$t->orden} no tiene comprobante adjunto (requerido para método de pago: {$t->metodo_pago}).",
+                ]);
+            }
+        }
+
+        return DB::transaction(function () use ($operacion, $transaccionesConfirmadas, $cerrador) {
+            // Crear movimientos contables desde las transacciones confirmadas
+            foreach ($transaccionesConfirmadas as $i => $t) {
+                // Movimiento de salida (cuenta origen)
+                $operacion->movimientos()->create([
+                    'cuenta_id'             => $t->cuenta_origen_id,
+                    'moneda_id'             => $t->moneda_id,
+                    'monto'                 => -$t->monto,
+                    'tasa_a_usd'            => $t->tasa_aplicada ? round(1 / $t->tasa_aplicada, 8) : 1,
+                    'monto_usd_equivalente' => $t->tasa_aplicada ? round($t->monto / $t->tasa_aplicada, 2) : $t->monto,
+                    'orden'                 => ($i * 2) + 1,
+                ]);
+
+                // Movimiento de entrada (cuenta destino)
+                $operacion->movimientos()->create([
+                    'cuenta_id'             => $t->cuenta_destino_id,
+                    'moneda_id'             => $t->moneda_id,
+                    'monto'                 => $t->monto,
+                    'tasa_a_usd'            => $t->tasa_aplicada ? round(1 / $t->tasa_aplicada, 8) : 1,
+                    'monto_usd_equivalente' => $t->tasa_aplicada ? round($t->monto / $t->tasa_aplicada, 2) : $t->monto,
+                    'orden'                 => ($i * 2) + 2,
+                ]);
+            }
+
+            // Cerrar operación
+            $operacion->update([
+                'estado'       => 'cerrada',
+                'estado_pool'  => 'completada',
+                'verificado_at' => now(),
+                'verificado_por_id' => $cerrador->id,
+            ]);
+
+            // Calcular ganancia bruta
+            $tipo = $operacion->tipoOperacion;
+            if ($tipo->genera_ganancia) {
+                $operacion->setRelation('tipoOperacion', $tipo);
+                $operacion->load('movimientos.moneda');
+
+                $ganancia = $this->calcularGananciaBruta($operacion);
+                $operacion->update([
+                    'ganancia_bruta_usd' => $ganancia['usd'],
+                    'ganancia_bruta_ves' => $ganancia['ves'],
+                ]);
+            }
+
+            // Aplicar comisiones
+            $operacion->load(['movimientos.cuenta.banco', 'movimientos.moneda', 'operador.titular', 'tipoOperacion']);
+            $this->comisionesService->aplicarAOperacion($operacion);
+
+            // Actualizar saldos y despachar jobs
+            $cuentaIdsAfectadas = [];
+            foreach ($transaccionesConfirmadas as $t) {
+                $cuentaIdsAfectadas[] = $t->cuenta_origen_id;
+                $cuentaIdsAfectadas[] = $t->cuenta_destino_id;
+            }
+            RecalcularSaldoCuentaJob::dispatch(array_unique($cuentaIdsAfectadas));
+
+            if ($tipo->afecta_fifo) {
+                ProcesarFifoOperacionJob::dispatch($operacion->id);
+            }
+
+            // Bitácora
+            activity('operaciones')
+                ->performedOn($operacion)
+                ->causedBy($cerrador)
+                ->withProperties([
+                    'transacciones_confirmadas' => $transaccionesConfirmadas->count(),
+                    'movimientos_creados'       => $operacion->movimientos()->count(),
+                ])
+                ->event('operacion_cerrada')
+                ->log('Operación cerrada con ' . $transaccionesConfirmadas->count() . ' transacciones');
+
+            return $operacion->fresh(['movimientos.cuenta', 'tipoOperacion', 'transacciones']);
+        });
+    }
+
+    /**
+     * Cancela una operación en estado solicitud o en_progreso.
+     * Si tiene transacciones confirmadas, las revierte (reingresa saldos).
+     * Marca todas las transacciones pendientes como canceladas.
+     *
+     * @throws ValidationException
+     */
+    public function cancelarOperacion(Operacion $operacion, \App\Models\User $cancelador, ?string $motivo = null): Operacion
+    {
+        if (! in_array($operacion->estado, ['solicitud', 'en_progreso'])) {
+            throw ValidationException::withMessages([
+                'estado' => 'Solo se pueden cancelar operaciones en estado "solicitud" o "en_progreso".',
+            ]);
+        }
+
+        return DB::transaction(function () use ($operacion, $cancelador, $motivo) {
+            // Revertir transacciones confirmadas
+            $confirmadas = $operacion->transacciones()->where('estado', 'confirmada')->get();
+            foreach ($confirmadas as $t) {
+                $cuentaOrigen = Cuenta::findOrFail($t->cuenta_origen_id);
+                $saldoAntes = $cuentaOrigen->saldo_cache;
+                $nuevoSaldo = bcadd($saldoAntes, $t->monto, 2);
+                $cuentaOrigen->update(['saldo_cache' => $nuevoSaldo]);
+
+                $t->update(['estado' => 'revertida', 'motivo_rechazo' => $motivo ?? 'Operación cancelada']);
+            }
+
+            // Cancelar transacciones pendientes
+            $operacion->transacciones()->where('estado', 'pendiente')->update(['estado' => 'cancelada']);
+
+            // Cancelar operación
+            $operacion->update([
+                'estado'              => 'cancelada',
+                'cancelada_at'        => now(),
+                'motivo_cancelacion'  => $motivo,
+            ]);
+
+            activity('operaciones')
+                ->performedOn($operacion)
+                ->causedBy($cancelador)
+                ->withProperties([
+                    'transacciones_revertidas' => $confirmadas->count(),
+                    'motivo'                   => $motivo,
+                ])
+                ->event('operacion_cancelada')
+                ->log('Operación cancelada');
+
+            return $operacion->fresh(['transacciones']);
+        });
+    }
+
+    /**
+     * Pasa una operación de 'solicitud' a 'en_progreso'.
+     *
+     * @throws ValidationException
+     */
+    public function iniciarOperacion(Operacion $operacion): Operacion
+    {
+        if ($operacion->estado !== 'solicitud') {
+            throw ValidationException::withMessages([
+                'estado' => 'Solo se puede iniciar operaciones en estado "solicitud".',
+            ]);
+        }
+
+        $operacion->update([
+            'estado'        => 'en_progreso',
+            'en_progreso_at' => now(),
+        ]);
+
+        return $operacion->fresh();
     }
 }

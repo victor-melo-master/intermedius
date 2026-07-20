@@ -10,10 +10,6 @@ use App\Services\Transaccion\SaldoValidator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
-/**
- * Creates, updates, and manages transactions for a given operation.
- * Handles account changes, validation state, and comprobante attachments.
- */
 class TransaccionService
 {
     public function __construct(
@@ -21,11 +17,8 @@ class TransaccionService
     ) {}
 
     /**
-     * Creates a batch of transactions for an operation.
-     *
-     * @param  Operacion                   $operacion
-     * @param  array<int, array<string, mixed>>  $transaccionesData
-     * @return \Illuminate\Support\Collection<int, Transaccion>
+     * Crea un batch de transacciones para una operación (solicitud o en_progreso).
+     * NO valida saldo aquí — eso se hace al confirmar.
      */
     public function crearTransacciones(Operacion $operacion, array $transaccionesData): \Illuminate\Support\Collection
     {
@@ -33,17 +26,15 @@ class TransaccionService
 
         DB::transaction(function () use ($operacion, $transaccionesData, &$transacciones) {
             foreach ($transaccionesData as $i => $data) {
-                $this->saldoValidator->assertSaldoSuficiente(
-                    $data['cuenta_origen_id'],
-                    $data['moneda_id'],
-                    $data['monto'],
-                );
-
                 $transaccion = $operacion->transacciones()->create([
                     'cuenta_origen_id'  => $data['cuenta_origen_id'],
                     'cuenta_destino_id' => $data['cuenta_destino_id'],
                     'moneda_id'         => $data['moneda_id'],
                     'monto'             => $data['monto'],
+                    'tasa_aplicada'     => $data['tasa_aplicada'] ?? null,
+                    'tasas_snapshot'    => $data['tasas_snapshot'] ?? null,
+                    'metodo_pago'       => $data['metodo_pago'] ?? null,
+                    'comprobante'       => $data['comprobante'] ?? null,
                     'estado'            => 'pendiente',
                     'orden'             => $i + 1,
                 ]);
@@ -56,13 +47,107 @@ class TransaccionService
     }
 
     /**
-     * Validates a transaction (marks as validated).
+     * Confirma una transacción: valida saldo, marca como confirmada, descuenta saldo.
      *
-     * @param  Transaccion  $transaccion
-     * @param  User         $validador
-     * @return Transaccion
+     * @throws ValidationException
      */
-    public function validarTransaccion(Transaccion $transaccion, User $validador): Transaccion
+    public function confirmarTransaccion(Transaccion $transaccion, User $usuario): Transaccion
+    {
+        if ($transaccion->estado !== 'pendiente') {
+            throw ValidationException::withMessages([
+                'transaccion_id' => 'Solo se pueden confirmar transacciones en estado "pendiente".',
+            ]);
+        }
+
+        $this->saldoValidator->assertSaldoSuficiente(
+            $transaccion->cuenta_origen_id,
+            $transaccion->moneda_id,
+            $transaccion->monto,
+        );
+
+        // Registrar en bitácora el saldo antes de descontar
+        $cuentaOrigen = Cuenta::findOrFail($transaccion->cuenta_origen_id);
+        $saldoAntes = $cuentaOrigen->saldo_cache;
+
+        DB::transaction(function () use ($transaccion, $usuario, $cuentaOrigen, $saldoAntes) {
+            // Descontar saldo de cuenta origen
+            $nuevoSaldo = bcsub($saldoAntes, $transaccion->monto, 2);
+            $cuentaOrigen->update(['saldo_cache' => $nuevoSaldo]);
+
+            // Marcar como confirmada
+            $transaccion->update([
+                'estado'           => 'confirmada',
+                'confirmada_en'    => now(),
+                'confirmada_por_id' => $usuario->id,
+            ]);
+
+            // Bitácora
+            activity('transacciones')
+                ->performedOn($transaccion)
+                ->causedBy($usuario)
+                ->withProperties([
+                    'operacion_id'      => $transaccion->operacion_id,
+                    'cuenta_origen_id'  => $transaccion->cuenta_origen_id,
+                    'saldo_anterior'    => $saldoAntes,
+                    'saldo_nuevo'       => $nuevoSaldo,
+                    'monto'             => $transaccion->monto,
+                ])
+                ->event('transaccion_confirmada')
+                ->log('Transacción confirmada - saldo descontado');
+        });
+
+        return $transaccion->fresh();
+    }
+
+    /**
+     * Revuelve una transacción confirmada: reingresa saldo y marca como pendiente.
+     *
+     * @throws ValidationException
+     */
+    public function revertirTransaccion(Transaccion $transaccion, User $usuario, ?string $motivo = null): Transaccion
+    {
+        if ($transaccion->estado !== 'confirmada') {
+            throw ValidationException::withMessages([
+                'transaccion_id' => 'Solo se pueden revertir transacciones en estado "confirmada".',
+            ]);
+        }
+
+        $cuentaOrigen = Cuenta::findOrFail($transaccion->cuenta_origen_id);
+        $saldoAntes = $cuentaOrigen->saldo_cache;
+
+        DB::transaction(function () use ($transaccion, $usuario, $cuentaOrigen, $saldoAntes, $motivo) {
+            // Reingresar saldo
+            $nuevoSaldo = bcadd($saldoAntes, $transaccion->monto, 2);
+            $cuentaOrigen->update(['saldo_cache' => $nuevoSaldo]);
+
+            // Marcar como revertida
+            $transaccion->update([
+                'estado'        => 'revertida',
+                'motivo_rechazo' => $motivo ?? 'Revertida manualmente',
+            ]);
+
+            activity('transacciones')
+                ->performedOn($transaccion)
+                ->causedBy($usuario)
+                ->withProperties([
+                    'operacion_id'      => $transaccion->operacion_id,
+                    'cuenta_origen_id'  => $transaccion->cuenta_origen_id,
+                    'saldo_anterior'    => $saldoAntes,
+                    'saldo_nuevo'       => $nuevoSaldo,
+                    'monto'             => $transaccion->monto,
+                    'motivo'            => $motivo,
+                ])
+                ->event('transaccion_revertida')
+                ->log('Transacción revertida - saldo reingresado');
+        });
+
+        return $transaccion->fresh();
+    }
+
+    /**
+     * Valida una transacción (flujo legacy de verificación).
+     */
+    public function validarTransaccion(Transaccion $transaccion, User $usuario): Transaccion
     {
         if ($transaccion->estado !== 'pendiente') {
             throw ValidationException::withMessages([
@@ -71,20 +156,15 @@ class TransaccionService
         }
 
         $transaccion->update([
-            'estado'         => 'validada',
-            'validada_en'    => now(),
-            'validada_por_id' => $validador->id,
+            'estado'          => 'validada',
+            'validada_por_id' => $usuario->id,
         ]);
 
         return $transaccion->fresh();
     }
 
     /**
-     * Rejects a transaction with a reason.
-     *
-     * @param  Transaccion  $transaccion
-     * @param  string       $motivo
-     * @return Transaccion
+     * Rechaza una transacción pendiente.
      */
     public function rechazarTransaccion(Transaccion $transaccion, string $motivo): Transaccion
     {
@@ -103,12 +183,7 @@ class TransaccionService
     }
 
     /**
-     * Changes the destination account of a pending transaction.
-     * Validates that the new account exists and matches the transaction currency.
-     *
-     * @param  Transaccion  $transaccion
-     * @param  int          $nuevaCuentaDestinoId
-     * @return Transaccion
+     * Cambia la cuenta destino de una transacción pendiente.
      */
     public function cambiarCuentaDestino(Transaccion $transaccion, int $nuevaCuentaDestinoId): Transaccion
     {
@@ -133,12 +208,7 @@ class TransaccionService
     }
 
     /**
-     * Changes the origin account of a pending transaction (e.g., when client payment fails).
-     * Re-validates that the new origin account has sufficient funds.
-     *
-     * @param  Transaccion  $transaccion
-     * @param  int          $nuevaCuentaOrigenId
-     * @return Transaccion
+     * Cambia la cuenta origen de una transacción pendiente.
      */
     public function cambiarCuentaOrigen(Transaccion $transaccion, int $nuevaCuentaOrigenId): Transaccion
     {
@@ -162,10 +232,7 @@ class TransaccionService
     }
 
     /**
-     * Cancels a pending transaction (e.g., when the whole operation is cancelled).
-     *
-     * @param  Transaccion  $transaccion
-     * @return Transaccion
+     * Cancela una transacción pendiente.
      */
     public function cancelarTransaccion(Transaccion $transaccion): Transaccion
     {
@@ -181,11 +248,7 @@ class TransaccionService
     }
 
     /**
-     * Attaches a comprobante file to a transaction.
-     *
-     * @param  Transaccion  $transaccion
-     * @param  string       $rutaComprobante
-     * @return Transaccion
+     * Adjunta comprobante a una transacción.
      */
     public function adjuntarComprobante(Transaccion $transaccion, string $rutaComprobante): Transaccion
     {

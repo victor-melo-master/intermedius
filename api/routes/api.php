@@ -100,6 +100,7 @@ Route::prefix('v1')->group(function () {
         });
 
         // ── Operaciones (ledger contable) ────────────────────────────
+        Route::post('operaciones/solicitud', [OperacionController::class, 'solicitud']);
         Route::apiResource('operaciones', OperacionController::class)
             ->parameters(['operaciones' => 'operacion'])
             ->middleware('throttle:30,1');
@@ -110,10 +111,17 @@ Route::prefix('v1')->group(function () {
         Route::patch('operaciones/{operacion}/movimientos/{movimiento}/rechazar', [OperacionController::class, 'rechazarMovimiento']);
         Route::delete('operaciones/{operacion}', [OperacionController::class, 'destroy']);
 
-        // ── Transacciones (durante verificación) ────────────────────
+        // ── Flujo multi-paso: solicitud → en_progreso → cerrada / cancelada ──
+        Route::post('operaciones/{operacion}/iniciar', [OperacionController::class, 'iniciar']);
+        Route::post('operaciones/{operacion}/cerrar', [OperacionController::class, 'cerrar']);
+        Route::post('operaciones/{operacion}/cancelar', [OperacionController::class, 'cancelar']);
+
+        // ── Transacciones (solicitud / en_progreso / verificación) ────
         Route::post('operaciones/{operacion}/transacciones', [TransaccionController::class, 'store']);
         Route::put('operaciones/{operacion}/transacciones/{transaccion}', [TransaccionController::class, 'update']);
+        Route::patch('operaciones/{operacion}/transacciones/{transaccion}/confirmar', [TransaccionController::class, 'confirmar']);
         Route::patch('operaciones/{operacion}/transacciones/{transaccion}/validar', [TransaccionController::class, 'validar']);
+        Route::patch('operaciones/{operacion}/transacciones/{transaccion}/revertir', [TransaccionController::class, 'revertir']);
         Route::delete('operaciones/{operacion}/transacciones/{transaccion}', [TransaccionController::class, 'destroy']);
 
         // ── Pool de pagadores ────────────────────────────────────────

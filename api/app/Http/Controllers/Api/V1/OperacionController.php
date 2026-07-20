@@ -131,13 +131,19 @@ class OperacionController extends Controller
             'movimientos.cuenta.banco',
             'movimientos.moneda',
             'movimientos.validadaPor',
+            'transacciones.cuentaOrigen.banco',
+            'transacciones.cuentaDestino.banco',
+            'transacciones.moneda',
             'tipoOperacion',
             'cliente',
             'operador',
         ]);
 
         $saldos = (object) [];
-        $cuentasIds = $operacion->movimientos->pluck('cuenta_id')->unique()->values();
+        $cuentasIds = $operacion->movimientos->pluck('cuenta_id')
+            ->merge($operacion->transacciones->pluck('cuenta_origen_id'))
+            ->merge($operacion->transacciones->pluck('cuenta_destino_id'))
+            ->unique()->values();
 
         foreach ($cuentasIds as $cuentaId) {
             $cuenta = \App\Models\Cuenta::with('moneda')->find($cuentaId);
@@ -152,13 +158,18 @@ class OperacionController extends Controller
 
         $totalMovimientos = $operacion->movimientos->count();
         $movimientosValidados = $operacion->movimientos->where('estado', 'validada')->count();
+        $totalTransacciones = $operacion->transacciones->count();
+        $transaccionesValidadas = $operacion->transacciones->where('estado', 'validada')->count();
 
         return response()->json([
             'operacion'              => $operacion,
             'movimientos'            => $operacion->movimientos,
+            'transacciones'          => $operacion->transacciones,
             'saldos'                 => $saldos,
             'total_movimientos'      => $totalMovimientos,
             'movimientos_validados'  => $movimientosValidados,
+            'total_transacciones'    => $totalTransacciones,
+            'transacciones_validadas' => $transaccionesValidadas,
         ]);
     }
 
@@ -318,5 +329,73 @@ class OperacionController extends Controller
         return response()->json([
             'message' => 'Las operaciones no se eliminan. Use ajuste manual para corregir.',
         ], 405);
+    }
+
+    /**
+     * Crea una solicitud de operación SIN movimientos contables.
+     * La operación queda en estado 'solicitud' para que el operador agregue transacciones.
+     */
+    public function solicitud(StoreOperacionRequest $request): JsonResponse
+    {
+        $operacion = $this->registroService->crearSolicitud($request->validated());
+
+        return (new OperacionResource($operacion))
+            ->response()
+            ->setStatusCode(201);
+    }
+
+    /**
+     * Pasa una operación de 'solicitud' a 'en_progreso'.
+     */
+    public function iniciar(Operacion $operacion): JsonResponse
+    {
+        $this->authorize('update', $operacion);
+
+        $operacion = $this->registroService->iniciarOperacion($operacion);
+
+        return response()->json([
+            'message' => 'Operación iniciada.',
+            'operacion' => new OperacionResource($operacion),
+        ]);
+    }
+
+    /**
+     * Cierra una operación en estado 'en_progreso'.
+     * Crea movimientos contables desde las transacciones confirmadas.
+     */
+    public function cerrar(Request $request, Operacion $operacion): JsonResponse
+    {
+        $this->authorize('update', $operacion);
+
+        $operacion = $this->registroService->cerrarOperacion($operacion, $request->user());
+
+        return response()->json([
+            'message' => 'Operación cerrada.',
+            'operacion' => new OperacionResource($operacion),
+        ]);
+    }
+
+    /**
+     * Cancela una operación en estado 'solicitud' o 'en_progreso'.
+     * Revierte transacciones confirmadas y cancela pendientes.
+     */
+    public function cancelar(Request $request, Operacion $operacion): JsonResponse
+    {
+        $this->authorize('cancel', $operacion);
+
+        $request->validate([
+            'motivo' => 'nullable|string|max:255',
+        ]);
+
+        $operacion = $this->registroService->cancelarOperacion(
+            $operacion,
+            $request->user(),
+            $request->input('motivo'),
+        );
+
+        return response()->json([
+            'message' => 'Operación cancelada.',
+            'operacion' => new OperacionResource($operacion),
+        ]);
     }
 }

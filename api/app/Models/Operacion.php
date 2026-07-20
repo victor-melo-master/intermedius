@@ -47,6 +47,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string|null $origen
  * @property string|null $origen_referencia
  * @property string|null $estado_pool
+ * @property string|null $estado
+ * @property array|null $tasas_snapshot
+ * @property \Illuminate\Support\Carbon|null $en_progreso_at
  * @property int|null $pagador_id
  * @property \Illuminate\Support\Carbon|null $asignada_at
  * @property \Illuminate\Support\Carbon|null $pagada_at
@@ -118,6 +121,8 @@ class Operacion extends Model
         'pagada_at',
         'cancelada_at',
         'motivo_cancelacion',
+        'tasas_snapshot',
+        'en_progreso_at',
         'sla_notificado_en',
     ];
 
@@ -147,6 +152,8 @@ class Operacion extends Model
             'tasa_venta'             => 'decimal:8',
             'estado_pool'            => 'string',
             'estado'                 => 'string',
+            'tasas_snapshot'         => 'array',
+            'en_progreso_at'         => 'datetime',
             'sla_notificado_en'      => 'datetime',
         ];
     }
@@ -216,6 +223,26 @@ class Operacion extends Model
     {
         return $query->where('pagador_id', $userId)
             ->where('estado_pool', 'asignada');
+    }
+
+    public function scopeSolicitudes(Builder $query): Builder
+    {
+        return $query->where('estado', 'solicitud');
+    }
+
+    public function scopeEnProgreso(Builder $query): Builder
+    {
+        return $query->where('estado', 'en_progreso');
+    }
+
+    public function scopeCerradas(Builder $query): Builder
+    {
+        return $query->where('estado', 'cerrada');
+    }
+
+    public function scopeCanceladas(Builder $query): Builder
+    {
+        return $query->where('estado', 'cancelada');
     }
 
     /**

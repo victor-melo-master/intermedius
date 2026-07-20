@@ -62,4 +62,18 @@ class OperacionPolicy
     {
         return $user->hasRole(['admin', 'operador', 'contador']);
     }
+
+    /**
+     * Determine whether the user can cancel an operacion.
+     * Admin, super_admin, or the operator who created the solicitud.
+     */
+    public function cancel(User $user, Operacion $operacion): bool
+    {
+        if ($user->hasRole(['admin'])) {
+            return true;
+        }
+
+        // El operador que creó la solicitud también puede cancelar
+        return $user->id === $operacion->operador_id;
+    }
 }

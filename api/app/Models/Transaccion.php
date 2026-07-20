@@ -18,19 +18,24 @@ class Transaccion extends Model
         'cuenta_destino_id',
         'moneda_id',
         'monto',
+        'tasa_aplicada',
+        'tasas_snapshot',
+        'metodo_pago',
+        'comprobante',
         'estado',
         'motivo_rechazo',
-        'comprobante',
-        'validada_en',
-        'validada_por_id',
+        'confirmada_en',
+        'confirmada_por_id',
         'orden',
     ];
 
     protected function casts(): array
     {
         return [
-            'monto' => 'decimal:2',
-            'validada_en' => 'datetime',
+            'monto'           => 'decimal:2',
+            'tasa_aplicada'   => 'decimal:8',
+            'tasas_snapshot'  => 'array',
+            'confirmada_en'   => 'datetime',
         ];
     }
 
@@ -54,8 +59,8 @@ class Transaccion extends Model
         return $this->belongsTo(Moneda::class);
     }
 
-    public function validadaPor(): BelongsTo
+    public function confirmadaPor(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'validada_por_id');
+        return $this->belongsTo(User::class, 'confirmada_por_id');
     }
 }

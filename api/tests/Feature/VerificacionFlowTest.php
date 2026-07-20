@@ -175,11 +175,11 @@ class VerificacionFlowTest extends TestCase
             ->assertJsonStructure([
                 'operacion',
                 'saldos',
-                'total_transacciones',
-                'transacciones_validadas',
+                'total_movimientos',
+                'movimientos_validados',
             ])
-            ->assertJsonPath('total_transacciones', 1)
-            ->assertJsonPath('transacciones_validadas', 0);
+            ->assertJsonPath('total_movimientos', 0)
+            ->assertJsonPath('movimientos_validados', 0);
     }
 
     public function test_verificacion_requiere_autenticacion(): void
@@ -255,7 +255,7 @@ class VerificacionFlowTest extends TestCase
             ]);
 
         $response->assertStatus(422)
-            ->assertJsonPath('message', 'La operación no está en proceso de verificación.');
+            ->assertJsonPath('message', 'La operación no está en un estado que permita agregar transacciones.');
     }
 
     public function test_agregar_transaccion_moneda_no_coincide_da_422(): void
@@ -280,7 +280,7 @@ class VerificacionFlowTest extends TestCase
         $response->assertStatus(422);
     }
 
-    public function test_agregar_transaccion_saldo_insuficiente_da_422(): void
+    public function test_agregar_transaccion_saldo_insuficiente_no_falla_en_creacion(): void
     {
         $operacion = Operacion::create([
             'fecha'              => now(),
@@ -298,7 +298,8 @@ class VerificacionFlowTest extends TestCase
                 'monto'             => 999999,
             ]);
 
-        $response->assertStatus(422);
+        $response->assertStatus(201)
+            ->assertJsonPath('estado', 'pendiente');
     }
 
     public function test_agregar_transaccion_requiere_autenticacion(): void
@@ -384,7 +385,7 @@ class VerificacionFlowTest extends TestCase
             ]);
 
         $response->assertStatus(422)
-            ->assertJsonPath('message', 'La operación no está en proceso de verificación.');
+            ->assertJsonPath('message', 'La operación no está en un estado que permita editar transacciones.');
     }
 
     public function test_editar_transaccion_validada_da_422(): void
@@ -550,7 +551,7 @@ class VerificacionFlowTest extends TestCase
             ->deleteJson("/api/v1/operaciones/{$operacion->id}/transacciones/{$transaccion->id}");
 
         $response->assertStatus(422)
-            ->assertJsonPath('message', 'La operación no está en proceso de verificación.');
+            ->assertJsonPath('message', 'La operación no está en un estado que permita eliminar transacciones.');
     }
 
     // ── Cerrar Verificación ───────────────────────────────────────────────────
@@ -577,12 +578,22 @@ class VerificacionFlowTest extends TestCase
         ['operacion' => $operacion] = $this->crearOperacionConTransaccion();
         $operacion->update(['estatus' => 'en_verificacion']);
 
+        \App\Models\Movimiento::create([
+            'operacion_id'          => $operacion->id,
+            'cuenta_id'             => $this->cuentaOrigen->id,
+            'moneda_id'             => $this->usd->id,
+            'monto'                 => -100,
+            'tasa_a_usd'            => 1.0,
+            'monto_usd_equivalente' => -100,
+            'orden'                 => 1,
+        ]);
+
         $response = $this->actingAs($this->contador)
             ->patchJson("/api/v1/operaciones/{$operacion->id}/verificar");
 
         $response->assertStatus(422)
-            ->assertJsonPath('message', 'Hay 1 transacción(es) sin validar. Todas deben estar validadas para cerrar la verificación.')
-            ->assertJsonPath('transacciones_pendientes', 1);
+            ->assertJsonPath('message', 'Hay 1 movimiento(s) sin validar. Todos deben estar validados para cerrar la verificación.')
+            ->assertJsonPath('movimientos_pendientes', 1);
     }
 
     public function test_cerrar_verificacion_sin_iniciar_da_422(): void
@@ -707,7 +718,7 @@ class VerificacionFlowTest extends TestCase
             ]);
 
         $this->assertDatabaseHas('activity_log', [
-            'event'         => 'cuenta_modificada',
+            'event'         => 'transaccion_modificada',
             'causer_id'     => $this->operador->id,
         ]);
     }

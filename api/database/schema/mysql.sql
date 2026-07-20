@@ -303,6 +303,37 @@ CREATE TABLE `movimientos` (
   CONSTRAINT `movimientos_validada_por_id_foreign` FOREIGN KEY (`validada_por_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+CREATE TABLE `transacciones` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `operacion_id` bigint(20) unsigned NOT NULL,
+  `cuenta_origen_id` bigint(20) unsigned NOT NULL,
+  `cuenta_destino_id` bigint(20) unsigned NOT NULL,
+  `moneda_id` bigint(20) unsigned NOT NULL,
+  `monto` decimal(20,4) NOT NULL,
+  `tasa_aplicada` decimal(20,8) DEFAULT NULL,
+  `tasas_snapshot` json DEFAULT NULL,
+  `metodo_pago` varchar(50) DEFAULT NULL,
+  `comprobante` varchar(500) DEFAULT NULL,
+  `estado` varchar(50) NOT NULL DEFAULT 'pendiente',
+  `motivo_rechazo` text DEFAULT NULL,
+  `confirmada_en` timestamp NULL DEFAULT NULL,
+  `confirmada_por_id` bigint(20) unsigned DEFAULT NULL,
+  `orden` smallint(5) unsigned NOT NULL DEFAULT 1,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `transacciones_operacion_id_foreign` (`operacion_id`),
+  KEY `transacciones_cuenta_origen_id_foreign` (`cuenta_origen_id`),
+  KEY `transacciones_cuenta_destino_id_foreign` (`cuenta_destino_id`),
+  KEY `transacciones_moneda_id_foreign` (`moneda_id`),
+  KEY `transacciones_confirmada_por_id_foreign` (`confirmada_por_id`),
+  CONSTRAINT `transacciones_operacion_id_foreign` FOREIGN KEY (`operacion_id`) REFERENCES `operaciones` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `transacciones_cuenta_origen_id_foreign` FOREIGN KEY (`cuenta_origen_id`) REFERENCES `cuentas` (`id`),
+  CONSTRAINT `transacciones_cuenta_destino_id_foreign` FOREIGN KEY (`cuenta_destino_id`) REFERENCES `cuentas` (`id`),
+  CONSTRAINT `transacciones_moneda_id_foreign` FOREIGN KEY (`moneda_id`) REFERENCES `monedas` (`id`),
+  CONSTRAINT `transacciones_confirmada_por_id_foreign` FOREIGN KEY (`confirmada_por_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 CREATE TABLE `operaciones` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `fecha` date NOT NULL,
@@ -344,6 +375,10 @@ CREATE TABLE `operaciones` (
   `verificado_por_id` bigint(20) unsigned DEFAULT NULL,
   `origen` enum('manual','importado','ajuste_apertura') NOT NULL DEFAULT 'manual',
   `origen_referencia` varchar(100) DEFAULT NULL,
+  `estado` varchar(50) NOT NULL DEFAULT 'en_espera' COMMENT 'solicitud, en_progreso, cerrada, cancelada',
+  `tasas_snapshot` json DEFAULT NULL COMMENT 'Snapshot de tasas BCV/USDT al momento de la solicitud',
+  `en_progreso_at` timestamp NULL DEFAULT NULL,
+  `sla_notificado_en` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   `deleted_at` timestamp NULL DEFAULT NULL,
@@ -354,6 +389,7 @@ CREATE TABLE `operaciones` (
   KEY `operaciones_verificado_por_id_foreign` (`verificado_por_id`),
   KEY `operaciones_fecha_tipo_operacion_id_index` (`fecha`,`tipo_operacion_id`),
   KEY `operaciones_estatus_index` (`estatus`),
+  KEY `operaciones_estado_index` (`estado`),
   KEY `operaciones_cliente_id_index` (`cliente_id`),
   KEY `operaciones_operador_id_index` (`operador_id`),
   KEY `operaciones_tasa_diaria_id_foreign` (`tasa_diaria_id`),

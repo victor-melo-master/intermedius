@@ -400,6 +400,12 @@ class OperacionEndpointTest extends TestCase
             ->postJson("/api/v1/operaciones/{$operacion->id}/iniciar-verificacion")
             ->assertOk();
 
+        foreach ($operacion->movimientos as $movimiento) {
+            $this->actingAs($this->contador)
+                ->patchJson("/api/v1/operaciones/{$operacion->id}/movimientos/{$movimiento->id}/validar")
+                ->assertOk();
+        }
+
         $this->actingAs($this->contador)
             ->patchJson("/api/v1/operaciones/{$operacion->id}/verificar")
             ->assertOk()

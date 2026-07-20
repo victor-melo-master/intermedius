@@ -25,6 +25,9 @@ class PoolController extends Controller
         'movimientos.cuenta.titular',
         'movimientos.cuenta.cliente',
         'movimientos.moneda',
+        'transacciones.cuentaOrigen.banco',
+        'transacciones.cuentaDestino.banco',
+        'transacciones.moneda',
         'operador',
         'pagador',
     ];
@@ -40,6 +43,7 @@ class PoolController extends Controller
         $perPage = min((int) $request->get('per_page', 25), 100);
 
         $query = Operacion::pendientes()
+            ->where('estado', '!=', 'solicitud')
             ->with(self::EAGER)
             ->orderBy('created_at')
             ->orderBy('id');
