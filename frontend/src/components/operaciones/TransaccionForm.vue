@@ -216,7 +216,8 @@ const limiteMoneda = computed(() => {
 const totalExistente = computed(() => {
   if (!form.moneda_id || !props.transaccionesExistentes.length) return 0
   return props.transaccionesExistentes
-    .filter(t => t.moneda?.id == form.moneda_id || t.moneda_id == form.moneda_id)
+    .filter(t => (t.moneda?.id == form.moneda_id || t.moneda_id == form.moneda_id)
+      && ['pendiente', 'confirmada'].includes(t.estado))
     .reduce((sum, t) => sum + Math.abs(parseFloat(t.monto)), 0)
 })
 
