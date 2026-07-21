@@ -138,7 +138,7 @@ Eager carga `titular`.
 ### `GET /api/v1/operaciones`
 `auth:sanctum` | `viewAny` (admin | operador | contador | lectura)
 
-**Query params:** `per_page` (max 100), `fecha_desde`, `fecha_hasta`, `tipo_codigo`, `cliente_id`, `operador_id`, `estatus`, `cuenta_id`
+**Query params:** `per_page` (max 100), `fecha_desde`, `fecha_hasta`, `tipo_codigo`, `cliente_id`, `operador_id`, `estatus`, `estado`, `cuenta_id`
 
 Eager: `tipoOperacion`, `monedaOperacion`, `cliente`, `operador`, `movimientos.moneda`.
 
@@ -194,7 +194,10 @@ No permite editar si está verificado (excepto super_admin) ni cancelado.
 ### `PATCH /api/v1/operaciones/{operacion}/verificar`
 `auth:sanctum` | `role:admin|contador`
 
-Sin body. Cambia estatus a `verificado`.
+Requiere `estatus: 'en_verificacion'` y que todos los movimientos estén `validada`. Sin body adicional. Cambia estatus a `verificado` y registra `verificado_at` y `verificado_por_id`.
+
+→ `200` `OperacionResource`
+→ `422` operación no en verificación o hay movimientos pendientes
 
 ### `DELETE /api/v1/operaciones/{operacion}`
 Siempre `405` — las operaciones no se eliminan.
@@ -207,7 +210,7 @@ Siempre `405` — las operaciones no se eliminan.
 {
   "id": "int",
   "fecha": "2026-07-07",
-  "estatus": "borrador|verificado",
+  "estatus": "sin_verificar|en_verificacion|verificado",
   "estado": "solicitud|en_progreso|cerrada|cancelada|null",
   "monto_solicitado": "100.00|null",
   "origen": "manual|null",
@@ -217,9 +220,10 @@ Siempre `405` — las operaciones no se eliminan.
   "tasa_aplicada": "700.00000000",
   "tasa_compra": "800.00000000",
   "tasa_venta": "810.00000000",
-  "tasa_mercado_snapshot": "700.00000000|null",
+  "tasa_mercado_snapshot": "700.00000000",
   "fuente_tasa_mercado": "bcv|null",
   "tasa_sugerida": "700.00000000",
+  "tasa_diaria_id": null,
   "sin_tasa_referencia": false,
   "ganancia": {
     "bruta_usd": "0.0000",
@@ -235,11 +239,13 @@ Siempre `405` — las operaciones no se eliminan.
   "tipo_comision": null,
   "verificado_at": null,
   "estado_pool": "pendiente|asignada|pagada|cancelada",
-  "en_progreso_at": null,
+  "pagador_id": null,
+  "asignada_at": null,
+  "pagada_at": null,
   "cancelada_at": null,
   "motivo_cancelacion": null,
   "pagador": { "id": 1, "name": "Admin" }|null,
-  "tipo_operacion": { "id": 1, "codigo": "compra", "nombre": "..." },
+  "tipo_operacion": { "id": 1, "codigo": "compra_usd", "nombre": "Compra de USD" },
   "moneda_operacion": { "id": 3, "codigo": "USDT", "nombre": "Tether USD" }|null,
   "cliente": { "id": 1, "nombre": "...", "alias": "..." }|null,
   "cliente_emisor": { ... }|null,
@@ -250,6 +256,9 @@ Siempre `405` — las operaciones no se eliminan.
   "movimientos": [
     {
       "id": 1,
+      "operacion_id": 1,
+      "cuenta_id": 1,
+      "moneda_id": 1,
       "monto": "-7000.0000",
       "tasa_a_usd": "0.00142857",
       "monto_usd_equivalente": "-10.0000",
@@ -264,6 +273,7 @@ Siempre `405` — las operaciones no se eliminan.
       "moneda": { "id": 1, "codigo": "USD", "simbolo": "$" }
     }
   ],
+  "transacciones": [ TransaccionResource ],
   "created_at": "2026-07-07T12:00:00Z",
   "updated_at": "2026-07-07T12:00:00Z"
 }
@@ -488,6 +498,112 @@ Paginated (50) de `Activity` log. `created_at DESC`.
 
 ---
 
+## Verificación de Operaciones (Legacy)
+
+Flujo de verificación por pasos: initiator → validar movimientos → cerrar verificación.
+
+### `GET /api/v1/operaciones/{operacion}/verificacion`
+`auth:sanctum` | `view`
+
+Retorna la vista de verificación con movimientos, transacciones y saldos de cuentas involucradas.
+
+→ `200` `{ operacion, movimientos, transacciones, saldos, total_movimientos, movimientos_validados, total_transacciones, transacciones_validadas }`
+
+### `POST /api/v1/operaciones/{operacion}/iniciar-verificacion`
+`auth:sanctum` | `update`
+
+Cambia `estatus` de `sin_verificar` → `en_verificacion`. Sin body.
+
+→ `200` `{ message, operacion }`
+→ `422` operación no está en `sin_verificar`
+
+### `PATCH /api/v1/operaciones/{operacion}/movimientos/{movimiento}/validar`
+`auth:sanctum` | `update`
+
+Valida un movimiento individual durante la verificación. Requiere `estatus: 'en_verificacion'` y `movimiento.estado: 'pendiente'`.
+
+→ `200` `{ movimiento, todas_validados }`
+
+### `PATCH /api/v1/operaciones/{operacion}/movimientos/{movimiento}/rechazar`
+`auth:sanctum` | `update`
+
+Rechaza un movimiento individual. Requiere `estatus: 'en_verificacion'`.
+
+```json
+{
+  "motivo_rechazo": "required|string|max:500"
+}
+```
+
+→ `200` `{ movimiento }`
+
+### `PATCH /api/v1/operaciones/{operacion}/transacciones/{transaccion}/validar`
+`auth:sanctum` | `update`
+
+Valida una transacción (flujo legacy de verificación). Requiere `estatus: 'en_verificacion'`.
+
+→ `200` `{ transaccion, todas_validadas }`
+
+---
+
+## Documentos
+
+### `GET /api/v1/clientes/{cliente}/documentos`
+`auth:sanctum`
+
+Lista documentos de un cliente.
+
+### `POST /api/v1/clientes/{cliente}/documentos`
+`auth:sanctum`
+
+Sube un documento para un cliente.
+
+### `DELETE /api/v1/documentos/{documento}`
+`auth:sanctum`
+
+Elimina un documento.
+
+### `GET /api/v1/documentos/{documento}/preview`
+Pública (autenticada por token en query param). Preview del documento.
+
+### `GET /api/v1/documentos/{documento}/download`
+Pública (autenticada por token en query param). Descarga del documento.
+
+---
+
+## Cuentas — Saldos
+
+### `POST /api/v1/cuentas/{cuenta}/saldo`
+`auth:sanctum` | `role:admin|super_admin`
+
+Carga saldo manual a una cuenta.
+
+### `GET /api/v1/cuentas/{cuenta}/saldo-disponible`
+`auth:sanctum`
+
+Retorna el saldo disponible de la cuenta (saldo_cache menos transacciones pendientes).
+
+---
+
+## Clientes — Extras
+
+### `GET /api/v1/clientes/{cliente}/operaciones`
+`auth:sanctum`
+
+Lista operaciones de un cliente específico.
+
+### `POST /api/v1/clientes/{cliente}/operaciones/exportar`
+`auth:sanctum`
+
+Exporta operaciones de un cliente.
+
+### `POST /api/v1/clientes/{cliente}/restaurar`
+`auth:sanctum` | `role:admin|super_admin`
+
+Restaura un cliente desactivado.
+
+---
+
 ## Flujo Multi-Paso (Operaciones con Transacciones)
 
 Flujo alternativo al CRUD directo de movimientos. Permite crear la operación como **solicitud**, agregar **transacciones** una por una, confirmarlas, y cerrar la operación cuando esté balanceada.
@@ -532,15 +648,15 @@ Pasa la operación de `solicitud` → `en_progreso`. Sin body.
 
 Cierra la operación: crea movimientos contables desde las transacciones confirmadas.
 
-**Body (opcional):**
+**Body:**
 ```json
 {
-  "tasa_mercado_snapshot": 36.50,
-  "fuente_tasa_mercado": "bcv"
+  "tasa_mercado_snapshot": "required|numeric|min:0",
+  "fuente_tasa_mercado": "string?|max:30"
 }
 ```
 
-Si se envía `tasa_mercado_snapshot`, se actualiza al momento del cierre antes de calcular la ganancia.
+Se actualiza `tasa_mercado_snapshot` al momento del cierre antes de calcular la ganancia.
 
 **Validaciones:**
 - Estado debe ser `en_progreso`
@@ -581,6 +697,13 @@ Retorna la ganancia estimada de una operación sin persistir. Para uso en previe
 ```
 
 Cancela la operación (estado `solicitud` o `en_progreso`):
+
+```json
+{
+  "motivo": "nullable|string|max:255"
+}
+```
+
 - Reversión de saldos de transacciones confirmadas
 - Transacciones pendientes → `cancelada`
 - Operación → `cancelada`
@@ -589,10 +712,7 @@ Cancela la operación (estado `solicitud` o `en_progreso`):
 
 ## Transacciones (Flujo Multi-Paso)
 
-### `GET /api/v1/operaciones/{operacion}/transacciones`
-`auth:sanctum`
-
-Lista transacciones de la operación.
+Las transacciones se obtienen a través de `GET /api/v1/operaciones/{operacion}` (campo `transacciones` en `OperacionResource`). No existe un endpoint GET separado para listarlas.
 
 ### `POST /api/v1/operaciones/{operacion}/transacciones`
 `auth:sanctum`
@@ -643,7 +763,7 @@ Revierte una transacción confirmada: reingresa saldos.
 
 ```json
 {
-  "motivo": "required|string"
+  "motivo": "nullable|string|max:255"
 }
 ```
 
@@ -660,9 +780,12 @@ Revierte una transacción confirmada: reingresa saldos.
   "moneda_id": 2,
   "monto": "50.00",
   "tasa_aplicada": "50.00",
+  "tasas_snapshot": null,
   "metodo_pago": "efectivo",
   "comprobante": null,
-  "estado": "pendiente|confirmada|revertida|cancelada",
+  "estado": "pendiente|confirmada|revertida|cancelada|validada",
+  "motivo_rechazo": null,
+  "confirmada_en": "2026-07-21T18:54:55+00:00|null",
   "orden": 1,
   "moneda": { "id": 2, "codigo": "USD", "nombre": "Dólar Estadounidense", "simbolo": "$" },
   "cuenta_origen": { "id": 13, "alias": "Intermedius - Efectivo USD", "nombre": "..." },
@@ -681,10 +804,6 @@ Los siguientes campos se agregaron para el flujo multi-paso:
 | `estado` | `string` | `solicitud` / `en_progreso` / `cerrada` / `cancelada` |
 | `monto_solicitado` | `string\|null` | Monto en divisa solicitado |
 | `moneda_operacion` | `object\|null` | `{ id, codigo, nombre }` — moneda negociada (USD, USDT, EUR, COP) |
-| `tasas_snapshot` | `object\|null` | Snapshot de tasas al crear la solicitud |
-| `en_progreso_at` | `string\|null` | Timestamp ISO8601 cuando se inició |
-| `cancelada_at` | `string\|null` | Timestamp ISO8601 cuando se canceló |
-| `motivo_cancelacion` | `string\|null` | Motivo de cancelación |
 | `transacciones` | `array` | Lista de transacciones (cuando se carga la relación) |
 
 ### Eager loads actualizados
