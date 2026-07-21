@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\Cuenta;
+use App\Models\Moneda;
 use App\Models\Operacion;
 use App\Models\Transaccion;
 use App\Services\Transaccion\SaldoValidator;
@@ -56,6 +57,27 @@ class TransaccionController extends Controller
             return response()->json([
                 'message' => 'La cuenta de destino no pertenece a la moneda indicada.',
             ], 422);
+        }
+
+        // Validar que las transacciones no excedan el monto solicitado
+        if ($operacion->monto_solicitado && $operacion->tasa_aplicada) {
+            $moneda = Moneda::find($request->moneda_id);
+            $limite = $moneda->codigo === 'VES'
+                ? round((float) $operacion->monto_solicitado * (float) $operacion->tasa_aplicada, 2)
+                : (float) $operacion->monto_solicitado;
+
+            $totalExistente = (float) $operacion->transacciones()
+                ->where('moneda_id', $request->moneda_id)
+                ->sum('monto');
+
+            $montoNuevo = round((float) $request->monto, 2);
+
+            if ($totalExistente + $montoNuevo > $limite) {
+                $disponible = round($limite - $totalExistente, 2);
+                return response()->json([
+                    'message' => "El monto excede el límite de {$limite} {$moneda->codigo}. Disponible: {$disponible} {$moneda->codigo}.",
+                ], 422);
+            }
         }
 
         $maxOrden = $operacion->transacciones()->max('orden') ?? 0;
@@ -148,6 +170,28 @@ class TransaccionController extends Controller
         $camposExtra = ['monto', 'tasa_aplicada', 'tasas_snapshot', 'metodo_pago', 'comprobante'];
         foreach ($camposExtra as $campo) {
             if ($request->has($campo) && $request->input($campo) != $transaccion->$campo) {
+                // Validar límite si cambia el monto
+                if ($campo === 'monto' && $operacion->monto_solicitado && $operacion->tasa_aplicada) {
+                    $moneda = Moneda::find($transaccion->moneda_id);
+                    $limite = $moneda->codigo === 'VES'
+                        ? round((float) $operacion->monto_solicitado * (float) $operacion->tasa_aplicada, 2)
+                        : (float) $operacion->monto_solicitado;
+
+                    $totalExistente = (float) $operacion->transacciones()
+                        ->where('moneda_id', $transaccion->moneda_id)
+                        ->where('id', '!=', $transaccion->id)
+                        ->sum('monto');
+
+                    $nuevoMonto = round((float) $request->input('monto'), 2);
+
+                    if ($totalExistente + $nuevoMonto > $limite) {
+                        $disponible = round($limite - $totalExistente, 2);
+                        return response()->json([
+                            'message' => "El monto excede el límite de {$limite} {$moneda->codigo}. Disponible: {$disponible} {$moneda->codigo}.",
+                        ], 422);
+                    }
+                }
+
                 $transaccion->update([$campo => $request->input($campo)]);
                 $cambios[$campo] = true;
             }

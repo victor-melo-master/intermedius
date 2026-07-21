@@ -56,7 +56,12 @@
     <div>
       <label class="block text-xs text-gray-500 mb-1">Monto</label>
       <input v-model="form.monto" type="number" step="0.01" min="0" required placeholder="0.00"
-        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+        class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 outline-none"
+        :class="excedeLimite ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'" />
+      <p v-if="disponible !== null && form.moneda_id" class="text-xs mt-1"
+        :class="excedeLimite ? 'text-red-500 font-medium' : 'text-gray-400'">
+        {{ excedeLimite ? 'Excede el límite. ' : '' }}Disponible: {{ monedaSel?.simbolo || '' }}{{ formatMoney(disponible) }} de {{ monedaSel?.simbolo || '' }}{{ formatMoney(limiteMoneda) }}
+      </p>
     </div>
 
     <div>
@@ -106,6 +111,7 @@
 import { reactive, ref, computed, onMounted, watch } from 'vue'
 import { useTransacciones } from '@/composables/useTransacciones'
 import { useNotification } from '@/composables/useNotification'
+import { useFormatting } from '@/composables/useFormatting'
 import api from '@/api/axios'
 
 const props = defineProps({
@@ -116,12 +122,15 @@ const props = defineProps({
   monedasPermitidas: { type: Array, default: () => [] },
   esCompra: { type: Boolean, default: true },
   tasaOperacion: { type: [String, Number, null], default: null },
+  montoSolicitado: { type: [String, Number, null], default: null },
+  transaccionesExistentes: { type: Array, default: () => [] },
 })
 
 const emit = defineEmits(['saved', 'cancel'])
 
 const txService = useTransacciones()
 const notifier = useNotification()
+const { formatMoney } = useFormatting()
 
 const cuentasIntermedius = ref([])
 const cuentasCliente = ref([])
@@ -151,7 +160,7 @@ const monedaSel = computed(() =>
 const monedaEsUSD = computed(() => monedaSel.value?.codigo === 'USD')
 
 const valido = computed(() =>
-  form.cuenta_origen_id && form.cuenta_destino_id && form.moneda_id && parseFloat(form.monto) > 0 && form.metodo_pago
+  form.cuenta_origen_id && form.cuenta_destino_id && form.moneda_id && parseFloat(form.monto) > 0 && form.metodo_pago && !excedeLimite.value
 )
 
 const cuentasOrigen = computed(() => {
@@ -195,6 +204,30 @@ const textoFlujo = computed(() => {
   return monedaEsUSD.value
     ? `Venta: ${props.clienteNombre || 'El cliente'} entrega ${moneda} a Intermedius`
     : `Venta: Intermedius entrega ${moneda} al cliente → ${props.clienteNombre || 'el cliente'}`
+})
+
+const limiteMoneda = computed(() => {
+  if (!props.montoSolicitado || !monedaSel.value) return null
+  const monto = parseFloat(props.montoSolicitado)
+  const tasa = parseFloat(props.tasaOperacion) || 0
+  return monedaEsUSD.value ? monto : monto * tasa
+})
+
+const totalExistente = computed(() => {
+  if (!form.moneda_id || !props.transaccionesExistentes.length) return 0
+  return props.transaccionesExistentes
+    .filter(t => t.moneda?.id == form.moneda_id || t.moneda_id == form.moneda_id)
+    .reduce((sum, t) => sum + Math.abs(parseFloat(t.monto)), 0)
+})
+
+const disponible = computed(() => {
+  if (limiteMoneda.value === null) return null
+  return Math.max(0, limiteMoneda.value - totalExistente.value)
+})
+
+const excedeLimite = computed(() => {
+  if (disponible.value === null || !form.monto) return false
+  return parseFloat(form.monto) > disponible.value
 })
 
 function labelCuenta(c) {

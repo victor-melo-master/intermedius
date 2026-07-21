@@ -211,36 +211,22 @@ const esCompra = computed(() => {
   return codigo === 'compra_usd'
 })
 
-/** Monto en divisa (no VES) — busca en movimientos, transacciones o monto_solicitado */
+/** Monto en divisa — usa monto_solicitado como fuente primaria */
 const montoDivisa = computed(() => {
   const op = ops.detail
   if (!op) return 0
-  const mov = (op.movimientos || []).find(m => m.moneda?.codigo !== 'VES')
-  if (mov) return Math.abs(parseFloat(mov.monto))
-  const tx = (op.transacciones || []).find(t => t.moneda?.codigo !== 'VES')
-  if (tx) return Math.abs(parseFloat(tx.monto))
   return op.monto_solicitado ? Math.abs(parseFloat(op.monto_solicitado)) : 0
 })
 
-/** Código de la moneda divisa (no VES) */
+/** Código de la moneda divisa — siempre USD para monto_solicitado */
 const monedaDivisa = computed(() => {
-  const op = ops.detail
-  if (!op) return ''
-  const mov = (op.movimientos || []).find(m => m.moneda?.codigo !== 'VES')
-  if (mov) return mov.moneda?.codigo || ''
-  const tx = (op.transacciones || []).find(t => t.moneda?.codigo !== 'VES')
-  if (tx) return tx.moneda?.codigo || ''
-  return op.tipo_operacion?.codigo === 'venta_usd' ? 'USD' : 'USD'
+  return ops.detail?.tipo_operacion?.codigo === 'venta_usd' ? 'USD' : 'USD'
 })
 
-/** Monto en bolívares — busca en movimientos, transacciones o calcula de monto × tasa */
+/** Monto en bolívares — calcula de monto_solicitado × tasa_aplicada */
 const montoBolivares = computed(() => {
   const op = ops.detail
   if (!op) return 0
-  const mov = (op.movimientos || []).find(m => m.moneda?.codigo === 'VES')
-  if (mov) return Math.abs(parseFloat(mov.monto))
-  const tx = (op.transacciones || []).find(t => t.moneda?.codigo === 'VES')
-  if (tx) return Math.abs(parseFloat(tx.monto))
   const usd = montoDivisa.value
   const tasa = parseFloat(op.tasa_aplicada)
   return usd && tasa ? usd * tasa : 0

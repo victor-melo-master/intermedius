@@ -118,6 +118,8 @@
           :monedas-permitidas="monedasPermitidas"
           :es-compra="esCompra"
           :tasa-operacion="store.detail?.tasa_aplicada"
+          :monto-solicitado="store.detail?.monto_solicitado"
+          :transacciones-existentes="store.detail?.transacciones || []"
           @saved="onTransaccionGuardada"
           @cancel="mostrarAgregarTx = false"
         />
@@ -199,30 +201,16 @@ const badgeEstado = computed(() => {
 const montoDivisa = computed(() => {
   const op = store.detail
   if (!op) return 0
-  const mov = (op.movimientos || []).find(m => m.moneda?.codigo !== 'VES')
-  if (mov) return Math.abs(parseFloat(mov.monto))
-  const tx = (op.transacciones || []).find(t => t.moneda?.codigo !== 'VES')
-  if (tx) return Math.abs(parseFloat(tx.monto))
   return op.monto_solicitado ? Math.abs(parseFloat(op.monto_solicitado)) : 0
 })
 
 const monedaDivisa = computed(() => {
-  const op = store.detail
-  if (!op) return ''
-  const mov = (op.movimientos || []).find(m => m.moneda?.codigo !== 'VES')
-  if (mov) return mov.moneda?.codigo || ''
-  const tx = (op.transacciones || []).find(t => t.moneda?.codigo !== 'VES')
-  if (tx) return tx.moneda?.codigo || ''
   return 'USD'
 })
 
 const montoBolivares = computed(() => {
   const op = store.detail
   if (!op) return 0
-  const mov = (op.movimientos || []).find(m => m.moneda?.codigo === 'VES')
-  if (mov) return Math.abs(parseFloat(mov.monto))
-  const tx = (op.transacciones || []).find(t => t.moneda?.codigo === 'VES')
-  if (tx) return Math.abs(parseFloat(tx.monto))
   const usd = montoDivisa.value
   const tasa = parseFloat(op.tasa_aplicada)
   return usd && tasa ? usd * tasa : 0

@@ -3,7 +3,6 @@
 namespace App\Services\Transaccion;
 
 use App\Models\Cuenta;
-use App\Models\Movimiento;
 use App\Models\Transaccion;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -32,13 +31,7 @@ class SaldoValidator
 
     public function obtenerSaldoDisponible(Cuenta $cuenta, int $monedaId): float
     {
-        if ($cuenta->saldo_cache_at !== null && $cuenta->saldo_cache_at->diffInMinutes(now()) < 5) {
-            return (float) $cuenta->saldo_cache;
-        }
-
-        $movimientos = Movimiento::where('cuenta_id', $cuenta->id)
-            ->where('moneda_id', $monedaId)
-            ->sum(DB::raw('monto'));
+        $base = (float) $cuenta->saldo_cache;
 
         $transaccionesOrigen = Transaccion::where('cuenta_origen_id', $cuenta->id)
             ->where('moneda_id', $monedaId)
@@ -50,6 +43,6 @@ class SaldoValidator
             ->where('estado', 'validada')
             ->sum(DB::raw('monto'));
 
-        return (float) ($movimientos - $transaccionesOrigen + $transaccionesDestino);
+        return round($base - $transaccionesOrigen + $transaccionesDestino, 2);
     }
 }
