@@ -161,19 +161,19 @@
         <form @submit.prevent="cerrarOperacion" class="space-y-4">
           <p class="text-sm text-gray-500">Confirma el cierre de esta operación. Se generarán los movimientos contables.</p>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Tasa de mercado (BCV/Binance)</label>
-            <input v-model.number="tasaMercadoCierre" type="number" step="0.01" min="0"
-              placeholder="Ej: 36.50"
+            <label class="block text-sm font-medium text-gray-700 mb-1">Tasa de mercado (BCV/Binance) *</label>
+            <input v-model.number="tasaMercadoCierre" type="number" step="0.01" min="0" required
+              placeholder="Ej: 64.00"
               class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 outline-none" />
             <p class="text-xs text-gray-400 mt-1">Tasa de referencia para el cálculo de ganancia</p>
           </div>
-          <div class="bg-gray-50 rounded-xl p-3 text-sm text-gray-600">
+          <div v-if="tasaMercadoCierre" class="bg-gray-50 rounded-xl p-3 text-sm text-gray-600">
             <p>Ganancia estimada: <span class="font-semibold" :class="gananciaPreview?.bruta_usd >= 0 ? 'text-green-600' : 'text-red-600'">{{ formatMoney(gananciaPreview?.bruta_usd || 0) }} USD</span></p>
           </div>
           <div class="flex gap-3">
             <button type="button" @click="mostrarCerrar = false"
               class="flex-1 py-2.5 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition">Volver</button>
-            <button type="submit" :disabled="acting"
+            <button type="submit" :disabled="acting || !tasaMercadoCierre"
               class="flex-1 py-2.5 bg-green-600 text-white text-sm font-medium rounded-xl hover:bg-green-700 disabled:bg-green-300 transition flex items-center justify-center gap-2">
               <span v-if="acting" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
               {{ acting ? 'Cerrando...' : 'Cerrar operación' }}

@@ -773,6 +773,13 @@ public function actualizar(Operacion $operacion, array $payload, \App\Models\Use
             ]);
         }
 
+        // La tasa de mercado es obligatoria para calcular ganancia
+        if ($tasaMercadoSnapshot === null || $tasaMercadoSnapshot <= 0) {
+            throw ValidationException::withMessages([
+                'tasa_mercado_snapshot' => 'La tasa de mercado es obligatoria para cerrar la operación.',
+            ]);
+        }
+
         $transaccionesConfirmadas = $operacion->transacciones()
             ->where('estado', 'confirmada')
             ->get();
