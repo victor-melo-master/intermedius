@@ -41,6 +41,9 @@
           <div class="text-right shrink-0">
             <p class="font-bold text-sm text-gray-800">$ {{ formatMoney(montoUsd(op)) }}</p>
             <p class="text-xs text-gray-500">Bs. {{ formatMoney(bolivares(op)) }}</p>
+            <p v-if="gananciaOp(op)" class="text-[11px] font-medium mt-0.5" :class="gananciaOp(op) >= 0 ? 'text-green-600' : 'text-red-500'">
+              G: ${{ formatMoney(gananciaOp(op)) }}
+            </p>
             <p class="text-[11px] text-gray-400">Tasa {{ formatRate(op.tasa_aplicada) }}</p>
           </div>
         </div>
@@ -296,6 +299,18 @@ function bolivares(op) {
   const usd = montoUsd(op)
   const tasa = parseFloat(op.tasa_aplicada)
   return usd && tasa ? usd * tasa : 0
+}
+
+/**
+ * Obtiene la ganancia neta en USD de una operación.
+ * @param {Object} op - Operación
+ * @returns {number|null}
+ */
+function gananciaOp(op) {
+  const ganancia = op.ganancia?.neta_usd ?? op.ganancia_neta_usd
+  if (ganancia === null || ganancia === undefined) return null
+  const val = parseFloat(ganancia)
+  return val !== 0 ? val : null
 }
 
 /** Aplica los filtros y recarga la lista de operaciones */

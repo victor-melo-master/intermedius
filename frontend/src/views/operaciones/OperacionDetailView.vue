@@ -95,10 +95,23 @@
       </div>
 
       <!-- Métricas -->
-      <div v-if="ops.detail.ganancia_neta_usd" class="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
-        <h3 class="font-semibold text-gray-700">Métricas</h3>
+      <div v-if="tieneGanancia" class="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
+        <h3 class="font-semibold text-gray-700">Ganancia</h3>
         <div class="grid grid-cols-2 gap-4">
-          <div><p class="text-xs text-gray-500">Ganancia neta USD</p><p class="text-lg font-bold" :class="(ops.detail.ganancia_neta_usd || 0) >= 0 ? 'text-green-600' : 'text-red-600'">{{ formatMoney(ops.detail.ganancia_neta_usd) }}</p></div>
+          <div>
+            <p class="text-xs text-gray-500">Bruta</p>
+            <p class="text-lg font-bold" :class="gananciaBrutaUsd >= 0 ? 'text-green-600' : 'text-red-600'">
+              {{ formatMoney(gananciaBrutaUsd) }} USD
+            </p>
+            <p class="text-xs text-gray-400">Bs. {{ formatMoney(gananciaBrutaVes) }}</p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500">Neta</p>
+            <p class="text-lg font-bold" :class="gananciaNetaUsd >= 0 ? 'text-green-600' : 'text-red-600'">
+              {{ formatMoney(gananciaNetaUsd) }} USD
+            </p>
+            <p class="text-xs text-gray-400">Bs. {{ formatMoney(gananciaNetaVes) }}</p>
+          </div>
         </div>
       </div>
 
@@ -264,6 +277,12 @@ const puedeEditar = computed(() => {
   if (op.estado_pool === 'cancelada') return false
   return true
 })
+
+const gananciaBrutaUsd = computed(() => parseFloat(ops.detail?.ganancia?.bruta_usd ?? ops.detail?.ganancia_bruta_usd ?? 0))
+const gananciaBrutaVes = computed(() => parseFloat(ops.detail?.ganancia?.bruta_ves ?? ops.detail?.ganancia_bruta_ves ?? 0))
+const gananciaNetaUsd = computed(() => parseFloat(ops.detail?.ganancia?.neta_usd ?? ops.detail?.ganancia_neta_usd ?? 0))
+const gananciaNetaVes = computed(() => parseFloat(ops.detail?.ganancia?.neta_ves ?? ops.detail?.ganancia_neta_ves ?? 0))
+const tieneGanancia = computed(() => gananciaBrutaUsd.value !== 0 || gananciaNetaUsd.value !== 0)
 
 /** Verifica la operación actual (cambia estatus a verificado) */
 async function iniciarVerificacion() {
