@@ -33,10 +33,12 @@ class TransaccionResource extends JsonResource
             ]),
             'cuenta_origen'     => $this->whenLoaded('cuentaOrigen', fn () => [
                 'id'     => $this->cuentaOrigen->id,
+                'alias'  => $this->cuentaOrigen->alias,
                 'nombre' => $this->cuentaOrigen->nombre,
             ]),
             'cuenta_destino'    => $this->whenLoaded('cuentaDestino', fn () => [
                 'id'     => $this->cuentaDestino->id,
+                'alias'  => $this->cuentaDestino->alias,
                 'nombre' => $this->cuentaDestino->nombre,
             ]),
         ];
