@@ -34,3 +34,7 @@ npm run dev       # Servidor de desarrollo
 npm run build     # Build producción
 npm run preview   # Preview build
 ```
+
+## Documentación
+
+Ver [`docs/`](docs/) para documentación detallada del flujo multi-paso y componentes.
