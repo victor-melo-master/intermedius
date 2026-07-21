@@ -78,6 +78,11 @@ class OperacionResource extends JsonResource
                 'codigo' => $this->tipoOperacion->codigo,
                 'nombre' => $this->tipoOperacion->nombre,
             ]),
+            'moneda_operacion'      => $this->whenLoaded('monedaOperacion', fn () => [
+                'id'     => $this->monedaOperacion->id,
+                'codigo' => $this->monedaOperacion->codigo,
+                'nombre' => $this->monedaOperacion->nombre,
+            ]),
             'cliente'               => $this->whenLoaded('cliente', fn () => $this->cliente ? [
                 'id'     => $this->cliente->id,
                 'nombre' => $this->cliente->nombre,

@@ -114,6 +114,7 @@ export function useOperacionForm() {
       const body = {
         fecha: form.fecha,
         tipo_codigo: tipoCodigo.value,
+        moneda_codigo: monedaSel.value,
         operador_id: Number(auth.user.value.id),
         tasa_aplicada: roundTo(parseFloat(form.tasa)),
         monto_solicitado: roundTo(parseFloat(form.monto_usd)),

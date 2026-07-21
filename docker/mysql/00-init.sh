@@ -349,6 +349,7 @@ CREATE TABLE IF NOT EXISTS `operaciones` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `fecha` date NOT NULL,
   `tipo_operacion_id` bigint(20) unsigned NOT NULL,
+  `moneda_operacion_id` bigint(20) unsigned DEFAULT NULL,
   `cliente_id` bigint(20) unsigned DEFAULT NULL,
   `cliente_emisor_id` bigint(20) unsigned DEFAULT NULL,
   `cliente_receptor_id` bigint(20) unsigned DEFAULT NULL,
@@ -397,6 +398,7 @@ CREATE TABLE IF NOT EXISTS `operaciones` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `operaciones_origen_referencia_unique` (`origen_referencia`),
   KEY `operaciones_tipo_operacion_id_foreign` (`tipo_operacion_id`),
+  KEY `operaciones_moneda_operacion_id_foreign` (`moneda_operacion_id`),
   KEY `operaciones_categoria_gasto_id_foreign` (`categoria_gasto_id`),
   KEY `operaciones_verificado_por_id_foreign` (`verificado_por_id`),
   KEY `operaciones_fecha_tipo_operacion_id_index` (`fecha`,`tipo_operacion_id`),
@@ -412,6 +414,7 @@ CREATE TABLE IF NOT EXISTS `operaciones` (
   CONSTRAINT `operaciones_pagador_id_foreign` FOREIGN KEY (`pagador_id`) REFERENCES `users` (`id`) ON DELETE SET NULL,
   CONSTRAINT `operaciones_tasa_diaria_id_foreign` FOREIGN KEY (`tasa_diaria_id`) REFERENCES `tasas_diarias` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
   CONSTRAINT `operaciones_tipo_operacion_id_foreign` FOREIGN KEY (`tipo_operacion_id`) REFERENCES `tipos_operacion` (`id`) ON UPDATE CASCADE,
+  CONSTRAINT `operaciones_moneda_operacion_id_foreign` FOREIGN KEY (`moneda_operacion_id`) REFERENCES `monedas` (`id`) ON DELETE SET NULL,
   CONSTRAINT `operaciones_verificado_por_id_foreign` FOREIGN KEY (`verificado_por_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 

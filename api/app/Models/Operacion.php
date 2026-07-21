@@ -125,6 +125,7 @@ class Operacion extends Model
         'tasas_snapshot',
         'en_progreso_at',
         'sla_notificado_en',
+        'moneda_operacion_id',
     ];
 
     protected function casts(): array
@@ -277,6 +278,14 @@ class Operacion extends Model
     {
         return $this->belongsTo(Cliente::class, 'cliente_receptor_id');
     }
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Moneda>
+     */
+    public function monedaOperacion(): BelongsTo
+    {
+        return $this->belongsTo(Moneda::class, 'moneda_operacion_id');
+    }
+
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Transaccion>
      */

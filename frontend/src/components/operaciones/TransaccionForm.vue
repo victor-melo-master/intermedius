@@ -157,7 +157,7 @@ const monedaSel = computed(() =>
   monedasFiltradas.value.find(m => m.id == form.moneda_id) || null
 )
 
-const monedaEsUSD = computed(() => monedaSel.value?.codigo === 'USD')
+const esDivisa = computed(() => monedaSel.value?.codigo !== 'VES')
 
 const valido = computed(() =>
   form.cuenta_origen_id && form.cuenta_destino_id && form.moneda_id && parseFloat(form.monto) > 0 && form.metodo_pago && !excedeLimite.value
@@ -168,9 +168,9 @@ const cuentasOrigen = computed(() => {
   const deIntermedius = cuentasIntermedius.value.filter(c => c.moneda_id == form.moneda_id)
   const delCliente = cuentasCliente.value.filter(c => c.moneda_id == form.moneda_id)
   if (props.esCompra) {
-    return monedaEsUSD.value ? deIntermedius : delCliente
+    return esDivisa.value ? deIntermedius : delCliente
   }
-  return monedaEsUSD.value ? delCliente : deIntermedius
+  return esDivisa.value ? delCliente : deIntermedius
 })
 
 const cuentasDestino = computed(() => {
@@ -178,9 +178,9 @@ const cuentasDestino = computed(() => {
   const deIntermedius = cuentasIntermedius.value.filter(c => c.moneda_id == form.moneda_id)
   const delCliente = cuentasCliente.value.filter(c => c.moneda_id == form.moneda_id)
   if (props.esCompra) {
-    return monedaEsUSD.value ? delCliente : deIntermedius
+    return esDivisa.value ? delCliente : deIntermedius
   }
-  return monedaEsUSD.value ? deIntermedius : delCliente
+  return esDivisa.value ? deIntermedius : delCliente
 })
 
 const labelOrigen = computed(() => {
@@ -197,11 +197,11 @@ const textoFlujo = computed(() => {
   if (!monedaSel.value) return ''
   const moneda = monedaSel.value.codigo
   if (props.esCompra) {
-    return monedaEsUSD.value
+    return esDivisa.value
       ? `Compra: Intermedius entrega ${moneda} al cliente → ${props.clienteNombre || 'el cliente'}`
       : `Compra: ${props.clienteNombre || 'El cliente'} entrega ${moneda} a Intermedius`
   }
-  return monedaEsUSD.value
+  return esDivisa.value
     ? `Venta: ${props.clienteNombre || 'El cliente'} entrega ${moneda} a Intermedius`
     : `Venta: Intermedius entrega ${moneda} al cliente → ${props.clienteNombre || 'el cliente'}`
 })
@@ -210,7 +210,7 @@ const limiteMoneda = computed(() => {
   if (!props.montoSolicitado || !monedaSel.value) return null
   const monto = parseFloat(props.montoSolicitado)
   const tasa = parseFloat(props.tasaOperacion) || 0
-  return monedaEsUSD.value ? monto : monto * tasa
+  return esDivisa.value ? monto : monto * tasa
 })
 
 const totalExistente = computed(() => {

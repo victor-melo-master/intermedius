@@ -235,9 +235,9 @@ const montoDivisa = computed(() => {
   return op.monto_solicitado ? Math.abs(parseFloat(op.monto_solicitado)) : 0
 })
 
-/** Código de la moneda divisa — siempre USD para monto_solicitado */
+/** Código de la moneda divisa — usa moneda_operacion */
 const monedaDivisa = computed(() => {
-  return ops.detail?.tipo_operacion?.codigo === 'venta_usd' ? 'USD' : 'USD'
+  return ops.detail?.moneda_operacion?.codigo || 'USD'
 })
 
 /** Monto en bolívares — calcula de monto_solicitado × tasa_aplicada */

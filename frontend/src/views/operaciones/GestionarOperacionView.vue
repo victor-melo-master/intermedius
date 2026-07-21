@@ -181,8 +181,12 @@ const tieneTransaccionesConfirmadas = computed(() =>
 
 const monedasPermitidas = computed(() => {
   const codigo = store.detail?.tipo_operacion?.codigo
+  const monedaOp = store.detail?.moneda_operacion?.codigo
   if (!codigo) return []
-  if (['compra_usd', 'venta_usd'].includes(codigo)) return ['USD', 'VES']
+  if (['compra_usd', 'venta_usd'].includes(codigo)) {
+    if (monedaOp) return [monedaOp, 'VES']
+    return ['USD', 'VES']
+  }
   return []
 })
 
@@ -205,7 +209,7 @@ const montoDivisa = computed(() => {
 })
 
 const monedaDivisa = computed(() => {
-  return 'USD'
+  return store.detail?.moneda_operacion?.codigo || 'USD'
 })
 
 const montoBolivares = computed(() => {

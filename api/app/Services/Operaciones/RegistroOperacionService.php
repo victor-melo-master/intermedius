@@ -688,6 +688,7 @@ public function actualizar(Operacion $operacion, array $payload, \App\Models\Use
     public function crearSolicitud(array $payload): Operacion
     {
         $tipo = TipoOperacion::where('codigo', $payload['tipo_codigo'])->firstOrFail();
+        $moneda = Moneda::where('codigo', $payload['moneda_codigo'])->firstOrFail();
 
         // Resolver tasas para snapshot
         $tasaAplicada = (float) ($payload['tasa_aplicada'] ?? 1);
@@ -696,6 +697,7 @@ public function actualizar(Operacion $operacion, array $payload, \App\Models\Use
         return Operacion::create([
             'fecha'                  => $payload['fecha'],
             'tipo_operacion_id'      => $tipo->id,
+            'moneda_operacion_id'    => $moneda->id,
             'cliente_id'             => $payload['cliente_id'] ?? null,
             'cliente_emisor_id'      => $payload['cliente_emisor_id'] ?? null,
             'cliente_receptor_id'    => $payload['cliente_receptor_id'] ?? null,
