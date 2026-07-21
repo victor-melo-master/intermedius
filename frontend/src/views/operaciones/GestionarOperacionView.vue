@@ -93,7 +93,8 @@
         </button>
 
         <button v-if="store.detail.estado === 'en_progreso'"
-          @click="cerrarOperacion" :disabled="acting || !tieneTransaccionesConfirmadas"
+          @click="cerrarOperacion" :disabled="acting || !operacionBalanceada"
+          :title="operacionBalanceada ? 'Cerrar operación' : motivoNoBalanceada"
           class="w-full bg-green-600 hover:bg-green-700 disabled:bg-green-300 text-white font-semibold py-3 rounded-xl transition flex items-center justify-center gap-2">
           <span v-if="acting" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
           {{ acting ? 'Cerrando...' : '🔒 Cerrar operación' }}
@@ -178,6 +179,51 @@ const intermediusTitularId = ref(null)
 const tieneTransaccionesConfirmadas = computed(() =>
   (store.detail?.transacciones || []).some(t => t.estado === 'confirmada')
 )
+
+const operacionBalanceada = computed(() => {
+  if (!tieneTransaccionesConfirmadas.value) return false
+  const op = store.detail
+  if (!op) return false
+  const monedaOp = op.moneda_operacion?.codigo
+  if (!monedaOp) return false
+
+  const monto = parseFloat(op.monto_solicitado || 0)
+  const tasa = parseFloat(op.tasa_aplicada || 0)
+  const expectedVes = monto * tasa
+
+  let totalDivisa = 0
+  let totalVes = 0
+  for (const t of (op.transacciones || [])) {
+    if (t.estado !== 'confirmada') continue
+    if (t.moneda?.codigo === monedaOp) totalDivisa += Math.abs(parseFloat(t.monto))
+    else if (t.moneda?.codigo === 'VES') totalVes += Math.abs(parseFloat(t.monto))
+  }
+
+  return Math.abs(totalDivisa - monto) <= 0.01 && Math.abs(totalVes - expectedVes) <= 0.01
+})
+
+const motivoNoBalanceada = computed(() => {
+  if (!tieneTransaccionesConfirmadas.value) return 'Debe haber al menos una transacción confirmada'
+  const op = store.detail
+  if (!op) return ''
+  const monedaOp = op.moneda_operacion?.codigo || 'Divisa'
+  const monto = parseFloat(op.monto_solicitado || 0)
+  const tasa = parseFloat(op.tasa_aplicada || 0)
+  const expectedVes = monto * tasa
+
+  let totalDivisa = 0
+  let totalVes = 0
+  for (const t of (op.transacciones || [])) {
+    if (t.estado !== 'confirmada') continue
+    if (t.moneda?.codigo === monedaOp) totalDivisa += Math.abs(parseFloat(t.monto))
+    else if (t.moneda?.codigo === 'VES') totalVes += Math.abs(parseFloat(t.monto))
+  }
+
+  const partes = []
+  if (Math.abs(totalDivisa - monto) > 0.01) partes.push(`${monedaOp}: ${totalDivisa.toFixed(2)} de ${monto.toFixed(2)}`)
+  if (Math.abs(totalVes - expectedVes) > 0.01) partes.push(`VES: ${totalVes.toFixed(2)} de ${expectedVes.toFixed(2)}`)
+  return 'Faltan transacciones: ' + partes.join(', ')
+})
 
 const monedasPermitidas = computed(() => {
   const codigo = store.detail?.tipo_operacion?.codigo

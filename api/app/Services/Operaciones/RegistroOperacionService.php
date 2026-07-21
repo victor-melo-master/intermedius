@@ -784,6 +784,9 @@ public function actualizar(Operacion $operacion, array $payload, \App\Models\Use
             }
         }
 
+        // Validar que las transacciones estén balanceadas (divisa vs VES)
+        $this->validarBalanceCierre($operacion, $transaccionesConfirmadas);
+
         return DB::transaction(function () use ($operacion, $transaccionesConfirmadas, $cerrador) {
             // Crear movimientos contables desde las transacciones confirmadas
             foreach ($transaccionesConfirmadas as $i => $t) {
@@ -912,6 +915,60 @@ public function actualizar(Operacion $operacion, array $payload, \App\Models\Use
 
             return $operacion->fresh(['transacciones']);
         });
+    }
+
+    /**
+     * Valida que el total de transacciones confirmadas esté balanceado
+     * respecto al monto_solicitado y la tasa de la operación.
+     *
+     * Regla:
+     * - Suma de transacciones en la moneda de operación (divisa) = monto_solicitado
+     * - Suma de transacciones en VES = monto_solicitado × tasa_aplicada
+     *
+     * @throws ValidationException
+     */
+    private function validarBalanceCierre(Operacion $operacion, \Illuminate\Support\Collection $transacciones): void
+    {
+        $monedaOperacion = $operacion->monedaOperacion;
+
+        // Si la operación no tiene moneda definida, no validamos balance (legacy)
+        if (!$monedaOperacion) {
+            return;
+        }
+
+        $tasa = (float) $operacion->tasa_aplicada;
+        $montoSolicitado = (float) $operacion->monto_solicitado;
+
+        $totalDivisa = 0;
+        $totalVes = 0;
+
+        foreach ($transacciones as $t) {
+            if ($t->moneda_id === $monedaOperacion?->id) {
+                $totalDivisa += (float) $t->monto;
+            } elseif ($t->moneda?->codigo === 'VES') {
+                $totalVes += (float) $t->monto;
+            }
+        }
+
+        $expectedVes = round($montoSolicitado * $tasa, 2);
+
+        $diffDivisa = abs($totalDivisa - $montoSolicitado);
+        $diffVes = abs($totalVes - $expectedVes);
+
+        $errores = [];
+        if ($diffDivisa > self::TOLERANCIA_USD) {
+            $codigo = $monedaOperacion?->codigo ?? 'Divisa';
+            $errores[] = "Total en {$codigo}: {$totalDivisa}, esperado: {$montoSolicitado} (diferencia: {$diffDivisa}).";
+        }
+        if ($diffVes > self::TOLERANCIA_USD) {
+            $errores[] = "Total en VES: {$totalVes}, esperado: {$expectedVes} (diferencia: {$diffVes}).";
+        }
+
+        if (!empty($errores)) {
+            throw ValidationException::withMessages([
+                'transacciones' => 'Las transacciones confirmadas no están balanceadas: ' . implode(' ', $errores),
+            ]);
+        }
     }
 
     /**
