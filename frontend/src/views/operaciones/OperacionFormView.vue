@@ -19,12 +19,14 @@
           <button type="button" @click="form.tipo = 'compra'"
             class="flex-1 py-3 rounded-xl text-sm font-medium transition border-2"
             :class="form.tipo === 'compra' ? 'bg-blue-50 border-blue-500 text-blue-700' : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300'">
-            Compra de USD
+            {{ textoCompra }}
+            <span class="block text-xs mt-1 opacity-70">El cliente entrega {{ monedaSel }}</span>
           </button>
           <button type="button" @click="form.tipo = 'venta'"
             class="flex-1 py-3 rounded-xl text-sm font-medium transition border-2"
             :class="form.tipo === 'venta' ? 'bg-green-50 border-green-500 text-green-700' : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300'">
-            Venta de USD
+            {{ textoVenta }}
+            <span class="block text-xs mt-1 opacity-70">La casa entrega {{ monedaSel }}</span>
           </button>
         </div>
       </div>
@@ -106,6 +108,8 @@ const {
   tasaSugerida,
   tasaDesfavorable,
   parStr,
+  textoCompra,
+  textoVenta,
   formularioValido,
   submit,
   registrarOtra,

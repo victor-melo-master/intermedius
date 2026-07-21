@@ -35,6 +35,10 @@ export function useOperacionForm() {
   const parStr = computed(() => `${monedaSel.value}/${quoteCodigo.value}`)
   const quoteSimbolo = computed(() => ({ USD: '$', USDT: '₮', EUR: '€', COP: '$', VES: 'Bs.' })[quoteCodigo.value] || 'Bs.')
   const tipoCodigo = computed(() => (form.tipo === 'venta' ? 'venta_usd' : 'compra_usd'))
+  const monedaNombre = computed(() => ({ USD: 'USD', USDT: 'USDT', EUR: 'EUR', COP: 'COP' })[monedaSel.value] || monedaSel.value)
+
+  const textoCompra = computed(() => `La casa compra ${monedaNombre.value}`)
+  const textoVenta = computed(() => `La casa vende ${monedaNombre.value}`)
 
   const tasaPar = computed(() => {
     const vigentes = tasas.vigentes.value || []
@@ -62,7 +66,7 @@ export function useOperacionForm() {
 
   const titulo = computed(() => {
     if (esEdicion.value) return `Editar operación #${editId.value}`
-    return `Nueva solicitud ${monedaSel.value}`
+    return `Nueva solicitud — ${monedaSel.value}`
   })
 
   const formularioValido = computed(() => {
@@ -192,6 +196,8 @@ export function useOperacionForm() {
     tasaPar,
     tasaSugerida,
     tasaDesfavorable,
+    textoCompra,
+    textoVenta,
     formularioValido,
     submit,
     registrarOtra,
