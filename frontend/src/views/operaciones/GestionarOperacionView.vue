@@ -224,6 +224,7 @@ async function iniciarOperacion() {
   acting.value = true
   try {
     await store.iniciar(route.params.id)
+    await cargarOperacion()
     notifier.success('Operación iniciada')
   } catch {
     notifier.error('Error al iniciar la operación')
