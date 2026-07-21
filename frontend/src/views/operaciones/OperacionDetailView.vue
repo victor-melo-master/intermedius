@@ -94,8 +94,8 @@
         </div>
       </div>
 
-      <!-- Métricas -->
-      <div v-if="tieneGanancia" class="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
+      <!-- Ganancia -->
+      <div v-if="ops.detail.estado === 'cerrada'" class="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
         <h3 class="font-semibold text-gray-700">Ganancia</h3>
         <div class="grid grid-cols-2 gap-4">
           <div>
@@ -282,7 +282,6 @@ const gananciaBrutaUsd = computed(() => parseFloat(ops.detail?.ganancia?.bruta_u
 const gananciaBrutaVes = computed(() => parseFloat(ops.detail?.ganancia?.bruta_ves ?? ops.detail?.ganancia_bruta_ves ?? 0))
 const gananciaNetaUsd = computed(() => parseFloat(ops.detail?.ganancia?.neta_usd ?? ops.detail?.ganancia_neta_usd ?? 0))
 const gananciaNetaVes = computed(() => parseFloat(ops.detail?.ganancia?.neta_ves ?? ops.detail?.ganancia_neta_ves ?? 0))
-const tieneGanancia = computed(() => gananciaBrutaUsd.value !== 0 || gananciaNetaUsd.value !== 0)
 
 /** Verifica la operación actual (cambia estatus a verificado) */
 async function iniciarVerificacion() {
