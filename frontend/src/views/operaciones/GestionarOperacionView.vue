@@ -53,7 +53,7 @@
             <span class="text-sm text-gray-500">#{{ store.detail.id }}</span>
             <span class="px-3 py-1 rounded-full text-xs font-bold" :class="badgeEstado.clase">{{ badgeEstado.label }}</span>
           </div>
-          <span class="text-sm text-gray-400">{{ store.detail.fecha }}</span>
+          <span class="text-sm text-gray-400">{{ formatDate(store.detail.fecha) }}</span>
         </div>
         <p class="font-semibold text-lg">{{ nombreOperacion }}</p>
         <p v-if="store.detail.cliente?.nombre" class="text-sm text-gray-500">Cliente: {{ store.detail.cliente.nombre }}</p>
@@ -168,7 +168,7 @@ const route = useRoute()
 const router = useRouter()
 const store = useOperacionesStore()
 const notifier = useNotification()
-const { formatMoney, formatRate } = useFormatting()
+const { formatMoney, formatRate, formatDate } = useFormatting()
 const titulares = useTitulares()
 
 const acting = ref(false)

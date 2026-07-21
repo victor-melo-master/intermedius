@@ -70,7 +70,7 @@
         </div>
         <p class="font-semibold text-lg">{{ nombreOperacion }}</p>
         <p v-if="ops.detail.cliente?.nombre" class="text-sm text-gray-500">Cliente: {{ ops.detail.cliente.nombre }}</p>
-        <p class="text-sm text-gray-400">{{ ops.detail.fecha }}</p>
+        <p class="text-sm text-gray-400">{{ formatDate(ops.detail.fecha) }}</p>
         <p v-if="ops.detail.referencia" class="text-sm text-gray-500">Ref: {{ ops.detail.referencia }}</p>
         <p v-if="ops.detail.descripcion" class="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">{{ ops.detail.descripcion }}</p>
       </div>
@@ -187,7 +187,7 @@ const route = useRoute()
 const router = useRouter()
 /** Store de operaciones */
 const ops = useOperacionesStore()
-const { formatMoney, formatRate } = useFormatting()
+const { formatMoney, formatRate, formatDate } = useFormatting()
 /** Store de autenticación (permisos) */
 const auth = useAuthStore()
 /** Indica si se está verificando la operación */
