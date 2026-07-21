@@ -697,14 +697,20 @@ Los siguientes campos se agregaron para el flujo multi-paso:
 
 ### Dirección de Transacciones
 
-Según la moneda seleccionada y el tipo de operación (`compra` / `venta`):
+Desde la perspectiva de **la casa de cambio**:
+- **Compra** = la casa **compra** divisa del cliente (el cliente entrega divisa, la casa entrega VES)
+- **Venta** = la casa **vende** divisa al cliente (el cliente entrega VES, la casa entrega divisa)
 
-| Operación | Moneda | Cuenta Origen | Cuenta Destino |
-|-----------|--------|---------------|----------------|
-| Compra | Divisa (USD/USDT/EUR/COP) | Intermedius | Cliente |
-| Compra | VES | Cliente | Intermedius |
-| Venta | Divisa (USD/USDT/EUR/COP) | Cliente | Intermedius |
-| Venta | VES | Intermedius | Cliente |
+| Operación | Moneda TX | Cuenta Origen (envía) | Cuenta Destino (recibe) |
+|-----------|-----------|-----------------------|------------------------|
+| Compra | Divisa (USD/USDT/EUR/COP) | Cliente | Intermedius |
+| Compra | VES | Intermedius | Cliente |
+| Venta | Divisa (USD/USDT/EUR/COP) | Intermedius | Cliente |
+| Venta | VES | Cliente | Intermedius |
+
+**Resumen visual:**
+- Compra: Cliente entrega divisa → Intermedius, Intermedius entrega VES → Cliente
+- Venta: Intermedius entrega divisa → Cliente, Cliente entrega VES → Intermedius
 
 ### Validación de Balance al Cerrar
 

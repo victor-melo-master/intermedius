@@ -15,3 +15,16 @@ Ver sección *"Flujo Multi-Paso (Operaciones con Transacciones)"* en `api-refere
 - Nuevo `TransaccionResource`
 - Validación de balance al cerrar
 - Migración `moneda_operacion_id`
+
+### Direccionalidad compra/venta
+
+La semántica es desde la perspectiva de **la casa de cambio**:
+
+- **Compra** = la casa **compra** divisa del cliente
+  - Transacción divisa: Cliente → Intermedius (origen=cliente, destino=intermedius)
+  - Transacción VES: Intermedius → Cliente (origen=intermedius, destino=cliente)
+- **Venta** = la casa **vende** divisa al cliente
+  - Transacción divisa: Intermedius → Cliente (origen=intermedius, destino=cliente)
+  - Transacción VES: Cliente → Intermedius (origen=cliente, destino=intermedius)
+
+Ver tabla detallada en *"Dirección de Transacciones"* dentro de `api-reference.md`.

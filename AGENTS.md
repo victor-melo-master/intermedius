@@ -40,6 +40,7 @@ solicitud ──[iniciar]──→ en_progreso ──[cerrar]──→ cerrada
 - Preview de ganancia estimada en `GestionarOperacionView` (card + modal de cierre)
 - Redirige a `/operaciones` al cerrar
 - Fechas en formato `dd/mm/yyyy`
+- Direccionalidad compra/venta: compra = casa compra divisa (cliente entrega divisa → casa entrega VES); venta = casa vende divisa (cliente entrega VES → casa entrega divisa)
 
 ### Cálculo de Ganancia
 
