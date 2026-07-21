@@ -140,7 +140,7 @@ Eager carga `titular`.
 
 **Query params:** `per_page` (max 100), `fecha_desde`, `fecha_hasta`, `tipo_codigo`, `cliente_id`, `operador_id`, `estatus`, `cuenta_id`
 
-Eager: `tipoOperacion`, `cliente`, `operador`, `movimientos.moneda`.
+Eager: `tipoOperacion`, `monedaOperacion`, `cliente`, `operador`, `movimientos.moneda`.
 
 ### `POST /api/v1/operaciones`
 `auth:sanctum` | `create` (admin | operador)
@@ -182,7 +182,7 @@ Eager: `tipoOperacion`, `cliente`, `operador`, `movimientos.moneda`.
 ### `GET /api/v1/operaciones/{operacion}`
 `auth:sanctum` | `view`
 
-Eager carga: `movimientos.cuenta.titular`, `movimientos.moneda`, `tipoOperacion`, `cliente`, `clienteEmisor`, `clienteReceptor`, `categoriaGasto`, `operador`, `verificadoPor`, `pagador`.
+Eager carga: `movimientos.cuenta.titular`, `movimientos.moneda`, `tipoOperacion`, `monedaOperacion`, `cliente`, `clienteEmisor`, `clienteReceptor`, `categoriaGasto`, `operador`, `verificadoPor`, `pagador`, `transacciones.moneda`, `transacciones.cuentaOrigen`, `transacciones.cuentaDestino`.
 
 ### `PUT|PATCH /api/v1/operaciones/{operacion}`
 `auth:sanctum` | owner | admin | super_admin
@@ -208,6 +208,8 @@ Siempre `405` — las operaciones no se eliminan.
   "id": "int",
   "fecha": "2026-07-07",
   "estatus": "borrador|verificado",
+  "estado": "solicitud|en_progreso|cerrada|cancelada|null",
+  "monto_solicitado": "100.00|null",
   "origen": "manual|null",
   "origen_referencia": "string|null",
   "referencia": "string|null",
@@ -233,8 +235,12 @@ Siempre `405` — las operaciones no se eliminan.
   "tipo_comision": null,
   "verificado_at": null,
   "estado_pool": "pendiente|asignada|pagada|cancelada",
+  "en_progreso_at": null,
+  "cancelada_at": null,
+  "motivo_cancelacion": null,
   "pagador": { "id": 1, "name": "Admin" }|null,
   "tipo_operacion": { "id": 1, "codigo": "compra", "nombre": "..." },
+  "moneda_operacion": { "id": 3, "codigo": "USDT", "nombre": "Tether USD" }|null,
   "cliente": { "id": 1, "nombre": "...", "alias": "..." }|null,
   "cliente_emisor": { ... }|null,
   "cliente_receptor": { ... }|null,
@@ -479,3 +485,216 @@ DELETE: desactiva (`activo=false`), no borra.
 **Query:** `?modelo=&user_id=&desde=&hasta=`
 
 Paginated (50) de `Activity` log. `created_at DESC`.
+
+---
+
+## Flujo Multi-Paso (Operaciones con Transacciones)
+
+Flujo alternativo al CRUD directo de movimientos. Permite crear la operación como **solicitud**, agregar **transacciones** una por una, confirmarlas, y cerrar la operación cuando esté balanceada.
+
+### State Machine
+
+```
+solicitud ──[iniciar]──→ en_progreso ──[cerrar]──→ cerrada
+     │                      │
+     └──[cancelar]──────────┴──[cancelar]──→ cancelada
+```
+
+### `POST /api/v1/operaciones/solicitud`
+`auth:sanctum` | `create`
+
+Crea una operación SIN movimientos contables. Queda en estado `solicitud`.
+
+```json
+{
+  "fecha":            "required|date|before_or_equal:today",
+  "tipo_codigo":      "required|exists:tipos_operacion,codigo",
+  "moneda_codigo":    "required|exists:monedas,codigo",
+  "cliente_id":       "int?|exists:clientes",
+  "operador_id":      "required|exists:users",
+  "tasa_aplicada":    "required|numeric|min:0.01",
+  "monto_solicitado": "required|numeric|min:0.01",
+  "descripcion":      "string?"
+}
+```
+
+→ `201` `OperacionResource` con `estado: "solicitud"`
+
+### `POST /api/v1/operaciones/{operacion}/iniciar`
+`auth:sanctum` | `update`
+
+Pasa la operación de `solicitud` → `en_progreso`. Sin body.
+
+→ `200` `{ "message": "Operación iniciada.", "operacion": OperacionResource }`
+
+### `POST /api/v1/operaciones/{operacion}/cerrar`
+`auth:sanctum` | `update`
+
+Cierra la operación: crea movimientos contables desde las transacciones confirmadas.
+
+**Validaciones:**
+- Estado debe ser `en_progreso`
+- Debe haber transacciones confirmadas
+- **Balance:** suma de transacciones en la moneda de operación debe = `monto_solicitado` (tolerancia 0.01)
+- **Balance:** suma de transacciones en VES debe = `monto_solicitado × tasa_aplicada` (tolerancia 0.01)
+- Cada transacción con método de pago ≠ `efectivo` debe tener `comprobante`
+
+→ `200` Operación con `estado: "cerrada"`, movimientos generados
+
+### `POST /api/v1/operaciones/{operacion}/cancelar`
+`auth:sanctum` | admin | super_admin | owner
+
+```json
+{
+  "motivo": "required|string"
+}
+```
+
+Cancela la operación (estado `solicitud` o `en_progreso`):
+- Reversión de saldos de transacciones confirmadas
+- Transacciones pendientes → `cancelada`
+- Operación → `cancelada`
+
+---
+
+## Transacciones (Flujo Multi-Paso)
+
+### `GET /api/v1/operaciones/{operacion}/transacciones`
+`auth:sanctum`
+
+Lista transacciones de la operación.
+
+### `POST /api/v1/operaciones/{operacion}/transacciones`
+`auth:sanctum`
+
+Agrega una nueva transacción pendiente.
+
+```json
+{
+  "cuenta_origen_id":  "required|exists:cuentas",
+  "cuenta_destino_id": "required|exists:cuentas",
+  "moneda_id":         "required|exists:monedas",
+  "monto":             "required|numeric|min:0.01",
+  "tasa_aplicada":     "numeric?",
+  "metodo_pago":       "string?|max:50",
+  "comprobante":       "string?|max:255"
+}
+```
+
+**Validación extra:**
+- Cuenta origen y destino deben coincidir con `moneda_id`
+- La suma de transacciones pendientes+confirmadas+validadas no puede exceder el límite:
+  - **Divisa (no VES):** `monto_solicitado`
+  - **VES:** `monto_solicitado × tasa_aplicada`
+
+→ `201` `TransaccionResource`
+
+### `PUT /api/v1/operaciones/{operacion}/transacciones/{transaccion}`
+`auth:sanctum`
+
+Edita una transacción pendiente. Campos `sometimes`.
+
+Misma validación de límite si cambia `monto`.
+
+### `DELETE /api/v1/operaciones/{operacion}/transacciones/{transaccion}`
+`auth:sanctum`
+
+Elimina una transacción pendiente.
+
+### `POST /api/v1/operaciones/{operacion}/transacciones/{transaccion}/confirmar`
+`auth:sanctum`
+
+Confirma la transacción: descuenta saldo de cuenta origen, acredita a destino.
+
+### `POST /api/v1/operaciones/{operacion}/transacciones/{transaccion}/revertir`
+`auth:sanctum`
+
+Revierte una transacción confirmada: reingresa saldos.
+
+```json
+{
+  "motivo": "required|string"
+}
+```
+
+---
+
+## Response `TransaccionResource`
+
+```json
+{
+  "id": 1,
+  "operacion_id": 1,
+  "cuenta_origen_id": 13,
+  "cuenta_destino_id": 2,
+  "moneda_id": 2,
+  "monto": "50.00",
+  "tasa_aplicada": "50.00",
+  "metodo_pago": "efectivo",
+  "comprobante": null,
+  "estado": "pendiente|confirmada|revertida|cancelada",
+  "orden": 1,
+  "moneda": { "id": 2, "codigo": "USD", "nombre": "Dólar Estadounidense", "simbolo": "$" },
+  "cuenta_origen": { "id": 13, "alias": "Intermedius - Efectivo USD", "nombre": "..." },
+  "cuenta_destino": { "id": 2, "alias": "Efectivo USDT", "nombre": "..." }
+}
+```
+
+---
+
+## OperacionResource — Campos Adicionales (Multi-Paso)
+
+Los siguientes campos se agregaron para el flujo multi-paso:
+
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| `estado` | `string` | `solicitud` / `en_progreso` / `cerrada` / `cancelada` |
+| `monto_solicitado` | `string\|null` | Monto en divisa solicitado |
+| `moneda_operacion` | `object\|null` | `{ id, codigo, nombre }` — moneda negociada (USD, USDT, EUR, COP) |
+| `tasas_snapshot` | `object\|null` | Snapshot de tasas al crear la solicitud |
+| `en_progreso_at` | `string\|null` | Timestamp ISO8601 cuando se inició |
+| `cancelada_at` | `string\|null` | Timestamp ISO8601 cuando se canceló |
+| `motivo_cancelacion` | `string\|null` | Motivo de cancelación |
+| `transacciones` | `array` | Lista de transacciones (cuando se carga la relación) |
+
+### Eager loads actualizados
+
+**`GET /api/v1/operaciones` (index):**
+`tipoOperacion`, `monedaOperacion`, `cliente`, `operador`, `movimientos.moneda`
+
+**`GET /api/v1/operaciones/{operacion}` (show):**
+`movimientos.cuenta.titular`, `movimientos.moneda`, `tipoOperacion`, `monedaOperacion`, `cliente`, `clienteEmisor`, `clienteReceptor`, `categoriaGasto`, `operador`, `verificadoPor`, `pagador`, `transacciones.moneda`, `transacciones.cuentaOrigen`, `transacciones.cuentaDestino`
+
+### Dirección de Transacciones
+
+Según la moneda seleccionada y el tipo de operación (`compra` / `venta`):
+
+| Operación | Moneda | Cuenta Origen | Cuenta Destino |
+|-----------|--------|---------------|----------------|
+| Compra | Divisa (USD/USDT/EUR/COP) | Intermedius | Cliente |
+| Compra | VES | Cliente | Intermedius |
+| Venta | Divisa (USD/USDT/EUR/COP) | Cliente | Intermedius |
+| Venta | VES | Intermedius | Cliente |
+
+### Validación de Balance al Cerrar
+
+En `RegistroOperacionService::cerrarOperacion()` se ejecuta `validarBalanceCierre()`:
+
+```
+| Concepto       | Esperado                     |
+|----------------|------------------------------|
+| Total divisa   | = monto_solicitado           |
+| Total VES      | = monto_solicitado × tasa    |
+```
+
+Ambos con tolerancia de 0.01. Si no coinciden, se rechaza con mensaje detallado.
+
+### Migración: `moneda_operacion_id`
+
+```sql
+ALTER TABLE operaciones
+  ADD COLUMN moneda_operacion_id BIGINT UNSIGNED NULL AFTER tipo_operacion_id,
+  ADD INDEX operaciones_moneda_operacion_id_foreign (moneda_operacion_id),
+  ADD CONSTRAINT operaciones_moneda_operacion_id_foreign
+    FOREIGN KEY (moneda_operacion_id) REFERENCES monedas (id) ON DELETE SET NULL;
+```
