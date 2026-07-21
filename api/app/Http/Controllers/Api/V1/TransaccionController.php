@@ -68,6 +68,7 @@ class TransaccionController extends Controller
 
             $totalExistente = (float) $operacion->transacciones()
                 ->where('moneda_id', $request->moneda_id)
+                ->whereIn('estado', ['pendiente', 'confirmada', 'validada'])
                 ->sum('monto');
 
             $montoNuevo = round((float) $request->monto, 2);
@@ -179,6 +180,7 @@ class TransaccionController extends Controller
 
                     $totalExistente = (float) $operacion->transacciones()
                         ->where('moneda_id', $transaccion->moneda_id)
+                        ->whereIn('estado', ['pendiente', 'confirmada', 'validada'])
                         ->where('id', '!=', $transaccion->id)
                         ->sum('monto');
 
