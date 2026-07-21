@@ -532,6 +532,16 @@ Pasa la operación de `solicitud` → `en_progreso`. Sin body.
 
 Cierra la operación: crea movimientos contables desde las transacciones confirmadas.
 
+**Body (opcional):**
+```json
+{
+  "tasa_mercado_snapshot": 36.50,
+  "fuente_tasa_mercado": "bcv"
+}
+```
+
+Si se envía `tasa_mercado_snapshot`, se actualiza al momento del cierre antes de calcular la ganancia.
+
 **Validaciones:**
 - Estado debe ser `en_progreso`
 - Debe haber transacciones confirmadas
@@ -539,7 +549,27 @@ Cierra la operación: crea movimientos contables desde las transacciones confirm
 - **Balance:** suma de transacciones en VES debe = `monto_solicitado × tasa_aplicada` (tolerancia 0.01)
 - Cada transacción con método de pago ≠ `efectivo` debe tener `comprobante`
 
-→ `200` Operación con `estado: "cerrada"`, movimientos generados
+→ `200` Operación con `estado: "cerrada"`, movimientos generados, ganancia calculada
+
+### `GET /api/v1/operaciones/{operacion}/ganancia-preview`
+`auth:sanctum` | `view`
+
+Retorna la ganancia estimada de una operación sin persistir. Para uso en preview antes de cerrar.
+
+**Query params (opcional):**
+- `tasa_mercado` — Tasa de mercado a usar para el cálculo (si no se provee, usa el `tasa_mercado_snapshot` de la operación)
+
+→ `200`
+```json
+{
+  "ganancia": {
+    "bruta_usd": "0.22",
+    "bruta_ves": "8.00",
+    "neta_usd": "0.22",
+    "neta_ves": "8.00"
+  }
+}
+```
 
 ### `POST /api/v1/operaciones/{operacion}/cancelar`
 `auth:sanctum` | admin | super_admin | owner

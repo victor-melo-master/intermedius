@@ -449,4 +449,162 @@ class RegistroOperacionServiceTest extends TestCase
         $this->assertEquals('0.00', $operacion->ganancia_bruta_usd);
         $this->assertEquals('0.00', $operacion->ganancia_bruta_ves);
     }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 16. Venta USDT calcula ganancia correctamente (multi-divisa)
+    // ─────────────────────────────────────────────────────────────────────────
+    public function test_venta_usdt_calcula_ganancia_multi_divisa(): void
+    {
+        Queue::fake();
+        TipoOperacion::factory()->ventaUsd()->create();
+        $usdt = Moneda::factory()->usdt()->create();
+        // Crear tasa diaria para USDT/VES (no USD/VES)
+        TasaDiaria::create([
+            'fecha'              => now()->toDateString(),
+            'moneda_base_id'     => $usdt->id,
+            'moneda_cotizada_id' => $this->ves->id,
+            'tasa_compra'        => 36.20,
+            'tasa_venta'         => 36.50,
+            'definida_por_id'    => $this->operador->id,
+            'notas'              => null,
+            'vigente_desde'      => now()->subMinute(),
+            'vigente_hasta'      => null,
+        ]);
+        $cUsdt = Cuenta::factory()->create([
+            'moneda_id'  => $usdt->id,
+            'titular_id' => $this->titular->id,
+            'tipo'       => 'plataforma',
+            'activa'     => true,
+        ]);
+        $cVes = $this->cuentaVes();
+
+        $operacion = $this->service->registrar([
+            'fecha'                 => '2026-05-11',
+            'tipo_codigo'           => 'venta_usd',
+            'operador_id'           => $this->operador->id,
+            'tasa_aplicada'         => 36.50,
+            'tasa_mercado_snapshot' => 36.42,
+            'fuente_tasa_mercado'   => 'bcv',
+            'moneda_operacion_id'   => $usdt->id,
+            'movimientos'           => [
+                ['cuenta_id' => $cUsdt->id, 'monto' => -100.0, 'tasa_a_usd' => 1.0],
+                ['cuenta_id' => $cVes->id, 'monto' => 3650.0, 'tasa_a_usd' => round(1 / 36.50, 8)],
+            ],
+        ]);
+
+        // ganancia_ves = 100 × (36.50 − 36.42) = 8.00 Bs
+        $this->assertEqualsWithDelta(8.00, (float) $operacion->ganancia_bruta_ves, 0.01);
+        // ganancia_usd = 8.00 / 36.50 = 0.2192 USD
+        $this->assertEqualsWithDelta(0.22, (float) $operacion->ganancia_bruta_usd, 0.01);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 17. Compra USD genera ganancia (genera_ganancia = true)
+    // ─────────────────────────────────────────────────────────────────────────
+    public function test_compra_usd_genera_ganancia(): void
+    {
+        Queue::fake();
+        TipoOperacion::factory()->compraUsd()->create(['genera_ganancia' => true]);
+        $this->crearTasaDiariaUsdVes(36.20, 36.50);
+        $cUsd = $this->cuentaUsd();
+        $cVes = $this->cuentaVes();
+
+        $operacion = $this->service->registrar([
+            'fecha'                 => '2026-05-11',
+            'tipo_codigo'           => 'compra_usd',
+            'operador_id'           => $this->operador->id,
+            'tasa_aplicada'         => 36.20,
+            'tasa_mercado_snapshot' => 36.42,
+            'movimientos'           => [
+                ['cuenta_id' => $cUsd->id, 'monto' => 100.0, 'tasa_a_usd' => 1.0],
+                ['cuenta_id' => $cVes->id, 'monto' => -3620.0, 'tasa_a_usd' => round(1 / 36.20, 8)],
+            ],
+        ]);
+
+        $this->assertNotEquals('0.00', $operacion->ganancia_bruta_usd);
+        $this->assertNotEquals('0.00', $operacion->ganancia_bruta_ves);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 18. Snapshot al cierre: tasa_mercado se actualiza al cerrar
+    // ─────────────────────────────────────────────────────────────────────────
+    public function test_snapshot_al_cierre_actualiza_tasa_mercado(): void
+    {
+        Queue::fake();
+        TipoOperacion::factory()->ventaUsd()->create();
+        $this->crearTasaDiariaUsdVes();
+        $cUsd = $this->cuentaUsd();
+        $cVes = $this->cuentaVes();
+
+        $operacion = $this->service->registrar($this->payloadVenta($cUsd, $cVes, 36.50, 36.42, 100));
+
+        // Verificar que tiene la tasa original
+        $this->assertEquals(36.42, (float) $operacion->tasa_mercado_snapshot);
+
+        // Simular cierre con nueva tasa de mercado
+        $cuentaOrigen = Cuenta::factory()->create(['moneda_id' => $this->usd->id, 'titular_id' => $this->titular->id]);
+        $cuentaDestino = Cuenta::factory()->create(['moneda_id' => $this->ves->id, 'titular_id' => $this->titular->id]);
+
+        // Crear transacción confirmada
+        $operacion->update(['estado' => 'en_progreso']);
+        \App\Models\Transaccion::factory()->create([
+            'operacion_id'     => $operacion->id,
+            'cuenta_origen_id' => $cuentaOrigen->id,
+            'cuenta_destino_id' => $cuentaDestino->id,
+            'moneda_id'        => $this->usd->id,
+            'monto'            => 100.0,
+            'estado'           => 'confirmada',
+            'metodo_pago'      => 'efectivo',
+            'orden'            => 1,
+        ]);
+
+        // Cerrar con nueva tasa
+        $operacionCerrada = $this->service->cerrarOperacion(
+            $operacion,
+            $this->operador,
+            36.55,
+            'bcv'
+        );
+
+        // La tasa de mercado debe haberse actualizado
+        $this->assertEquals(36.55, (float) $operacionCerrada->tasa_mercado_snapshot);
+        $this->assertEquals('bcv', $operacionCerrada->fuente_tasa_mercado);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 19. Preview de ganancia retorna datos correctos
+    // ─────────────────────────────────────────────────────────────────────────
+    public function test_preview_ganancia_retorna_datos_correctos(): void
+    {
+        Queue::fake();
+        TipoOperacion::factory()->ventaUsd()->create();
+        $this->crearTasaDiariaUsdVes();
+        $cUsd = $this->cuentaUsd();
+        $cVes = $this->cuentaVes();
+
+        $operacion = $this->service->registrar($this->payloadVenta($cUsd, $cVes, 36.50, 36.42, 100));
+        $operacion->update(['estado' => 'en_progreso']);
+
+        // Crear transacciones confirmadas
+        $cuentaOrigen = Cuenta::factory()->create(['moneda_id' => $this->usd->id, 'titular_id' => $this->titular->id]);
+        $cuentaDestino = Cuenta::factory()->create(['moneda_id' => $this->ves->id, 'titular_id' => $this->titular->id]);
+
+        \App\Models\Transaccion::factory()->create([
+            'operacion_id'     => $operacion->id,
+            'cuenta_origen_id' => $cuentaOrigen->id,
+            'cuenta_destino_id' => $cuentaDestino->id,
+            'moneda_id'        => $this->usd->id,
+            'monto'            => 100.0,
+            'estado'           => 'confirmada',
+            'orden'            => 1,
+        ]);
+
+        $preview = $this->service->calcularGananciaEstimada($operacion, 36.42);
+
+        $this->assertArrayHasKey('bruta_usd', $preview);
+        $this->assertArrayHasKey('bruta_ves', $preview);
+        $this->assertArrayHasKey('neta_usd', $preview);
+        $this->assertArrayHasKey('neta_ves', $preview);
+        $this->assertEqualsWithDelta(8.00, $preview['bruta_ves'], 0.01);
+    }
 }

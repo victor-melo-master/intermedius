@@ -115,6 +115,7 @@ Route::prefix('v1')->group(function () {
         Route::post('operaciones/{operacion}/iniciar', [OperacionController::class, 'iniciar']);
         Route::post('operaciones/{operacion}/cerrar', [OperacionController::class, 'cerrar']);
         Route::post('operaciones/{operacion}/cancelar', [OperacionController::class, 'cancelar']);
+        Route::get('operaciones/{operacion}/ganancia-preview', [OperacionController::class, 'gananciaPreview']);
 
         // ── Transacciones (solicitud / en_progreso / verificación) ────
         Route::post('operaciones/{operacion}/transacciones', [TransaccionController::class, 'store']);

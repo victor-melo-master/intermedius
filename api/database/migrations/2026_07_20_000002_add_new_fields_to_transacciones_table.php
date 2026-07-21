@@ -16,7 +16,9 @@ return new class extends Migration
         });
 
         // Agregar 'confirmada' y 'revertida' al enum de estado
-        DB::statement("ALTER TABLE transacciones MODIFY COLUMN estado varchar(50) NOT NULL DEFAULT 'pendiente'");
+        if (config('database.default') !== 'sqlite') {
+            DB::statement("ALTER TABLE transacciones MODIFY COLUMN estado varchar(50) NOT NULL DEFAULT 'pendiente'");
+        }
 
         // Renombrar validada_en -> confirmada_en y validada_por_id -> confirmada_por_id
         Schema::table('transacciones', function (Blueprint $table) {
@@ -33,6 +35,8 @@ return new class extends Migration
             $table->renameColumn('confirmada_por_id', 'validada_por_id');
         });
 
-        DB::statement("ALTER TABLE transacciones MODIFY COLUMN estado enum('pendiente','validada','rechazada','cancelada') NOT NULL DEFAULT 'pendiente'");
+        if (config('database.default') !== 'sqlite') {
+            DB::statement("ALTER TABLE transacciones MODIFY COLUMN estado enum('pendiente','validada','rechazada','cancelada') NOT NULL DEFAULT 'pendiente'");
+        }
     }
 };

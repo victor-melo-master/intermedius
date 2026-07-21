@@ -51,14 +51,20 @@ export function useOperaciones() {
     return response
   }
 
-  const cerrar = async (id) => {
-    const response = await execute((signal) => api.post(`/operaciones/${id}/cerrar`, null, { signal }))
+  const cerrar = async (id, payload = {}) => {
+    const response = await execute((signal) => api.post(`/operaciones/${id}/cerrar`, payload, { signal }))
     return response
   }
 
   const cancelar = async (id, motivo) => {
     const response = await execute((signal) => api.post(`/operaciones/${id}/cancelar`, { motivo }, { signal }))
     return response
+  }
+
+  const fetchGananciaPreview = async (id, tasaMercado = null) => {
+    const params = tasaMercado ? { tasa_mercado: tasaMercado } : {}
+    const response = await execute((signal) => api.get(`/operaciones/${id}/ganancia-preview`, { params, signal }))
+    return response?.data?.ganancia || { bruta_usd: 0, bruta_ves: 0, neta_usd: 0, neta_ves: 0 }
   }
 
   return {
@@ -74,6 +80,7 @@ export function useOperaciones() {
     iniciar,
     cerrar,
     cancelar,
+    fetchGananciaPreview,
     loading,
     error,
   }

@@ -373,7 +373,17 @@ class OperacionController extends Controller
     {
         $this->authorize('update', $operacion);
 
-        $operacion = $this->registroService->cerrarOperacion($operacion, $request->user());
+        $validated = $request->validate([
+            'tasa_mercado_snapshot' => ['nullable', 'numeric', 'min:0'],
+            'fuente_tasa_mercado'   => ['nullable', 'string', 'max:30'],
+        ]);
+
+        $operacion = $this->registroService->cerrarOperacion(
+            $operacion,
+            $request->user(),
+            $validated['tasa_mercado_snapshot'] ?? null,
+            $validated['fuente_tasa_mercado'] ?? null,
+        );
 
         return response()->json([
             'message' => 'Operación cerrada.',
@@ -403,5 +413,25 @@ class OperacionController extends Controller
             'message' => 'Operación cancelada.',
             'operacion' => new OperacionResource($operacion),
         ]);
+    }
+
+    /**
+     * Retorna la ganancia estimada de una operación sin persistir.
+     * Para uso en preview antes de cerrar.
+     */
+    public function gananciaPreview(Request $request, Operacion $operacion): JsonResponse
+    {
+        $this->authorize('view', $operacion);
+
+        $validated = $request->validate([
+            'tasa_mercado' => ['nullable', 'numeric', 'min:0'],
+        ]);
+
+        $preview = $this->registroService->calcularGananciaEstimada(
+            $operacion,
+            $validated['tasa_mercado'] ?? null,
+        );
+
+        return response()->json(['ganancia' => $preview]);
     }
 }

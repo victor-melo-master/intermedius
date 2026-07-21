@@ -80,6 +80,7 @@ class RegistroOperacionService
             $operacion = Operacion::create([
                 'fecha'                  => $payload['fecha'],
                 'tipo_operacion_id'      => $tipo->id,
+                'moneda_operacion_id'    => $payload['moneda_operacion_id'] ?? null,
                 'cliente_id'             => $payload['cliente_id'] ?? null,
                 'categoria_gasto_id'     => $payload['categoria_gasto_id'] ?? null,
                 'operador_id'            => $payload['operador_id'],
@@ -299,17 +300,20 @@ class RegistroOperacionService
     {
         $codigo = $operacion->tipoOperacion->codigo;
 
+        // Determinar la moneda de operación (divisa): multi-divisa o fallback a USD
+        $codigoDivisa = $operacion->monedaOperacion?->codigo ?? 'USD';
+
         switch ($codigo) {
             case 'venta_usd':
                 /*
-                 * La casa vende USD al cliente y recibe VES.
-                 * El spread es la diferencia entre la tasa aplicada y la tasa de mercado (BCV/Binance).
+                 * La casa vende divisa al cliente y recibe VES.
+                 * El spread es la diferencia entre la tasa aplicada y la tasa de mercado.
                  *
                  * Fórmula:
-                 *   ganancia_ves = monto_usd_vendido × (tasa_aplicada − tasa_mercado)
+                 *   ganancia_ves = monto_divisa_vendido × (tasa_aplicada − tasa_mercado)
                  *   ganancia_usd = ganancia_ves / tasa_aplicada
                  *
-                 * Ejemplo: 100 USD vendidos a 36.50, BCV en 36.42.
+                 * Ejemplo: 100 USDT vendidos a 36.50, BCV en 36.42.
                  *   ganancia_ves = 100 × (36.50 − 36.42) = 8.00 Bs
                  *   ganancia_usd = 8.00 / 36.50 = 0.2192 USD
                  */
@@ -317,22 +321,22 @@ class RegistroOperacionService
                     return ['usd' => 0.0, 'ves' => 0.0];
                 }
 
-                $montoUsdVendido = $operacion->movimientos
-                    ->filter(fn ($m) => (float) $m->monto < 0 && $m->moneda->codigo === 'USD')
+                $montoDivisaVendido = $operacion->movimientos
+                    ->filter(fn ($m) => (float) $m->monto < 0 && $m->moneda->codigo === $codigoDivisa)
                     ->sum(fn ($m) => abs((float) $m->monto));
 
-                $gananciaVes = $montoUsdVendido * ((float) $operacion->tasa_aplicada - (float) $operacion->tasa_mercado_snapshot);
+                $gananciaVes = $montoDivisaVendido * ((float) $operacion->tasa_aplicada - (float) $operacion->tasa_mercado_snapshot);
                 $gananciaUsd = $gananciaVes / (float) $operacion->tasa_aplicada;
 
                 return ['usd' => round($gananciaUsd, 2), 'ves' => round($gananciaVes, 2)];
 
             case 'compra_usd':
                 /*
-                 * La casa compra USD al cliente y entrega VES.
+                 * La casa compra divisa al cliente y entrega VES.
                  * Gana cuando compra por debajo de la tasa de mercado.
                  *
                  * Fórmula:
-                 *   ganancia_ves = monto_usd_comprado × (tasa_mercado − tasa_aplicada)
+                 *   ganancia_ves = monto_divisa_comprado × (tasa_mercado − tasa_aplicada)
                  *   ganancia_usd = ganancia_ves / tasa_mercado  ← se divide por tasa_mercado
                  *                                                  porque es la referencia "justa"
                  */
@@ -340,11 +344,11 @@ class RegistroOperacionService
                     return ['usd' => 0.0, 'ves' => 0.0];
                 }
 
-                $montoUsdComprado = $operacion->movimientos
-                    ->filter(fn ($m) => (float) $m->monto > 0 && $m->moneda->codigo === 'USD')
+                $montoDivisaComprado = $operacion->movimientos
+                    ->filter(fn ($m) => (float) $m->monto > 0 && $m->moneda->codigo === $codigoDivisa)
                     ->sum(fn ($m) => (float) $m->monto);
 
-                $gananciaVes = $montoUsdComprado * ((float) $operacion->tasa_mercado_snapshot - (float) $operacion->tasa_aplicada);
+                $gananciaVes = $montoDivisaComprado * ((float) $operacion->tasa_mercado_snapshot - (float) $operacion->tasa_aplicada);
                 $gananciaUsd = $gananciaVes / (float) $operacion->tasa_mercado_snapshot;
 
                 return ['usd' => round($gananciaUsd, 2), 'ves' => round($gananciaVes, 2)];
@@ -757,8 +761,12 @@ public function actualizar(Operacion $operacion, array $payload, \App\Models\Use
      *
      * @throws ValidationException
      */
-    public function cerrarOperacion(Operacion $operacion, \App\Models\User $cerrador): Operacion
-    {
+    public function cerrarOperacion(
+        Operacion $operacion,
+        \App\Models\User $cerrador,
+        ?float $tasaMercadoSnapshot = null,
+        ?string $fuenteTasaMercado = null,
+    ): Operacion {
         if ($operacion->estado !== 'en_progreso') {
             throw ValidationException::withMessages([
                 'estado' => 'Solo se pueden cerrar operaciones en estado "en_progreso".',
@@ -787,7 +795,7 @@ public function actualizar(Operacion $operacion, array $payload, \App\Models\Use
         // Validar que las transacciones estén balanceadas (divisa vs VES)
         $this->validarBalanceCierre($operacion, $transaccionesConfirmadas);
 
-        return DB::transaction(function () use ($operacion, $transaccionesConfirmadas, $cerrador) {
+        return DB::transaction(function () use ($operacion, $transaccionesConfirmadas, $cerrador, $tasaMercadoSnapshot, $fuenteTasaMercado) {
             // Crear movimientos contables desde las transacciones confirmadas
             foreach ($transaccionesConfirmadas as $i => $t) {
                 $esFiat = in_array($t->moneda->codigo ?? '', ['USD', 'USDT']);
@@ -821,6 +829,18 @@ public function actualizar(Operacion $operacion, array $payload, \App\Models\Use
                 'verificado_at' => now(),
                 'verificado_por_id' => $cerrador->id,
             ]);
+
+            // Actualizar snapshot de tasa de mercado al momento del cierre
+            $camposSnapshot = [];
+            if ($tasaMercadoSnapshot !== null) {
+                $camposSnapshot['tasa_mercado_snapshot'] = $tasaMercadoSnapshot;
+            }
+            if ($fuenteTasaMercado !== null) {
+                $camposSnapshot['fuente_tasa_mercado'] = $fuenteTasaMercado;
+            }
+            if (!empty($camposSnapshot)) {
+                $operacion->update($camposSnapshot);
+            }
 
             // Calcular ganancia bruta
             $tipo = $operacion->tipoOperacion;
@@ -990,5 +1010,100 @@ public function actualizar(Operacion $operacion, array $payload, \App\Models\Use
         ]);
 
         return $operacion->fresh();
+    }
+
+    /**
+     * Calcula la ganancia estimada de una operación SIN persistir.
+     * Usa las transacciones confirmadas + la tasa de mercado actual.
+     * Para uso en preview antes de cerrar.
+     *
+     * @return array{bruta_usd: float, bruta_ves: float, neta_usd: float, neta_ves: float}
+     */
+    public function calcularGananciaEstimada(Operacion $operacion, ?float $tasaMercado = null): array
+    {
+        $tipo = $operacion->tipoOperacion;
+
+        if (!$tipo->genera_ganancia) {
+            return ['bruta_usd' => 0.0, 'bruta_ves' => 0.0, 'neta_usd' => 0.0, 'neta_ves' => 0.0];
+        }
+
+        $transacciones = $operacion->transacciones()
+            ->where('estado', 'confirmada')
+            ->get();
+
+        if ($transacciones->isEmpty()) {
+            return ['bruta_usd' => 0.0, 'bruta_ves' => 0.0, 'neta_usd' => 0.0, 'neta_ves' => 0.0];
+        }
+
+        $codigoDivisa = $operacion->monedaOperacion?->codigo ?? 'USD';
+        $tasaMercado = $tasaMercado ?? (float) $operacion->tasa_mercado_snapshot;
+        $tasaAplicada = (float) $operacion->tasa_aplicada;
+
+        if ($tasaMercado <= 0 || $tasaAplicada <= 0) {
+            return ['bruta_usd' => 0.0, 'bruta_ves' => 0.0, 'neta_usd' => 0.0, 'neta_ves' => 0.0];
+        }
+
+        $totalDivisa = $transacciones
+            ->filter(fn ($t) => ($t->moneda->codigo ?? '') === $codigoDivisa)
+            ->sum(fn ($t) => (float) $t->monto);
+
+        $totalVes = $transacciones
+            ->filter(fn ($t) => ($t->moneda->codigo ?? '') === 'VES')
+            ->sum(fn ($t) => (float) $t->monto);
+
+        $gananciaVes = 0.0;
+        $gananciaUsd = 0.0;
+
+        switch ($tipo->codigo) {
+            case 'venta_usd':
+                // La casa vende divisa: movimiento negativo en divisa, positivo en VES
+                $montoDivisaVendido = abs($totalDivisa);
+                $gananciaVes = $montoDivisaVendido * ($tasaAplicada - $tasaMercado);
+                $gananciaUsd = $gananciaVes / $tasaAplicada;
+                break;
+
+            case 'compra_usd':
+                // La casa compra divisa: movimiento positivo en divisa, negativo en VES
+                $montoDivisaComprado = abs($totalDivisa);
+                $gananciaVes = $montoDivisaComprado * ($tasaMercado - $tasaAplicada);
+                $gananciaUsd = $gananciaVes / $tasaMercado;
+                break;
+
+            case 'intermediada':
+                $montoDivisa = abs($totalDivisa) / 2;
+                $tasaCompra = (float) $operacion->tasa_compra;
+                $tasaVenta = (float) $operacion->tasa_venta;
+                $gananciaVes = $montoDivisa * ($tasaVenta - $tasaCompra);
+                $gananciaUsd = $tasaVenta > 0 ? $gananciaVes / $tasaVenta : 0;
+                break;
+
+            case 'comision':
+                $movIngreso = $transacciones->first(fn ($t) => (float) $t->monto > 0);
+                if ($movIngreso) {
+                    $gananciaUsd = (float) ($movIngreso->monto_usd_equivalente ?? 0);
+                    $gananciaVes = ($movIngreso->moneda->codigo ?? '') === 'VES'
+                        ? (float) $movIngreso->monto
+                        : ($tasaMercado > 0 ? round($gananciaUsd * $tasaMercado, 2) : 0.0);
+                }
+                break;
+        }
+
+        $brutaUsd = round($gananciaUsd, 2);
+        $brutaVes = round($gananciaVes, 2);
+
+        // Calcular netas restando comisiones existentes
+        $comisiones = $operacion->comisiones()->get();
+        $totalComisionesUsd = $comisiones->sum(fn ($c) => (float) ($c->monto_usd_equivalente ?? 0));
+        $totalComisionesVes = $comisiones->sum(fn ($c) => ($c->moneda->codigo ?? '') === 'VES'
+            ? (float) $c->monto
+            : (float) ($c->monto_usd_equivalente ?? 0) * $tasaAplicada
+        );
+
+        return [
+            'bruta_usd' => $brutaUsd,
+            'bruta_ves' => $brutaVes,
+            'neta_usd'  => round($brutaUsd - $totalComisionesUsd, 2),
+            'neta_ves'  => round($brutaVes - $totalComisionesVes, 2),
+        ];
     }
 }

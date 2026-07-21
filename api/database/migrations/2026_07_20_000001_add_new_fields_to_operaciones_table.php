@@ -10,7 +10,9 @@ return new class extends Migration
     public function up(): void
     {
         // Modificar el enum existente de 'estado' para incluir los nuevos valores
-        DB::statement("ALTER TABLE operaciones MODIFY COLUMN estado varchar(50) NOT NULL DEFAULT 'en_espera'");
+        if (config('database.default') !== 'sqlite') {
+            DB::statement("ALTER TABLE operaciones MODIFY COLUMN estado varchar(50) NOT NULL DEFAULT 'en_espera'");
+        }
 
         // Agregar las nuevas columnas
         Schema::table('operaciones', function (Blueprint $table) {
@@ -25,6 +27,8 @@ return new class extends Migration
             $table->dropColumn(['tasas_snapshot', 'en_progreso_at']);
         });
 
-        DB::statement("ALTER TABLE operaciones MODIFY COLUMN estado enum('en_espera','en_proceso','concluida','cancelada') NOT NULL DEFAULT 'en_espera'");
+        if (config('database.default') !== 'sqlite') {
+            DB::statement("ALTER TABLE operaciones MODIFY COLUMN estado enum('en_espera','en_proceso','concluida','cancelada') NOT NULL DEFAULT 'en_espera'");
+        }
     }
 };

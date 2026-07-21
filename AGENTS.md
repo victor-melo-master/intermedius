@@ -32,13 +32,31 @@ solicitud ──[iniciar]──→ en_progreso ──[cerrar]──→ cerrada
 **Frontend:**
 - Vistas: `OperacionFormView` (nueva/editar), `GestionarOperacionView`, `OperacionDetailView`
 - Componentes: `FlujoProgress`, `TransaccionList`, `TransaccionForm`, `ConfirmarTransaccionModal`, `CalculadoraBidireccional`
-- Composables: `useOperacionForm`, `useTransacciones`, `useOperaciones` (solicitar/iniciar/cerrar/cancelar)
-- Store: `operaciones` (solicitar/iniciar/cerrar/cancelar)
+- Composables: `useOperacionForm`, `useTransacciones`, `useOperaciones` (solicitar/iniciar/cerrar/cancelar/fetchGananciaPreview)
+- Store: `operaciones` (solicitar/iniciar/cerrar/cancelar/fetchGananciaPreview)
 - `monedaEsUSD` → `esDivisa` (cualquier moneda no-VES funciona como divisa)
 - Botón "Agregar transacción" se deshabilita cuando balanceado, muestra "✅ Transacciones balanceadas"
-- Botón "Cerrar" deshabilitado hasta balancear
+- Botón "Cerrar" deshabilitado hasta balancear, abre modal con campo tasa de mercado
+- Preview de ganancia estimada en `GestionarOperacionView` (card + modal de cierre)
 - Redirige a `/operaciones` al cerrar
 - Fechas en formato `dd/mm/yyyy`
+
+### Cálculo de Ganancia
+
+**Rama:** `feat/calculo-ganancia`
+
+**Fórmulas (multi-divisa: USD/USDT/EUR/COP):**
+- `venta_usd`: `ganancia_ves = monto_divisa × (tasa_aplicada − tasa_mercado)`, `ganancia_usd = ganancia_ves / tasa_aplicada`
+- `compra_usd`: `ganancia_ves = monto_divisa × (tasa_mercado − tasa_aplicada)`, `ganancia_usd = ganancia_ves / tasa_mercado`
+- `intermediada`: `ganancia_ves = montoDivisa × (tasa_venta − tasa_compra)`, `ganancia_usd = ganancia_ves / tasa_venta`
+- `comision`: directa desde `monto_usd_equivalente`
+- Netas: `bruta − comisiones` (CalculadorComisionesService)
+
+**Snapshot al cierre:** `tasa_mercado_snapshot` se actualiza al momento de cerrar la operación (no al crear solicitud).
+
+**Preview:** `GET /operaciones/{id}/ganancia-preview?tasa_mercado=X` retorna ganancia estimada sin persistir.
+
+**`genera_ganancia`:** `venta_usd`, `compra_usd`, `intermediada`, `comision` = `true`. Resto = `false`.
 
 ## Rendimiento (diagnóstico Jul 2026)
 

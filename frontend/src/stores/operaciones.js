@@ -95,8 +95,8 @@ export const useOperacionesStore = defineStore('operaciones', () => {
     return data
   }
 
-  async function cerrar(id) {
-    const { data } = await api.post(`/operaciones/${id}/cerrar`)
+  async function cerrar(id, payload = {}) {
+    const { data } = await api.post(`/operaciones/${id}/cerrar`, payload)
     detail.value = data.data || data
     return data
   }
@@ -107,5 +107,11 @@ export const useOperacionesStore = defineStore('operaciones', () => {
     return data
   }
 
-  return { list, detail, loading, error, fetchAll, fetchOne, create, update, verificar, solicitar, iniciar, cerrar, cancelar }
+  async function fetchGananciaPreview(id, tasaMercado = null) {
+    const params = tasaMercado ? { tasa_mercado: tasaMercado } : {}
+    const { data } = await api.get(`/operaciones/${id}/ganancia-preview`, { params })
+    return data.ganancia || { bruta_usd: 0, bruta_ves: 0, neta_usd: 0, neta_ves: 0 }
+  }
+
+  return { list, detail, loading, error, fetchAll, fetchOne, create, update, verificar, solicitar, iniciar, cerrar, cancelar, fetchGananciaPreview }
 })

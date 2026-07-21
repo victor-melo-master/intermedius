@@ -66,6 +66,27 @@
         <FlujoProgress :estado="store.detail.estado" />
       </div>
 
+      <!-- ════════ GANANCIA ESTIMADA ════════ -->
+      <div v-if="gananciaPreview && store.detail.estado === 'en_progreso'" class="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
+        <h3 class="font-semibold text-gray-700">Ganancia estimada</h3>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <p class="text-xs text-gray-400">Bruta</p>
+            <p class="text-lg font-bold" :class="gananciaPreview.bruta_usd >= 0 ? 'text-green-600' : 'text-red-600'">
+              {{ formatMoney(gananciaPreview.bruta_usd) }} USD
+            </p>
+            <p class="text-sm text-gray-500">Bs. {{ formatMoney(gananciaPreview.bruta_ves) }}</p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-400">Neta</p>
+            <p class="text-lg font-bold" :class="gananciaPreview.neta_usd >= 0 ? 'text-green-600' : 'text-red-600'">
+              {{ formatMoney(gananciaPreview.neta_usd) }} USD
+            </p>
+            <p class="text-sm text-gray-500">Bs. {{ formatMoney(gananciaPreview.neta_ves) }}</p>
+          </div>
+        </div>
+      </div>
+
       <!-- ════════ TRANSACCIONES ════════ -->
       <div class="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
         <h3 class="font-semibold text-gray-700">Transacciones</h3>
@@ -97,7 +118,7 @@
           </button>
 
           <button
-            @click="cerrarOperacion" :disabled="acting || !operacionBalanceada"
+            @click="mostrarCerrar = true" :disabled="acting || !operacionBalanceada"
             class="w-full bg-green-600 hover:bg-green-700 disabled:bg-green-300 text-white font-semibold py-3 rounded-xl transition flex items-center justify-center gap-2">
             <span v-if="acting" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
             {{ acting ? 'Cerrando...' : '🔒 Cerrar operación' }}
@@ -134,6 +155,34 @@
       </AppFormModal>
     </Teleport>
 
+    <!-- Modal: Cerrar operación -->
+    <Teleport to="body">
+      <AppFormModal v-model="mostrarCerrar" title="Cerrar operación">
+        <form @submit.prevent="cerrarOperacion" class="space-y-4">
+          <p class="text-sm text-gray-500">Confirma el cierre de esta operación. Se generarán los movimientos contables.</p>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Tasa de mercado (BCV/Binance)</label>
+            <input v-model.number="tasaMercadoCierre" type="number" step="0.01" min="0"
+              placeholder="Ej: 36.50"
+              class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 outline-none" />
+            <p class="text-xs text-gray-400 mt-1">Tasa de referencia para el cálculo de ganancia</p>
+          </div>
+          <div class="bg-gray-50 rounded-xl p-3 text-sm text-gray-600">
+            <p>Ganancia estimada: <span class="font-semibold" :class="gananciaPreview?.bruta_usd >= 0 ? 'text-green-600' : 'text-red-600'">{{ formatMoney(gananciaPreview?.bruta_usd || 0) }} USD</span></p>
+          </div>
+          <div class="flex gap-3">
+            <button type="button" @click="mostrarCerrar = false"
+              class="flex-1 py-2.5 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition">Volver</button>
+            <button type="submit" :disabled="acting"
+              class="flex-1 py-2.5 bg-green-600 text-white text-sm font-medium rounded-xl hover:bg-green-700 disabled:bg-green-300 transition flex items-center justify-center gap-2">
+              <span v-if="acting" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+              {{ acting ? 'Cerrando...' : 'Cerrar operación' }}
+            </button>
+          </div>
+        </form>
+      </AppFormModal>
+    </Teleport>
+
     <!-- Modal: Cancelar operación -->
     <Teleport to="body">
       <AppFormModal v-model="mostrarCancelar" title="Cancelar operación">
@@ -158,7 +207,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useOperacionesStore } from '../../stores/operaciones.js'
 import { useNotification } from '@/composables/useNotification'
@@ -181,8 +230,11 @@ const titulares = useTitulares()
 const acting = ref(false)
 const mostrarAgregarTx = ref(false)
 const mostrarCancelar = ref(false)
+const mostrarCerrar = ref(false)
 const motivoCancelacion = ref('')
 const intermediusTitularId = ref(null)
+const gananciaPreview = ref(null)
+const tasaMercadoCierre = ref(null)
 
 const tieneTransaccionesConfirmadas = computed(() =>
   (store.detail?.transacciones || []).some(t => t.estado === 'confirmada')
@@ -278,8 +330,14 @@ async function iniciarOperacion() {
 async function cerrarOperacion() {
   acting.value = true
   try {
-    await store.cerrar(route.params.id)
+    const payload = {}
+    if (tasaMercadoCierre.value) {
+      payload.tasa_mercado_snapshot = tasaMercadoCierre.value
+      payload.fuente_tasa_mercado = 'bcv'
+    }
+    await store.cerrar(route.params.id, payload)
     notifier.success('Operación cerrada — movimientos generados')
+    mostrarCerrar.value = false
     router.push('/operaciones')
   } catch {
     notifier.error('Error al cerrar la operación')
@@ -299,15 +357,38 @@ async function cancelarOperacion() {
   acting.value = false
 }
 
-function onTransaccionGuardada() {
+async function onTransaccionGuardada() {
   mostrarAgregarTx.value = false
-  cargarOperacion()
+  await cargarOperacion()
+  await cargarGananciaPreview()
 }
+
+async function cargarGananciaPreview() {
+  if (!store.detail?.id || store.detail?.estado !== 'en_progreso') {
+    gananciaPreview.value = null
+    return
+  }
+  try {
+    gananciaPreview.value = await store.fetchGananciaPreview(store.detail.id)
+  } catch {
+    gananciaPreview.value = null
+  }
+}
+
+watch(tasaMercadoCierre, async (nueva) => {
+  if (!store.detail?.id || store.detail?.estado !== 'en_progreso') return
+  try {
+    gananciaPreview.value = await store.fetchGananciaPreview(store.detail.id, nueva || null)
+  } catch {
+    // keep existing preview
+  }
+})
 
 onMounted(async () => {
   await titulares.fetchAll()
   const intermedius = titulares.getIntermedius()
   intermediusTitularId.value = intermedius ? intermedius.id : null
   await cargarOperacion()
+  await cargarGananciaPreview()
 })
 </script>

@@ -69,7 +69,7 @@ class CatalogosBaseSeeder extends Seeder
         // Tipos de operación
         $tipos = [
             ['codigo' => 'venta_usd',       'nombre' => 'Venta de USD',        'afecta_cliente' => true,  'afecta_fifo' => true,  'genera_ganancia' => true],
-            ['codigo' => 'compra_usd',      'nombre' => 'Compra de USD',       'afecta_cliente' => true,  'afecta_fifo' => true,  'genera_ganancia' => false],
+            ['codigo' => 'compra_usd',      'nombre' => 'Compra de USD',       'afecta_cliente' => true,  'afecta_fifo' => true,  'genera_ganancia' => true],
             ['codigo' => 'cambio',          'nombre' => 'Cambio de moneda',    'afecta_cliente' => false, 'afecta_fifo' => false, 'genera_ganancia' => false],
             ['codigo' => 'intermediada',    'nombre' => 'Operación Intermediada', 'afecta_cliente' => true, 'afecta_fifo' => true, 'genera_ganancia' => true],
             ['codigo' => 'gasto',           'nombre' => 'Gasto operativo',     'afecta_cliente' => false, 'afecta_fifo' => false, 'genera_ganancia' => false],
