@@ -152,7 +152,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useOperacionesStore } from '../../stores/operaciones.js'
 import { useNotification } from '@/composables/useNotification'
 import { useFormatting } from '@/composables/useFormatting'
@@ -165,6 +165,7 @@ import AppErrorState from '@/components/common/AppErrorState.vue'
 import AppFormModal from '@/components/common/AppFormModal.vue'
 
 const route = useRoute()
+const router = useRouter()
 const store = useOperacionesStore()
 const notifier = useNotification()
 const { formatMoney, formatRate } = useFormatting()
@@ -287,6 +288,7 @@ async function cerrarOperacion() {
   try {
     await store.cerrar(route.params.id)
     notifier.success('Operación cerrada — movimientos generados')
+    router.push('/operaciones')
   } catch {
     notifier.error('Error al cerrar la operación')
   }
