@@ -86,21 +86,26 @@
           {{ acting ? 'Iniciando...' : '🚀 Iniciar operación' }}
         </button>
 
-        <button v-if="store.detail.estado === 'en_progreso'"
-          @click="mostrarAgregarTx = true"
-          :disabled="operacionBalanceada"
-          :title="operacionBalanceada ? 'Operación balanceada — todas las transacciones necesarias están confirmadas' : 'Agregar nueva transacción'"
-          class="w-full bg-indigo-500 hover:bg-indigo-600 disabled:bg-indigo-300 text-white font-semibold py-3 rounded-xl transition flex items-center justify-center gap-2">
-          + Agregar transacción
-        </button>
+        <template v-if="store.detail.estado === 'en_progreso'">
+          <div v-if="operacionBalanceada" class="bg-green-50 border border-green-200 rounded-xl px-4 py-3">
+            <p class="text-green-700 text-sm font-medium text-center">✅ Transacciones balanceadas</p>
+          </div>
+          <button v-else
+            @click="mostrarAgregarTx = true"
+            class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-3 rounded-xl transition flex items-center justify-center gap-2">
+            + Agregar transacción
+          </button>
 
-        <button v-if="store.detail.estado === 'en_progreso'"
-          @click="cerrarOperacion" :disabled="acting || !operacionBalanceada"
-          :title="operacionBalanceada ? 'Cerrar operación' : motivoNoBalanceada"
-          class="w-full bg-green-600 hover:bg-green-700 disabled:bg-green-300 text-white font-semibold py-3 rounded-xl transition flex items-center justify-center gap-2">
-          <span v-if="acting" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-          {{ acting ? 'Cerrando...' : '🔒 Cerrar operación' }}
-        </button>
+          <button
+            @click="cerrarOperacion" :disabled="acting || !operacionBalanceada"
+            class="w-full bg-green-600 hover:bg-green-700 disabled:bg-green-300 text-white font-semibold py-3 rounded-xl transition flex items-center justify-center gap-2">
+            <span v-if="acting" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+            {{ acting ? 'Cerrando...' : '🔒 Cerrar operación' }}
+          </button>
+          <p v-if="!operacionBalanceada" class="text-xs text-gray-400 text-center">
+            Confirma todas las transacciones para cerrar la operación
+          </p>
+        </template>
 
         <button v-if="store.detail.estado !== 'cerrada' && store.detail.estado !== 'cancelada'"
           @click="mostrarCancelar = true"
@@ -203,29 +208,6 @@ const operacionBalanceada = computed(() => {
   }
 
   return Math.abs(totalDivisa - monto) <= 0.01 && Math.abs(totalVes - expectedVes) <= 0.01
-})
-
-const motivoNoBalanceada = computed(() => {
-  if (!tieneTransaccionesConfirmadas.value) return 'Debe haber al menos una transacción confirmada'
-  const op = store.detail
-  if (!op) return ''
-  const monedaOp = op.moneda_operacion?.codigo || 'Divisa'
-  const monto = parseFloat(op.monto_solicitado || 0)
-  const tasa = parseFloat(op.tasa_aplicada || 0)
-  const expectedVes = monto * tasa
-
-  let totalDivisa = 0
-  let totalVes = 0
-  for (const t of (op.transacciones || [])) {
-    if (t.estado !== 'confirmada') continue
-    if (t.moneda?.codigo === monedaOp) totalDivisa += Math.abs(parseFloat(t.monto))
-    else if (t.moneda?.codigo === 'VES') totalVes += Math.abs(parseFloat(t.monto))
-  }
-
-  const partes = []
-  if (Math.abs(totalDivisa - monto) > 0.01) partes.push(`${monedaOp}: ${totalDivisa.toFixed(2)} de ${monto.toFixed(2)}`)
-  if (Math.abs(totalVes - expectedVes) > 0.01) partes.push(`VES: ${totalVes.toFixed(2)} de ${expectedVes.toFixed(2)}`)
-  return 'Faltan transacciones: ' + partes.join(', ')
 })
 
 const monedasPermitidas = computed(() => {
