@@ -88,7 +88,9 @@
 
         <button v-if="store.detail.estado === 'en_progreso'"
           @click="mostrarAgregarTx = true"
-          class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-3 rounded-xl transition flex items-center justify-center gap-2">
+          :disabled="operacionBalanceada"
+          :title="operacionBalanceada ? 'Operación balanceada — todas las transacciones necesarias están confirmadas' : 'Agregar nueva transacción'"
+          class="w-full bg-indigo-500 hover:bg-indigo-600 disabled:bg-indigo-300 text-white font-semibold py-3 rounded-xl transition flex items-center justify-center gap-2">
           + Agregar transacción
         </button>
 
