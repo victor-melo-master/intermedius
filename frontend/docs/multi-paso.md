@@ -88,10 +88,10 @@ Props: `operacionId`, `clienteId`, `clienteNombre`, `intermediusTitularId`, `mon
 
 **Direccionalidad de cuentas:**
 - `esDivisa` (cualquier moneda ≠ VES): funciona como USD en la lógica de cuentas
-- Compra + Divisa: origen=Intermedius, destino=Cliente
-- Compra + VES: origen=Cliente, destino=Intermedius
-- Venta + Divisa: origen=Cliente, destino=Intermedius
-- Venta + VES: origen=Intermedius, destino=Cliente
+- Compra + Divisa: origen=Cliente, destino=Intermedius
+- Compra + VES: origen=Intermedius, destino=Cliente
+- Venta + Divisa: origen=Intermedius, destino=Cliente
+- Venta + VES: origen=Cliente, destino=Intermedius
 
 **Validación de límite:**
 - `totalExistente` filtra solo `pendiente`/`confirmada`

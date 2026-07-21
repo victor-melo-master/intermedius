@@ -168,9 +168,9 @@ const cuentasOrigen = computed(() => {
   const deIntermedius = cuentasIntermedius.value.filter(c => c.moneda_id == form.moneda_id)
   const delCliente = cuentasCliente.value.filter(c => c.moneda_id == form.moneda_id)
   if (props.esCompra) {
-    return esDivisa.value ? deIntermedius : delCliente
+    return esDivisa.value ? delCliente : deIntermedius
   }
-  return esDivisa.value ? delCliente : deIntermedius
+  return esDivisa.value ? deIntermedius : delCliente
 })
 
 const cuentasDestino = computed(() => {
@@ -178,9 +178,9 @@ const cuentasDestino = computed(() => {
   const deIntermedius = cuentasIntermedius.value.filter(c => c.moneda_id == form.moneda_id)
   const delCliente = cuentasCliente.value.filter(c => c.moneda_id == form.moneda_id)
   if (props.esCompra) {
-    return esDivisa.value ? delCliente : deIntermedius
+    return esDivisa.value ? deIntermedius : delCliente
   }
-  return esDivisa.value ? deIntermedius : delCliente
+  return esDivisa.value ? delCliente : deIntermedius
 })
 
 const labelOrigen = computed(() => {
@@ -198,12 +198,12 @@ const textoFlujo = computed(() => {
   const moneda = monedaSel.value.codigo
   if (props.esCompra) {
     return esDivisa.value
-      ? `Compra: Intermedius entrega ${moneda} al cliente → ${props.clienteNombre || 'el cliente'}`
-      : `Compra: ${props.clienteNombre || 'El cliente'} entrega ${moneda} a Intermedius`
+      ? `Compra: ${props.clienteNombre || 'El cliente'} entrega ${moneda} a Intermedius`
+      : `Compra: Intermedius entrega ${moneda} al cliente → ${props.clienteNombre || 'el cliente'}`
   }
   return esDivisa.value
-    ? `Venta: ${props.clienteNombre || 'El cliente'} entrega ${moneda} a Intermedius`
-    : `Venta: Intermedius entrega ${moneda} al cliente → ${props.clienteNombre || 'el cliente'}`
+    ? `Venta: Intermedius entrega ${moneda} al cliente → ${props.clienteNombre || 'el cliente'}`
+    : `Venta: ${props.clienteNombre || 'El cliente'} entrega ${moneda} a Intermedius`
 })
 
 const limiteMoneda = computed(() => {

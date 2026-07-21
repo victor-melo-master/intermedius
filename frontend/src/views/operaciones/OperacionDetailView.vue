@@ -34,13 +34,13 @@
           <div class="bg-blue-50 rounded-xl px-4 py-3 text-center">
             <p class="text-[11px] text-blue-500 mb-1">El cliente entrega</p>
             <p class="text-lg font-bold" :class="esCompra ? 'text-green-700' : 'text-blue-700'">
-              {{ esCompra ? 'Bs. ' + formatMoney(montoBolivares) : formatMoney(montoDivisa) + ' ' + monedaDivisa }}
+              {{ esCompra ? formatMoney(montoDivisa) + ' ' + monedaDivisa : 'Bs. ' + formatMoney(montoBolivares) }}
             </p>
           </div>
           <div class="bg-green-50 rounded-xl px-4 py-3 text-center">
             <p class="text-[11px] text-green-500 mb-1">La casa entrega</p>
             <p class="text-lg font-bold" :class="esCompra ? 'text-blue-700' : 'text-green-700'">
-              {{ esCompra ? formatMoney(montoDivisa) + ' ' + monedaDivisa : 'Bs. ' + formatMoney(montoBolivares) }}
+              {{ esCompra ? 'Bs. ' + formatMoney(montoBolivares) : formatMoney(montoDivisa) + ' ' + monedaDivisa }}
             </p>
           </div>
         </div>
