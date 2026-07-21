@@ -1,42 +1,6 @@
 <template>
   <form @submit.prevent="guardar" class="space-y-4">
-    <div class="grid grid-cols-2 gap-3">
-      <div>
-        <label class="block text-xs text-gray-500 mb-1">Cuenta origen</label>
-        <select v-model="form.cuenta_origen_id" required
-          class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none">
-          <option value="">Seleccionar</option>
-          <optgroup v-if="cuentasIntermedius.length" label="Intermedius">
-            <option v-for="c in cuentasIntermedius" :key="c.id" :value="c.id">
-              {{ labelCuenta(c) }}
-            </option>
-          </optgroup>
-          <optgroup v-if="cuentasCliente.length" :label="'Cliente' + (clienteNombre ? ': ' + clienteNombre : '')">
-            <option v-for="c in cuentasCliente" :key="c.id" :value="c.id">
-              {{ labelCuenta(c) }}
-            </option>
-          </optgroup>
-        </select>
-      </div>
-      <div>
-        <label class="block text-xs text-gray-500 mb-1">Cuenta destino</label>
-        <select v-model="form.cuenta_destino_id" required
-          class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none">
-          <option value="">Seleccionar</option>
-          <optgroup v-if="cuentasIntermedius.length" label="Intermedius">
-            <option v-for="c in cuentasIntermedius" :key="c.id" :value="c.id">
-              {{ labelCuenta(c) }}
-            </option>
-          </optgroup>
-          <optgroup v-if="cuentasCliente.length" :label="'Cliente' + (clienteNombre ? ': ' + clienteNombre : '')">
-            <option v-for="c in cuentasCliente" :key="c.id" :value="c.id">
-              {{ labelCuenta(c) }}
-            </option>
-          </optgroup>
-        </select>
-      </div>
-    </div>
-
+    <!-- Moneda primero para forzar dirección -->
     <div>
       <label class="block text-xs text-gray-500 mb-1">Moneda</label>
       <select v-model="form.moneda_id" required
@@ -47,6 +11,48 @@
       <p v-if="monedasFiltradas.length === 1" class="text-xs text-gray-400 mt-1">Moneda fijada por la operación</p>
     </div>
 
+    <div v-if="!form.moneda_id" class="bg-amber-50 border border-amber-200 text-amber-700 text-sm p-3 rounded-lg">
+      Selecciona la moneda primero para ver las cuentas disponibles.
+    </div>
+
+    <template v-else>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">
+            Cuenta origen
+            <span class="text-gray-400">({{ labelOrigen }})</span>
+          </label>
+          <select v-model="form.cuenta_origen_id" required
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+            <option value="">Seleccionar</option>
+            <option v-for="c in cuentasOrigen" :key="c.id" :value="c.id">
+              {{ labelCuenta(c) }}
+            </option>
+          </select>
+          <p v-if="!cuentasOrigen.length" class="text-xs text-red-500 mt-1">No hay cuentas disponibles</p>
+        </div>
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">
+            Cuenta destino
+            <span class="text-gray-400">({{ labelDestino }})</span>
+          </label>
+          <select v-model="form.cuenta_destino_id" required
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+            <option value="">Seleccionar</option>
+            <option v-for="c in cuentasDestino" :key="c.id" :value="c.id">
+              {{ labelCuenta(c) }}
+            </option>
+          </select>
+          <p v-if="!cuentasDestino.length" class="text-xs text-red-500 mt-1">No hay cuentas disponibles</p>
+        </div>
+      </div>
+
+      <div class="bg-blue-50 border border-blue-200 text-blue-700 text-sm p-3 rounded-lg flex items-start gap-2">
+        <span class="mt-0.5">ℹ️</span>
+        <span>{{ textoFlujo }}</span>
+      </div>
+    </template>
+
     <div>
       <label class="block text-xs text-gray-500 mb-1">Monto</label>
       <input v-model="form.monto" type="number" step="0.01" min="0" required placeholder="0.00"
@@ -54,14 +60,14 @@
     </div>
 
     <div>
-      <label class="block text-xs text-gray-500 mb-1">Tasa aplicada <span class="text-gray-400">(opcional)</span></label>
-      <input v-model="form.tasa_aplicada" type="number" step="0.01" min="0" placeholder="Dejar vacío para usar la de la operación"
+      <label class="block text-xs text-gray-500 mb-1">Tasa aplicada</label>
+      <input v-model="form.tasa_aplicada" type="number" step="0.01" min="0" required
         class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
     </div>
 
     <div>
-      <label class="block text-xs text-gray-500 mb-1">Método de pago</label>
-      <select v-model="form.metodo_pago"
+      <label class="block text-xs text-gray-500 mb-1">Método de pago <span class="text-red-400">*</span></label>
+      <select v-model="form.metodo_pago" required
         class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none">
         <option value="">Seleccionar</option>
         <option value="efectivo">Efectivo</option>
@@ -108,6 +114,8 @@ const props = defineProps({
   clienteNombre: { type: String, default: '' },
   intermediusTitularId: { type: [String, Number, null], default: null },
   monedasPermitidas: { type: Array, default: () => [] },
+  esCompra: { type: Boolean, default: true },
+  tasaOperacion: { type: [String, Number, null], default: null },
 })
 
 const emit = defineEmits(['saved', 'cancel'])
@@ -126,14 +134,68 @@ const form = reactive({
   cuenta_destino_id: '',
   moneda_id: '',
   monto: '',
-  tasa_aplicada: '',
+  tasa_aplicada: props.tasaOperacion ? parseFloat(props.tasaOperacion).toFixed(2) : '',
   metodo_pago: '',
   comprobante: '',
 })
 
-const valido = computed(() =>
-  form.cuenta_origen_id && form.cuenta_destino_id && form.moneda_id && parseFloat(form.monto) > 0
+const monedasFiltradas = computed(() => {
+  if (!props.monedasPermitidas.length) return monedas.value
+  return monedas.value.filter(m => props.monedasPermitidas.includes(m.codigo))
+})
+
+const monedaSel = computed(() =>
+  monedasFiltradas.value.find(m => m.id == form.moneda_id) || null
 )
+
+const monedaEsUSD = computed(() => monedaSel.value?.codigo === 'USD')
+
+const valido = computed(() =>
+  form.cuenta_origen_id && form.cuenta_destino_id && form.moneda_id && parseFloat(form.monto) > 0 && form.metodo_pago
+)
+
+const cuentasOrigen = computed(() => {
+  if (!form.moneda_id) return []
+  const deIntermedius = cuentasIntermedius.value.filter(c => c.moneda_id == form.moneda_id)
+  const delCliente = cuentasCliente.value.filter(c => c.moneda_id == form.moneda_id)
+  if (props.esCompra) {
+    return monedaEsUSD.value ? deIntermedius : delCliente
+  }
+  return monedaEsUSD.value ? delCliente : deIntermedius
+})
+
+const cuentasDestino = computed(() => {
+  if (!form.moneda_id) return []
+  const deIntermedius = cuentasIntermedius.value.filter(c => c.moneda_id == form.moneda_id)
+  const delCliente = cuentasCliente.value.filter(c => c.moneda_id == form.moneda_id)
+  if (props.esCompra) {
+    return monedaEsUSD.value ? delCliente : deIntermedius
+  }
+  return monedaEsUSD.value ? deIntermedius : delCliente
+})
+
+const labelOrigen = computed(() => {
+  if (!cuentasOrigen.value.length) return ''
+  return cuentasOrigen.value[0]?.titular_id ? 'Intermedius' : (props.clienteNombre || 'Cliente')
+})
+
+const labelDestino = computed(() => {
+  if (!cuentasDestino.value.length) return ''
+  return cuentasDestino.value[0]?.titular_id ? 'Intermedius' : (props.clienteNombre || 'Cliente')
+})
+
+const textoFlujo = computed(() => {
+  if (!monedaSel.value) return ''
+  const moneda = monedaSel.value.codigo
+  if (props.esCompra) {
+    return monedaEsUSD.value
+      ? `Compra: Intermedius entrega ${moneda} al cliente → ${props.clienteNombre || 'el cliente'}`
+      : `Compra: ${props.clienteNombre || 'El cliente'} entrega ${moneda} a Intermedius`
+  }
+  return monedaEsUSD.value
+    ? `Venta: ${props.clienteNombre || 'El cliente'} entrega ${moneda} a Intermedius`
+    : `Venta: Intermedius entrega ${moneda} al cliente → ${props.clienteNombre || 'el cliente'}`
+})
 
 function labelCuenta(c) {
   const tipo = c.banco?.nombre || c.tipo || 'cuenta'
@@ -174,11 +236,6 @@ async function cargarCuentas() {
   }
 }
 
-const monedasFiltradas = computed(() => {
-  if (!props.monedasPermitidas.length) return monedas.value
-  return monedas.value.filter(m => props.monedasPermitidas.includes(m.codigo))
-})
-
 async function cargarMonedas() {
   try {
     const { data } = await api.get('/monedas')
@@ -211,14 +268,28 @@ async function guardar() {
 
 watch(() => [props.clienteId, props.intermediusTitularId, props.monedasPermitidas], cargarCuentas)
 
+watch(() => props.tasaOperacion, (val) => {
+  if (val && !form.tasa_aplicada) {
+    form.tasa_aplicada = parseFloat(val).toFixed(2)
+  }
+}, { immediate: true })
+
 watch(monedasFiltradas, (list) => {
   if (list.length === 1 && !form.moneda_id) {
     form.moneda_id = list[0].id
   }
 })
 
+watch(() => form.moneda_id, () => {
+  form.cuenta_origen_id = ''
+  form.cuenta_destino_id = ''
+})
+
 onMounted(() => {
   cargarCuentas()
   cargarMonedas()
+  if (props.tasaOperacion && !form.tasa_aplicada) {
+    form.tasa_aplicada = parseFloat(props.tasaOperacion).toFixed(2)
+  }
 })
 </script>

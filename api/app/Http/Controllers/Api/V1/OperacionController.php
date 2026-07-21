@@ -112,6 +112,9 @@ class OperacionController extends Controller
         'operador',
         'verificadoPor',
         'pagador',
+        'transacciones.moneda',
+        'transacciones.cuentaOrigen',
+        'transacciones.cuentaDestino',
     ]);
 
     // \Log::info('Show operacion after load', [

@@ -116,6 +116,8 @@
           :cliente-nombre="store.detail?.cliente?.nombre || ''"
           :intermedius-titular-id="intermediusTitularId"
           :monedas-permitidas="monedasPermitidas"
+          :es-compra="esCompra"
+          :tasa-operacion="store.detail?.tasa_aplicada"
           @saved="onTransaccionGuardada"
           @cancel="mostrarAgregarTx = false"
         />
