@@ -785,13 +785,16 @@ public function actualizar(Operacion $operacion, array $payload, \App\Models\Use
         return DB::transaction(function () use ($operacion, $transaccionesConfirmadas, $cerrador) {
             // Crear movimientos contables desde las transacciones confirmadas
             foreach ($transaccionesConfirmadas as $i => $t) {
+                $esFiat = in_array($t->moneda->codigo ?? '', ['USD', 'USDT']);
+                $tasaUsd = $esFiat ? 1.0 : ($t->tasa_aplicada ? round(1 / $t->tasa_aplicada, 8) : 1.0);
+
                 // Movimiento de salida (cuenta origen)
                 $operacion->movimientos()->create([
                     'cuenta_id'             => $t->cuenta_origen_id,
                     'moneda_id'             => $t->moneda_id,
                     'monto'                 => -$t->monto,
-                    'tasa_a_usd'            => $t->tasa_aplicada ? round(1 / $t->tasa_aplicada, 8) : 1,
-                    'monto_usd_equivalente' => $t->tasa_aplicada ? round($t->monto / $t->tasa_aplicada, 2) : $t->monto,
+                    'tasa_a_usd'            => $tasaUsd,
+                    'monto_usd_equivalente' => round($t->monto * $tasaUsd, 2),
                     'orden'                 => ($i * 2) + 1,
                 ]);
 
@@ -800,8 +803,8 @@ public function actualizar(Operacion $operacion, array $payload, \App\Models\Use
                     'cuenta_id'             => $t->cuenta_destino_id,
                     'moneda_id'             => $t->moneda_id,
                     'monto'                 => $t->monto,
-                    'tasa_a_usd'            => $t->tasa_aplicada ? round(1 / $t->tasa_aplicada, 8) : 1,
-                    'monto_usd_equivalente' => $t->tasa_aplicada ? round($t->monto / $t->tasa_aplicada, 2) : $t->monto,
+                    'tasa_a_usd'            => $tasaUsd,
+                    'monto_usd_equivalente' => round($t->monto * $tasaUsd, 2),
                     'orden'                 => ($i * 2) + 2,
                 ]);
             }
