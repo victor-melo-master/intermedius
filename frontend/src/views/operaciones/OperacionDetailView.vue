@@ -68,7 +68,7 @@
             </span>
           </div>
         </div>
-        <p class="font-semibold text-lg">{{ ops.detail.tipo_operacion?.nombre || 'Operación' }}</p>
+        <p class="font-semibold text-lg">{{ nombreOperacion }}</p>
         <p v-if="ops.detail.cliente?.nombre" class="text-sm text-gray-500">Cliente: {{ ops.detail.cliente.nombre }}</p>
         <p class="text-sm text-gray-400">{{ ops.detail.fecha }}</p>
         <p v-if="ops.detail.referencia" class="text-sm text-gray-500">Ref: {{ ops.detail.referencia }}</p>
@@ -203,6 +203,14 @@ const editError = ref('')
 const esCompra = computed(() => {
   const codigo = ops.detail?.tipo_operacion?.codigo
   return codigo === 'compra_usd'
+})
+
+const nombreOperacion = computed(() => {
+  const nombre = ops.detail?.tipo_operacion?.nombre
+  if (!nombre) return 'Operación'
+  const moneda = ops.detail?.moneda_operacion?.codigo
+  if (!moneda) return nombre
+  return nombre.replace('USD', moneda)
 })
 
 /** Operación usa el flujo multi-paso (no legacy) */

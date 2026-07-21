@@ -55,7 +55,7 @@
           </div>
           <span class="text-sm text-gray-400">{{ store.detail.fecha }}</span>
         </div>
-        <p class="font-semibold text-lg">{{ store.detail.tipo_operacion?.nombre || 'Operación' }}</p>
+        <p class="font-semibold text-lg">{{ nombreOperacion }}</p>
         <p v-if="store.detail.cliente?.nombre" class="text-sm text-gray-500">Cliente: {{ store.detail.cliente.nombre }}</p>
         <p v-if="store.detail.referencia" class="text-sm text-gray-500">Ref: {{ store.detail.referencia }}</p>
         <p v-if="store.detail.descripcion" class="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">{{ store.detail.descripcion }}</p>
@@ -238,6 +238,14 @@ const monedasPermitidas = computed(() => {
 })
 
 const esCompra = computed(() => store.detail?.tipo_operacion?.codigo === 'compra_usd')
+
+const nombreOperacion = computed(() => {
+  const nombre = store.detail?.tipo_operacion?.nombre
+  if (!nombre) return 'Operación'
+  const moneda = store.detail?.moneda_operacion?.codigo
+  if (!moneda) return nombre
+  return nombre.replace('USD', moneda)
+})
 
 const badgeEstado = computed(() => {
   const map = {
