@@ -8,6 +8,44 @@
     <AppLoadingSpinner v-if="ops.loading" />
     <AppErrorState v-else-if="ops.error" :message="ops.error" @retry="ops.fetchOne(route.params.id)" />
     <div v-else-if="ops.detail" class="space-y-4">
+      <!-- Resumen de monto -->
+      <div class="bg-white border border-gray-200 rounded-xl p-5 space-y-4">
+        <div class="grid grid-cols-3 gap-4 text-center">
+          <div>
+            <p class="text-xs text-gray-400 mb-1">{{ esCompra ? 'Monto divisa' : 'Monto divisa' }}</p>
+            <p class="text-xl font-bold text-gray-800">
+              {{ formatMoney(montoDivisa) }} {{ monedaDivisa }}
+            </p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-400 mb-1">Tasa</p>
+            <p class="text-xl font-bold text-blue-600">
+              {{ formatRate(ops.detail.tasa_aplicada) }}
+            </p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-400 mb-1">Bolívares</p>
+            <p class="text-xl font-bold text-green-600">
+              Bs. {{ formatMoney(montoBolivares) }}
+            </p>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3 pt-3 border-t border-gray-100">
+          <div class="bg-blue-50 rounded-xl px-4 py-3 text-center">
+            <p class="text-[11px] text-blue-500 mb-1">El cliente entrega</p>
+            <p class="text-lg font-bold" :class="esCompra ? 'text-green-700' : 'text-blue-700'">
+              {{ esCompra ? 'Bs. ' + formatMoney(montoBolivares) : formatMoney(montoDivisa) + ' ' + monedaDivisa }}
+            </p>
+          </div>
+          <div class="bg-green-50 rounded-xl px-4 py-3 text-center">
+            <p class="text-[11px] text-green-500 mb-1">La casa entrega</p>
+            <p class="text-lg font-bold" :class="esCompra ? 'text-blue-700' : 'text-green-700'">
+              {{ esCompra ? formatMoney(montoDivisa) + ' ' + monedaDivisa : 'Bs. ' + formatMoney(montoBolivares) }}
+            </p>
+          </div>
+        </div>
+      </div>
+
       <!-- Datos generales -->
       <div class="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
         <div class="flex items-center justify-between">
@@ -63,11 +101,10 @@
       </div>
 
       <!-- Métricas -->
-      <div class="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
+      <div v-if="ops.detail.ganancia_neta_usd" class="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
         <h3 class="font-semibold text-gray-700">Métricas</h3>
         <div class="grid grid-cols-2 gap-4">
           <div><p class="text-xs text-gray-500">Ganancia neta USD</p><p class="text-lg font-bold" :class="(ops.detail.ganancia_neta_usd || 0) >= 0 ? 'text-green-600' : 'text-red-600'">{{ formatMoney(ops.detail.ganancia_neta_usd) }}</p></div>
-          <div><p class="text-xs text-gray-500">Tasa aplicada</p><p class="text-lg font-bold text-blue-600">{{ formatRate(ops.detail.tasa_aplicada) }}</p></div>
         </div>
       </div>
 
@@ -169,6 +206,46 @@ const motivoEdicion = ref('')
 const editError = ref('')
 
 /** Indica si la operación puede ser editada (no verificada ni cancelada) */
+const esCompra = computed(() => {
+  const codigo = ops.detail?.tipo_operacion?.codigo
+  return codigo === 'compra_usd'
+})
+
+/** Monto en divisa (no VES) — busca en movimientos, transacciones o monto_solicitado */
+const montoDivisa = computed(() => {
+  const op = ops.detail
+  if (!op) return 0
+  const mov = (op.movimientos || []).find(m => m.moneda?.codigo !== 'VES')
+  if (mov) return Math.abs(parseFloat(mov.monto))
+  const tx = (op.transacciones || []).find(t => t.moneda?.codigo !== 'VES')
+  if (tx) return Math.abs(parseFloat(tx.monto))
+  return op.monto_solicitado ? Math.abs(parseFloat(op.monto_solicitado)) : 0
+})
+
+/** Código de la moneda divisa (no VES) */
+const monedaDivisa = computed(() => {
+  const op = ops.detail
+  if (!op) return ''
+  const mov = (op.movimientos || []).find(m => m.moneda?.codigo !== 'VES')
+  if (mov) return mov.moneda?.codigo || ''
+  const tx = (op.transacciones || []).find(t => t.moneda?.codigo !== 'VES')
+  if (tx) return tx.moneda?.codigo || ''
+  return op.tipo_operacion?.codigo === 'venta_usd' ? 'USD' : 'USD'
+})
+
+/** Monto en bolívares — busca en movimientos, transacciones o calcula de monto × tasa */
+const montoBolivares = computed(() => {
+  const op = ops.detail
+  if (!op) return 0
+  const mov = (op.movimientos || []).find(m => m.moneda?.codigo === 'VES')
+  if (mov) return Math.abs(parseFloat(mov.monto))
+  const tx = (op.transacciones || []).find(t => t.moneda?.codigo === 'VES')
+  if (tx) return Math.abs(parseFloat(tx.monto))
+  const usd = montoDivisa.value
+  const tasa = parseFloat(op.tasa_aplicada)
+  return usd && tasa ? usd * tasa : 0
+})
+
 const puedeEditar = computed(() => {
   const op = ops.detail
   if (!op) return false

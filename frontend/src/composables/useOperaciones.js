@@ -42,6 +42,7 @@ export function useOperaciones() {
 
   const solicitar = async (payload) => {
     const response = await execute((signal) => api.post('/operaciones/solicitud', payload, { signal }))
+    detail.value = response?.data?.data || response?.data
     return response
   }
 

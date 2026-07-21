@@ -6,9 +6,16 @@
         <select v-model="form.cuenta_origen_id" required
           class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none">
           <option value="">Seleccionar</option>
-          <option v-for="c in cuentas" :key="c.id" :value="c.id">
-            {{ labelCuenta(c) }}
-          </option>
+          <optgroup v-if="cuentasIntermedius.length" label="Intermedius">
+            <option v-for="c in cuentasIntermedius" :key="c.id" :value="c.id">
+              {{ labelCuenta(c) }}
+            </option>
+          </optgroup>
+          <optgroup v-if="cuentasCliente.length" :label="'Cliente' + (clienteNombre ? ': ' + clienteNombre : '')">
+            <option v-for="c in cuentasCliente" :key="c.id" :value="c.id">
+              {{ labelCuenta(c) }}
+            </option>
+          </optgroup>
         </select>
       </div>
       <div>
@@ -16,9 +23,16 @@
         <select v-model="form.cuenta_destino_id" required
           class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none">
           <option value="">Seleccionar</option>
-          <option v-for="c in cuentas" :key="c.id" :value="c.id">
-            {{ labelCuenta(c) }}
-          </option>
+          <optgroup v-if="cuentasIntermedius.length" label="Intermedius">
+            <option v-for="c in cuentasIntermedius" :key="c.id" :value="c.id">
+              {{ labelCuenta(c) }}
+            </option>
+          </optgroup>
+          <optgroup v-if="cuentasCliente.length" :label="'Cliente' + (clienteNombre ? ': ' + clienteNombre : '')">
+            <option v-for="c in cuentasCliente" :key="c.id" :value="c.id">
+              {{ labelCuenta(c) }}
+            </option>
+          </optgroup>
         </select>
       </div>
     </div>
@@ -28,8 +42,9 @@
       <select v-model="form.moneda_id" required
         class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none">
         <option value="">Seleccionar</option>
-        <option v-for="m in monedas" :key="m.id" :value="m.id">{{ m.codigo }} — {{ m.nombre }}</option>
+        <option v-for="m in monedasFiltradas" :key="m.id" :value="m.id">{{ m.codigo }} — {{ m.nombre }}</option>
       </select>
+      <p v-if="monedasFiltradas.length === 1" class="text-xs text-gray-400 mt-1">Moneda fijada por la operación</p>
     </div>
 
     <div>
@@ -82,23 +97,26 @@
 </template>
 
 <script setup>
-import { reactive, ref, computed, onMounted } from 'vue'
+import { reactive, ref, computed, onMounted, watch } from 'vue'
 import { useTransacciones } from '@/composables/useTransacciones'
 import { useNotification } from '@/composables/useNotification'
-import { useCuentas } from '@/composables/useCuentas'
 import api from '@/api/axios'
 
 const props = defineProps({
   operacionId: { type: [String, Number], required: true },
+  clienteId: { type: [String, Number, null], default: null },
+  clienteNombre: { type: String, default: '' },
+  intermediusTitularId: { type: [String, Number, null], default: null },
+  monedasPermitidas: { type: Array, default: () => [] },
 })
 
 const emit = defineEmits(['saved', 'cancel'])
 
 const txService = useTransacciones()
-const cuentasComposable = useCuentas()
 const notifier = useNotification()
 
-const cuentas = ref([])
+const cuentasIntermedius = ref([])
+const cuentasCliente = ref([])
 const monedas = ref([])
 const saving = ref(false)
 const error = ref('')
@@ -119,7 +137,53 @@ const valido = computed(() =>
 
 function labelCuenta(c) {
   const tipo = c.banco?.nombre || c.tipo || 'cuenta'
-  return `${c.alias} · ${tipo} (${c.moneda?.codigo})`
+  const saldo = c.saldo_cache != null ? ` · Saldo: ${c.moneda?.simbolo || ''}${parseFloat(c.saldo_cache).toLocaleString('es-VE', { minimumFractionDigits: 2 })}` : ''
+  return `${c.alias} · ${tipo}${saldo}`
+}
+
+function filtrarPorMoneda(lista) {
+  if (!props.monedasPermitidas.length) return lista
+  return lista.filter(c => props.monedasPermitidas.includes(c.moneda?.codigo))
+}
+
+async function cargarCuentas() {
+  const params = []
+  if (props.intermediusTitularId) params.push(`titular_id=${props.intermediusTitularId}`)
+  if (props.clienteId) params.push(`cliente_id=${props.clienteId}`)
+
+  if (params.length === 0) {
+    const { data } = await api.get('/cuentas')
+    const all = Array.isArray(data) ? data : (data.data || [])
+    cuentasIntermedius.value = filtrarPorMoneda(all.filter(c => c.titular_id))
+    cuentasCliente.value = filtrarPorMoneda(all.filter(c => c.cliente_id))
+    return
+  }
+
+  if (props.intermediusTitularId) {
+    try {
+      const { data } = await api.get(`/cuentas?titular_id=${props.intermediusTitularId}`)
+      cuentasIntermedius.value = filtrarPorMoneda(Array.isArray(data) ? data : (data.data || []))
+    } catch { cuentasIntermedius.value = [] }
+  }
+
+  if (props.clienteId) {
+    try {
+      const { data } = await api.get(`/cuentas?cliente_id=${props.clienteId}`)
+      cuentasCliente.value = filtrarPorMoneda(Array.isArray(data) ? data : (data.data || []))
+    } catch { cuentasCliente.value = [] }
+  }
+}
+
+const monedasFiltradas = computed(() => {
+  if (!props.monedasPermitidas.length) return monedas.value
+  return monedas.value.filter(m => props.monedasPermitidas.includes(m.codigo))
+})
+
+async function cargarMonedas() {
+  try {
+    const { data } = await api.get('/monedas')
+    monedas.value = Array.isArray(data) ? data : (data.data || [])
+  } catch { monedas.value = [] }
 }
 
 async function guardar() {
@@ -145,12 +209,16 @@ async function guardar() {
   saving.value = false
 }
 
-onMounted(async () => {
-  await cuentasComposable.fetchAll()
-  cuentas.value = cuentasComposable.cuentas.value || []
-  try {
-    const { data } = await api.get('/monedas')
-    monedas.value = Array.isArray(data) ? data : (data.data || [])
-  } catch { monedas.value = [] }
+watch(() => [props.clienteId, props.intermediusTitularId, props.monedasPermitidas], cargarCuentas)
+
+watch(monedasFiltradas, (list) => {
+  if (list.length === 1 && !form.moneda_id) {
+    form.moneda_id = list[0].id
+  }
+})
+
+onMounted(() => {
+  cargarCuentas()
+  cargarMonedas()
 })
 </script>

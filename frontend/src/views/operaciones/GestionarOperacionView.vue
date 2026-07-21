@@ -8,6 +8,44 @@
     <AppLoadingSpinner v-if="store.loading" />
     <AppErrorState v-else-if="store.error" :message="store.error" @retry="cargarOperacion" />
     <template v-else-if="store.detail">
+      <!-- ════════ RESUMEN MONTO ════════ -->
+      <div class="bg-white border border-gray-200 rounded-xl p-5 space-y-4">
+        <div class="grid grid-cols-3 gap-4 text-center">
+          <div>
+            <p class="text-xs text-gray-400 mb-1">Monto divisa</p>
+            <p class="text-xl font-bold text-gray-800">
+              {{ formatMoney(montoDivisa) }} {{ monedaDivisa }}
+            </p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-400 mb-1">Tasa</p>
+            <p class="text-xl font-bold text-blue-600">
+              {{ formatRate(store.detail.tasa_aplicada) }}
+            </p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-400 mb-1">Bolívares</p>
+            <p class="text-xl font-bold text-green-600">
+              Bs. {{ formatMoney(montoBolivares) }}
+            </p>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3 pt-3 border-t border-gray-100">
+          <div class="bg-blue-50 rounded-xl px-4 py-3 text-center">
+            <p class="text-[11px] text-blue-500 mb-1">El cliente entrega</p>
+            <p class="text-lg font-bold" :class="esCompra ? 'text-green-700' : 'text-blue-700'">
+              {{ esCompra ? 'Bs. ' + formatMoney(montoBolivares) : formatMoney(montoDivisa) + ' ' + monedaDivisa }}
+            </p>
+          </div>
+          <div class="bg-green-50 rounded-xl px-4 py-3 text-center">
+            <p class="text-[11px] text-green-500 mb-1">La casa entrega</p>
+            <p class="text-lg font-bold" :class="esCompra ? 'text-blue-700' : 'text-green-700'">
+              {{ esCompra ? formatMoney(montoDivisa) + ' ' + monedaDivisa : 'Bs. ' + formatMoney(montoBolivares) }}
+            </p>
+          </div>
+        </div>
+      </div>
+
       <!-- ════════ CABECERA ════════ -->
       <div class="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
         <div class="flex items-center justify-between">
@@ -74,6 +112,10 @@
       <AppFormModal v-model="mostrarAgregarTx" title="Nueva transacción">
         <TransaccionForm
           :operacion-id="store.detail?.id"
+          :cliente-id="store.detail?.cliente?.id"
+          :cliente-nombre="store.detail?.cliente?.nombre || ''"
+          :intermedius-titular-id="intermediusTitularId"
+          :monedas-permitidas="monedasPermitidas"
           @saved="onTransaccionGuardada"
           @cancel="mostrarAgregarTx = false"
         />
@@ -108,6 +150,8 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useOperacionesStore } from '../../stores/operaciones.js'
 import { useNotification } from '@/composables/useNotification'
+import { useFormatting } from '@/composables/useFormatting'
+import { useTitulares } from '@/composables/useTitulares'
 import FlujoProgress from '@/components/operaciones/FlujoProgress.vue'
 import TransaccionList from '@/components/operaciones/TransaccionList.vue'
 import TransaccionForm from '@/components/operaciones/TransaccionForm.vue'
@@ -118,15 +162,27 @@ import AppFormModal from '@/components/common/AppFormModal.vue'
 const route = useRoute()
 const store = useOperacionesStore()
 const notifier = useNotification()
+const { formatMoney, formatRate } = useFormatting()
+const titulares = useTitulares()
 
 const acting = ref(false)
 const mostrarAgregarTx = ref(false)
 const mostrarCancelar = ref(false)
 const motivoCancelacion = ref('')
+const intermediusTitularId = ref(null)
 
 const tieneTransaccionesConfirmadas = computed(() =>
   (store.detail?.transacciones || []).some(t => t.estado === 'confirmada')
 )
+
+const monedasPermitidas = computed(() => {
+  const codigo = store.detail?.tipo_operacion?.codigo
+  if (!codigo) return []
+  if (['compra_usd', 'venta_usd'].includes(codigo)) return ['USD', 'VES']
+  return []
+})
+
+const esCompra = computed(() => store.detail?.tipo_operacion?.codigo === 'compra_usd')
 
 const badgeEstado = computed(() => {
   const map = {
@@ -136,6 +192,38 @@ const badgeEstado = computed(() => {
     cancelada:   { label: 'Cancelada',   clase: 'bg-red-100 text-red-700' },
   }
   return map[store.detail?.estado] || { label: store.detail?.estado || '—', clase: 'bg-gray-100 text-gray-600' }
+})
+
+const montoDivisa = computed(() => {
+  const op = store.detail
+  if (!op) return 0
+  const mov = (op.movimientos || []).find(m => m.moneda?.codigo !== 'VES')
+  if (mov) return Math.abs(parseFloat(mov.monto))
+  const tx = (op.transacciones || []).find(t => t.moneda?.codigo !== 'VES')
+  if (tx) return Math.abs(parseFloat(tx.monto))
+  return op.monto_solicitado ? Math.abs(parseFloat(op.monto_solicitado)) : 0
+})
+
+const monedaDivisa = computed(() => {
+  const op = store.detail
+  if (!op) return ''
+  const mov = (op.movimientos || []).find(m => m.moneda?.codigo !== 'VES')
+  if (mov) return mov.moneda?.codigo || ''
+  const tx = (op.transacciones || []).find(t => t.moneda?.codigo !== 'VES')
+  if (tx) return tx.moneda?.codigo || ''
+  return 'USD'
+})
+
+const montoBolivares = computed(() => {
+  const op = store.detail
+  if (!op) return 0
+  const mov = (op.movimientos || []).find(m => m.moneda?.codigo === 'VES')
+  if (mov) return Math.abs(parseFloat(mov.monto))
+  const tx = (op.transacciones || []).find(t => t.moneda?.codigo === 'VES')
+  if (tx) return Math.abs(parseFloat(tx.monto))
+  const usd = montoDivisa.value
+  const tasa = parseFloat(op.tasa_aplicada)
+  return usd && tasa ? usd * tasa : 0
 })
 
 async function cargarOperacion() {
@@ -181,5 +269,10 @@ function onTransaccionGuardada() {
   cargarOperacion()
 }
 
-onMounted(cargarOperacion)
+onMounted(async () => {
+  await titulares.fetchAll()
+  const intermedius = titulares.getIntermedius()
+  intermediusTitularId.value = intermedius ? intermedius.id : null
+  await cargarOperacion()
+})
 </script>
