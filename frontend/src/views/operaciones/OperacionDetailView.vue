@@ -59,7 +59,7 @@
                        'bg-gray-50 text-gray-700'">
               {{ ops.detail.estado?.replace('_', ' ') }}
             </span>
-            <span class="px-3 py-1 rounded-full text-xs font-bold"
+            <span v-if="!esFlujoMultipaso" class="px-3 py-1 rounded-full text-xs font-bold"
               :class="ops.detail.estatus === 'verificado' ? 'bg-green-50 text-green-700' :
                        ops.detail.estatus === 'en_verificacion' ? 'bg-blue-50 text-blue-700' :
                        ops.detail.estatus === 'en_revision' ? 'bg-orange-50 text-orange-700' :
@@ -127,7 +127,7 @@
         </button>
 
         <button
-          v-if="auth.isAdmin && ops.detail.estatus === 'sin_verificar'"
+          v-if="auth.isAdmin && !esFlujoMultipaso && ops.detail.estatus === 'sin_verificar'"
           @click="iniciarVerificacion"
           :disabled="verifying"
           class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-semibold py-3 rounded-xl transition flex items-center justify-center gap-2"
@@ -137,7 +137,7 @@
         </button>
 
         <button
-          v-if="auth.isAdmin && ops.detail.estatus === 'en_verificacion'"
+          v-if="auth.isAdmin && !esFlujoMultipaso && ops.detail.estatus === 'en_verificacion'"
           @click="irAVerificacion"
           class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-xl transition flex items-center justify-center gap-2"
         >
@@ -209,6 +209,12 @@ const editError = ref('')
 const esCompra = computed(() => {
   const codigo = ops.detail?.tipo_operacion?.codigo
   return codigo === 'compra_usd'
+})
+
+/** Operación usa el flujo multi-paso (no legacy) */
+const esFlujoMultipaso = computed(() => {
+  const estado = ops.detail?.estado
+  return estado && estado !== 'en_espera'
 })
 
 /** Monto en divisa — usa monto_solicitado como fuente primaria */
