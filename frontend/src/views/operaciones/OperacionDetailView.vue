@@ -78,25 +78,19 @@
       <!-- Movimientos -->
       <div v-if="ops.detail.movimientos?.length" class="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
         <h3 class="font-semibold text-gray-700">Movimientos</h3>
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm">
-            <thead>
-              <tr class="text-left text-xs text-gray-400 border-b border-gray-100">
-                <th class="py-2 font-medium">Cuenta</th>
-                <th class="py-2 font-medium text-right">Monto</th>
-                <th class="py-2 font-medium text-right">Tasa a USD</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="m in ops.detail.movimientos" :key="m.id" class="border-b border-gray-50 last:border-0">
-                <td class="py-2 text-gray-700">{{ m.cuenta?.alias || `Cuenta #${m.cuenta_id}` }}</td>
-                <td class="py-2 text-right font-medium" :class="m.monto >= 0 ? 'text-green-600' : 'text-red-600'">
-                  {{ formatMoney(m.monto) }} {{ m.moneda?.codigo }}
-                </td>
-                <td class="py-2 text-right text-gray-500">{{ formatRate(m.tasa_a_usd) }}</td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="space-y-2">
+          <div v-for="(par, idx) in movimientosPareados" :key="idx"
+            class="flex items-center gap-3 text-sm bg-gray-50 rounded-lg px-4 py-3">
+            <div class="flex-1 text-right">
+              <p class="text-gray-500 text-xs">{{ par.salida.cuenta?.alias || `Cuenta #${par.salida.cuenta_id}` }}</p>
+              <p class="font-medium text-red-600">{{ formatMoney(par.salida.monto) }} {{ par.salida.moneda?.codigo }}</p>
+            </div>
+            <span class="text-gray-400 text-lg shrink-0">→</span>
+            <div class="flex-1">
+              <p class="text-gray-500 text-xs">{{ par.entrada?.cuenta?.alias || `Cuenta #${par.entrada?.cuenta_id}` }}</p>
+              <p class="font-medium text-green-600">{{ formatMoney(par.entrada?.monto) }} {{ par.entrada?.moneda?.codigo }}</p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -215,6 +209,23 @@ const esCompra = computed(() => {
 const esFlujoMultipaso = computed(() => {
   const estado = ops.detail?.estado
   return estado && estado !== 'en_espera'
+})
+
+/** Movimientos agrupados en pares: salida → entrada */
+const movimientosPareados = computed(() => {
+  const movs = ops.detail?.movimientos || []
+  if (!movs.length) return []
+  const pares = []
+  for (let i = 0; i < movs.length; i += 2) {
+    const salida = movs[i]
+    const entrada = movs[i + 1]
+    if (salida && entrada) {
+      pares.push({ salida, entrada })
+    } else if (salida) {
+      pares.push({ salida, entrada: null })
+    }
+  }
+  return pares
 })
 
 /** Monto en divisa — usa monto_solicitado como fuente primaria */
