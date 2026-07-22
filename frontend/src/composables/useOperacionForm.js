@@ -1,4 +1,4 @@
-import { reactive, ref, computed } from 'vue'
+import { reactive, ref, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useTasas } from './useTasas'
 import { useAuth } from './useAuth'
@@ -26,6 +26,20 @@ export function useOperacionForm() {
   const successRef = ref('')
   const intermediusTitularId = ref(null)
   const today = new Date().toISOString().split('T')[0]
+
+  const transaccionesLocales = ref([])
+  const cuentasCliente = ref([])
+  const cuentasIntermedius = ref([])
+  const loadingCuentas = ref(false)
+
+  const txForm = reactive({
+    moneda_id: '',
+    cuenta_origen_id: '',
+    cuenta_destino_id: '',
+    monto: '',
+    metodo_pago: '',
+    comprobante: '',
+  })
 
   const editId = computed(() => route.params.id || null)
   const esEdicion = computed(() => !!editId.value)
@@ -77,6 +91,115 @@ export function useOperacionForm() {
     return true
   })
 
+  const monedasFiltradas = computed(() =>
+    monedas.value.filter(m => [monedaSel.value, 'VES'].includes(m.codigo))
+  )
+
+  const monedaSelObj = computed(() =>
+    monedas.value.find(m => m.id == txForm.moneda_id) || null
+  )
+
+  const esDivisa = computed(() => monedaSelObj.value?.codigo !== 'VES')
+
+  const cuentasOrigen = computed(() => {
+    if (!txForm.moneda_id) return []
+    const inter = cuentasIntermedius.value.filter(c => c.moneda_id == txForm.moneda_id)
+    const cli = cuentasCliente.value.filter(c => c.moneda_id == txForm.moneda_id)
+    if (form.tipo === 'compra') return esDivisa.value ? cli : inter
+    return esDivisa.value ? inter : cli
+  })
+
+  const cuentasDestino = computed(() => {
+    if (!txForm.moneda_id) return []
+    const inter = cuentasIntermedius.value.filter(c => c.moneda_id == txForm.moneda_id)
+    const cli = cuentasCliente.value.filter(c => c.moneda_id == txForm.moneda_id)
+    if (form.tipo === 'compra') return esDivisa.value ? inter : cli
+    return esDivisa.value ? cli : inter
+  })
+
+  const labelOrigen = computed(() => {
+    if (!cuentasOrigen.value.length) return ''
+    return cuentasOrigen.value[0]?.titular_id ? 'Intermedius' : (clienteSeleccionado.value.nombre || 'Cliente')
+  })
+
+  const labelDestino = computed(() => {
+    if (!cuentasDestino.value.length) return ''
+    return cuentasDestino.value[0]?.titular_id ? 'Intermedius' : (clienteSeleccionado.value.nombre || 'Cliente')
+  })
+
+  const textoFlujo = computed(() => {
+    if (!monedaSelObj.value) return ''
+    const moneda = monedaSelObj.value.codigo
+    const nombre = clienteSeleccionado.value.nombre || 'Cliente'
+    if (form.tipo === 'compra') {
+      return esDivisa.value
+        ? `Compra: ${nombre} entrega ${moneda} a Intermedius`
+        : `Compra: Intermedius entrega ${moneda} a ${nombre}`
+    }
+    return esDivisa.value
+      ? `Venta: Intermedius entrega ${moneda} a ${nombre}`
+      : `Venta: ${nombre} entrega ${moneda} a Intermedius`
+  })
+
+  const txFormValido = computed(() =>
+    txForm.moneda_id && txForm.cuenta_origen_id && txForm.cuenta_destino_id && parseFloat(txForm.monto) > 0
+  )
+
+  function labelCuenta(c) {
+    const tipo = c.banco?.nombre || c.tipo || 'cuenta'
+    return `${c.alias} · ${tipo}`
+  }
+
+  function agregarTransaccionLocal() {
+    if (!txFormValido.value) return
+    transaccionesLocales.value.push({
+      cuenta_origen_id: Number(txForm.cuenta_origen_id),
+      cuenta_destino_id: Number(txForm.cuenta_destino_id),
+      moneda_id: Number(txForm.moneda_id),
+      monto: parseFloat(txForm.monto),
+      tasa_aplicada: roundTo(parseFloat(form.tasa)),
+      metodo_pago: txForm.metodo_pago || 'transferencia',
+      comprobante: txForm.comprobante || null,
+      _origen: cuentasOrigen.value.find(c => c.id == txForm.cuenta_origen_id)?.alias || '',
+      _destino: cuentasDestino.value.find(c => c.id == txForm.cuenta_destino_id)?.alias || '',
+      _moneda: monedaSelObj.value?.codigo || '',
+    })
+    txForm.cuenta_origen_id = ''
+    txForm.cuenta_destino_id = ''
+    txForm.monto = ''
+    txForm.metodo_pago = ''
+    txForm.comprobante = ''
+  }
+
+  function eliminarTransaccionLocal(index) {
+    transaccionesLocales.value.splice(index, 1)
+  }
+
+  async function cargarCuentas() {
+    loadingCuentas.value = true
+    try {
+      if (intermediusTitularId.value) {
+        const { data } = await api.get(`/cuentas?titular_id=${intermediusTitularId.value}`)
+        cuentasIntermedius.value = Array.isArray(data) ? data : (data.data || [])
+      }
+      if (clienteSeleccionado.value.id) {
+        const { data } = await api.get(`/cuentas?cliente_id=${clienteSeleccionado.value.id}`)
+        cuentasCliente.value = Array.isArray(data) ? data : (data.data || [])
+      }
+    } catch {
+      cuentasIntermedius.value = []
+      cuentasCliente.value = []
+    }
+    loadingCuentas.value = false
+  }
+
+  watch(() => [clienteSeleccionado.value.id, intermediusTitularId.value], cargarCuentas)
+
+  watch(() => txForm.moneda_id, () => {
+    txForm.cuenta_origen_id = ''
+    txForm.cuenta_destino_id = ''
+  })
+
   const cargarOperacion = async () => {
     if (!esEdicion.value) return
     await operaciones.fetchOne(editId.value)
@@ -125,6 +248,18 @@ export function useOperacionForm() {
         body.cliente_id = Number(clienteSeleccionado.value.id)
       }
 
+      if (transaccionesLocales.value.length > 0) {
+        body.transacciones = transaccionesLocales.value.map(tx => ({
+          cuenta_origen_id: tx.cuenta_origen_id,
+          cuenta_destino_id: tx.cuenta_destino_id,
+          moneda_id: tx.moneda_id,
+          monto: tx.monto,
+          tasa_aplicada: tx.tasa_aplicada,
+          metodo_pago: tx.metodo_pago,
+          comprobante: tx.comprobante,
+        }))
+      }
+
       if (esEdicion.value) {
         body.motivo_edicion = motivoEdicion.value
         await operaciones.update(editId.value, body)
@@ -156,6 +291,7 @@ export function useOperacionForm() {
       tasa: tasaSugerida.value || '',
       descripcion: '',
     })
+    transaccionesLocales.value = []
     tasas.fetchVigentes()
   }
 
@@ -170,6 +306,8 @@ export function useOperacionForm() {
       monedas.value = Array.isArray(monedasData) ? monedasData : (monedasData.data || [])
     } catch { monedas.value = [] }
 
+    await cargarCuentas()
+
     if (esEdicion.value) {
       await cargarOperacion()
     } else if (tasaSugerida.value) {
@@ -181,6 +319,7 @@ export function useOperacionForm() {
     form,
     clienteSeleccionado,
     monedas,
+    monedasFiltradas,
     saving,
     error,
     successRef,
@@ -199,6 +338,23 @@ export function useOperacionForm() {
     textoCompra,
     textoVenta,
     formularioValido,
+    transaccionesLocales,
+    txForm,
+    cuentasCliente,
+    cuentasIntermedius,
+    loadingCuentas,
+    monedaSelObj,
+    esDivisa,
+    cuentasOrigen,
+    cuentasDestino,
+    labelOrigen,
+    labelDestino,
+    textoFlujo,
+    txFormValido,
+    labelCuenta,
+    agregarTransaccionLocal,
+    eliminarTransaccionLocal,
+    formatMoney,
     submit,
     registrarOtra,
     init,
