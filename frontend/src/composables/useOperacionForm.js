@@ -147,7 +147,10 @@ export function useOperacionForm() {
 
   function labelCuenta(c) {
     const tipo = c.banco?.nombre || c.tipo || 'cuenta'
-    return `${c.alias} · ${tipo}`
+    const saldo = c.saldo_cache != null
+      ? ` · Saldo: ${c.moneda?.simbolo || ''}${parseFloat(c.saldo_cache).toLocaleString('es-VE', { minimumFractionDigits: 2 })}`
+      : ''
+    return `${c.alias} · ${tipo}${saldo}`
   }
 
   function agregarTransaccionLocal() {
