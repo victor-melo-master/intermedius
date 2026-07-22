@@ -1,5 +1,7 @@
 <template>
   <div class="max-w-3xl mx-auto space-y-4 pb-10">
+    <TasasReferencia />
+
     <div class="flex items-center gap-3 mb-2">
       <button @click="$router.back()" class="p-2 hover:bg-gray-100 rounded-lg text-gray-500">←</button>
       <h2 class="text-xl font-bold text-gray-800">{{ titulo }}</h2>
@@ -179,6 +181,7 @@ import { useOperacionForm } from '@/composables/useOperacionForm'
 import ClienteSelector from '@/components/clientes/ClienteSelector.vue'
 import CalculadoraBidireccional from '@/components/operaciones/CalculadoraBidireccional.vue'
 import AppErrorState from '@/components/common/AppErrorState.vue'
+import TasasReferencia from '@/components/common/TasasReferencia.vue'
 
 const router = useRouter()
 
