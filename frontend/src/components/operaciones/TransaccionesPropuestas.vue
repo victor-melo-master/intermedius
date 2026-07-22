@@ -15,16 +15,21 @@
       <div v-if="cargandoCuentas" class="text-sm text-gray-400 py-4 text-center">Cargando cuentas…</div>
 
       <template v-else>
+        <div v-if="!clienteId" class="bg-amber-50 border border-amber-200 text-amber-700 text-sm p-3 rounded-lg">
+          Selecciona un cliente para poder elegir sus cuentas.
+        </div>
+
         <div class="grid grid-cols-2 gap-3 p-4 bg-blue-50 rounded-xl">
           <div>
             <label class="block text-xs text-gray-500 mb-1">
               Cuenta {{ labelCliente }} para {{ monedaSimbolo }}
               <span class="text-gray-400">({{ esCompra ? 'origen' : 'destino' }})</span>
             </label>
-            <select v-model="cuentaClienteDivisa" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+            <select v-model="cuentaClienteDivisa" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none" :disabled="!clienteId">
               <option value="">Seleccionar</option>
               <option v-for="c in cuentasClienteDivisa" :key="c.id" :value="c.id">{{ labelCuenta(c) }}</option>
             </select>
+            <p v-if="clienteId && !cuentasClienteDivisa.length" class="text-xs text-red-500 mt-1">El cliente no tiene cuentas en {{ monedaSimbolo }}</p>
           </div>
           <div>
             <label class="block text-xs text-gray-500 mb-1">
@@ -35,6 +40,7 @@
               <option value="">Seleccionar</option>
               <option v-for="c in cuentasIntermediusDivisa" :key="c.id" :value="c.id">{{ labelCuenta(c) }}</option>
             </select>
+            <p v-if="!cuentasIntermediusDivisa.length" class="text-xs text-red-500 mt-1">No hay cuentas de Intermedius en {{ monedaSimbolo }}</p>
           </div>
         </div>
 
@@ -44,10 +50,11 @@
               Cuenta {{ labelCliente }} para VES
               <span class="text-gray-400">({{ esCompra ? 'destino' : 'origen' }})</span>
             </label>
-            <select v-model="cuentaClienteVes" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+            <select v-model="cuentaClienteVes" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none" :disabled="!clienteId">
               <option value="">Seleccionar</option>
               <option v-for="c in cuentasClienteVes" :key="c.id" :value="c.id">{{ labelCuenta(c) }}</option>
             </select>
+            <p v-if="clienteId && !cuentasClienteVes.length" class="text-xs text-red-500 mt-1">El cliente no tiene cuentas en VES</p>
           </div>
           <div>
             <label class="block text-xs text-gray-500 mb-1">
@@ -58,6 +65,7 @@
               <option value="">Seleccionar</option>
               <option v-for="c in cuentasIntermediusVes" :key="c.id" :value="c.id">{{ labelCuenta(c) }}</option>
             </select>
+            <p v-if="!cuentasIntermediusVes.length" class="text-xs text-red-500 mt-1">No hay cuentas de Intermedius en VES</p>
           </div>
         </div>
 

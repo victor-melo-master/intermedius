@@ -72,7 +72,7 @@
 
       <!-- Transacciones propuestas -->
       <TransaccionesPropuestas
-        v-if="clienteSeleccionado.id && !esEdicion"
+        v-if="!esEdicion"
         v-model:transacciones="transaccionesPropuestas"
         :cliente-id="clienteSeleccionado.id"
         :cliente-nombre="clienteSeleccionado.nombre || clienteSeleccionado.alias"
