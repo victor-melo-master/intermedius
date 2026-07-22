@@ -26,7 +26,7 @@
           <div>
             <p class="text-xs text-gray-400 mb-1">Bolívares</p>
             <p class="text-xl font-bold text-green-600">
-              Bs. {{ formatMoney(montoBolivares) }}
+              {{ formatVes(montoBolivares) }}
             </p>
           </div>
         </div>
@@ -210,7 +210,7 @@ const route = useRoute()
 const router = useRouter()
 const store = useOperacionesStore()
 const notifier = useNotification()
-const { formatMoney, formatRate, formatDate } = useFormatting()
+const { formatMoney, formatVes, formatRate, formatDate } = useFormatting()
 const titulares = useTitulares()
 
 const acting = ref(false)
