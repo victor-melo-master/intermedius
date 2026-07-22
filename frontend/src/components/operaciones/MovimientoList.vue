@@ -1,7 +1,7 @@
 <template>
   <div>
     <div v-if="!transacciones.length" class="text-center py-8">
-      <p class="text-gray-400 text-sm">No hay transacciones registradas</p>
+      <p class="text-gray-400 text-sm">No hay movimientos registrados</p>
     </div>
     <div v-else class="space-y-2">
       <div v-for="tx in transacciones" :key="tx.id"
@@ -69,9 +69,9 @@
 
     <!-- Modal: Revertir -->
     <Teleport to="body">
-      <AppFormModal v-model="mostrarRevertirSeleccionado" title="Revertir transacción">
+      <AppFormModal v-model="mostrarRevertirSeleccionado" title="Revertir movimiento">
         <form @submit.prevent="revertirTx" class="space-y-4">
-          <p class="text-sm text-gray-500">¿Estás seguro de revertir esta transacción? Se ajustará el saldo de las cuentas.</p>
+          <p class="text-sm text-gray-500">¿Estás seguro de revertir este movimiento? Se ajustará el saldo de las cuentas.</p>
           <textarea v-model="motivoRevertir" rows="3" required
             placeholder="Motivo de la reversión..."
             class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none resize-none"></textarea>
@@ -80,7 +80,7 @@
               class="flex-1 py-2.5 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition">Volver</button>
             <button type="submit" :disabled="!motivoRevertir.trim() || revertiendo"
               class="flex-1 py-2.5 bg-orange-600 text-white text-sm font-medium rounded-xl hover:bg-orange-700 disabled:bg-orange-300 transition">
-              {{ revertiendo ? 'Revirtiendo...' : 'Revertir transacción' }}
+              {{ revertiendo ? 'Revirtiendo...' : 'Revertir movimiento' }}
             </button>
           </div>
         </form>
@@ -91,7 +91,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { useTransacciones } from '@/composables/useTransacciones'
+import { useMovimientos } from '@/composables/useMovimientos'
 import { useNotification } from '@/composables/useNotification'
 import AppFormModal from '@/components/common/AppFormModal.vue'
 
@@ -103,7 +103,7 @@ const props = defineProps({
 
 const emit = defineEmits(['refrescar'])
 
-const txService = useTransacciones()
+const txService = useMovimientos()
 
 function formatearSaldo(cuenta) {
   if (!cuenta || cuenta.saldo_cache == null) return 'N/D'
@@ -135,24 +135,24 @@ function editarTx(tx) {
 }
 
 async function confirmarTx(tx) {
-  if (!confirm('¿Confirmar esta transacción?')) return
+  if (!confirm('¿Confirmar este movimiento?')) return
   try {
     await txService.confirmar(props.operacionId, tx.id)
-    notifier.success('Transacción confirmada')
+    notifier.success('Movimiento confirmado')
     emit('refrescar')
   } catch {
-    notifier.error('Error al confirmar la transacción')
+    notifier.error('Error al confirmar el movimiento')
   }
 }
 
 async function eliminarTx(tx) {
-  if (!confirm('¿Eliminar esta transacción?')) return
+  if (!confirm('¿Eliminar este movimiento?')) return
   try {
     await txService.eliminar(props.operacionId, tx.id)
-    notifier.success('Transacción eliminada')
+    notifier.success('Movimiento eliminado')
     emit('refrescar')
   } catch {
-    notifier.error('Error al eliminar la transacción')
+    notifier.error('Error al eliminar el movimiento')
   }
 }
 
@@ -161,12 +161,12 @@ async function revertirTx() {
   revertiendo.value = true
   try {
     await txService.revertir(props.operacionId, mostrarRevertir.value, motivoRevertir.value.trim())
-    notifier.success('Transacción revertida')
+    notifier.success('Movimiento revertido')
     mostrarRevertir.value = null
     motivoRevertir.value = ''
     emit('refrescar')
   } catch {
-    notifier.error('Error al revertir la transacción')
+    notifier.error('Error al revertir el movimiento')
   }
   revertiendo.value = false
 }

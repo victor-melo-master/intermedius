@@ -115,11 +115,11 @@
         </div>
       </div>
 
-      <!-- Botón: Gestionar transacciones (flujo multi-paso) -->
+      <!-- Botón: Gestionar movimientos (flujo multi-paso) -->
       <div v-if="ops.detail.estado && ['solicitud', 'en_progreso'].includes(ops.detail.estado)" class="space-y-2">
         <router-link :to="`/operaciones/${ops.detail.id}/gestionar`"
           class="block w-full bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-3 rounded-xl transition text-center">
-          📋 Gestionar transacciones
+          📋 Gestionar movimientos
         </router-link>
       </div>
 

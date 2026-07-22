@@ -3,7 +3,7 @@
     <div v-if="visible" class="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div class="fixed inset-0 bg-black/40" @click="$emit('cancel')"></div>
       <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4">
-        <h3 class="text-lg font-bold text-gray-800">Confirmar transacción</h3>
+        <h3 class="text-lg font-bold text-gray-800">Confirmar movimiento</h3>
 
         <div class="space-y-2 text-sm">
           <div class="flex justify-between">
@@ -40,7 +40,7 @@
           <button @click="confirmar" :disabled="confirmando || !comprobanteValido"
             class="flex-1 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-xl hover:bg-blue-700 disabled:bg-blue-300 transition flex items-center justify-center gap-2">
             <span v-if="confirmando" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-            {{ confirmando ? 'Confirmando...' : 'Confirmar transacción' }}
+            {{ confirmando ? 'Confirmando...' : 'Confirmar movimiento' }}
           </button>
         </div>
       </div>
@@ -50,7 +50,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { useTransacciones } from '@/composables/useTransacciones'
+import { useMovimientos } from '@/composables/useMovimientos'
 import { useNotification } from '@/composables/useNotification'
 
 const props = defineProps({
@@ -61,7 +61,7 @@ const props = defineProps({
 
 const emit = defineEmits(['confirmado', 'cancel'])
 
-const txService = useTransacciones()
+const txService = useMovimientos()
 const notifier = useNotification()
 
 const comprobante = ref('')
@@ -78,7 +78,7 @@ async function confirmar() {
   confirmando.value = true
   try {
     await txService.confirmar(props.operacionId, props.transaccion.id)
-    notifier.success('Transacción confirmada exitosamente')
+    notifier.success('Movimiento confirmado exitosamente')
     emit('confirmado')
   } catch (err) {
     error.value = err.response?.data?.message || err.message

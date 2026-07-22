@@ -1,7 +1,7 @@
 <template>
   <div class="border border-gray-200 rounded-xl p-4 space-y-3">
     <div class="flex items-center justify-between">
-      <span class="text-sm font-medium text-gray-500">Transacción {{ index + 1 }}</span>
+      <span class="text-sm font-medium text-gray-500">Movimiento {{ index + 1 }}</span>
       <button
         type="button"
         @click="$emit('remove')"

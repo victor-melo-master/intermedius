@@ -1,7 +1,7 @@
 import { useApi } from './useApi'
 import api from '@/api/axios'
 
-export function useTransacciones() {
+export function useMovimientos() {
   const { execute, loading, error } = useApi()
 
   const agregar = async (operacionId, payload) => {

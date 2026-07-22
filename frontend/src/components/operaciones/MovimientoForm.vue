@@ -101,7 +101,7 @@
       <button type="submit" :disabled="saving || !valido"
         class="flex-1 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-xl hover:bg-blue-700 disabled:bg-blue-300 transition flex items-center justify-center gap-2">
         <span v-if="saving" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-        {{ saving ? 'Guardando...' : 'Guardar transacción' }}
+        {{ saving ? 'Guardando...' : 'Guardar movimiento' }}
       </button>
     </div>
   </form>
@@ -109,7 +109,7 @@
 
 <script setup>
 import { reactive, ref, computed, onMounted, watch } from 'vue'
-import { useTransacciones } from '@/composables/useTransacciones'
+import { useMovimientos } from '@/composables/useMovimientos'
 import { useNotification } from '@/composables/useNotification'
 import { useFormatting } from '@/composables/useFormatting'
 import api from '@/api/axios'
@@ -123,12 +123,12 @@ const props = defineProps({
   esCompra: { type: Boolean, default: true },
   tasaOperacion: { type: [String, Number, null], default: null },
   montoSolicitado: { type: [String, Number, null], default: null },
-  transaccionesExistentes: { type: Array, default: () => [] },
+  movimientosExistentes: { type: Array, default: () => [] },
 })
 
 const emit = defineEmits(['saved', 'cancel'])
 
-const txService = useTransacciones()
+const txService = useMovimientos()
 const notifier = useNotification()
 const { formatMoney } = useFormatting()
 
@@ -214,8 +214,8 @@ const limiteMoneda = computed(() => {
 })
 
 const totalExistente = computed(() => {
-  if (!form.moneda_id || !props.transaccionesExistentes.length) return 0
-  return props.transaccionesExistentes
+  if (!form.moneda_id || !props.movimientosExistentes.length) return 0
+  return props.movimientosExistentes
     .filter(t => (t.moneda?.id == form.moneda_id || t.moneda_id == form.moneda_id)
       && ['pendiente', 'confirmada'].includes(t.estado))
     .reduce((sum, t) => sum + Math.abs(parseFloat(t.monto)), 0)
@@ -295,7 +295,7 @@ async function guardar() {
     if (form.comprobante) payload.comprobante = form.comprobante
 
     await txService.agregar(props.operacionId, payload)
-    notifier.success('Transacción agregada')
+    notifier.success('Movimiento agregado')
     emit('saved')
   } catch (err) {
     error.value = err.response?.data?.message || err.message

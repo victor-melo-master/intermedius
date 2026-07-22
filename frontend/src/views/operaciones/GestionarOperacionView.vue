@@ -73,10 +73,10 @@
         </div>
       </div>
 
-      <!-- ════════ TRANSACCIONES ════════ -->
+      <!-- ════════ MOVIMIENTOS ════════ -->
       <div class="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
-        <h3 class="font-semibold text-gray-700">Transacciones</h3>
-        <TransaccionList
+        <h3 class="font-semibold text-gray-700">Movimientos</h3>
+        <MovimientoList
           :transacciones="store.detail.transacciones || []"
           :operacion-id="store.detail.id"
           :estado="store.detail.estado"
@@ -95,12 +95,12 @@
 
         <template v-if="store.detail.estado === 'en_progreso'">
           <div v-if="operacionBalanceada" class="bg-green-50 border border-green-200 rounded-xl px-4 py-3">
-            <p class="text-green-700 text-sm font-medium text-center">✅ Transacciones balanceadas</p>
+            <p class="text-green-700 text-sm font-medium text-center">✅ Movimientos balanceados</p>
           </div>
           <button v-else
             @click="mostrarAgregarTx = true"
             class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-3 rounded-xl transition flex items-center justify-center gap-2">
-            + Agregar transacción
+            + Agregar movimiento
           </button>
 
           <button
@@ -110,7 +110,7 @@
             {{ acting ? 'Cerrando...' : '🔒 Cerrar operación' }}
           </button>
           <p v-if="!operacionBalanceada" class="text-xs text-gray-400 text-center">
-            Confirma todas las transacciones para cerrar la operación
+            Confirma todos los movimientos para cerrar la operación
           </p>
         </template>
 
@@ -122,10 +122,10 @@
       </div>
     </template>
 
-    <!-- Modal: Agregar transacción -->
+    <!-- Modal: Agregar movimiento -->
     <Teleport to="body">
-      <AppFormModal v-model="mostrarAgregarTx" title="Nueva transacción">
-        <TransaccionForm
+      <AppFormModal v-model="mostrarAgregarTx" title="Nuevo movimiento">
+        <MovimientoForm
           :operacion-id="store.detail?.id"
           :cliente-id="store.detail?.cliente?.id"
           :cliente-nombre="store.detail?.cliente?.nombre || ''"
@@ -134,8 +134,8 @@
           :es-compra="esCompra"
           :tasa-operacion="store.detail?.tasa_aplicada"
           :monto-solicitado="store.detail?.monto_solicitado"
-          :transacciones-existentes="store.detail?.transacciones || []"
-          @saved="onTransaccionGuardada"
+          :movimientos-existentes="store.detail?.transacciones || []"
+          @saved="onMovimientoGuardada"
           @cancel="mostrarAgregarTx = false"
         />
       </AppFormModal>
@@ -200,8 +200,8 @@ import { useNotification } from '@/composables/useNotification'
 import { useFormatting } from '@/composables/useFormatting'
 import { useTitulares } from '@/composables/useTitulares'
 import FlujoProgress from '@/components/operaciones/FlujoProgress.vue'
-import TransaccionList from '@/components/operaciones/TransaccionList.vue'
-import TransaccionForm from '@/components/operaciones/TransaccionForm.vue'
+import MovimientoList from '@/components/operaciones/MovimientoList.vue'
+import MovimientoForm from '@/components/operaciones/MovimientoForm.vue'
 import AppLoadingSpinner from '@/components/common/AppLoadingSpinner.vue'
 import AppErrorState from '@/components/common/AppErrorState.vue'
 import AppFormModal from '@/components/common/AppFormModal.vue'
@@ -224,12 +224,12 @@ const intermediusTitularId = ref(null)
 const gananciaPreview = ref(null)
 const tasaMercadoCierre = ref(null)
 
-const tieneTransaccionesConfirmadas = computed(() =>
-  (store.detail?.transacciones || []).some(t => t.estado === 'confirmada')
+const tieneMovimientosConfirmados = computed(() =>
+  (store.detail?.transacciones || []).some(tx => tx.estado === 'confirmada')
 )
 
 const operacionBalanceada = computed(() => {
-  if (!tieneTransaccionesConfirmadas.value) return false
+  if (!tieneMovimientosConfirmados.value) return false
   const op = store.detail
   if (!op) return false
   const monedaOp = op.moneda_operacion?.codigo
@@ -241,10 +241,10 @@ const operacionBalanceada = computed(() => {
 
   let totalDivisa = 0
   let totalVes = 0
-  for (const t of (op.transacciones || [])) {
-    if (t.estado !== 'confirmada') continue
-    if (t.moneda?.codigo === monedaOp) totalDivisa += Math.abs(parseFloat(t.monto))
-    else if (t.moneda?.codigo === 'VES') totalVes += Math.abs(parseFloat(t.monto))
+  for (const tx of (op.transacciones || [])) {
+    if (tx.estado !== 'confirmada') continue
+    if (tx.moneda?.codigo === monedaOp) totalDivisa += Math.abs(parseFloat(tx.monto))
+    else if (tx.moneda?.codigo === 'VES') totalVes += Math.abs(parseFloat(tx.monto))
   }
 
   return Math.abs(totalDivisa - monto) <= 0.01 && Math.abs(totalVes - expectedVes) <= 0.01
@@ -346,7 +346,7 @@ async function cancelarOperacion() {
   acting.value = false
 }
 
-async function onTransaccionGuardada() {
+async function onMovimientoGuardada() {
   mostrarAgregarTx.value = false
   await cargarOperacion()
   await cargarGananciaPreview()

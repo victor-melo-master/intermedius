@@ -66,28 +66,28 @@
         ></textarea>
       </div>
 
-      <!-- Transacciones propuestas (locales) -->
+      <!-- Movimientos propuestos (locales) -->
       <div class="bg-white border border-gray-200 rounded-xl p-5 space-y-4">
         <div class="flex items-center justify-between">
-          <h3 class="font-semibold text-gray-700">Transacciones propuestas</h3>
+          <h3 class="font-semibold text-gray-700">Movimientos propuestos</h3>
           <span class="text-xs text-gray-400">Opcional</span>
         </div>
 
-        <!-- Lista de transacciones agregadas -->
-        <div v-if="transaccionesLocales.length" class="space-y-1.5">
-          <div v-for="(tx, i) in transaccionesLocales" :key="i"
+        <!-- Lista de movimientos agregadas -->
+        <div v-if="movimientosLocales.length" class="space-y-1.5">
+          <div v-for="(tx, i) in movimientosLocales" :key="i"
             class="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2 text-sm">
             <span>
               <span class="font-medium">{{ tx._moneda }}</span>
               {{ tx._origen }} → {{ tx._destino }} ·
               {{ formatMoney(tx.monto) }}
             </span>
-            <button type="button" @click="eliminarTransaccionLocal(i)"
+            <button type="button" @click="eliminarMovimientoLocal(i)"
               class="text-red-500 hover:text-red-700 ml-2">✕</button>
           </div>
         </div>
 
-        <!-- Formulario para agregar una transacción local -->
+        <!-- Formulario para agregar un movimiento local -->
         <div class="space-y-3">
           <div>
             <label class="block text-xs text-gray-500 mb-1">Moneda</label>
@@ -153,9 +153,9 @@
             </div>
           </template>
 
-          <button type="button" @click="agregarTransaccionLocal" :disabled="!txFormValido"
+          <button type="button" @click="agregarMovimientoLocal" :disabled="!txFormValido"
             class="w-full py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-xl disabled:opacity-50 transition">
-            + Agregar transacción
+            + Agregar movimiento
           </button>
         </div>
       </div>
@@ -203,7 +203,7 @@ const {
   textoCompra,
   textoVenta,
   formularioValido,
-  transaccionesLocales,
+  movimientosLocales,
   txForm,
   loadingCuentas,
   cuentasOrigen,
@@ -213,8 +213,8 @@ const {
   textoFlujo,
   txFormValido,
   labelCuenta,
-  agregarTransaccionLocal,
-  eliminarTransaccionLocal,
+  agregarMovimientoLocal,
+  eliminarMovimientoLocal,
   formatMoney,
   submit,
   init,

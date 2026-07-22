@@ -27,7 +27,7 @@ export function useOperacionForm() {
   const intermediusTitularId = ref(null)
   const today = new Date().toISOString().split('T')[0]
 
-  const transaccionesLocales = ref([])
+  const movimientosLocales = ref([])
   const cuentasCliente = ref([])
   const cuentasIntermedius = ref([])
   const loadingCuentas = ref(false)
@@ -149,9 +149,9 @@ export function useOperacionForm() {
     return `${c.alias} · ${tipo}${saldo}`
   }
 
-  function agregarTransaccionLocal() {
+  function agregarMovimientoLocal() {
     if (!txFormValido.value) return
-    transaccionesLocales.value.push({
+    movimientosLocales.value.push({
       cuenta_origen_id: Number(txForm.cuenta_origen_id),
       cuenta_destino_id: Number(txForm.cuenta_destino_id),
       moneda_id: Number(txForm.moneda_id),
@@ -170,8 +170,8 @@ export function useOperacionForm() {
     txForm.comprobante = ''
   }
 
-  function eliminarTransaccionLocal(index) {
-    transaccionesLocales.value.splice(index, 1)
+  function eliminarMovimientoLocal(index) {
+    movimientosLocales.value.splice(index, 1)
   }
 
   async function cargarCuentas() {
@@ -247,8 +247,8 @@ export function useOperacionForm() {
         body.cliente_id = Number(clienteSeleccionado.value.id)
       }
 
-      if (transaccionesLocales.value.length > 0) {
-        body.transacciones = transaccionesLocales.value.map(tx => ({
+      if (movimientosLocales.value.length > 0) {
+        body.transacciones = movimientosLocales.value.map(tx => ({
           cuenta_origen_id: tx.cuenta_origen_id,
           cuenta_destino_id: tx.cuenta_destino_id,
           moneda_id: tx.moneda_id,
@@ -290,7 +290,7 @@ export function useOperacionForm() {
       tasa: tasaSugerida.value || '',
       descripcion: '',
     })
-    transaccionesLocales.value = []
+    movimientosLocales.value = []
     tasasRef.fetch()
   }
 
@@ -336,7 +336,7 @@ export function useOperacionForm() {
     textoCompra,
     textoVenta,
     formularioValido,
-    transaccionesLocales,
+    movimientosLocales,
     txForm,
     cuentasCliente,
     cuentasIntermedius,
@@ -350,8 +350,8 @@ export function useOperacionForm() {
     textoFlujo,
     txFormValido,
     labelCuenta,
-    agregarTransaccionLocal,
-    eliminarTransaccionLocal,
+    agregarMovimientoLocal,
+    eliminarMovimientoLocal,
     formatMoney,
     submit,
     registrarOtra,

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
-import TransaccionRow from '../../components/operaciones/TransaccionRow.vue'
+import TransaccionRow from '../../components/operaciones/MovimientoRow.vue'
 
 const monedas = [
   { id: 1, codigo: 'USD', nombre: 'Dólar' },

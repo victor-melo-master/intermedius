@@ -14,7 +14,7 @@
     </div>
 
     <template v-else>
-      <TransaccionRow
+      <MovimientoRow
         v-for="(tx, i) in transacciones"
         :key="tx._key"
         :index="i"
@@ -70,7 +70,7 @@
 </template>
 
 <script setup>
-import TransaccionRow from '@/components/operaciones/TransaccionRow.vue'
+import MovimientoRow from '@/components/operaciones/MovimientoRow.vue'
 import AppLoadingSpinner from '@/components/common/AppLoadingSpinner.vue'
 
 const props = defineProps({
