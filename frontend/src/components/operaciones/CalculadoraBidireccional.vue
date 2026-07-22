@@ -64,7 +64,7 @@
           >✕ Limpiar</button>
         </div>
         <p v-if="modoActual === 'calcular_tasa'" class="text-xs text-blue-500 mt-1">Calculado automáticamente</p>
-        <p v-else-if="tasaSugerida" class="text-xs text-gray-400 mt-1">Ref. BCV/Binance: <span class="font-medium text-gray-600">{{ formatTasa(tasaSugerida) }}</span></p>
+        <p v-else-if="tasaSugerida" class="text-xs text-gray-400 mt-1">Referencia ({{ fuenteLabel }}): <span class="font-medium text-gray-600">{{ formatTasa(tasaSugerida) }}</span></p>
         <p v-else class="text-xs text-amber-500 mt-1">No hay tasa de referencia disponible.</p>
       </div>
     </div>
@@ -120,6 +120,11 @@ const modos = [
 ]
 
 const modoActual = ref('divisa_ves')
+
+const fuenteLabel = computed(() => {
+  const map = { USD: 'BCV', EUR: 'BCV', USDT: 'Binance', COP: 'BCV' }
+  return map[props.moneda] || props.moneda || 'BCV'
+})
 
 function fmt(v) {
   if (v === '' || v == null) return ''
