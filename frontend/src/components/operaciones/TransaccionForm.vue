@@ -233,7 +233,10 @@ const excedeLimite = computed(() => {
 
 function labelCuenta(c) {
   const tipo = c.banco?.nombre || c.tipo || 'cuenta'
-  const saldo = c.saldo_cache != null ? ` · Saldo: ${c.moneda?.simbolo || ''}${parseFloat(c.saldo_cache).toLocaleString('es-VE', { minimumFractionDigits: 2 })}` : ''
+  let saldo = ''
+  if (c.titular_id && c.saldo_cache != null) {
+    saldo = ` · Saldo: ${c.moneda?.simbolo || ''}${parseFloat(c.saldo_cache).toLocaleString('es-VE', { minimumFractionDigits: 2 })}`
+  }
   return `${c.alias} · ${tipo}${saldo}`
 }
 

@@ -34,7 +34,7 @@
         >
           <option value="">Seleccionar</option>
           <option v-for="c in cuentasOrigen" :key="c.id" :value="c.id">
-            {{ labelCuenta(c) }} — Saldo: {{ saldo(c) }}
+            {{ labelCuenta(c) }}<template v-if="c.titular_id"> — Saldo: {{ saldo(c) }}</template>
           </option>
         </select>
       </div>
@@ -51,7 +51,7 @@
         >
           <option value="">Seleccionar</option>
           <option v-for="c in cuentasDestino" :key="c.id" :value="c.id">
-            {{ labelCuenta(c) }} — Saldo: {{ saldo(c) }}
+            {{ labelCuenta(c) }}<template v-if="c.titular_id"> — Saldo: {{ saldo(c) }}</template>
           </option>
         </select>
       </div>
