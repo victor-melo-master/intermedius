@@ -25,7 +25,7 @@
           </span>
         </template>
         <template v-if="spreadBcvUsdEurNeto !== null">
-          <span>BCV USD vs EUR:</span>
+          <span>BCV USD vs BCV EUR:</span>
           <span class="font-semibold" :class="spreadBcvUsdEurNeto >= 0 ? 'text-green-600' : 'text-red-500'">
             {{ formatVes(Math.abs(spreadBcvUsdEurNeto)) }} ({{ spreadBcvUsdEurPorc?.toFixed(1) }}%)
           </span>
