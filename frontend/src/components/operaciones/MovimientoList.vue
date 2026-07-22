@@ -95,8 +95,8 @@
             </select>
           </div>
           <div v-if="editForm.metodo_pago && editForm.metodo_pago !== 'efectivo'">
-            <label class="block text-xs text-gray-500 mb-1">Comprobante</label>
-            <input v-model="editForm.comprobante"
+            <label class="block text-xs text-gray-500 mb-1">Comprobante <span class="text-red-400">*</span></label>
+            <input v-model="editForm.comprobante" required
               placeholder="N° de referencia, voucher, hash..."
               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
           </div>
@@ -225,8 +225,9 @@ async function confirmarTx(tx) {
     await txService.confirmar(props.operacionId, tx.id)
     notifier.success('Movimiento confirmado')
     emit('refrescar')
-  } catch {
-    notifier.error('Error al confirmar el movimiento')
+  } catch (err) {
+    const msg = err.response?.data?.message || err.message || 'Error al confirmar el movimiento'
+    notifier.error(msg)
   }
 }
 
