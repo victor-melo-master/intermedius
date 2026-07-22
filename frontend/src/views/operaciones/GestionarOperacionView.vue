@@ -9,24 +9,26 @@
     <AppErrorState v-else-if="store.error" :message="store.error" @retry="cargarOperacion" />
     <template v-else-if="store.detail">
       <!-- ════════ RESUMEN MONTO ════════ -->
-      <div class="grid grid-cols-3 gap-3">
-        <div class="bg-blue-50 rounded-xl px-4 py-4 text-center">
-          <p class="text-[11px] text-blue-500 mb-1">Monto divisa</p>
-          <p class="text-xl font-bold text-gray-800">
-            {{ formatMoney(montoDivisa) }} {{ monedaDivisa }}
-          </p>
-        </div>
-        <div class="bg-gray-50 rounded-xl px-4 py-4 text-center">
-          <p class="text-[11px] text-gray-500 mb-1">Tasa</p>
-          <p class="text-xl font-bold text-blue-600">
-            {{ formatRate(store.detail.tasa_aplicada) }}
-          </p>
-        </div>
-        <div class="bg-green-50 rounded-xl px-4 py-4 text-center">
-          <p class="text-[11px] text-green-500 mb-1">Bolívares</p>
-          <p class="text-xl font-bold text-green-700">
-            Bs. {{ formatMoney(montoBolivares) }}
-          </p>
+      <div class="bg-white border border-gray-200 rounded-xl p-5">
+        <div class="grid grid-cols-3 gap-4 text-center">
+          <div>
+            <p class="text-xs text-gray-400 mb-1">Monto divisa</p>
+            <p class="text-xl font-bold text-gray-800">
+              {{ formatMoney(montoDivisa) }} {{ monedaDivisa }}
+            </p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-400 mb-1">Tasa</p>
+            <p class="text-xl font-bold text-blue-600">
+              {{ formatRate(store.detail.tasa_aplicada) }}
+            </p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-400 mb-1">Bolívares</p>
+            <p class="text-xl font-bold text-green-600">
+              Bs. {{ formatMoney(montoBolivares) }}
+            </p>
+          </div>
         </div>
       </div>
 
