@@ -36,7 +36,7 @@
         <div v-if="tx.motivo_rechazo" class="text-xs text-red-500 bg-red-50 rounded-lg px-3 py-1">
           Motivo: {{ tx.motivo_rechazo }}
         </div>
-        <div v-if="estado !== 'cerrada' && estado !== 'cancelada'" class="flex gap-2 pt-1">
+        <div v-if="!['solicitud', 'cerrada', 'cancelada'].includes(estado)" class="flex gap-2 pt-1">
           <button v-if="tx.estado === 'pendiente'"
             @click="editarTx(tx)"
             class="text-xs px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg transition">
