@@ -205,6 +205,7 @@ import TransaccionForm from '@/components/operaciones/TransaccionForm.vue'
 import AppLoadingSpinner from '@/components/common/AppLoadingSpinner.vue'
 import AppErrorState from '@/components/common/AppErrorState.vue'
 import AppFormModal from '@/components/common/AppFormModal.vue'
+import { useTasasReferencia } from '@/composables/useTasasReferencia'
 
 const route = useRoute()
 const router = useRouter()
@@ -212,6 +213,7 @@ const store = useOperacionesStore()
 const notifier = useNotification()
 const { formatMoney, formatVes, formatRate, formatDate } = useFormatting()
 const titulares = useTitulares()
+const tasasRef = useTasasReferencia()
 
 const acting = ref(false)
 const mostrarAgregarTx = ref(false)
@@ -319,7 +321,8 @@ async function cerrarOperacion() {
     const payload = {}
     if (tasaMercadoCierre.value) {
       payload.tasa_mercado_snapshot = tasaMercadoCierre.value
-      payload.fuente_tasa_mercado = 'bcv'
+      const fuenteMap = { USD: 'bcv', EUR: 'bcv_eur', USDT: 'binance_p2p' }
+      payload.fuente_tasa_mercado = fuenteMap[monedaDivisa.value] || 'bcv'
     }
     await store.cerrar(route.params.id, payload)
     notifier.success('Operación cerrada — movimientos generados')
@@ -360,6 +363,16 @@ async function cargarGananciaPreview() {
     gananciaPreview.value = null
   }
 }
+
+watch(mostrarCerrar, async (abierto) => {
+  if (!abierto) return
+  const codigo = monedaDivisa.value
+  await tasasRef.fetch()
+  const ref = tasasRef.refTasaPorMoneda(codigo)
+  if (ref) {
+    tasaMercadoCierre.value = parseFloat(ref)
+  }
+})
 
 watch(tasaMercadoCierre, async (nueva) => {
   if (!store.detail?.id || store.detail?.estado !== 'en_progreso') return

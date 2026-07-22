@@ -14,11 +14,13 @@ vi.mock('@/api/axios', () => ({
   },
 }))
 
-vi.mock('../useTasas', () => ({
-  useTasas: () => ({
-    vigentes: { value: [] },
-    fetchVigentes: vi.fn(),
-    fetchMonedas: vi.fn(),
+vi.mock('../useTasasReferencia', () => ({
+  useTasasReferencia: () => ({
+    refTasas: { value: null },
+    refTasaPorMoneda: () => null,
+    fetch: vi.fn(),
+    start: vi.fn(),
+    stop: vi.fn(),
   }),
 }))
 

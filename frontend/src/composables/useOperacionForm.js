@@ -1,6 +1,6 @@
 import { reactive, ref, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { useTasas } from './useTasas'
+import { useTasasReferencia } from './useTasasReferencia'
 import { useAuth } from './useAuth'
 import { useOperaciones } from './useOperaciones'
 import { useTitulares } from './useTitulares'
@@ -11,7 +11,7 @@ import api from '@/api/axios'
 
 export function useOperacionForm() {
   const route = useRoute()
-  const tasas = useTasas()
+  const tasasRef = useTasasReferencia()
   const auth = useAuth()
   const operaciones = useOperaciones()
   const titulares = useTitulares()
@@ -54,13 +54,9 @@ export function useOperacionForm() {
   const textoCompra = computed(() => `La casa compra ${monedaNombre.value}`)
   const textoVenta = computed(() => `La casa vende ${monedaNombre.value}`)
 
-  const tasaPar = computed(() => {
-    const vigentes = tasas.vigentes.value || []
-    return vigentes.find(t => t.par === parStr.value) || null
-  })
   const tasaSugerida = computed(() => {
-    if (!tasaPar.value) return null
-    return form.tipo === 'venta' ? tasaPar.value.tasa_venta : tasaPar.value.tasa_compra
+    const ref = tasasRef.refTasaPorMoneda(monedaSel.value)
+    return ref ? parseFloat(ref).toFixed(2) : null
   })
   const tasaDesfavorable = computed(() => {
     const sug = parseFloat(tasaSugerida.value)
@@ -87,7 +83,6 @@ export function useOperacionForm() {
     if (!form.tasa || parseFloat(form.tasa) <= 0) return false
     if (!clienteSeleccionado.value.id) return false
     if (!form.monto_usd || parseFloat(form.monto_usd) <= 0) return false
-    if (tasaDesfavorable.value && !form.descripcion.trim()) return false
     return true
   })
 
@@ -296,11 +291,11 @@ export function useOperacionForm() {
       descripcion: '',
     })
     transaccionesLocales.value = []
-    tasas.fetchVigentes()
+    tasasRef.fetch()
   }
 
   const init = async () => {
-    await tasas.fetchVigentes()
+    await tasasRef.fetch()
     await titulares.fetchAll()
     const intermedius = titulares.getIntermedius()
     intermediusTitularId.value = intermedius ? intermedius.id : null
@@ -336,7 +331,6 @@ export function useOperacionForm() {
     quoteSimbolo,
     parStr,
     titulo,
-    tasaPar,
     tasaSugerida,
     tasaDesfavorable,
     textoCompra,

@@ -37,16 +37,19 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useFormatting } from '@/composables/useFormatting'
-import api from '@/api/axios'
+import { useTasasReferencia } from '@/composables/useTasasReferencia'
 
 const { formatVes } = useFormatting()
 
-const refTasas = ref(null)
-const ahora = ref(Date.now())
-
-const hayReferencia = computed(() => !!(refTasas.value?.bcv || refTasas.value?.binance_p2p))
+const {
+  refTasas,
+  hayReferencia,
+  refStale,
+  refRelativo,
+  start,
+} = useTasasReferencia()
 
 const spreadBcvBinanceNeto = computed(() => {
   const bcv = refTasas.value?.bcv?.tasa
@@ -90,54 +93,5 @@ const spreadBcvUsdEurPorc = computed(() => {
   return ((eur - usd) / usd) * 100
 })
 
-const refUltimoTs = computed(() => {
-  const fechas = [refTasas.value?.bcv?.capturado_en, refTasas.value?.binance_p2p?.capturado_en]
-    .filter(Boolean)
-    .map(f => new Date(f).getTime())
-  return fechas.length ? Math.max(...fechas) : null
-})
-
-const refStale = computed(() => {
-  if (!refUltimoTs.value) return false
-  return (ahora.value - refUltimoTs.value) > 2 * 60 * 1000
-})
-
-const refRelativo = computed(() => {
-  if (!refUltimoTs.value) return ''
-  const diff = Math.max(0, Math.floor((ahora.value - refUltimoTs.value) / 1000))
-  if (diff < 60) return 'hace unos segundos'
-  const min = Math.floor(diff / 60)
-  if (min < 60) return `hace ${min} min`
-  const h = Math.floor(min / 60)
-  if (h < 24) return `hace ${h} h`
-  return `hace ${Math.floor(h / 24)} d`
-})
-
-async function fetchTasasReferencia() {
-  try {
-    const { data } = await api.get('/dashboard/tasas-referencia')
-    refTasas.value = data
-    ahora.value = Date.now()
-  } catch {
-    refTasas.value = null
-  }
-}
-
-let refTimer = null
-
-function scheduleRefresh() {
-  refTimer = setTimeout(async () => {
-    await fetchTasasReferencia()
-    scheduleRefresh()
-  }, 1 * 60 * 1000)
-}
-
-onMounted(() => {
-  fetchTasasReferencia()
-  scheduleRefresh()
-})
-
-onUnmounted(() => {
-  if (refTimer) clearTimeout(refTimer)
-})
+onMounted(start)
 </script>
