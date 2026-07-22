@@ -133,7 +133,6 @@ const notifier = useNotification()
 const { formatMoney } = useFormatting()
 
 const cuentasIntermedius = ref([])
-const cuentasCliente = ref([])
 const monedas = ref([])
 const saving = ref(false)
 const error = ref('')
@@ -165,45 +164,28 @@ const valido = computed(() =>
 
 const cuentasOrigen = computed(() => {
   if (!form.moneda_id) return []
-  const deIntermedius = cuentasIntermedius.value.filter(c => c.moneda_id == form.moneda_id)
-  const delCliente = cuentasCliente.value.filter(c => c.moneda_id == form.moneda_id)
-  if (props.esCompra) {
-    return esDivisa.value ? delCliente : deIntermedius
-  }
-  return esDivisa.value ? deIntermedius : delCliente
+  return cuentasIntermedius.value.filter(c => c.moneda_id == form.moneda_id)
 })
 
 const cuentasDestino = computed(() => {
   if (!form.moneda_id) return []
-  const deIntermedius = cuentasIntermedius.value.filter(c => c.moneda_id == form.moneda_id)
-  const delCliente = cuentasCliente.value.filter(c => c.moneda_id == form.moneda_id)
-  if (props.esCompra) {
-    return esDivisa.value ? deIntermedius : delCliente
-  }
-  return esDivisa.value ? delCliente : deIntermedius
+  return cuentasIntermedius.value.filter(c => c.moneda_id == form.moneda_id)
 })
 
-const labelOrigen = computed(() => {
-  if (!cuentasOrigen.value.length) return ''
-  return cuentasOrigen.value[0]?.titular_id ? 'Intermedius' : (props.clienteNombre || 'Cliente')
-})
-
-const labelDestino = computed(() => {
-  if (!cuentasDestino.value.length) return ''
-  return cuentasDestino.value[0]?.titular_id ? 'Intermedius' : (props.clienteNombre || 'Cliente')
-})
+const labelOrigen = computed(() => cuentasOrigen.value.length ? 'Intermedius' : '')
+const labelDestino = computed(() => cuentasDestino.value.length ? 'Intermedius' : '')
 
 const textoFlujo = computed(() => {
   if (!monedaSel.value) return ''
   const moneda = monedaSel.value.codigo
   if (props.esCompra) {
     return esDivisa.value
-      ? `Compra: ${props.clienteNombre || 'El cliente'} entrega ${moneda} a Intermedius`
-      : `Compra: Intermedius entrega ${moneda} al cliente → ${props.clienteNombre || 'el cliente'}`
+      ? `Compra: ${props.clienteNombre || 'Cliente'} entrega ${moneda} → Intermedius recibe`
+      : `Compra: Intermedius entrega ${moneda} → ${props.clienteNombre || 'Cliente'} recibe`
   }
   return esDivisa.value
-    ? `Venta: Intermedius entrega ${moneda} al cliente → ${props.clienteNombre || 'el cliente'}`
-    : `Venta: ${props.clienteNombre || 'El cliente'} entrega ${moneda} a Intermedius`
+    ? `Venta: Intermedius entrega ${moneda} → ${props.clienteNombre || 'Cliente'} recibe`
+    : `Venta: ${props.clienteNombre || 'Cliente'} entrega ${moneda} → Intermedius recibe`
 })
 
 const limiteMoneda = computed(() => {
@@ -243,31 +225,11 @@ function filtrarPorMoneda(lista) {
 }
 
 async function cargarCuentas() {
-  const params = []
-  if (props.intermediusTitularId) params.push(`titular_id=${props.intermediusTitularId}`)
-  if (props.clienteId) params.push(`cliente_id=${props.clienteId}`)
-
-  if (params.length === 0) {
-    const { data } = await api.get('/cuentas')
-    const all = Array.isArray(data) ? data : (data.data || [])
-    cuentasIntermedius.value = filtrarPorMoneda(all.filter(c => c.titular_id))
-    cuentasCliente.value = filtrarPorMoneda(all.filter(c => c.cliente_id))
-    return
-  }
-
-  if (props.intermediusTitularId) {
-    try {
-      const { data } = await api.get(`/cuentas?titular_id=${props.intermediusTitularId}`)
-      cuentasIntermedius.value = filtrarPorMoneda(Array.isArray(data) ? data : (data.data || []))
-    } catch { cuentasIntermedius.value = [] }
-  }
-
-  if (props.clienteId) {
-    try {
-      const { data } = await api.get(`/cuentas?cliente_id=${props.clienteId}`)
-      cuentasCliente.value = filtrarPorMoneda(Array.isArray(data) ? data : (data.data || []))
-    } catch { cuentasCliente.value = [] }
-  }
+  if (!props.intermediusTitularId) { cuentasIntermedius.value = []; return }
+  try {
+    const { data } = await api.get(`/cuentas?titular_id=${props.intermediusTitularId}`)
+    cuentasIntermedius.value = filtrarPorMoneda(Array.isArray(data) ? data : (data.data || []))
+  } catch { cuentasIntermedius.value = [] }
 }
 
 async function cargarMonedas() {
@@ -300,7 +262,7 @@ async function guardar() {
   saving.value = false
 }
 
-watch(() => [props.clienteId, props.intermediusTitularId, props.monedasPermitidas], cargarCuentas)
+watch(() => [props.intermediusTitularId, props.monedasPermitidas], cargarCuentas)
 
 watch(() => props.tasaOperacion, (val) => {
   if (val && !form.tasa_aplicada) {

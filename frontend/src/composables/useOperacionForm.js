@@ -28,7 +28,6 @@ export function useOperacionForm() {
   const today = new Date().toISOString().split('T')[0]
 
   const transaccionesLocales = ref([])
-  const cuentasCliente = ref([])
   const cuentasIntermedius = ref([])
   const loadingCuentas = ref(false)
 
@@ -103,29 +102,16 @@ export function useOperacionForm() {
 
   const cuentasOrigen = computed(() => {
     if (!txForm.moneda_id) return []
-    const inter = cuentasIntermedius.value.filter(c => c.moneda_id == txForm.moneda_id)
-    const cli = cuentasCliente.value.filter(c => c.moneda_id == txForm.moneda_id)
-    if (form.tipo === 'compra') return esDivisa.value ? cli : inter
-    return esDivisa.value ? inter : cli
+    return cuentasIntermedius.value.filter(c => c.moneda_id == txForm.moneda_id)
   })
 
   const cuentasDestino = computed(() => {
     if (!txForm.moneda_id) return []
-    const inter = cuentasIntermedius.value.filter(c => c.moneda_id == txForm.moneda_id)
-    const cli = cuentasCliente.value.filter(c => c.moneda_id == txForm.moneda_id)
-    if (form.tipo === 'compra') return esDivisa.value ? inter : cli
-    return esDivisa.value ? cli : inter
+    return cuentasIntermedius.value.filter(c => c.moneda_id == txForm.moneda_id)
   })
 
-  const labelOrigen = computed(() => {
-    if (!cuentasOrigen.value.length) return ''
-    return cuentasOrigen.value[0]?.titular_id ? 'Intermedius' : (clienteSeleccionado.value.nombre || 'Cliente')
-  })
-
-  const labelDestino = computed(() => {
-    if (!cuentasDestino.value.length) return ''
-    return cuentasDestino.value[0]?.titular_id ? 'Intermedius' : (clienteSeleccionado.value.nombre || 'Cliente')
-  })
+  const labelOrigen = computed(() => cuentasOrigen.value.length ? 'Intermedius' : '')
+  const labelDestino = computed(() => cuentasDestino.value.length ? 'Intermedius' : '')
 
   const textoFlujo = computed(() => {
     if (!monedaSelObj.value) return ''
@@ -133,12 +119,12 @@ export function useOperacionForm() {
     const nombre = clienteSeleccionado.value.nombre || 'Cliente'
     if (form.tipo === 'compra') {
       return esDivisa.value
-        ? `Compra: ${nombre} entrega ${moneda} a Intermedius`
-        : `Compra: Intermedius entrega ${moneda} a ${nombre}`
+        ? `Compra: ${nombre} entrega ${moneda} → Intermedius recibe`
+        : `Compra: Intermedius entrega ${moneda} → ${nombre} recibe`
     }
     return esDivisa.value
-      ? `Venta: Intermedius entrega ${moneda} a ${nombre}`
-      : `Venta: ${nombre} entrega ${moneda} a Intermedius`
+      ? `Venta: Intermedius entrega ${moneda} → ${nombre} recibe`
+      : `Venta: ${nombre} entrega ${moneda} → Intermedius recibe`
   })
 
   const txFormValido = computed(() =>
@@ -185,13 +171,8 @@ export function useOperacionForm() {
         const { data } = await api.get(`/cuentas?titular_id=${intermediusTitularId.value}`)
         cuentasIntermedius.value = Array.isArray(data) ? data : (data.data || [])
       }
-      if (clienteSeleccionado.value.id) {
-        const { data } = await api.get(`/cuentas?cliente_id=${clienteSeleccionado.value.id}`)
-        cuentasCliente.value = Array.isArray(data) ? data : (data.data || [])
-      }
     } catch {
       cuentasIntermedius.value = []
-      cuentasCliente.value = []
     }
     loadingCuentas.value = false
   }
@@ -343,7 +324,6 @@ export function useOperacionForm() {
     formularioValido,
     transaccionesLocales,
     txForm,
-    cuentasCliente,
     cuentasIntermedius,
     loadingCuentas,
     monedaSelObj,
