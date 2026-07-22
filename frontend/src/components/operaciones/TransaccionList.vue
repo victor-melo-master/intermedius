@@ -16,10 +16,16 @@
           <div>
             <p class="text-xs text-gray-400">Origen</p>
             <p class="font-medium text-gray-700">{{ tx.cuenta_origen?.alias || `Cuenta #${tx.cuenta_origen_id}` }}</p>
+            <p v-if="tx.cuenta_origen?.saldo_cache != null" class="text-[11px] text-gray-400">
+              Saldo: {{ formatearSaldo(tx.cuenta_origen) }}
+            </p>
           </div>
           <div>
             <p class="text-xs text-gray-400">Destino</p>
             <p class="font-medium text-gray-700">{{ tx.cuenta_destino?.alias || `Cuenta #${tx.cuenta_destino_id}` }}</p>
+            <p v-if="tx.cuenta_destino?.saldo_cache != null" class="text-[11px] text-gray-400">
+              Saldo: {{ formatearSaldo(tx.cuenta_destino) }}
+            </p>
           </div>
           <div>
             <p class="text-xs text-gray-400">Monto</p>
@@ -98,6 +104,11 @@ const props = defineProps({
 const emit = defineEmits(['refrescar'])
 
 const txService = useTransacciones()
+
+function formatearSaldo(cuenta) {
+  if (cuenta.saldo_cache == null) return 'N/D'
+  return new Intl.NumberFormat('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(parseFloat(cuenta.saldo_cache))
+}
 const notifier = useNotification()
 
 const mostrarRevertir = ref(null)
