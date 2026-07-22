@@ -683,8 +683,9 @@ public function actualizar(Operacion $operacion, array $payload, \App\Models\Use
     // ═══════════════════════════════════════════════════════════════════
 
     /**
-     * Crea una solicitud de operación SIN movimientos contables.
-     * La operación queda en estado 'solicitud' para que el operador agregue transacciones.
+     * Crea una solicitud de operación.
+     * Si se incluyen transacciones en el payload, las crea en estado 'pendiente'.
+     * La operación queda en estado 'solicitud' para que el operador pueda gestionar transacciones.
      *
      * @param array $payload Debe incluir: fecha, tipo_codigo, operador_id
      * @return Operacion
@@ -694,38 +695,84 @@ public function actualizar(Operacion $operacion, array $payload, \App\Models\Use
         $tipo = TipoOperacion::where('codigo', $payload['tipo_codigo'])->firstOrFail();
         $moneda = Moneda::where('codigo', $payload['moneda_codigo'])->firstOrFail();
 
-        // Resolver tasas para snapshot
         $tasaAplicada = (float) ($payload['tasa_aplicada'] ?? 1);
         $payload['tasas_snapshot'] = $payload['tasas_snapshot'] ?? $this->capturarTasasSnapshot($payload, $tipo);
 
-        return Operacion::create([
-            'fecha'                  => $payload['fecha'],
-            'tipo_operacion_id'      => $tipo->id,
-            'moneda_operacion_id'    => $moneda->id,
-            'cliente_id'             => $payload['cliente_id'] ?? null,
-            'cliente_emisor_id'      => $payload['cliente_emisor_id'] ?? null,
-            'cliente_receptor_id'    => $payload['cliente_receptor_id'] ?? null,
-            'categoria_gasto_id'     => $payload['categoria_gasto_id'] ?? null,
-            'operador_id'            => $payload['operador_id'],
-            'tasa_aplicada'          => $tasaAplicada,
-            'tasa_compra'            => $payload['tasa_compra'] ?? null,
-            'tasa_venta'             => $payload['tasa_venta'] ?? null,
-            'genera_comision'        => $payload['genera_comision'] ?? false,
-            'monto_comision'         => $payload['monto_comision'] ?? 0,
-            'tipo_comision'          => $payload['tipo_comision'] ?? null,
-            'tasa_sugerida'          => $payload['tasa_sugerida'] ?? null,
-            'sin_tasa_referencia'    => $payload['sin_tasa_referencia'] ?? false,
-            'tasa_mercado_snapshot'  => $payload['tasa_mercado_snapshot'] ?? null,
-            'fuente_tasa_mercado'    => $payload['fuente_tasa_mercado'] ?? null,
-            'referencia'             => $payload['referencia'] ?? null,
-            'descripcion'            => $payload['descripcion'] ?? null,
-            'monto_solicitado'       => $payload['monto_solicitado'] ?? null,
-            'tasas_snapshot'         => $payload['tasas_snapshot'],
-            'estado'                 => 'solicitud',
-            'estado_pool'            => 'pendiente',
-            'origen'                 => $payload['origen'] ?? 'manual',
-            'origen_referencia'      => $payload['origen_referencia'] ?? null,
-        ]);
+        return DB::transaction(function () use ($payload, $tipo, $moneda, $tasaAplicada) {
+            $operacion = Operacion::create([
+                'fecha'                  => $payload['fecha'],
+                'tipo_operacion_id'      => $tipo->id,
+                'moneda_operacion_id'    => $moneda->id,
+                'cliente_id'             => $payload['cliente_id'] ?? null,
+                'cliente_emisor_id'      => $payload['cliente_emisor_id'] ?? null,
+                'cliente_receptor_id'    => $payload['cliente_receptor_id'] ?? null,
+                'categoria_gasto_id'     => $payload['categoria_gasto_id'] ?? null,
+                'operador_id'            => $payload['operador_id'],
+                'tasa_aplicada'          => $tasaAplicada,
+                'tasa_compra'            => $payload['tasa_compra'] ?? null,
+                'tasa_venta'             => $payload['tasa_venta'] ?? null,
+                'genera_comision'        => $payload['genera_comision'] ?? false,
+                'monto_comision'         => $payload['monto_comision'] ?? 0,
+                'tipo_comision'          => $payload['tipo_comision'] ?? null,
+                'tasa_sugerida'          => $payload['tasa_sugerida'] ?? null,
+                'sin_tasa_referencia'    => $payload['sin_tasa_referencia'] ?? false,
+                'tasa_mercado_snapshot'  => $payload['tasa_mercado_snapshot'] ?? null,
+                'fuente_tasa_mercado'    => $payload['fuente_tasa_mercado'] ?? null,
+                'referencia'             => $payload['referencia'] ?? null,
+                'descripcion'            => $payload['descripcion'] ?? null,
+                'monto_solicitado'       => $payload['monto_solicitado'] ?? null,
+                'tasas_snapshot'         => $payload['tasas_snapshot'],
+                'estado'                 => 'solicitud',
+                'estado_pool'            => 'pendiente',
+                'origen'                 => $payload['origen'] ?? 'manual',
+                'origen_referencia'      => $payload['origen_referencia'] ?? null,
+            ]);
+
+            if (!empty($payload['transacciones'])) {
+                $this->validarTransaccionesSolicitud($payload['transacciones']);
+
+                $orden = 1;
+                foreach ($payload['transacciones'] as $tData) {
+                    $tasaT = $tData['tasa_aplicada'] ?? $tasaAplicada;
+
+                    $operacion->transacciones()->create([
+                        'cuenta_origen_id'  => $tData['cuenta_origen_id'],
+                        'cuenta_destino_id' => $tData['cuenta_destino_id'],
+                        'moneda_id'         => $tData['moneda_id'],
+                        'monto'             => $tData['monto'],
+                        'tasa_aplicada'     => $tasaT,
+                        'metodo_pago'       => $tData['metodo_pago'] ?? 'transferencia',
+                        'comprobante'       => $tData['comprobante'] ?? null,
+                        'estado'            => 'pendiente',
+                        'orden'             => $orden++,
+                    ]);
+                }
+            }
+
+            return $operacion->fresh(['transacciones']);
+        });
+    }
+
+    /**
+     * Valida las transacciones enviadas en la solicitud.
+     */
+    private function validarTransaccionesSolicitud(array $transacciones): void
+    {
+        $cuentaIds = [];
+        foreach ($transacciones as $t) {
+            $cuentaIds[] = $t['cuenta_origen_id'];
+            $cuentaIds[] = $t['cuenta_destino_id'];
+        }
+
+        $cuentaIds = array_unique($cuentaIds);
+        $inactivas = Cuenta::whereIn('id', $cuentaIds)->where('activa', false)->get();
+
+        if ($inactivas->isNotEmpty()) {
+            $aliases = $inactivas->pluck('alias')->join(', ');
+            throw ValidationException::withMessages([
+                'transacciones' => "Las siguientes cuentas están inactivas: {$aliases}.",
+            ]);
+        }
     }
 
     /**

@@ -9,6 +9,7 @@ use App\Models\Moneda;
 use App\Models\TasaDiaria;
 use App\Models\TipoOperacion;
 use App\Models\Titular;
+use App\Models\Transaccion;
 use App\Models\User;
 use App\Services\Operaciones\RegistroOperacionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -606,5 +607,229 @@ class RegistroOperacionServiceTest extends TestCase
         $this->assertArrayHasKey('neta_usd', $preview);
         $this->assertArrayHasKey('neta_ves', $preview);
         $this->assertEqualsWithDelta(8.00, $preview['bruta_ves'], 0.01);
+    }
+
+    private function payloadSolicitudVenta(float $tasa = 36.50, float $monto = 100): array
+    {
+        return [
+            'fecha'            => '2026-07-22',
+            'tipo_codigo'      => 'venta_usd',
+            'moneda_codigo'    => 'USD',
+            'operador_id'      => $this->operador->id,
+            'tasa_aplicada'    => $tasa,
+            'monto_solicitado' => $monto,
+        ];
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // FLUJO MULTI-PASO: crearSolicitud
+    // ════════════════════════════════════════════════════════════════
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 20. crearSolicitud sin transacciones crea operación en solicitud
+    // ─────────────────────────────────────────────────────────────────────────
+    public function test_crear_solicitud_sin_transacciones_crea_operacion_en_solicitud(): void
+    {
+        TipoOperacion::factory()->ventaUsd()->create();
+
+        $operacion = $this->service->crearSolicitud(
+            $this->payloadSolicitudVenta()
+        );
+
+        $this->assertDatabaseHas('operaciones', [
+            'id'    => $operacion->id,
+            'estado' => 'solicitud',
+        ]);
+        $this->assertEquals('solicitud', $operacion->estado);
+        $this->assertNull($operacion->movimientos->first());
+        $this->assertCount(0, $operacion->transacciones);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 21. crearSolicitud con transacciones crea transacciones pendientes
+    // ─────────────────────────────────────────────────────────────────────────
+    public function test_crear_solicitud_con_transacciones_crea_transacciones_pendientes(): void
+    {
+        TipoOperacion::factory()->ventaUsd()->create();
+        $cUsd = $this->cuentaUsd();
+        $cVes = $this->cuentaVes();
+
+        $payload = $this->payloadSolicitudVenta(36.50, 100);
+        $payload['transacciones'] = [
+            [
+                'cuenta_origen_id'  => $cUsd->id,
+                'cuenta_destino_id' => $cVes->id,
+                'moneda_id'         => $this->usd->id,
+                'monto'             => 100.0,
+                'metodo_pago'       => 'transferencia',
+            ],
+        ];
+
+        $operacion = $this->service->crearSolicitud($payload);
+
+        $this->assertEquals('solicitud', $operacion->estado);
+        $this->assertCount(1, $operacion->transacciones);
+
+        $transaccion = $operacion->transacciones->first();
+        $this->assertEquals('pendiente', $transaccion->estado);
+        $this->assertEquals($cUsd->id, $transaccion->cuenta_origen_id);
+        $this->assertEquals($cVes->id, $transaccion->cuenta_destino_id);
+        $this->assertEquals(100.0, (float) $transaccion->monto);
+        $this->assertEquals(36.50, (float) $transaccion->tasa_aplicada);
+        $this->assertEquals('transferencia', $transaccion->metodo_pago);
+        $this->assertEquals(1, $transaccion->orden);
+
+        $this->assertDatabaseHas('transacciones', [
+            'id'                => $transaccion->id,
+            'operacion_id'      => $operacion->id,
+            'estado'            => 'pendiente',
+            'cuenta_origen_id'  => $cUsd->id,
+            'cuenta_destino_id' => $cVes->id,
+        ]);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 22. crearSolicitud con cuenta origen inactiva lanza ValidationException
+    // ─────────────────────────────────────────────────────────────────────────
+    public function test_crear_solicitud_con_cuenta_inactiva_lanza_error(): void
+    {
+        TipoOperacion::factory()->ventaUsd()->create();
+        $cInactiva = $this->cuentaUsd(['activa' => false]);
+        $cVes = $this->cuentaVes();
+
+        $payload = $this->payloadSolicitudVenta();
+        $payload['transacciones'] = [
+            [
+                'cuenta_origen_id'  => $cInactiva->id,
+                'cuenta_destino_id' => $cVes->id,
+                'moneda_id'         => $this->usd->id,
+                'monto'             => 100.0,
+            ],
+        ];
+
+        $this->expectException(ValidationException::class);
+        $this->expectExceptionMessage('cuentas están inactivas');
+
+        $this->service->crearSolicitud($payload);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 23. crearSolicitud con cuenta destino inactiva lanza ValidationException
+    // ─────────────────────────────────────────────────────────────────────────
+    public function test_crear_solicitud_con_cuenta_destino_inactiva_lanza_error(): void
+    {
+        TipoOperacion::factory()->ventaUsd()->create();
+        $cUsd = $this->cuentaUsd();
+        $cInactiva = $this->cuentaVes(['activa' => false]);
+
+        $payload = $this->payloadSolicitudVenta();
+        $payload['transacciones'] = [
+            [
+                'cuenta_origen_id'  => $cUsd->id,
+                'cuenta_destino_id' => $cInactiva->id,
+                'moneda_id'         => $this->usd->id,
+                'monto'             => 100.0,
+            ],
+        ];
+
+        $this->expectException(ValidationException::class);
+        $this->expectExceptionMessage('cuentas están inactivas');
+
+        $this->service->crearSolicitud($payload);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 24. crearSolicitud con transacciones usa tasa_aplicada por transacción
+    // ─────────────────────────────────────────────────────────────────────────
+    public function test_crear_solicitud_con_transaccion_usa_tasa_propia(): void
+    {
+        TipoOperacion::factory()->ventaUsd()->create();
+        $cUsd = $this->cuentaUsd();
+        $cVes = $this->cuentaVes();
+
+        $payload = $this->payloadSolicitudVenta(36.50, 100);
+        $payload['transacciones'] = [
+            [
+                'cuenta_origen_id'  => $cUsd->id,
+                'cuenta_destino_id' => $cVes->id,
+                'moneda_id'         => $this->usd->id,
+                'monto'             => 100.0,
+                'tasa_aplicada'     => 37.00,
+            ],
+        ];
+
+        $operacion = $this->service->crearSolicitud($payload);
+
+        $transaccion = $operacion->transacciones->first();
+        $this->assertEquals(37.00, (float) $transaccion->tasa_aplicada);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 25. crearSolicitud con múltiples transacciones asigna orden correcto
+    // ─────────────────────────────────────────────────────────────────────────
+    public function test_crear_solicitud_con_multiples_transacciones_asigna_orden(): void
+    {
+        TipoOperacion::factory()->ventaUsd()->create();
+        $cUsd = $this->cuentaUsd();
+        $cVes = $this->cuentaVes();
+        $cUsd2 = $this->cuentaUsd();
+
+        $payload = $this->payloadSolicitudVenta(36.50, 200);
+        $payload['transacciones'] = [
+            [
+                'cuenta_origen_id'  => $cUsd->id,
+                'cuenta_destino_id' => $cVes->id,
+                'moneda_id'         => $this->usd->id,
+                'monto'             => 100.0,
+            ],
+            [
+                'cuenta_origen_id'  => $cUsd2->id,
+                'cuenta_destino_id' => $cVes->id,
+                'moneda_id'         => $this->usd->id,
+                'monto'             => 100.0,
+            ],
+        ];
+
+        $operacion = $this->service->crearSolicitud($payload);
+
+        $this->assertCount(2, $operacion->transacciones);
+        $this->assertEquals(1, $operacion->transacciones[0]->orden);
+        $this->assertEquals(2, $operacion->transacciones[1]->orden);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 26. crearSolicitud con transacciones permite gestionarlas luego
+    // ─────────────────────────────────────────────────────────────────────────
+    public function test_crear_solicitud_con_transacciones_pendientes_son_gestionables(): void
+    {
+        TipoOperacion::factory()->ventaUsd()->create();
+        $cUsd = $this->cuentaUsd();
+        $cVes = $this->cuentaVes();
+
+        $payload = $this->payloadSolicitudVenta(36.50, 100);
+        $payload['transacciones'] = [
+            [
+                'cuenta_origen_id'  => $cUsd->id,
+                'cuenta_destino_id' => $cVes->id,
+                'moneda_id'         => $this->usd->id,
+                'monto'             => 100.0,
+            ],
+        ];
+
+        $operacion = $this->service->crearSolicitud($payload);
+
+        // Pasar a en_progreso
+        $operacion = $this->service->iniciarOperacion($operacion);
+        $this->assertEquals('en_progreso', $operacion->estado);
+
+        // Confirmar la transacción
+        $transaccion = $operacion->fresh()->transacciones->first();
+        $transaccion->update([
+            'estado'           => 'confirmada',
+            'confirmada_en'    => now(),
+            'confirmada_por_id' => $this->operador->id,
+        ]);
+
+        $this->assertEquals('confirmada', $transaccion->fresh()->estado);
     }
 }
