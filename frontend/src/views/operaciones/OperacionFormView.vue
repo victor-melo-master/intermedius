@@ -5,10 +5,31 @@
       <h2 class="text-xl font-bold text-gray-800">{{ titulo }}</h2>
     </div>
 
-    <div v-if="successRef" class="bg-green-50 border border-green-200 rounded-2xl p-6 text-center space-y-4">
-      <div class="w-8 h-8 border-2 border-green-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
-      <p class="text-green-700 font-semibold">Solicitud #{{ successRef }} creada</p>
-      <p class="text-sm text-gray-500">Redirigiendo a gestión…</p>
+    <div v-if="successRef" class="bg-white border border-gray-200 rounded-xl p-5 space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-green-700 font-semibold text-lg">Solicitud #{{ successRef }} creada</p>
+          <p class="text-sm text-gray-500">Agrega las transacciones propuestas</p>
+        </div>
+        <button @click="irAGestionar"
+          class="text-sm px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition font-medium">
+          Ir a gestión →
+        </button>
+      </div>
+
+      <TransaccionForm
+        :operacion-id="successRef"
+        :cliente-id="clienteSeleccionado.id || null"
+        :cliente-nombre="clienteSeleccionado.nombre || clienteSeleccionado.alias || ''"
+        :intermedius-titular-id="intermediusTitularId"
+        :monedas-permitidas="[monedaSel, 'VES']"
+        :es-compra="form.tipo === 'compra'"
+        :tasa-operacion="form.tasa"
+        :monto-solicitado="form.monto_usd"
+        :transacciones-existentes="[]"
+        @saved="() => {}"
+        @cancel="irAGestionar"
+      />
     </div>
 
     <form v-else @submit.prevent="submit" class="space-y-4">
@@ -70,21 +91,6 @@
         ></textarea>
       </div>
 
-      <!-- Transacciones propuestas -->
-      <TransaccionesPropuestas
-        v-if="!esEdicion"
-        v-model:transacciones="transaccionesPropuestas"
-        :cliente-id="clienteSeleccionado.id"
-        :cliente-nombre="clienteSeleccionado.nombre || clienteSeleccionado.alias"
-        :intermedius-titular-id="intermediusTitularId"
-        :es-compra="form.tipo === 'compra'"
-        :moneda-codigo="monedaSel"
-        :tasa="form.tasa"
-        :monto-usd="form.monto_usd"
-        :moneda-id="monedaOperacionId"
-        :ves-id="monedaVesId"
-      />
-
       <AppErrorState v-if="error" :message="error" :retry="false" />
 
       <button
@@ -100,12 +106,12 @@
 </template>
 
 <script setup>
-import { onMounted, watch, computed } from 'vue'
+import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useOperacionForm } from '@/composables/useOperacionForm'
 import ClienteSelector from '@/components/clientes/ClienteSelector.vue'
 import CalculadoraBidireccional from '@/components/operaciones/CalculadoraBidireccional.vue'
-import TransaccionesPropuestas from '@/components/operaciones/TransaccionesPropuestas.vue'
+import TransaccionForm from '@/components/operaciones/TransaccionForm.vue'
 import AppErrorState from '@/components/common/AppErrorState.vue'
 
 const router = useRouter()
@@ -113,7 +119,6 @@ const router = useRouter()
 const {
   form,
   clienteSeleccionado,
-  monedas,
   monedaSel,
   quoteCodigo,
   quoteSimbolo,
@@ -128,27 +133,16 @@ const {
   textoCompra,
   textoVenta,
   formularioValido,
-  transaccionesPropuestas,
+  intermediusTitularId,
   submit,
-  registrarOtra,
   init,
 } = useOperacionForm()
 
-const monedaOperacionId = computed(() => {
-  const m = monedas.value.find(m => m.codigo === monedaSel.value)
-  return m ? m.id : null
-})
-
-const monedaVesId = computed(() => {
-  const m = monedas.value.find(m => m.codigo === 'VES')
-  return m ? m.id : null
-})
+function irAGestionar() {
+  if (successRef.value) {
+    router.push(`/operaciones/${successRef.value}/gestionar`)
+  }
+}
 
 onMounted(init)
-
-watch(successRef, (id) => {
-  if (id) {
-    setTimeout(() => router.push(`/operaciones/${id}/gestionar`), 800)
-  }
-})
 </script>
