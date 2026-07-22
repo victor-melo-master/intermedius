@@ -39,10 +39,10 @@
             <p class="text-xs text-gray-400 mt-0.5">{{ formatDate(op.fecha) }} · {{ op.operador?.name || '—' }}</p>
           </div>
           <div class="text-right shrink-0">
-            <p class="font-bold text-sm text-gray-800">$ {{ formatMoney(montoUsd(op)) }}</p>
+            <p class="font-bold text-sm text-gray-800">$ {{ formatRate(montoUsd(op)) }}</p>
             <p class="text-xs text-gray-500">Bs. {{ formatMoney(bolivares(op)) }}</p>
             <p v-if="gananciaOp(op)" class="text-[11px] font-medium mt-0.5" :class="gananciaOp(op) >= 0 ? 'text-green-600' : 'text-red-500'">
-              G: ${{ formatMoney(gananciaOp(op)) }}
+              G: ${{ formatRate(gananciaOp(op)) }}
             </p>
             <p class="text-[11px] text-gray-400">Tasa {{ formatRate(op.tasa_aplicada) }}</p>
           </div>
