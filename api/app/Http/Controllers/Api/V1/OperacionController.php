@@ -114,8 +114,8 @@ class OperacionController extends Controller
         'verificadoPor',
         'pagador',
         'transacciones.moneda',
-        'transacciones.cuentaOrigen',
-        'transacciones.cuentaDestino',
+        'transacciones.cuentaOrigen.moneda',
+        'transacciones.cuentaDestino.moneda',
     ]);
 
     // \Log::info('Show operacion after load', [

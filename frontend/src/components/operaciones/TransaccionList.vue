@@ -107,7 +107,9 @@ const txService = useTransacciones()
 
 function formatearSaldo(cuenta) {
   if (!cuenta || cuenta.saldo_cache == null) return 'N/D'
-  return new Intl.NumberFormat('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(parseFloat(cuenta.saldo_cache))
+  const cifra = new Intl.NumberFormat('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(parseFloat(cuenta.saldo_cache))
+  const simbolo = cuenta.moneda?.simbolo || ''
+  return simbolo + cifra
 }
 const notifier = useNotification()
 

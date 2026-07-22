@@ -32,14 +32,26 @@ class TransaccionResource extends JsonResource
                 'simbolo' => $this->moneda->simbolo,
             ]),
             'cuenta_origen'     => $this->whenLoaded('cuentaOrigen', fn () => [
-                'id'     => $this->cuentaOrigen->id,
-                'alias'  => $this->cuentaOrigen->alias,
-                'nombre' => $this->cuentaOrigen->nombre,
+                'id'          => $this->cuentaOrigen->id,
+                'alias'       => $this->cuentaOrigen->alias,
+                'nombre'      => $this->cuentaOrigen->nombre,
+                'saldo_cache' => $this->cuentaOrigen->saldo_cache,
+                'moneda'      => $this->cuentaOrigen->relationLoaded('moneda') ? [
+                    'id'     => $this->cuentaOrigen->moneda->id,
+                    'codigo' => $this->cuentaOrigen->moneda->codigo,
+                    'simbolo' => $this->cuentaOrigen->moneda->simbolo,
+                ] : null,
             ]),
             'cuenta_destino'    => $this->whenLoaded('cuentaDestino', fn () => [
-                'id'     => $this->cuentaDestino->id,
-                'alias'  => $this->cuentaDestino->alias,
-                'nombre' => $this->cuentaDestino->nombre,
+                'id'          => $this->cuentaDestino->id,
+                'alias'       => $this->cuentaDestino->alias,
+                'nombre'      => $this->cuentaDestino->nombre,
+                'saldo_cache' => $this->cuentaDestino->saldo_cache,
+                'moneda'      => $this->cuentaDestino->relationLoaded('moneda') ? [
+                    'id'     => $this->cuentaDestino->moneda->id,
+                    'codigo' => $this->cuentaDestino->moneda->codigo,
+                    'simbolo' => $this->cuentaDestino->moneda->simbolo,
+                ] : null,
             ]),
         ];
     }
