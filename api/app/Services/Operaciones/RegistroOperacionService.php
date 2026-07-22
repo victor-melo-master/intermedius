@@ -1081,14 +1081,6 @@ public function actualizar(Operacion $operacion, array $payload, \App\Models\Use
             return ['bruta_usd' => 0.0, 'bruta_ves' => 0.0, 'neta_usd' => 0.0, 'neta_ves' => 0.0];
         }
 
-        $transacciones = $operacion->transacciones()
-            ->where('estado', 'confirmada')
-            ->get();
-
-        if ($transacciones->isEmpty()) {
-            return ['bruta_usd' => 0.0, 'bruta_ves' => 0.0, 'neta_usd' => 0.0, 'neta_ves' => 0.0];
-        }
-
         $codigoDivisa = $operacion->monedaOperacion?->codigo ?? 'USD';
         $tasaMercado = $tasaMercado ?? (float) $operacion->tasa_mercado_snapshot;
         $tasaAplicada = (float) $operacion->tasa_aplicada;
@@ -1097,13 +1089,22 @@ public function actualizar(Operacion $operacion, array $payload, \App\Models\Use
             return ['bruta_usd' => 0.0, 'bruta_ves' => 0.0, 'neta_usd' => 0.0, 'neta_ves' => 0.0];
         }
 
-        $totalDivisa = $transacciones
-            ->filter(fn ($t) => ($t->moneda->codigo ?? '') === $codigoDivisa)
-            ->sum(fn ($t) => (float) $t->monto);
+        $transacciones = $operacion->transacciones()
+            ->where('estado', 'confirmada')
+            ->get();
 
-        $totalVes = $transacciones
-            ->filter(fn ($t) => ($t->moneda->codigo ?? '') === 'VES')
-            ->sum(fn ($t) => (float) $t->monto);
+        if ($transacciones->isEmpty()) {
+            $totalDivisa = (float) $operacion->monto_solicitado;
+            $totalVes = $totalDivisa * $tasaAplicada;
+        } else {
+            $totalDivisa = $transacciones
+                ->filter(fn ($t) => ($t->moneda->codigo ?? '') === $codigoDivisa)
+                ->sum(fn ($t) => (float) $t->monto);
+
+            $totalVes = $transacciones
+                ->filter(fn ($t) => ($t->moneda->codigo ?? '') === 'VES')
+                ->sum(fn ($t) => (float) $t->monto);
+        }
 
         $gananciaVes = 0.0;
         $gananciaUsd = 0.0;
