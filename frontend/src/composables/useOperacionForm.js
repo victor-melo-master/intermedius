@@ -26,6 +26,7 @@ export function useOperacionForm() {
   const successRef = ref('')
   const intermediusTitularId = ref(null)
   const today = new Date().toISOString().split('T')[0]
+  const transaccionesPropuestas = ref([])
 
   const editId = computed(() => route.params.id || null)
   const esEdicion = computed(() => !!editId.value)
@@ -125,6 +126,10 @@ export function useOperacionForm() {
         body.cliente_id = Number(clienteSeleccionado.value.id)
       }
 
+      if (transaccionesPropuestas.value.length > 0) {
+        body.transacciones = transaccionesPropuestas.value
+      }
+
       if (esEdicion.value) {
         body.motivo_edicion = motivoEdicion.value
         await operaciones.update(editId.value, body)
@@ -185,6 +190,7 @@ export function useOperacionForm() {
     error,
     successRef,
     intermediusTitularId,
+    transaccionesPropuestas,
     today,
     editId,
     esEdicion,

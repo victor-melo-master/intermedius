@@ -70,6 +70,21 @@
         ></textarea>
       </div>
 
+      <!-- Transacciones propuestas -->
+      <TransaccionesPropuestas
+        v-if="clienteSeleccionado.id && !esEdicion"
+        v-model:transacciones="transaccionesPropuestas"
+        :cliente-id="clienteSeleccionado.id"
+        :cliente-nombre="clienteSeleccionado.nombre || clienteSeleccionado.alias"
+        :intermedius-titular-id="intermediusTitularId"
+        :es-compra="form.tipo === 'compra'"
+        :moneda-codigo="monedaSel"
+        :tasa="form.tasa"
+        :monto-usd="form.monto_usd"
+        :moneda-id="monedaOperacionId"
+        :ves-id="monedaVesId"
+      />
+
       <AppErrorState v-if="error" :message="error" :retry="false" />
 
       <button
@@ -85,11 +100,12 @@
 </template>
 
 <script setup>
-import { onMounted, watch } from 'vue'
+import { onMounted, watch, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useOperacionForm } from '@/composables/useOperacionForm'
 import ClienteSelector from '@/components/clientes/ClienteSelector.vue'
 import CalculadoraBidireccional from '@/components/operaciones/CalculadoraBidireccional.vue'
+import TransaccionesPropuestas from '@/components/operaciones/TransaccionesPropuestas.vue'
 import AppErrorState from '@/components/common/AppErrorState.vue'
 
 const router = useRouter()
@@ -97,6 +113,7 @@ const router = useRouter()
 const {
   form,
   clienteSeleccionado,
+  monedas,
   monedaSel,
   quoteCodigo,
   quoteSimbolo,
@@ -111,10 +128,21 @@ const {
   textoCompra,
   textoVenta,
   formularioValido,
+  transaccionesPropuestas,
   submit,
   registrarOtra,
   init,
 } = useOperacionForm()
+
+const monedaOperacionId = computed(() => {
+  const m = monedas.value.find(m => m.codigo === monedaSel.value)
+  return m ? m.id : null
+})
+
+const monedaVesId = computed(() => {
+  const m = monedas.value.find(m => m.codigo === 'VES')
+  return m ? m.id : null
+})
 
 onMounted(init)
 
