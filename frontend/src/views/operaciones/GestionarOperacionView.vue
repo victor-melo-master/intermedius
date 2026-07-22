@@ -358,7 +358,10 @@ async function cargarGananciaPreview() {
     return
   }
   try {
-    gananciaPreview.value = await store.fetchGananciaPreview(store.detail.id)
+    const codigo = monedaDivisa.value
+    await tasasRef.fetch()
+    const ref = tasasRef.refTasaPorMoneda(codigo)
+    gananciaPreview.value = await store.fetchGananciaPreview(store.detail.id, ref || null)
   } catch {
     gananciaPreview.value = null
   }
@@ -388,6 +391,7 @@ onMounted(async () => {
   const intermedius = titulares.getIntermedius()
   intermediusTitularId.value = intermedius ? intermedius.id : null
   await cargarOperacion()
+  tasasRef.start()
   await cargarGananciaPreview()
 })
 </script>
