@@ -65,16 +65,17 @@ class TransaccionService
             $transaccion->monto,
         );
 
-        // Registrar en bitácora el saldo antes de descontar
+        // Solo descontamos saldo para cuentas de Intermedius
         $cuentaOrigen = Cuenta::findOrFail($transaccion->cuenta_origen_id);
-        $saldoAntes = $cuentaOrigen->saldo_cache;
+        $actualizarSaldo = (bool) $cuentaOrigen->titular_id;
+        $saldoAntes = $actualizarSaldo ? $cuentaOrigen->saldo_cache : null;
 
-        DB::transaction(function () use ($transaccion, $usuario, $cuentaOrigen, $saldoAntes) {
-            // Descontar saldo de cuenta origen
-            $nuevoSaldo = bcsub($saldoAntes, $transaccion->monto, 2);
-            $cuentaOrigen->update(['saldo_cache' => $nuevoSaldo]);
+        DB::transaction(function () use ($transaccion, $usuario, $cuentaOrigen, $saldoAntes, $actualizarSaldo) {
+            if ($actualizarSaldo) {
+                $nuevoSaldo = bcsub($saldoAntes, $transaccion->monto, 2);
+                $cuentaOrigen->update(['saldo_cache' => $nuevoSaldo]);
+            }
 
-            // Marcar como confirmada
             $transaccion->update([
                 'estado'           => 'confirmada',
                 'confirmada_en'    => now(),
@@ -82,18 +83,21 @@ class TransaccionService
             ]);
 
             // Bitácora
+            $props = [
+                'operacion_id'     => $transaccion->operacion_id,
+                'cuenta_origen_id' => $transaccion->cuenta_origen_id,
+                'monto'            => $transaccion->monto,
+            ];
+            if ($actualizarSaldo) {
+                $props['saldo_anterior'] = $saldoAntes;
+                $props['saldo_nuevo'] = bcsub($saldoAntes, $transaccion->monto, 2);
+            }
             activity('transacciones')
                 ->performedOn($transaccion)
                 ->causedBy($usuario)
-                ->withProperties([
-                    'operacion_id'      => $transaccion->operacion_id,
-                    'cuenta_origen_id'  => $transaccion->cuenta_origen_id,
-                    'saldo_anterior'    => $saldoAntes,
-                    'saldo_nuevo'       => $nuevoSaldo,
-                    'monto'             => $transaccion->monto,
-                ])
+                ->withProperties($props)
                 ->event('transaccion_confirmada')
-                ->log('Transacción confirmada - saldo descontado');
+                ->log($actualizarSaldo ? 'Transacción confirmada - saldo descontado' : 'Transacción confirmada - cuenta de cliente, saldo no modificado');
         });
 
         return $transaccion->fresh();
@@ -113,32 +117,36 @@ class TransaccionService
         }
 
         $cuentaOrigen = Cuenta::findOrFail($transaccion->cuenta_origen_id);
-        $saldoAntes = $cuentaOrigen->saldo_cache;
+        $actualizarSaldo = (bool) $cuentaOrigen->titular_id;
+        $saldoAntes = $actualizarSaldo ? $cuentaOrigen->saldo_cache : null;
 
-        DB::transaction(function () use ($transaccion, $usuario, $cuentaOrigen, $saldoAntes, $motivo) {
-            // Reingresar saldo
-            $nuevoSaldo = bcadd($saldoAntes, $transaccion->monto, 2);
-            $cuentaOrigen->update(['saldo_cache' => $nuevoSaldo]);
+        DB::transaction(function () use ($transaccion, $usuario, $cuentaOrigen, $saldoAntes, $motivo, $actualizarSaldo) {
+            if ($actualizarSaldo) {
+                $nuevoSaldo = bcadd($saldoAntes, $transaccion->monto, 2);
+                $cuentaOrigen->update(['saldo_cache' => $nuevoSaldo]);
+            }
 
-            // Marcar como revertida
             $transaccion->update([
                 'estado'        => 'revertida',
                 'motivo_rechazo' => $motivo ?? 'Revertida manualmente',
             ]);
 
+            $props = [
+                'operacion_id'      => $transaccion->operacion_id,
+                'cuenta_origen_id'  => $transaccion->cuenta_origen_id,
+                'monto'             => $transaccion->monto,
+                'motivo'            => $motivo,
+            ];
+            if ($actualizarSaldo) {
+                $props['saldo_anterior'] = $saldoAntes;
+                $props['saldo_nuevo'] = bcadd($saldoAntes, $transaccion->monto, 2);
+            }
             activity('transacciones')
                 ->performedOn($transaccion)
                 ->causedBy($usuario)
-                ->withProperties([
-                    'operacion_id'      => $transaccion->operacion_id,
-                    'cuenta_origen_id'  => $transaccion->cuenta_origen_id,
-                    'saldo_anterior'    => $saldoAntes,
-                    'saldo_nuevo'       => $nuevoSaldo,
-                    'monto'             => $transaccion->monto,
-                    'motivo'            => $motivo,
-                ])
+                ->withProperties($props)
                 ->event('transaccion_revertida')
-                ->log('Transacción revertida - saldo reingresado');
+                ->log($actualizarSaldo ? 'Transacción revertida - saldo reingresado' : 'Transacción revertida - cuenta de cliente, saldo no modificado');
         });
 
         return $transaccion->fresh();

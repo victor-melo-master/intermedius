@@ -960,9 +960,12 @@ public function actualizar(Operacion $operacion, array $payload, \App\Models\Use
             $confirmadas = $operacion->transacciones()->where('estado', 'confirmada')->get();
             foreach ($confirmadas as $t) {
                 $cuentaOrigen = Cuenta::findOrFail($t->cuenta_origen_id);
-                $saldoAntes = $cuentaOrigen->saldo_cache;
-                $nuevoSaldo = bcadd($saldoAntes, $t->monto, 2);
-                $cuentaOrigen->update(['saldo_cache' => $nuevoSaldo]);
+                // Solo re-incrementamos saldo para cuentas de Intermedius
+                if ($cuentaOrigen->titular_id) {
+                    $saldoAntes = $cuentaOrigen->saldo_cache;
+                    $nuevoSaldo = bcadd($saldoAntes, $t->monto, 2);
+                    $cuentaOrigen->update(['saldo_cache' => $nuevoSaldo]);
+                }
 
                 $t->update(['estado' => 'revertida', 'motivo_rechazo' => $motivo ?? 'Operación cancelada']);
             }

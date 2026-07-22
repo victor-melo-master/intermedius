@@ -189,6 +189,7 @@ const cuentaOrigenObj = computed(() => props.cuentas.find(c => c.id == props.cue
 
 const advertenciaSaldo = computed(() => {
   if (!cuentaOrigenObj.value || !props.monto) return false
+  if (!cuentaOrigenObj.value.titular_id) return false
   const saldo = parseFloat(cuentaOrigenObj.value.saldo_cache)
   const monto = parseFloat(props.monto)
   if (isNaN(saldo) || isNaN(monto)) return false

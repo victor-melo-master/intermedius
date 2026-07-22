@@ -20,6 +20,12 @@ class SaldoValidator
         }
 
         $cuenta = Cuenta::findOrFail($cuentaId);
+
+        // No validamos saldo para cuentas de clientes — desconocemos su saldo real
+        if ($cuenta->cliente_id) {
+            return;
+        }
+
         $saldo  = $this->obtenerSaldoDisponible($cuenta, $monedaId);
 
         if ($saldo < $monto) {

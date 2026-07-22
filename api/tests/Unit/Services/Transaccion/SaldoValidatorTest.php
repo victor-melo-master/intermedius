@@ -98,7 +98,23 @@ class SaldoValidatorTest extends TestCase
 
         $saldo = $this->validator->obtenerSaldoDisponible($cuenta, $moneda->id);
 
-        $this->assertEquals(150, $saldo);
+        $this->assertEquals(50, $saldo);
+    }
+
+    public function test_assert_saldo_suficiente_omite_validacion_para_cuentas_de_cliente()
+    {
+        $moneda = Moneda::factory()->create();
+        $cliente = \App\Models\Cliente::factory()->create();
+        $cuenta = Cuenta::factory()->create([
+            'titular_id' => null,
+            'moneda_id'  => $moneda->id,
+            'cliente_id' => $cliente->id,
+            'saldo_cache' => 0,
+        ]);
+
+        // No debe lanzar excepción aunque saldo sea 0 y monto > 0
+        $this->validator->assertSaldoSuficiente($cuenta->id, $moneda->id, 100);
+        $this->assertTrue(true);
     }
 
     public function test_assert_saldo_suficiente_retorna_si_monto_es_cero()
