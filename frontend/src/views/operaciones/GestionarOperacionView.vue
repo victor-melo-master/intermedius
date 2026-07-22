@@ -154,7 +154,7 @@
             <p class="text-xs text-gray-400 mt-1">Tasa de referencia para el cálculo de ganancia</p>
           </div>
           <div v-if="tasaMercadoCierre" class="bg-gray-50 rounded-xl p-3 text-sm text-gray-600">
-            <p>Ganancia estimada: <span class="font-semibold" :class="gananciaPreview?.bruta_usd >= 0 ? 'text-green-600' : 'text-red-600'">{{ formatMoney(gananciaPreview?.bruta_usd || 0) }} USD</span></p>
+            <p>Ganancia estimada:             <span class="font-semibold" :class="gananciaPreview?.bruta_usd >= 0 ? 'text-green-600' : 'text-red-600'">$ {{ formatRate(gananciaPreview?.bruta_usd || 0) }} USD</span></p>
           </div>
           <div class="flex gap-3">
             <button type="button" @click="mostrarCerrar = false"
@@ -373,7 +373,7 @@ watch(mostrarCerrar, async (abierto) => {
   await tasasRef.fetch()
   const ref = tasasRef.refTasaPorMoneda(codigo)
   if (ref) {
-    tasaMercadoCierre.value = parseFloat(ref)
+    tasaMercadoCierre.value = Math.round(parseFloat(ref) * 100) / 100
   }
 })
 
