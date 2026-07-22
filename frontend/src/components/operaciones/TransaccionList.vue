@@ -16,14 +16,14 @@
           <div>
             <p class="text-xs text-gray-400">Origen</p>
             <p class="font-medium text-gray-700">{{ tx.cuenta_origen?.alias || `Cuenta #${tx.cuenta_origen_id}` }}</p>
-            <p class="text-[11px] text-gray-400">
+            <p v-if="tx.cuenta_origen?.titular_id" class="text-[11px] text-gray-400">
               Saldo: {{ formatearSaldo(tx.cuenta_origen) }}
             </p>
           </div>
           <div>
             <p class="text-xs text-gray-400">Destino</p>
             <p class="font-medium text-gray-700">{{ tx.cuenta_destino?.alias || `Cuenta #${tx.cuenta_destino_id}` }}</p>
-            <p class="text-[11px] text-gray-400">
+            <p v-if="tx.cuenta_destino?.titular_id" class="text-[11px] text-gray-400">
               Saldo: {{ formatearSaldo(tx.cuenta_destino) }}
             </p>
           </div>

@@ -35,6 +35,7 @@ class TransaccionResource extends JsonResource
                 'id'          => $this->cuentaOrigen->id,
                 'alias'       => $this->cuentaOrigen->alias,
                 'nombre'      => $this->cuentaOrigen->nombre,
+                'titular_id'  => $this->cuentaOrigen->titular_id,
                 'saldo_cache' => $this->cuentaOrigen->saldo_cache,
                 'moneda'      => $this->cuentaOrigen->relationLoaded('moneda') ? [
                     'id'     => $this->cuentaOrigen->moneda->id,
@@ -46,6 +47,7 @@ class TransaccionResource extends JsonResource
                 'id'          => $this->cuentaDestino->id,
                 'alias'       => $this->cuentaDestino->alias,
                 'nombre'      => $this->cuentaDestino->nombre,
+                'titular_id'  => $this->cuentaDestino->titular_id,
                 'saldo_cache' => $this->cuentaDestino->saldo_cache,
                 'moneda'      => $this->cuentaDestino->relationLoaded('moneda') ? [
                     'id'     => $this->cuentaDestino->moneda->id,
