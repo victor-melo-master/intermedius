@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Operacion\StoreOperacionRequest;
 use App\Http\Requests\Operacion\SolicitudOperacionRequest;
 use App\Http\Requests\Operacion\UpdateOperacionRequest;
+use App\Http\Requests\Operacion\VentaOperacionRequest;
 use App\Http\Requests\Operacion\VerificarOperacionRequest;
 use App\Http\Resources\OperacionResource;
 use App\Models\Operacion;
@@ -351,6 +352,23 @@ class OperacionController extends Controller
     }
 
     /**
+     * Crea una operación de venta y la cierra inmediatamente.
+     * Flujo atómico: cabecera + transacciones confirmadas + movimientos + cierre.
+     */
+    public function venta(VentaOperacionRequest $request): JsonResponse
+    {
+        $payload = array_merge($request->validated(), [
+            'usuario' => $request->user(),
+        ]);
+
+        $operacion = $this->registroService->crearVenta($payload);
+
+        return (new OperacionResource($operacion))
+            ->response()
+            ->setStatusCode(201);
+    }
+
+    /**
      * Pasa una operación de 'solicitud' a 'en_progreso'.
      */
     public function iniciar(Operacion $operacion): JsonResponse
@@ -411,6 +429,31 @@ class OperacionController extends Controller
 
         return response()->json([
             'message' => 'Operación cancelada.',
+            'operacion' => new OperacionResource($operacion),
+        ]);
+    }
+
+    /**
+     * Revierte una operación de venta ya cerrada.
+     * Crea transacciones y movimientos inversos, marca revertida_at.
+     * Solo admin/super_admin pueden revertir.
+     */
+    public function revertir(Request $request, Operacion $operacion): JsonResponse
+    {
+        $this->authorize('cancel', $operacion);
+
+        $request->validate([
+            'motivo' => 'required|string|max:500',
+        ]);
+
+        $operacion = $this->registroService->revertirOperacion(
+            $operacion,
+            $request->user(),
+            $request->input('motivo'),
+        );
+
+        return response()->json([
+            'message' => 'Operación revertida.',
             'operacion' => new OperacionResource($operacion),
         ]);
     }

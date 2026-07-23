@@ -240,6 +240,38 @@ class TransaccionService
     }
 
     /**
+     * Marca una transacción pendiente como fallida.
+     * Requiere una razón del fallo (ej. "saldo insuficiente", "transferencia rechazada").
+     *
+     * @throws ValidationException
+     */
+    public function fallarTransaccion(Transaccion $transaccion, User $usuario, string $razon): Transaccion
+    {
+        if ($transaccion->estado !== 'pendiente') {
+            throw ValidationException::withMessages([
+                'transaccion_id' => 'Solo se pueden marcar como fallidas transacciones en estado "pendiente".',
+            ]);
+        }
+
+        $transaccion->update([
+            'estado'         => 'fallido',
+            'motivo_rechazo' => $razon,
+        ]);
+
+        activity('transacciones')
+            ->performedOn($transaccion)
+            ->causedBy($usuario)
+            ->withProperties([
+                'operacion_id' => $transaccion->operacion_id,
+                'razon'        => $razon,
+            ])
+            ->event('transaccion_fallida')
+            ->log('Transacción marcada como fallida: ' . $razon);
+
+        return $transaccion->fresh();
+    }
+
+    /**
      * Cancela una transacción pendiente.
      */
     public function cancelarTransaccion(Transaccion $transaccion): Transaccion

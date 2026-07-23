@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Operacion;
+use App\Models\TipoOperacion;
 use App\Models\User;
 use Database\Seeders\CatalogosBaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -29,8 +30,9 @@ class PoolControllerTest extends TestCase
 
     public function test_index_lista_ordenes_pendientes(): void
     {
-        $asignada = Operacion::factory()->create(['estado_pool' => 'asignada']);
-        $pendiente = Operacion::factory()->create(['estado_pool' => 'pendiente']);
+        $compraUsd = TipoOperacion::where('codigo', 'compra_usd')->first();
+        $asignada = Operacion::factory()->create(['estado_pool' => 'asignada', 'tipo_operacion_id' => $compraUsd->id]);
+        $pendiente = Operacion::factory()->create(['estado_pool' => 'pendiente', 'tipo_operacion_id' => $compraUsd->id]);
 
         $response = $this->actingAs($this->pagador)
             ->getJson('/api/v1/pool');
@@ -48,7 +50,8 @@ class PoolControllerTest extends TestCase
 
     public function test_index_pagina_con_per_page(): void
     {
-        Operacion::factory()->count(5)->create(['estado_pool' => 'pendiente']);
+        $compraUsd = TipoOperacion::where('codigo', 'compra_usd')->first();
+        Operacion::factory()->count(5)->create(['estado_pool' => 'pendiente', 'tipo_operacion_id' => $compraUsd->id]);
 
         $response = $this->actingAs($this->pagador)
             ->getJson('/api/v1/pool?per_page=2');
@@ -59,13 +62,16 @@ class PoolControllerTest extends TestCase
 
     public function test_mis_ordenes_solo_asignadas_al_usuario(): void
     {
+        $compraUsd = TipoOperacion::where('codigo', 'compra_usd')->first();
         $propia = Operacion::factory()->create([
             'estado_pool' => 'asignada',
             'pagador_id'  => $this->pagador->id,
+            'tipo_operacion_id' => $compraUsd->id,
         ]);
         $deOtro = Operacion::factory()->create([
             'estado_pool' => 'asignada',
             'pagador_id'  => $this->admin->id,
+            'tipo_operacion_id' => $compraUsd->id,
         ]);
 
         $response = $this->actingAs($this->pagador)

@@ -17,6 +17,7 @@ class Transaccion extends Model
         'cuenta_origen_id',
         'cuenta_destino_id',
         'moneda_id',
+        'cliente_id',
         'monto',
         'tasa_aplicada',
         'tasas_snapshot',
@@ -57,6 +58,11 @@ class Transaccion extends Model
     public function moneda(): BelongsTo
     {
         return $this->belongsTo(Moneda::class);
+    }
+
+    public function cliente(): BelongsTo
+    {
+        return $this->belongsTo(Cliente::class);
     }
 
     public function confirmadaPor(): BelongsTo

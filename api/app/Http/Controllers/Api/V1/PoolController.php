@@ -34,6 +34,7 @@ class PoolController extends Controller
 
     /**
      * Lista las órdenes pendientes del pool (sin asignar), más antiguas primero.
+     * Solo muestra operaciones de tipo compra (la casa compra divisa al cliente).
      *
      * @param Request $request Parámetro opcional 'per_page' para paginación
      * @return AnonymousResourceCollection Colección paginada de órdenes pendientes
@@ -44,6 +45,7 @@ class PoolController extends Controller
 
         $query = Operacion::pendientes()
             ->where('estado', '!=', 'solicitud')
+            ->whereHas('tipoOperacion', fn ($q) => $q->where('codigo', 'compra_usd'))
             ->with(self::EAGER)
             ->orderBy('created_at')
             ->orderBy('id');
@@ -53,6 +55,7 @@ class PoolController extends Controller
 
     /**
      * Lista las órdenes asignadas al pagador autenticado.
+     * Solo muestra operaciones de tipo compra.
      *
      * @param Request $request Parámetro opcional 'per_page' para paginación
      * @return AnonymousResourceCollection Colección paginada de órdenes asignadas
@@ -62,6 +65,7 @@ class PoolController extends Controller
         $perPage = min((int) $request->get('per_page', 25), 100);
 
         $query = Operacion::asignadasA($request->user()->id)
+            ->whereHas('tipoOperacion', fn ($q) => $q->where('codigo', 'compra_usd'))
             ->with(self::EAGER)
             ->orderByDesc('asignada_at')
             ->orderByDesc('id');
@@ -71,6 +75,7 @@ class PoolController extends Controller
 
     /**
      * Asigna una orden pendiente al pagador autenticado.
+     * También avanza la operación de 'solicitud' a 'en_progreso'.
      *
      * @param Request $request Datos de la solicitud (usuario autenticado)
      * @param Operacion $operacion Orden a tomar
@@ -88,7 +93,15 @@ class PoolController extends Controller
             'estado_pool' => 'asignada',
             'pagador_id'  => $request->user()->id,
             'asignada_at' => now(),
+            'estado'      => 'en_progreso',
+            'en_progreso_at' => now(),
         ]);
+
+        activity('operaciones')
+            ->performedOn($operacion)
+            ->causedBy($request->user())
+            ->event('operacion_tomada_pool')
+            ->log('Operación tomada del pool y avanzada a en_progreso');
 
         return (new OperacionResource($operacion->fresh(self::EAGER)))->response();
     }

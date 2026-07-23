@@ -285,6 +285,39 @@ class TransaccionController extends Controller
     }
 
     /**
+     * Marca una transacción pendiente como fallida.
+     * Requiere razón obligatoria (ej. "saldo insuficiente", "transferencia rechazada").
+     */
+    public function fallar(Request $request, Operacion $operacion, Transaccion $transaccion): JsonResponse
+    {
+        $this->authorize('update', $operacion);
+
+        if ($transaccion->operacion_id !== $operacion->id) {
+            return response()->json(['message' => 'La transacción no pertenece a esta operación.'], 404);
+        }
+
+        if ($transaccion->estado !== 'pendiente') {
+            return response()->json([
+                'message' => 'Solo se pueden marcar como fallidas transacciones en estado pendiente.',
+            ], 422);
+        }
+
+        $request->validate([
+            'razon' => 'required|string|max:500',
+        ]);
+
+        $transaccion = $this->transaccionService->fallarTransaccion(
+            $transaccion,
+            $request->user(),
+            $request->input('razon'),
+        );
+
+        return response()->json([
+            'transaccion' => $transaccion->fresh(['cuentaOrigen.banco', 'cuentaDestino.banco', 'moneda']),
+        ]);
+    }
+
+    /**
      * Revuelve una transacción confirmada.
      */
     public function revertir(Request $request, Operacion $operacion, Transaccion $transaccion): JsonResponse

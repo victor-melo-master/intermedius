@@ -39,6 +39,7 @@ class Cliente extends Model
         'telefono',
         'email',
         'notas',
+        'datos_bancarios',
         'saldo_cache_usd',
         'saldo_cache_at',
         'activo',
@@ -48,6 +49,7 @@ class Cliente extends Model
     {
         return [
             'activo'          => 'boolean',
+            'datos_bancarios' => 'array',
             'saldo_cache_usd' => 'string',
             'saldo_cache_at'  => 'datetime',
         ];

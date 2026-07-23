@@ -30,6 +30,7 @@ class RegistroOperacionService
     public function __construct(
         private readonly TasaDiariaService $tasaService,
         private readonly CalculadorComisionesService $comisionesService,
+        private readonly CierreOperacionService $cierreService,
     ) {}
 
     /**
@@ -121,7 +122,7 @@ class RegistroOperacionService
                 $operacion->setRelation('tipoOperacion', $tipo);
                 $operacion->load('movimientos.moneda');
 
-                $ganancia = $this->calcularGananciaBruta($operacion);
+                $ganancia = $this->cierreService->calcularGanancia($operacion);
 
                 $operacion->update([
                     'ganancia_bruta_usd' => $ganancia['usd'],
@@ -287,114 +288,7 @@ class RegistroOperacionService
     }
 
     /**
-     * Calcula la ganancia bruta de la operación en USD y VES.
-     *
-     * La ganancia bruta se modela como spread entre tasa aplicada y tasa de mercado,
-     * NO como movimiento extra (lo que rompería la invariante Σ=0).
-     * Es un snapshot congelado al momento de la operación; no se recalcula aunque
-     * cambien las tasas de mercado.
-     *
-     * @return array{usd: float, ves: float}
-     */
-    private function calcularGananciaBruta(Operacion $operacion): array
-    {
-        $codigo = $operacion->tipoOperacion->codigo;
-
-        // Determinar la moneda de operación (divisa): multi-divisa o fallback a USD
-        $codigoDivisa = $operacion->monedaOperacion?->codigo ?? 'USD';
-
-        switch ($codigo) {
-            case 'venta_usd':
-                /*
-                 * La casa vende divisa al cliente y recibe VES.
-                 * El spread es la diferencia entre la tasa aplicada y la tasa de mercado.
-                 *
-                 * Fórmula:
-                 *   ganancia_ves = monto_divisa_vendido × (tasa_aplicada − tasa_mercado)
-                 *   ganancia_usd = ganancia_ves / tasa_aplicada
-                 *
-                 * Ejemplo: 100 USDT vendidos a 36.50, BCV en 36.42.
-                 *   ganancia_ves = 100 × (36.50 − 36.42) = 8.00 Bs
-                 *   ganancia_usd = 8.00 / 36.50 = 0.2192 USD
-                 */
-                if (is_null($operacion->tasa_mercado_snapshot) || is_null($operacion->tasa_aplicada)) {
-                    return ['usd' => 0.0, 'ves' => 0.0];
-                }
-
-                $montoDivisaVendido = $operacion->movimientos
-                    ->filter(fn ($m) => (float) $m->monto < 0 && $m->moneda->codigo === $codigoDivisa)
-                    ->sum(fn ($m) => abs((float) $m->monto));
-
-                $gananciaVes = $montoDivisaVendido * ((float) $operacion->tasa_aplicada - (float) $operacion->tasa_mercado_snapshot);
-                $gananciaUsd = $gananciaVes / (float) $operacion->tasa_aplicada;
-
-                return ['usd' => round($gananciaUsd, 2), 'ves' => round($gananciaVes, 2)];
-
-            case 'compra_usd':
-                /*
-                 * La casa compra divisa al cliente y entrega VES.
-                 * Gana cuando compra por debajo de la tasa de mercado.
-                 *
-                 * Fórmula:
-                 *   ganancia_ves = monto_divisa_comprado × (tasa_mercado − tasa_aplicada)
-                 *   ganancia_usd = ganancia_ves / tasa_mercado  ← se divide por tasa_mercado
-                 *                                                  porque es la referencia "justa"
-                 */
-                if (is_null($operacion->tasa_mercado_snapshot) || is_null($operacion->tasa_aplicada)) {
-                    return ['usd' => 0.0, 'ves' => 0.0];
-                }
-
-                $montoDivisaComprado = $operacion->movimientos
-                    ->filter(fn ($m) => (float) $m->monto > 0 && $m->moneda->codigo === $codigoDivisa)
-                    ->sum(fn ($m) => (float) $m->monto);
-
-                $gananciaVes = $montoDivisaComprado * ((float) $operacion->tasa_mercado_snapshot - (float) $operacion->tasa_aplicada);
-                $gananciaUsd = $gananciaVes / (float) $operacion->tasa_mercado_snapshot;
-
-                return ['usd' => round($gananciaUsd, 2), 'ves' => round($gananciaVes, 2)];
-
-            case 'comision':
-                /*
-                 * La comisión cobrada es ganancia neta directa.
-                 * USD: monto_usd_equivalente del primer movimiento de ingreso.
-                 * VES: si la comisión se cobró en VES, el monto ya es en Bs; de lo contrario,
-                 *      se convierte usando tasa_mercado_snapshot (si no hay snapshot, queda en 0).
-                 */
-                $movIngreso = $operacion->movimientos->first(fn ($m) => (float) $m->monto > 0);
-
-                if (! $movIngreso) {
-                    return ['usd' => 0.0, 'ves' => 0.0];
-                }
-
-                $gananciaUsd = (float) $movIngreso->monto_usd_equivalente;
-
-                if ($movIngreso->moneda->codigo === 'VES') {
-                    $gananciaVes = (float) $movIngreso->monto;
-                } else {
-                    $gananciaVes = ! is_null($operacion->tasa_mercado_snapshot)
-                        ? round($gananciaUsd * (float) $operacion->tasa_mercado_snapshot, 2)
-                        : 0.0;
-                }
-
-                return ['usd' => round($gananciaUsd, 2), 'ves' => round((float) $gananciaVes, 2)];
-
-            case 'cambio':
-                /*
-                 * TODO Fase 4: ganancia real en cambios multimoneda requiere tasa bilateral
-                 * de referencia. Se aclara con el cliente y se implementa en FifoService.
-                 */
-                return ['usd' => 0.0, 'ves' => 0.0];
-
-            default:
-                // traslado, gasto, ajuste, ajuste_apertura: no generan ganancia directa.
-                // Los gastos se reflejan en el movimiento mismo; P&L = Σganancias - Σgastos
-                // se calcula en ReportesService (Fase 5).
-                return ['usd' => 0.0, 'ves' => 0.0];
-        }
-    }
-
-    /**
- * Actualiza una operación existente.
+     * Actualiza una operación existente.
  *
  * Flujo:
  * 1. Valida que la operación sea editable (no verificada, no cancelada).
@@ -501,10 +395,9 @@ public function actualizar(Operacion $operacion, array $payload, \App\Models\Use
         // ── 4. Recalcular ganancia bruta ────────────────────────────────
         $tipo = $operacion->tipoOperacion;
         if ($tipo->genera_ganancia) {
-            $operacion->setRelation('tipoOperacion', $tipo);
             $operacion->load('movimientos.moneda');
 
-            $ganancia = $this->calcularGananciaBruta($operacion);
+            $ganancia = $this->cierreService->calcularGanancia($operacion);
 
             $operacion->update([
                 'ganancia_bruta_usd' => $ganancia['usd'],
@@ -838,43 +731,14 @@ public function actualizar(Operacion $operacion, array $payload, \App\Models\Use
         }
 
         // Validar comprobante obligatorio para métodos no efectivo
-        foreach ($transaccionesConfirmadas as $t) {
-            if (($t->metodo_pago ?? '') !== 'efectivo' && empty($t->comprobante)) {
-                throw ValidationException::withMessages([
-                    'comprobante' => "La transacción #{$t->orden} no tiene comprobante adjunto (requerido para método de pago: {$t->metodo_pago}).",
-                ]);
-            }
-        }
+        $this->cierreService->validarComprobantes($transaccionesConfirmadas);
 
         // Validar que las transacciones estén balanceadas (divisa vs VES)
-        $this->validarBalanceCierre($operacion, $transaccionesConfirmadas);
+        $this->cierreService->validarBalance($operacion, $transaccionesConfirmadas);
 
         return DB::transaction(function () use ($operacion, $transaccionesConfirmadas, $cerrador, $tasaMercadoSnapshot, $fuenteTasaMercado) {
             // Crear movimientos contables desde las transacciones confirmadas
-            foreach ($transaccionesConfirmadas as $i => $t) {
-                $esFiat = in_array($t->moneda->codigo ?? '', ['USD', 'USDT']);
-                $tasaUsd = $esFiat ? 1.0 : ($t->tasa_aplicada ? round(1 / $t->tasa_aplicada, 8) : 1.0);
-
-                // Movimiento de salida (cuenta origen)
-                $operacion->movimientos()->create([
-                    'cuenta_id'             => $t->cuenta_origen_id,
-                    'moneda_id'             => $t->moneda_id,
-                    'monto'                 => -$t->monto,
-                    'tasa_a_usd'            => $tasaUsd,
-                    'monto_usd_equivalente' => round($t->monto * $tasaUsd, 2),
-                    'orden'                 => ($i * 2) + 1,
-                ]);
-
-                // Movimiento de entrada (cuenta destino)
-                $operacion->movimientos()->create([
-                    'cuenta_id'             => $t->cuenta_destino_id,
-                    'moneda_id'             => $t->moneda_id,
-                    'monto'                 => $t->monto,
-                    'tasa_a_usd'            => $tasaUsd,
-                    'monto_usd_equivalente' => round($t->monto * $tasaUsd, 2),
-                    'orden'                 => ($i * 2) + 2,
-                ]);
-            }
+            $this->cierreService->generarMovimientos($operacion, $transaccionesConfirmadas);
 
             // Cerrar operación
             $operacion->update([
@@ -897,12 +761,10 @@ public function actualizar(Operacion $operacion, array $payload, \App\Models\Use
             }
 
             // Calcular ganancia bruta
-            $tipo = $operacion->tipoOperacion;
-            if ($tipo->genera_ganancia) {
-                $operacion->setRelation('tipoOperacion', $tipo);
+            if ($operacion->tipoOperacion->genera_ganancia) {
                 $operacion->load('movimientos.moneda');
 
-                $ganancia = $this->calcularGananciaBruta($operacion);
+                $ganancia = $this->cierreService->calcularGanancia($operacion);
                 $operacion->update([
                     'ganancia_bruta_usd' => $ganancia['usd'],
                     'ganancia_bruta_ves' => $ganancia['ves'],
@@ -914,14 +776,9 @@ public function actualizar(Operacion $operacion, array $payload, \App\Models\Use
             $this->comisionesService->aplicarAOperacion($operacion);
 
             // Actualizar saldos y despachar jobs
-            $cuentaIdsAfectadas = [];
-            foreach ($transaccionesConfirmadas as $t) {
-                $cuentaIdsAfectadas[] = $t->cuenta_origen_id;
-                $cuentaIdsAfectadas[] = $t->cuenta_destino_id;
-            }
-            RecalcularSaldoCuentaJob::dispatch(array_unique($cuentaIdsAfectadas));
+            RecalcularSaldoCuentaJob::dispatch($this->cierreService->cuentasAfectadas($transaccionesConfirmadas));
 
-            if ($tipo->afecta_fifo) {
+            if ($operacion->tipoOperacion?->afecta_fifo) {
                 ProcesarFifoOperacionJob::dispatch($operacion->id);
             }
 
@@ -995,60 +852,6 @@ public function actualizar(Operacion $operacion, array $payload, \App\Models\Use
     }
 
     /**
-     * Valida que el total de transacciones confirmadas esté balanceado
-     * respecto al monto_solicitado y la tasa de la operación.
-     *
-     * Regla:
-     * - Suma de transacciones en la moneda de operación (divisa) = monto_solicitado
-     * - Suma de transacciones en VES = monto_solicitado × tasa_aplicada
-     *
-     * @throws ValidationException
-     */
-    private function validarBalanceCierre(Operacion $operacion, \Illuminate\Support\Collection $transacciones): void
-    {
-        $monedaOperacion = $operacion->monedaOperacion;
-
-        // Si la operación no tiene moneda definida, no validamos balance (legacy)
-        if (!$monedaOperacion) {
-            return;
-        }
-
-        $tasa = (float) $operacion->tasa_aplicada;
-        $montoSolicitado = (float) $operacion->monto_solicitado;
-
-        $totalDivisa = 0;
-        $totalVes = 0;
-
-        foreach ($transacciones as $t) {
-            if ($t->moneda_id === $monedaOperacion?->id) {
-                $totalDivisa += (float) $t->monto;
-            } elseif ($t->moneda?->codigo === 'VES') {
-                $totalVes += (float) $t->monto;
-            }
-        }
-
-        $expectedVes = round($montoSolicitado * $tasa, 2);
-
-        $diffDivisa = abs($totalDivisa - $montoSolicitado);
-        $diffVes = abs($totalVes - $expectedVes);
-
-        $errores = [];
-        if ($diffDivisa > self::TOLERANCIA_USD) {
-            $codigo = $monedaOperacion?->codigo ?? 'Divisa';
-            $errores[] = "Total en {$codigo}: {$totalDivisa}, esperado: {$montoSolicitado} (diferencia: {$diffDivisa}).";
-        }
-        if ($diffVes > self::TOLERANCIA_USD) {
-            $errores[] = "Total en VES: {$totalVes}, esperado: {$expectedVes} (diferencia: {$diffVes}).";
-        }
-
-        if (!empty($errores)) {
-            throw ValidationException::withMessages([
-                'transacciones' => 'Las transacciones confirmadas no están balanceadas: ' . implode(' ', $errores),
-            ]);
-        }
-    }
-
-    /**
      * Pasa una operación de 'solicitud' a 'en_progreso'.
      *
      * @throws ValidationException
@@ -1067,6 +870,235 @@ public function actualizar(Operacion $operacion, array $payload, \App\Models\Use
         ]);
 
         return $operacion->fresh();
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // FLUJO VENTA: creación atómica con cierre inmediato
+    // ═══════════════════════════════════════════════════════════════════
+
+    /**
+     * Crea una operación de venta y la cierra inmediatamente.
+     *
+     * Flujo atómico:
+     * 1. Crea cabecera de operación en estado 'cerrada'
+     * 2. Crea todas las transacciones como 'confirmada'
+     * 3. Valida balance (suma divisa = monto_solicitado, suma VES = monto × tasa)
+     * 4. Genera movimientos contables desde las transacciones
+     * 5. Calcula ganancia bruta
+     * 6. Aplica comisiones automáticas
+     * 7. Despacha jobs de recálculo de saldos y FIFO
+     *
+     * @param array $payload Validado por VentaOperacionRequest
+     * @return Operacion
+     * @throws ValidationException
+     */
+    public function crearVenta(array $payload): Operacion
+    {
+        $tipo = TipoOperacion::where('codigo', 'venta_usd')->firstOrFail();
+        $moneda = Moneda::where('codigo', $payload['moneda_codigo'])->firstOrFail();
+        $tasaAplicada = (float) $payload['tasa_aplicada'];
+
+        return DB::transaction(function () use ($payload, $tipo, $moneda, $tasaAplicada) {
+            // ── 1. Crear cabecera de operación ─────────────────────────
+            $operacion = Operacion::create([
+                'fecha'                  => $payload['fecha'],
+                'tipo_operacion_id'      => $tipo->id,
+                'moneda_operacion_id'    => $moneda->id,
+                'cliente_id'             => $payload['cliente_id'],
+                'operador_id'            => $payload['operador_id'],
+                'tasa_aplicada'          => $tasaAplicada,
+                'monto_solicitado'       => $payload['monto_solicitado'],
+                'tasa_mercado_snapshot'  => $payload['tasa_mercado_snapshot'] ?? null,
+                'fuente_tasa_mercado'    => $payload['fuente_tasa_mercado'] ?? null,
+                'descripcion'            => $payload['descripcion'] ?? null,
+                'referencia'             => $payload['referencia'] ?? null,
+                'origen'                 => $payload['origen'] ?? 'manual',
+                'estado'                 => 'cerrada',
+                'estado_pool'            => 'completada',
+                'verificado_at'          => now(),
+                'verificado_por_id'      => $payload['operador_id'],
+            ]);
+
+            // ── 2. Crear transacciones como 'confirmada' ──────────────
+            $orden = 1;
+            foreach ($payload['transacciones'] as $tData) {
+                $operacion->transacciones()->create([
+                    'cuenta_origen_id'    => $tData['cuenta_origen_id'] ?? null,
+                    'cuenta_destino_id'   => $tData['cuenta_destino_id'] ?? null,
+                    'moneda_id'           => $tData['moneda_id'],
+                    'cliente_id'          => $tData['cliente_id'] ?? $payload['cliente_id'],
+                    'monto'               => $tData['monto'],
+                    'tasa_aplicada'       => $tasaAplicada,
+                    'metodo_pago'         => $tData['metodo_pago'] ?? 'transferencia',
+                    'comprobante'         => $tData['comprobante'] ?? null,
+                    'estado'              => 'confirmada',
+                    'confirmada_en'       => now(),
+                    'confirmada_por_id'   => $payload['operador_id'],
+                    'orden'               => $orden++,
+                ]);
+            }
+
+            // ── 3. Validar balance ─────────────────────────────────────
+            $transacciones = $operacion->transacciones()->get();
+            $this->cierreService->validarBalance($operacion, $transacciones);
+
+            // ── 4. Generar movimientos contables ───────────────────────
+            $this->cierreService->generarMovimientos($operacion, $transacciones);
+
+            // ── 5. Calcular ganancia bruta ─────────────────────────────
+            if ($tipo->genera_ganancia) {
+                $operacion->setRelation('tipoOperacion', $tipo);
+                $operacion->load('movimientos.moneda');
+
+                $ganancia = $this->cierreService->calcularGanancia($operacion);
+                $operacion->update([
+                    'ganancia_bruta_usd' => $ganancia['usd'],
+                    'ganancia_bruta_ves' => $ganancia['ves'],
+                ]);
+            }
+
+            // ── 6. Aplicar comisiones ──────────────────────────────────
+            $operacion->load(['movimientos.cuenta.banco', 'movimientos.moneda', 'operador.titular', 'tipoOperacion']);
+            $this->comisionesService->aplicarAOperacion($operacion);
+
+            // ── 7. Actualizar saldos y despachar jobs ──────────────────
+            RecalcularSaldoCuentaJob::dispatch($this->cierreService->cuentasAfectadas($transacciones));
+
+            if ($tipo->afecta_fifo) {
+                ProcesarFifoOperacionJob::dispatch($operacion->id);
+            }
+
+            // ── 8. Bitácora ────────────────────────────────────────────
+            activity('operaciones')
+                ->performedOn($operacion)
+                ->causedBy($payload['usuario'] ?? \App\Models\User::find($payload['operador_id']))
+                ->withProperties([
+                    'transacciones_creadas' => $transacciones->count(),
+                    'movimientos_creados'   => $operacion->movimientos()->count(),
+                    'tipo'                  => 'venta_inmediata',
+                ])
+                ->event('venta_cerrada')
+                ->log('Venta creada y cerrada con ' . $transacciones->count() . ' transacciones');
+
+            return $operacion->fresh(['movimientos.cuenta', 'tipoOperacion', 'transacciones.moneda', 'transacciones.cliente']);
+        });
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // REVERSIÓN DE VENTAS: deshace una operación de venta cerrada
+    // ═══════════════════════════════════════════════════════════════════
+
+    /**
+     * Revierte una operación de venta ya cerrada.
+     *
+     * Crea movimientos inversos (egreso de Bs, ingreso de divisa)
+     * y marca la operación con revertida_at.
+     * Solo admins/super_admin pueden revertir.
+     * No se permite revertir operaciones con más de 30 días de antigüedad.
+     *
+     * @throws ValidationException
+     */
+    public function revertirOperacion(Operacion $operacion, \App\Models\User $usuario, string $motivo): Operacion
+    {
+        if ($operacion->estado !== 'cerrada') {
+            throw ValidationException::withMessages([
+                'estado' => 'Solo se pueden revertir operaciones en estado "cerrada".',
+            ]);
+        }
+
+        if ($operacion->revertida_at) {
+            throw ValidationException::withMessages([
+                'revertida_at' => 'Esta operación ya fue revertida.',
+            ]);
+        }
+
+        if ($operacion->tipoOperacion->codigo !== 'venta_usd') {
+            throw ValidationException::withMessages([
+                'tipo_operacion_id' => 'Solo se pueden revertir operaciones de tipo venta.',
+            ]);
+        }
+
+        if ($operacion->created_at->diffInDays(now()) > 30) {
+            throw ValidationException::withMessages([
+                'fecha' => 'No se pueden revertir operaciones con más de 30 días de antigüedad.',
+            ]);
+        }
+
+        return DB::transaction(function () use ($operacion, $usuario, $motivo) {
+            $transaccionesOriginales = $operacion->transacciones()
+                ->where('estado', 'confirmada')
+                ->get();
+
+            // Crear transacciones inversas (confirmadas directamente)
+            $orden = $operacion->transacciones()->max('orden') + 1;
+            foreach ($transaccionesOriginales as $t) {
+                $operacion->transacciones()->create([
+                    'cuenta_origen_id'    => $t->cuenta_destino_id,
+                    'cuenta_destino_id'   => $t->cuenta_origen_id,
+                    'moneda_id'           => $t->moneda_id,
+                    'cliente_id'          => $t->cliente_id,
+                    'monto'               => $t->monto,
+                    'tasa_aplicada'       => $t->tasa_aplicada,
+                    'metodo_pago'         => $t->metodo_pago,
+                    'comprobante'         => null,
+                    'estado'              => 'confirmada',
+                    'confirmada_en'       => now(),
+                    'confirmada_por_id'   => $usuario->id,
+                    'orden'               => $orden++,
+                ]);
+            }
+
+            // Crear movimientos inversos
+            $transaccionesInversas = $operacion->transacciones()
+                ->where('orden', '>=', $orden - $transaccionesOriginales->count())
+                ->get();
+
+            foreach ($transaccionesInversas as $i => $t) {
+                $esFiat = in_array($t->moneda->codigo ?? '', ['USD', 'USDT']);
+                $tasaUsd = $esFiat ? 1.0 : ($t->tasa_aplicada ? round(1 / $t->tasa_aplicada, 8) : 1.0);
+                $movOrden = $operacion->movimientos()->max('orden') + 1;
+
+                if ($t->cuenta_origen_id) {
+                    $operacion->movimientos()->create([
+                        'cuenta_id'             => $t->cuenta_origen_id,
+                        'moneda_id'             => $t->moneda_id,
+                        'monto'                 => -$t->monto,
+                        'tasa_a_usd'            => $tasaUsd,
+                        'monto_usd_equivalente' => round($t->monto * $tasaUsd, 2),
+                        'orden'                 => $movOrden++,
+                    ]);
+                }
+
+                if ($t->cuenta_destino_id) {
+                    $operacion->movimientos()->create([
+                        'cuenta_id'             => $t->cuenta_destino_id,
+                        'moneda_id'             => $t->moneda_id,
+                        'monto'                 => $t->monto,
+                        'tasa_a_usd'            => $tasaUsd,
+                        'monto_usd_equivalente' => round($t->monto * $tasaUsd, 2),
+                        'orden'                 => $movOrden,
+                    ]);
+                }
+            }
+
+            // Marcar operación como revertida
+            $operacion->update([
+                'revertida_at' => now(),
+            ]);
+
+            // Bitácora
+            activity('operaciones')
+                ->performedOn($operacion)
+                ->causedBy($usuario)
+                ->withProperties([
+                    'transacciones_inversas' => $transaccionesInversas->count(),
+                    'motivo'                 => $motivo,
+                ])
+                ->event('operacion_revertida')
+                ->log('Venta revertida con ' . $transaccionesInversas->count() . ' transacciones inversas');
+
+            return $operacion->fresh(['transacciones', 'movimientos']);
+        });
     }
 
     /**
