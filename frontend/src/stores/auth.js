@@ -25,6 +25,10 @@ export const useAuthStore = defineStore('auth', () => {
   const isAdmin = computed(() => user.value?.roles?.includes('admin') || user.value?.roles?.includes('super_admin'))
   /** @type {import('vue').ComputedRef<boolean>} Verdadero si el usuario tiene rol super_admin */
   const isSuperAdmin = computed(() => user.value?.roles?.includes('super_admin'))
+  /** @type {import('vue').ComputedRef<boolean>} Verdadero si el usuario tiene rol pagador */
+  const isPagador = computed(() => user.value?.roles?.includes('pagador'))
+  /** @type {import('vue').ComputedRef<boolean>} Verdadero si el usuario tiene rol operador */
+  const isOperador = computed(() => user.value?.roles?.includes('operador'))
 
   /**
    * Verifica la sesión actual consultando /auth/me.
@@ -83,5 +87,5 @@ localStorage.setItem('token', token.value)
     localStorage.removeItem('token')
   }
 
-  return { user, token, loading, error, initialized, isAuthenticated, isAdmin, isSuperAdmin, init, login, logout }
+  return { user, token, loading, error, initialized, isAuthenticated, isAdmin, isSuperAdmin, isPagador, isOperador, init, login, logout }
 })

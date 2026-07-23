@@ -30,6 +30,10 @@
             </option>
           </select>
           <p v-if="!cuentasOrigen.length" class="text-xs text-red-500 mt-1">No hay cuentas disponibles</p>
+          <p v-else-if="cuentaOrigenObj && saldoOrigen !== null" class="text-xs mt-1"
+            :class="saldoOrigen < 0 ? 'text-red-500' : 'text-gray-400'">
+            Saldo: {{ monedaSel?.simbolo || '' }}{{ formatMoney(saldoOrigen) }}
+          </p>
         </div>
         <div>
           <label class="block text-xs text-gray-500 mb-1">
@@ -44,6 +48,10 @@
             </option>
           </select>
           <p v-if="!cuentasDestino.length" class="text-xs text-red-500 mt-1">No hay cuentas disponibles</p>
+          <p v-else-if="cuentaDestinoObj && saldoDestino !== null" class="text-xs mt-1"
+            :class="saldoDestino < 0 ? 'text-red-500' : 'text-gray-400'">
+            Saldo: {{ monedaSel?.simbolo || '' }}{{ formatMoney(saldoDestino) }}
+          </p>
         </div>
       </div>
 
@@ -61,6 +69,9 @@
       <p v-if="disponible !== null && form.moneda_id" class="text-xs mt-1"
         :class="excedeLimite ? 'text-red-500 font-medium' : 'text-gray-400'">
         {{ excedeLimite ? 'Excede el límite. ' : '' }}Disponible: {{ monedaSel?.simbolo || '' }}{{ formatMoney(disponible) }} de {{ monedaSel?.simbolo || '' }}{{ formatMoney(limiteMoneda) }}
+      </p>
+      <p v-if="saldoOrigen !== null && cuentaOrigenObj && !cuentaOrigenObj.titular_id && parseFloat(form.monto) > saldoOrigen" class="text-xs text-red-500 font-medium">
+        ⚠️ El monto excede el saldo disponible en la cuenta origen ({{ monedaSel?.simbolo || '' }}{{ formatMoney(saldoOrigen) }})
       </p>
     </div>
 
@@ -112,6 +123,8 @@ import { reactive, ref, computed, onMounted, watch } from 'vue'
 import { useMovimientos } from '@/composables/useMovimientos'
 import { useNotification } from '@/composables/useNotification'
 import { useFormatting } from '@/composables/useFormatting'
+import { useSaldoCuenta } from '@/composables/useSaldoCuenta'
+import { useMetodoPago } from '@/composables/useMetodoPago'
 import api from '@/api/axios'
 
 const props = defineProps({
@@ -131,6 +144,8 @@ const emit = defineEmits(['saved', 'cancel'])
 const txService = useMovimientos()
 const notifier = useNotification()
 const { formatMoney } = useFormatting()
+const saldoCuenta = useSaldoCuenta()
+const metodoPago = useMetodoPago()
 
 const cuentasIntermedius = ref([])
 const cuentasCliente = ref([])
@@ -172,6 +187,14 @@ const cuentasOrigen = computed(() => {
   }
   return esDivisa.value ? deIntermedius : delCliente
 })
+
+const cuentaOrigenObj = computed(() =>
+  cuentasOrigen.value.find(c => c.id == form.cuenta_origen_id) || null
+)
+
+const cuentaDestinoObj = computed(() =>
+  cuentasDestino.value.find(c => c.id == form.cuenta_destino_id) || null
+)
 
 const cuentasDestino = computed(() => {
   if (!form.moneda_id) return []
@@ -321,6 +344,41 @@ watch(() => form.moneda_id, () => {
   form.cuenta_origen_id = ''
   form.cuenta_destino_id = ''
 })
+
+const saldoOrigen = ref(null)
+const saldoDestino = ref(null)
+
+async function fetchSaldo(cuentaId) {
+  if (!cuentaId) return null
+  return await saldoCuenta.getSaldo(cuentaId)
+}
+
+watch(cuentaOrigenObj, async (cuenta) => {
+  saldoOrigen.value = null
+  if (!cuenta) return
+  saldoOrigen.value = await fetchSaldo(cuenta.id)
+  if (cuenta.cliente_id && esDivisa.value && props.esCompra && !form.monto) {
+    form.monto = saldoOrigen.value > 0 ? String(saldoOrigen.value) : ''
+  }
+  autoDetectarMetodoPago()
+}, { immediate: false })
+
+watch(cuentaDestinoObj, async (cuenta) => {
+  saldoDestino.value = null
+  if (!cuenta) return
+  saldoDestino.value = await fetchSaldo(cuenta.id)
+  autoDetectarMetodoPago()
+}, { immediate: false })
+
+function autoDetectarMetodoPago() {
+  const origen = cuentaOrigenObj.value
+  const destino = cuentaDestinoObj.value
+  if (!origen || !destino) return
+  const detectado = metodoPago.detectar(origen, destino)
+  if (detectado && !form.metodo_pago) {
+    form.metodo_pago = detectado
+  }
+}
 
 onMounted(() => {
   cargarCuentas()

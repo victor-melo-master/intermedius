@@ -147,12 +147,14 @@
  * El pool se refresca automáticamente cada 30 segundos.
  */
 import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { usePoolStore } from '../../stores/pool.js'
 import { useFormatting } from '@/composables/useFormatting'
 import { useApiError } from '@/composables/useApiError'
 
 /** Store del pool de pagos */
 const store = usePoolStore()
+const router = useRouter()
 const { formatMoney, formatHora } = useFormatting()
 const { parseError } = useApiError()
 /** Pestaña activa: 'pool' | 'mias' */
@@ -282,8 +284,7 @@ async function tomar(op) {
   acting.value = op.id
   try {
     await store.tomar(op.id)
-    showToast('Orden tomada. Está en "Mis órdenes".')
-    await Promise.all([store.fetchPool(), store.fetchMisOrdenes()])
+    router.push(`/operaciones/${op.id}/gestionar`)
   } catch (err) {
     showToast(parseError(err), true)
     await store.fetchPool()

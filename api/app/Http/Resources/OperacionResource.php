@@ -51,6 +51,11 @@ class OperacionResource extends JsonResource
                 'neta_ves'    => (string) $this->ganancia_neta_ves,
             ],
 
+            'motivo_reversion'       => $this->motivo_reversion,
+            'revertida_at'           => $this->revertida_at?->toIso8601String(),
+            'en_progreso_at'         => $this->en_progreso_at?->toIso8601String(),
+            'sla_notificado_en'      => $this->sla_notificado_en?->toIso8601String(),
+
             'comisiones_total'       => [
                 'usd' => (string) $this->total_comisiones_usd,
                 'ves' => (string) $this->total_comisiones_ves,

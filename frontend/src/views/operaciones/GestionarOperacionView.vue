@@ -49,7 +49,7 @@
 
       <!-- ════════ FLUJO PROGRESS ════════ -->
       <div class="bg-white border border-gray-200 rounded-xl p-5">
-        <FlujoProgress :estado="store.detail.estado" />
+        <FlujoProgress :estado="store.detail.estado" :revertida="store.detail.estado === 'revertida'" />
       </div>
 
       <!-- ════════ GANANCIA ESTIMADA ════════ -->
@@ -206,6 +206,7 @@ import AppLoadingSpinner from '@/components/common/AppLoadingSpinner.vue'
 import AppErrorState from '@/components/common/AppErrorState.vue'
 import AppFormModal from '@/components/common/AppFormModal.vue'
 import { useTasasReferencia } from '@/composables/useTasasReferencia'
+import { useSaldoCuenta } from '@/composables/useSaldoCuenta'
 
 const route = useRoute()
 const router = useRouter()
@@ -215,6 +216,7 @@ const { formatMoney, formatVes, formatRate, formatDate } = useFormatting()
 const titulares = useTitulares()
 const tasasRef = useTasasReferencia()
 
+const saldoCuenta = useSaldoCuenta()
 const acting = ref(false)
 const mostrarAgregarTx = ref(false)
 const mostrarCancelar = ref(false)
@@ -300,6 +302,7 @@ const montoBolivares = computed(() => {
 })
 
 async function cargarOperacion() {
+  saldoCuenta.invalidateCache()
   await store.fetchOne(route.params.id)
 }
 
@@ -348,6 +351,7 @@ async function cancelarOperacion() {
 
 async function onMovimientoGuardada() {
   mostrarAgregarTx.value = false
+  saldoCuenta.invalidateCache()
   await cargarOperacion()
   await cargarGananciaPreview()
 }

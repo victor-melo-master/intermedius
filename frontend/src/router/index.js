@@ -25,6 +25,7 @@ const routes = [
       /** Listado de operaciones registradas. */
       { path: 'operaciones', name: 'Operaciones', component: () => import('../views/operaciones/OperacionesView.vue') },
       /** Selección de moneda para nueva operación. */
+      { path: 'operaciones/venta/nueva', name: 'VentaNueva', component: () => import('../views/operaciones/VentaFormView.vue') },
       { path: 'operaciones/nueva', name: 'OperacionMoneda', component: () => import('../views/operaciones/OperacionMonedaView.vue') },
       /** Formulario de nueva operación para una moneda específica. */
       { path: 'operaciones/nueva/:moneda', name: 'OperacionNueva', component: () => import('../views/operaciones/OperacionFormView.vue') },

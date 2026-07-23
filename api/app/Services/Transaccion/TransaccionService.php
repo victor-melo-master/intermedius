@@ -272,9 +272,10 @@ class TransaccionService
     }
 
     /**
-     * Cancela una transacción pendiente.
+     * Cancela una transacción pendiente con razón obligatoria.
+     * Distinto de "fallar" (error externo): esto es decisión del operador.
      */
-    public function cancelarTransaccion(Transaccion $transaccion): Transaccion
+    public function cancelarTransaccion(Transaccion $transaccion, User $usuario, string $razon): Transaccion
     {
         if ($transaccion->estado !== 'pendiente') {
             throw ValidationException::withMessages([
@@ -282,7 +283,20 @@ class TransaccionService
             ]);
         }
 
-        $transaccion->update(['estado' => 'cancelada']);
+        $transaccion->update([
+            'estado'         => 'cancelada',
+            'motivo_rechazo' => $razon,
+        ]);
+
+        activity('transacciones')
+            ->performedOn($transaccion)
+            ->causedBy($usuario)
+            ->withProperties([
+                'operacion_id' => $transaccion->operacion_id,
+                'razon'        => $razon,
+            ])
+            ->event('transaccion_cancelada')
+            ->log('Transacción cancelada por el operador: ' . $razon);
 
         return $transaccion->fresh();
     }

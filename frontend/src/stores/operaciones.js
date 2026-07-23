@@ -113,5 +113,17 @@ export const useOperacionesStore = defineStore('operaciones', () => {
     return data.ganancia || { bruta_usd: 0, bruta_ves: 0, neta_usd: 0, neta_ves: 0 }
   }
 
-  return { list, detail, loading, error, fetchAll, fetchOne, create, update, verificar, solicitar, iniciar, cerrar, cancelar, fetchGananciaPreview }
+  async function crearVenta(payload) {
+    const { data } = await api.post('/operaciones/venta', payload)
+    detail.value = data.data || data
+    return data
+  }
+
+  async function revertirOperacion(id, motivo) {
+    const { data } = await api.post(`/operaciones/${id}/revertir`, { motivo })
+    detail.value = data.operacion || data.data || data
+    return data
+  }
+
+  return { list, detail, loading, error, fetchAll, fetchOne, create, update, verificar, solicitar, iniciar, cerrar, cancelar, fetchGananciaPreview, crearVenta, revertirOperacion }
 })

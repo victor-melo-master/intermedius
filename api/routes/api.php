@@ -126,6 +126,7 @@ Route::prefix('v1')->group(function () {
         Route::patch('operaciones/{operacion}/transacciones/{transaccion}/confirmar', [TransaccionController::class, 'confirmar']);
         Route::patch('operaciones/{operacion}/transacciones/{transaccion}/validar', [TransaccionController::class, 'validar']);
         Route::patch('operaciones/{operacion}/transacciones/{transaccion}/fallar', [TransaccionController::class, 'fallar']);
+        Route::patch('operaciones/{operacion}/transacciones/{transaccion}/cancelar', [TransaccionController::class, 'cancelar']);
         Route::patch('operaciones/{operacion}/transacciones/{transaccion}/revertir', [TransaccionController::class, 'revertir']);
         Route::delete('operaciones/{operacion}/transacciones/{transaccion}', [TransaccionController::class, 'destroy']);
 

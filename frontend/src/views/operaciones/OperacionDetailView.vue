@@ -56,6 +56,7 @@
                        ops.detail.estado === 'en_progreso' ? 'bg-blue-50 text-blue-700' :
                        ops.detail.estado === 'solicitud' ? 'bg-yellow-50 text-yellow-700' :
                        ops.detail.estado === 'cancelada' ? 'bg-red-50 text-red-700' :
+                       ops.detail.estado === 'revertida' ? 'bg-amber-50 text-amber-700' :
                        'bg-gray-50 text-gray-700'">
               {{ ops.detail.estado?.replace('_', ' ') }}
             </span>
@@ -73,11 +74,57 @@
         <p class="text-sm text-gray-400">{{ formatDate(ops.detail.fecha) }}</p>
         <p v-if="ops.detail.referencia" class="text-sm text-gray-500">Ref: {{ ops.detail.referencia }}</p>
         <p v-if="ops.detail.descripcion" class="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">{{ ops.detail.descripcion }}</p>
+        <p v-if="ops.detail.motivo_reversion" class="text-sm text-amber-700 bg-amber-50 p-3 rounded-lg">
+          ↩️ Reversión: {{ ops.detail.motivo_reversion }}
+        </p>
+        <p v-if="ops.detail.motivo_cancelacion" class="text-sm text-red-600 bg-red-50 p-3 rounded-lg">
+          ✕ Cancelación: {{ ops.detail.motivo_cancelacion }}
+        </p>
       </div>
 
-      <!-- Movimientos -->
+      <!-- Historial de estados -->
+      <div class="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
+        <h3 class="font-semibold text-gray-700">Historial</h3>
+        <div class="space-y-2 text-sm">
+          <div v-for="ev in historial" :key="ev.label" class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full" :class="ev.color"></span>
+            <span class="text-gray-600">{{ ev.label }}</span>
+            <span class="text-gray-400 ml-auto text-xs">{{ ev.fecha }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Transacciones -->
+      <div v-if="ops.detail.transacciones?.length" class="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
+        <h3 class="font-semibold text-gray-700">Transacciones</h3>
+        <div class="space-y-2">
+          <div v-for="tx in ops.detail.transacciones" :key="tx.id"
+            class="flex items-center gap-3 text-sm bg-gray-50 rounded-lg px-4 py-3"
+            :class="{ 'opacity-50': ['revertida', 'cancelada', 'fallido'].includes(tx.estado) }">
+            <div class="flex-1 text-right">
+              <p class="text-gray-500 text-xs">{{ tx.cuenta_origen?.alias || `Cuenta #${tx.cuenta_origen_id}` }}</p>
+              <p class="font-medium text-red-600">{{ formatMoney(tx.monto) }} {{ tx.moneda?.codigo }}</p>
+            </div>
+            <span class="text-gray-400 text-lg shrink-0">→</span>
+            <div class="flex-1">
+              <p class="text-gray-500 text-xs">{{ tx.cuenta_destino?.alias || `Cuenta #${tx.cuenta_destino_id}` }}</p>
+              <p class="font-medium text-green-600">{{ formatMoney(tx.monto) }} {{ tx.moneda?.codigo }}</p>
+            </div>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-medium shrink-0" :class="txEstadoBadge(tx).clase">
+              {{ txEstadoBadge(tx).label }}
+            </span>
+          </div>
+          <div v-for="tx in ops.detail.transacciones" :key="'motivo-'+tx.id">
+            <p v-if="tx.motivo_rechazo" class="text-xs text-red-500 bg-red-50 rounded-lg px-3 py-1 ml-12">
+              Motivo: {{ tx.motivo_rechazo }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Movimientos contables -->
       <div v-if="ops.detail.movimientos?.length" class="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
-        <h3 class="font-semibold text-gray-700">Movimientos</h3>
+        <h3 class="font-semibold text-gray-700">Movimientos contables</h3>
         <div class="space-y-2">
           <div v-for="(par, idx) in movimientosPareados" :key="idx"
             class="flex items-center gap-3 text-sm bg-gray-50 rounded-lg px-4 py-3">
@@ -123,6 +170,14 @@
         </router-link>
       </div>
 
+      <!-- Revertir venta (solo admin/super_admin, venta cerrada no revertida) -->
+      <div v-if="puedeRevertir" class="space-y-2">
+        <button @click="mostrarRevertirOp = true"
+          class="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold py-3 rounded-xl transition flex items-center justify-center gap-2">
+          ↩️ Revertir venta
+        </button>
+      </div>
+
       <!-- Botones de acción -->
       <div class="space-y-2">
         <button
@@ -152,6 +207,28 @@
         </button>
       </div>
     </div>
+
+    <!-- Modal: Revertir venta -->
+    <Teleport to="body">
+      <AppFormModal v-model="mostrarRevertirOp" title="Revertir venta">
+        <form @submit.prevent="confirmarRevertir" class="space-y-4">
+          <p class="text-sm text-gray-500">¿Estás seguro de revertir esta venta? Se generarán movimientos inversos.</p>
+          <textarea v-model="motivoRevertirOp" rows="3" required
+            placeholder="Motivo de la reversión..."
+            class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none resize-none"></textarea>
+          <div v-if="errorRevertir" class="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{{ errorRevertir }}</div>
+          <div class="flex gap-3">
+            <button type="button" @click="mostrarRevertirOp = false"
+              class="flex-1 py-2.5 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition">Cancelar</button>
+            <button type="submit" :disabled="!motivoRevertirOp.trim() || revertiendoOp"
+              class="flex-1 py-2.5 bg-amber-600 text-white text-sm font-medium rounded-xl hover:bg-amber-700 disabled:bg-amber-300 transition flex items-center justify-center gap-2">
+              <span v-if="revertiendoOp" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+              {{ revertiendoOp ? 'Revirtiendo...' : 'Revertir venta' }}
+            </button>
+          </div>
+        </form>
+      </AppFormModal>
+    </Teleport>
 
     <!-- Modal motivo de edición -->
     <Teleport to="body">
@@ -189,6 +266,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useOperacionesStore } from '../../stores/operaciones.js'
 import { useAuthStore } from '../../stores/auth.js'
 import { useFormatting } from '@/composables/useFormatting'
+import { useNotification } from '@/composables/useNotification'
 import api from '@/api/axios'
 import AppLoadingSpinner from '../../components/common/AppLoadingSpinner.vue'
 import AppErrorState from '../../components/common/AppErrorState.vue'
@@ -201,6 +279,7 @@ const router = useRouter()
 /** Store de operaciones */
 const ops = useOperacionesStore()
 const { formatMoney, formatRate, formatDate } = useFormatting()
+const notifier = useNotification()
 /** Store de autenticación (permisos) */
 const auth = useAuthStore()
 /** Indica si se está verificando la operación */
@@ -211,6 +290,12 @@ const showEditModal = ref(false)
 const motivoEdicion = ref('')
 /** Error al mostrar el modal */
 const editError = ref('')
+
+/** Revertir venta */
+const mostrarRevertirOp = ref(false)
+const motivoRevertirOp = ref('')
+const revertiendoOp = ref(false)
+const errorRevertir = ref('')
 
 /** Indica si la operación puede ser editada (no verificada ni cancelada) */
 const esCompra = computed(() => {
@@ -270,6 +355,15 @@ const montoBolivares = computed(() => {
   return usd && tasa ? usd * tasa : 0
 })
 
+const puedeRevertir = computed(() => {
+  const op = ops.detail
+  if (!op) return false
+  if (!auth.isAdmin && !auth.isSuperAdmin) return false
+  if (op.tipo_operacion?.codigo !== 'venta_usd') return false
+  if (op.estado !== 'cerrada') return false
+  return !op.revertida_at
+})
+
 const puedeEditar = computed(() => {
   const op = ops.detail
   if (!op) return false
@@ -277,6 +371,36 @@ const puedeEditar = computed(() => {
   if (op.estado_pool === 'cancelada') return false
   return true
 })
+
+const historial = computed(() => {
+  const op = ops.detail
+  if (!op) return []
+  const eventos = []
+  if (op.created_at) eventos.push({ label: 'Creada', fecha: formatDate2(op.created_at), color: 'bg-gray-400' })
+  if (op.en_progreso_at) eventos.push({ label: 'Iniciada', fecha: formatDate2(op.en_progreso_at), color: 'bg-blue-500' })
+  if (op.verificado_at) eventos.push({ label: 'Verificada', fecha: formatDate2(op.verificado_at), color: 'bg-green-500' })
+  if (op.cancelada_at) eventos.push({ label: 'Cancelada', fecha: formatDate2(op.cancelada_at), color: 'bg-red-500' })
+  if (op.revertida_at) eventos.push({ label: 'Revertida', fecha: formatDate2(op.revertida_at), color: 'bg-amber-500' })
+  return eventos
+})
+
+function formatDate2(iso) {
+  if (!iso) return '—'
+  try {
+    return new Date(iso).toLocaleDateString('es-VE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+  } catch { return iso }
+}
+
+function txEstadoBadge(tx) {
+  const map = {
+    pendiente:  { label: 'Pendiente',  clase: 'bg-yellow-100 text-yellow-700' },
+    confirmada: { label: 'Confirmada', clase: 'bg-green-100 text-green-700' },
+    revertida:  { label: 'Revertida',  clase: 'bg-orange-100 text-orange-700' },
+    cancelada:  { label: 'Cancelada',  clase: 'bg-red-100 text-red-700' },
+    fallido:    { label: 'Fallido',    clase: 'bg-red-200 text-red-800' },
+  }
+  return map[tx.estado] || { label: tx.estado, clase: 'bg-gray-100 text-gray-600' }
+}
 
 const gananciaBrutaUsd = computed(() => parseFloat(ops.detail?.ganancia?.bruta_usd ?? ops.detail?.ganancia_bruta_usd ?? 0))
 const gananciaBrutaVes = computed(() => parseFloat(ops.detail?.ganancia?.bruta_ves ?? ops.detail?.ganancia_bruta_ves ?? 0))
@@ -302,6 +426,23 @@ function abrirEdicion() {
   motivoEdicion.value = ''
   editError.value = ''
   showEditModal.value = true
+}
+
+/** Confirma la reversión de la venta */
+async function confirmarRevertir() {
+  if (!motivoRevertirOp.value.trim()) return
+  revertiendoOp.value = true
+  errorRevertir.value = ''
+  try {
+    await store.revertirOperacion(route.params.id, motivoRevertirOp.value.trim())
+    notifier.success('Venta revertida exitosamente')
+    mostrarRevertirOp.value = false
+    motivoRevertirOp.value = ''
+    await ops.fetchOne(route.params.id)
+  } catch (err) {
+    errorRevertir.value = err.response?.data?.message || err.message
+  }
+  revertiendoOp.value = false
 }
 
 /** Redirige a la URL de edición con el motivo como query param */

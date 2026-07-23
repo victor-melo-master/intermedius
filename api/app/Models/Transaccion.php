@@ -27,6 +27,7 @@ class Transaccion extends Model
         'motivo_rechazo',
         'confirmada_en',
         'confirmada_por_id',
+        'reversion_de_id',
         'orden',
     ];
 
@@ -68,5 +69,10 @@ class Transaccion extends Model
     public function confirmadaPor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'confirmada_por_id');
+    }
+
+    public function reversionDe(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'reversion_de_id');
     }
 }

@@ -25,6 +25,20 @@ export function useMovimientos() {
     return response
   }
 
+  const fallar = async (operacionId, txId, razon) => {
+    const response = await execute((signal) =>
+      api.patch(`/operaciones/${operacionId}/transacciones/${txId}/fallar`, { razon }, { signal })
+    )
+    return response
+  }
+
+  const cancelar = async (operacionId, txId, razon) => {
+    const response = await execute((signal) =>
+      api.patch(`/operaciones/${operacionId}/transacciones/${txId}/cancelar`, { razon }, { signal })
+    )
+    return response
+  }
+
   const revertir = async (operacionId, txId, motivo) => {
     const response = await execute((signal) =>
       api.patch(`/operaciones/${operacionId}/transacciones/${txId}/revertir`, { motivo }, { signal })
@@ -43,6 +57,8 @@ export function useMovimientos() {
     agregar,
     editar,
     confirmar,
+    fallar,
+    cancelar,
     revertir,
     eliminar,
     loading,

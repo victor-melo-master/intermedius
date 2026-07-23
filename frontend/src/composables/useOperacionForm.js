@@ -7,6 +7,8 @@ import { useTitulares } from './useTitulares'
 import { useNotification } from './useNotification'
 import { useApiError } from './useApiError'
 import { useFormatting } from './useFormatting'
+import { useSaldoCuenta } from './useSaldoCuenta'
+import { useMetodoPago } from './useMetodoPago'
 import api from '@/api/axios'
 
 export function useOperacionForm() {
@@ -18,6 +20,8 @@ export function useOperacionForm() {
   const notifier = useNotification()
   const { parseError } = useApiError()
   const { formatMoney, roundTo } = useFormatting()
+  const saldoCuenta = useSaldoCuenta()
+  const metodoPagoUtil = useMetodoPago()
 
   const monedas = ref([])
   const clienteSeleccionado = ref({ id: '', nombre: '' })
@@ -192,12 +196,42 @@ export function useOperacionForm() {
     loadingCuentas.value = false
   }
 
+  const cuentaOrigenObj = computed(() =>
+    cuentasOrigen.value.find(c => c.id == txForm.cuenta_origen_id) || null
+  )
+
+  const cuentaDestinoObj = computed(() =>
+    cuentasDestino.value.find(c => c.id == txForm.cuenta_destino_id) || null
+  )
+
   watch(() => [clienteSeleccionado.value.id, intermediusTitularId.value], cargarCuentas)
 
   watch(() => txForm.moneda_id, () => {
     txForm.cuenta_origen_id = ''
     txForm.cuenta_destino_id = ''
   })
+
+  watch(cuentaOrigenObj, async (cuenta) => {
+    if (cuenta?.cliente_id && esDivisa.value && form.tipo === 'compra' && !txForm.monto) {
+      const saldo = await saldoCuenta.getSaldo(cuenta.id)
+      if (saldo > 0) txForm.monto = String(saldo)
+    }
+    autoDetectarMetodoPago()
+  })
+
+  watch(cuentaDestinoObj, () => {
+    autoDetectarMetodoPago()
+  })
+
+  function autoDetectarMetodoPago() {
+    const origen = cuentaOrigenObj.value
+    const destino = cuentaDestinoObj.value
+    if (!origen || !destino) return
+    const detectado = metodoPagoUtil.detectar(origen, destino)
+    if (detectado && !txForm.metodo_pago) {
+      txForm.metodo_pago = detectado
+    }
+  }
 
   const cargarOperacion = async () => {
     if (!esEdicion.value) return

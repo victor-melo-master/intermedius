@@ -98,11 +98,18 @@ const baseNav = [
 /** @type {import('vue').ComputedRef<boolean>} - Indica si el usuario puede acceder al pool de pagos */
 const canPool = computed(() => auth.isAdmin || auth.isPagador)
 
+/** @type {import('vue').ComputedRef<boolean>} - Indica si el usuario puede crear ventas directas */
+const canCreateVenta = computed(() => auth.isAdmin || auth.isSuperAdmin || auth.isOperador)
+
 /** @type {import('vue').ComputedRef<Array<{path: string, label: string, icon: string}>>} - Items de navegación dinámicos según rol */
 const nav = computed(() => {
   const items = [...baseNav]
   if (canPool.value) {
     items.push({ path: '/pool', label: 'Pool de pagos', icon: '💸' })
+  }
+  if (canCreateVenta.value) {
+    const opIdx = items.findIndex(i => i.path === '/operaciones')
+    items.splice(opIdx + 1, 0, { path: '/operaciones/venta/nueva', label: 'Nueva Venta', icon: '💰' })
   }
   if (auth.isSuperAdmin) {
     items.push({ path: '/usuarios', label: 'Usuarios', icon: '🔑' })

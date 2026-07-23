@@ -736,6 +736,9 @@ public function actualizar(Operacion $operacion, array $payload, \App\Models\Use
         // Validar que las transacciones estén balanceadas (divisa vs VES)
         $this->cierreService->validarBalance($operacion, $transaccionesConfirmadas);
 
+        // Validar saldos suficientes en cuentas de la casa (salvo que sobregiro esté permitido)
+        $this->cierreService->validarSaldosSuficientes($transaccionesConfirmadas);
+
         return DB::transaction(function () use ($operacion, $transaccionesConfirmadas, $cerrador, $tasaMercadoSnapshot, $fuenteTasaMercado) {
             // Crear movimientos contables desde las transacciones confirmadas
             $this->cierreService->generarMovimientos($operacion, $transaccionesConfirmadas);
@@ -942,6 +945,9 @@ public function actualizar(Operacion $operacion, array $payload, \App\Models\Use
             $transacciones = $operacion->transacciones()->get();
             $this->cierreService->validarBalance($operacion, $transacciones);
 
+            // ── 3b. Validar saldos suficientes ──────────────────────────
+            $this->cierreService->validarSaldosSuficientes($transacciones);
+
             // ── 4. Generar movimientos contables ───────────────────────
             $this->cierreService->generarMovimientos($operacion, $transacciones);
 
@@ -1029,10 +1035,11 @@ public function actualizar(Operacion $operacion, array $payload, \App\Models\Use
                 ->where('estado', 'confirmada')
                 ->get();
 
-            // Crear transacciones inversas (confirmadas directamente)
+            // Crear transacciones inversas (confirmadas directamente) con vínculo a la original
             $orden = $operacion->transacciones()->max('orden') + 1;
+            $transaccionesInversas = collect();
             foreach ($transaccionesOriginales as $t) {
-                $operacion->transacciones()->create([
+                $inversa = $operacion->transacciones()->create([
                     'cuenta_origen_id'    => $t->cuenta_destino_id,
                     'cuenta_destino_id'   => $t->cuenta_origen_id,
                     'moneda_id'           => $t->moneda_id,
@@ -1044,14 +1051,11 @@ public function actualizar(Operacion $operacion, array $payload, \App\Models\Use
                     'estado'              => 'confirmada',
                     'confirmada_en'       => now(),
                     'confirmada_por_id'   => $usuario->id,
+                    'reversion_de_id'     => $t->id,
                     'orden'               => $orden++,
                 ]);
+                $transaccionesInversas->push($inversa);
             }
-
-            // Crear movimientos inversos
-            $transaccionesInversas = $operacion->transacciones()
-                ->where('orden', '>=', $orden - $transaccionesOriginales->count())
-                ->get();
 
             foreach ($transaccionesInversas as $i => $t) {
                 $esFiat = in_array($t->moneda->codigo ?? '', ['USD', 'USDT']);
@@ -1083,7 +1087,8 @@ public function actualizar(Operacion $operacion, array $payload, \App\Models\Use
 
             // Marcar operación como revertida
             $operacion->update([
-                'revertida_at' => now(),
+                'revertida_at'    => now(),
+                'motivo_reversion' => $motivo,
             ]);
 
             // Bitácora

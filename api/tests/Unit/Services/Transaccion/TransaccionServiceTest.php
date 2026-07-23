@@ -283,9 +283,10 @@ class TransaccionServiceTest extends TestCase
             ],
         ])->first();
 
-        $resultado = $this->service->cancelarTransaccion($transaccion);
+        $resultado = $this->service->cancelarTransaccion($transaccion, $this->operador, 'Cliente cambió de método de pago');
 
         $this->assertEquals('cancelada', $resultado->estado);
+        $this->assertEquals('Cliente cambió de método de pago', $resultado->motivo_rechazo);
     }
 
     public function test_adjuntar_comprobante_actualiza_ruta()

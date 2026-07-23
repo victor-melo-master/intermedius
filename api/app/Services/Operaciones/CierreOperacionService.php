@@ -2,6 +2,7 @@
 
 namespace App\Services\Operaciones;
 
+use App\Models\Cuenta;
 use App\Models\Movimiento;
 use App\Models\Operacion;
 use App\Models\Transaccion;
@@ -64,6 +65,54 @@ class CierreOperacionService
         if (!empty($errores)) {
             throw ValidationException::withMessages([
                 'transacciones' => 'Las transacciones confirmadas no están balanceadas: ' . implode(' ', $errores),
+            ]);
+        }
+    }
+
+    /**
+     * Valida que ninguna cuenta de la casa (con titular_id) quede con saldo negativo
+     * después de aplicar las transacciones. Si config('fifo.permitir_sobregiro') es true, omite.
+     *
+     * @throws ValidationException
+     */
+    public function validarSaldosSuficientes(Collection $transacciones): void
+    {
+        if (config('fifo.permitir_sobregiro', false)) {
+            return;
+        }
+
+        $saldos = [];
+
+        foreach ($transacciones as $t) {
+            if ($t->estado !== 'confirmada') {
+                continue;
+            }
+
+            $cuentaOrigen = Cuenta::find($t->cuenta_origen_id);
+            if ($cuentaOrigen && $cuentaOrigen->titular_id) {
+                $key = $cuentaOrigen->id;
+                $saldos[$key] = ($saldos[$key] ?? (float) $cuentaOrigen->saldo_cache) - (float) $t->monto;
+            }
+
+            $cuentaDestino = Cuenta::find($t->cuenta_destino_id);
+            if ($cuentaDestino && $cuentaDestino->titular_id) {
+                $key = $cuentaDestino->id;
+                $saldos[$key] = ($saldos[$key] ?? (float) $cuentaDestino->saldo_cache) + (float) $t->monto;
+            }
+        }
+
+        $errores = [];
+        foreach ($saldos as $cuentaId => $saldoFinal) {
+            if ($saldoFinal < 0) {
+                $cuenta = Cuenta::find($cuentaId);
+                $alias = $cuenta?->alias ?? "ID #{$cuentaId}";
+                $errores[] = "La cuenta {$alias} quedaría con saldo negativo ({$saldoFinal}).";
+            }
+        }
+
+        if (!empty($errores)) {
+            throw ValidationException::withMessages([
+                'saldos' => 'Saldo insuficiente en cuentas de la casa: ' . implode(' ', $errores),
             ]);
         }
     }

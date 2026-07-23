@@ -123,6 +123,7 @@ class Operacion extends Model
         'cancelada_at',
         'motivo_cancelacion',
         'revertida_at',
+        'motivo_reversion',
         'tasas_snapshot',
         'en_progreso_at',
         'sla_notificado_en',

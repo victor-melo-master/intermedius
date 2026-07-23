@@ -5,7 +5,8 @@
     </div>
     <div v-else class="space-y-2">
       <div v-for="tx in transacciones" :key="tx.id"
-        class="border border-gray-200 rounded-xl p-4 space-y-2">
+        class="border border-gray-200 rounded-xl p-4 space-y-2"
+        :class="{ 'opacity-60': ['revertida', 'cancelada', 'fallido'].includes(tx.estado) }">
         <div class="flex items-center justify-between">
           <span class="text-xs text-gray-400">#{{ tx.orden }}</span>
           <span class="px-2 py-0.5 rounded-full text-[11px] font-medium" :class="estadoBadge(tx).clase">
@@ -42,7 +43,7 @@
         <div v-if="tx.motivo_rechazo" class="text-xs text-red-500 bg-red-50 rounded-lg px-3 py-1">
           Motivo: {{ tx.motivo_rechazo }}
         </div>
-        <div v-if="!['solicitud', 'cerrada', 'cancelada'].includes(estado)" class="flex gap-2 pt-1">
+        <div v-if="!['solicitud', 'cerrada', 'cancelada'].includes(estado)" class="flex gap-2 pt-1 flex-wrap">
           <button v-if="tx.estado === 'pendiente'"
             @click="editarTx(tx)"
             class="text-xs px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg transition">
@@ -54,8 +55,18 @@
             Confirmar
           </button>
           <button v-if="tx.estado === 'pendiente'"
+            @click="abrirFallar(tx)"
+            class="text-xs px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition">
+            Fallar
+          </button>
+          <button v-if="tx.estado === 'pendiente'"
+            @click="abrirCancelar(tx)"
+            class="text-xs px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-700 rounded-lg transition">
+            Cancelar
+          </button>
+          <button v-if="tx.estado === 'pendiente'"
             @click="eliminarTx(tx)"
-            class="text-xs px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition">
+            class="text-xs px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg transition">
             Eliminar
           </button>
           <button v-if="tx.estado === 'confirmada'"
@@ -66,6 +77,15 @@
         </div>
       </div>
     </div>
+
+    <!-- Modal: Confirmar -->
+    <ConfirmarMovimientoModal
+      :visible="txAConfirmar !== null"
+      :transaccion="txAConfirmar"
+      :operacion-id="operacionId"
+      @confirmado="onConfirmado"
+      @cancel="onCancelarConfirmacion"
+    />
 
     <!-- Modal: Editar -->
     <Teleport to="body">
@@ -87,7 +107,7 @@
               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none">
               <option value="">Seleccionar</option>
               <option value="efectivo">Efectivo</option>
-              <option value="pago_movil">Pago móvil</option>
+              <option value="pagomovil">Pago móvil</option>
               <option value="transferencia">Transferencia</option>
               <option value="zelle">Zelle</option>
               <option value="binance">Binance</option>
@@ -133,6 +153,46 @@
         </form>
       </AppFormModal>
     </Teleport>
+
+    <!-- Modal: Fallar -->
+    <Teleport to="body">
+      <AppFormModal v-model="mostrarFallarSeleccionado" title="Fallar movimiento">
+        <form @submit.prevent="fallarTx" class="space-y-4">
+          <p class="text-sm text-gray-500">Indica la razón por la que este movimiento no pudo ejecutarse.</p>
+          <textarea v-model="razonFallar" rows="3" required
+            placeholder="Ej: saldo insuficiente, transferencia rechazada..."
+            class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 outline-none resize-none"></textarea>
+          <div class="flex gap-3">
+            <button type="button" @click="cerrarFallar"
+              class="flex-1 py-2.5 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition">Volver</button>
+            <button type="submit" :disabled="!razonFallar.trim() || fallando"
+              class="flex-1 py-2.5 bg-red-600 text-white text-sm font-medium rounded-xl hover:bg-red-700 disabled:bg-red-300 transition">
+              {{ fallando ? 'Procesando...' : 'Marcar como fallido' }}
+            </button>
+          </div>
+        </form>
+      </AppFormModal>
+    </Teleport>
+
+    <!-- Modal: Cancelar -->
+    <Teleport to="body">
+      <AppFormModal v-model="mostrarCancelarSeleccionado" title="Cancelar movimiento">
+        <form @submit.prevent="cancelarTx" class="space-y-4">
+          <p class="text-sm text-gray-500">Indica por qué cancelas este movimiento.</p>
+          <textarea v-model="razonCancelar" rows="3" required
+            placeholder="Motivo de cancelación..."
+            class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none resize-none"></textarea>
+          <div class="flex gap-3">
+            <button type="button" @click="cerrarCancelar"
+              class="flex-1 py-2.5 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition">Volver</button>
+            <button type="submit" :disabled="!razonCancelar.trim() || cancelando"
+              class="flex-1 py-2.5 bg-amber-600 text-white text-sm font-medium rounded-xl hover:bg-amber-700 disabled:bg-amber-300 transition">
+              {{ cancelando ? 'Procesando...' : 'Cancelar movimiento' }}
+            </button>
+          </div>
+        </form>
+      </AppFormModal>
+    </Teleport>
   </div>
 </template>
 
@@ -141,6 +201,7 @@ import { ref, computed, reactive } from 'vue'
 import { useMovimientos } from '@/composables/useMovimientos'
 import { useNotification } from '@/composables/useNotification'
 import AppFormModal from '@/components/common/AppFormModal.vue'
+import ConfirmarMovimientoModal from '@/components/operaciones/ConfirmarMovimientoModal.vue'
 
 const props = defineProps({
   transacciones: { type: Array, default: () => [] },
@@ -173,9 +234,61 @@ const editForm = reactive({
   comprobante: '',
 })
 
+// Fallar
+const mostrarFallar = ref(null)
+const razonFallar = ref('')
+const fallando = ref(false)
+
+function abrirFallar(tx) { mostrarFallar.value = tx.id; razonFallar.value = ''; fallando.value = false }
+function cerrarFallar() { mostrarFallar.value = null; razonFallar.value = '' }
+
+const mostrarFallarSeleccionado = computed(() => mostrarFallar.value !== null)
+
+async function fallarTx() {
+  if (!mostrarFallar.value || !razonFallar.value.trim()) return
+  fallando.value = true
+  try {
+    await txService.fallar(props.operacionId, mostrarFallar.value, razonFallar.value.trim())
+    notifier.success('Movimiento marcado como fallido')
+    cerrarFallar()
+    emit('refrescar')
+  } catch (err) {
+    notifier.error(err.response?.data?.message || 'Error al fallar el movimiento')
+  }
+  fallando.value = false
+}
+
+// Cancelar
+const mostrarCancelar = ref(null)
+const razonCancelar = ref('')
+const cancelando = ref(false)
+
+function abrirCancelar(tx) { mostrarCancelar.value = tx.id; razonCancelar.value = ''; cancelando.value = false }
+function cerrarCancelar() { mostrarCancelar.value = null; razonCancelar.value = '' }
+
+const mostrarCancelarSeleccionado = computed(() => mostrarCancelar.value !== null)
+
+async function cancelarTx() {
+  if (!mostrarCancelar.value || !razonCancelar.value.trim()) return
+  cancelando.value = true
+  try {
+    await txService.cancelar(props.operacionId, mostrarCancelar.value, razonCancelar.value.trim())
+    notifier.success('Movimiento cancelado')
+    cerrarCancelar()
+    emit('refrescar')
+  } catch (err) {
+    notifier.error(err.response?.data?.message || 'Error al cancelar el movimiento')
+  }
+  cancelando.value = false
+}
+
+// End shared
+
 const mostrarEditando = computed(() => editTx.value !== null)
 
 const mostrarRevertirSeleccionado = computed(() => mostrarRevertir.value !== null)
+
+const txAConfirmar = ref(null)
 
 function estadoBadge(tx) {
   const map = {
@@ -183,6 +296,7 @@ function estadoBadge(tx) {
     confirmada: { label: 'Confirmada', clase: 'bg-green-100 text-green-700' },
     revertida:  { label: 'Revertida',  clase: 'bg-orange-100 text-orange-700' },
     cancelada:  { label: 'Cancelada',  clase: 'bg-red-100 text-red-700' },
+    fallido:    { label: 'Fallido',    clase: 'bg-red-200 text-red-800' },
   }
   return map[tx.estado] || { label: tx.estado, clase: 'bg-gray-100 text-gray-600' }
 }
@@ -219,16 +333,17 @@ async function guardarEdicion() {
   editando.value = false
 }
 
-async function confirmarTx(tx) {
-  if (!confirm('¿Confirmar este movimiento?')) return
-  try {
-    await txService.confirmar(props.operacionId, tx.id)
-    notifier.success('Movimiento confirmado')
-    emit('refrescar')
-  } catch (err) {
-    const msg = err.response?.data?.message || err.message || 'Error al confirmar el movimiento'
-    notifier.error(msg)
-  }
+function confirmarTx(tx) {
+  txAConfirmar.value = tx
+}
+
+function onConfirmado() {
+  txAConfirmar.value = null
+  emit('refrescar')
+}
+
+function onCancelarConfirmacion() {
+  txAConfirmar.value = null
 }
 
 async function eliminarTx(tx) {
