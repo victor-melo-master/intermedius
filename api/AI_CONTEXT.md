@@ -40,6 +40,32 @@ Todas definidas en `routes/console.php`. Ejecutadas por el container `schedule` 
 - **Horizon**: container `horizon` (`php artisan horizon`)
 - **Conexión interna**: API/Horizon/Schedule conectan a `reverb:8080` (nombre del container en Docker network)
 
+## CierreOperacionService
+
+Extraído de `RegistroOperacionService` en Jul 2026. Centraliza la lógica de cierre de operaciones:
+
+- **`validarComprobantes(transacciones)`** — exige comprobante si método pago ≠ efectivo
+- **`validarBalance(operacion, transacciones)`** — solo considera transacciones `confirmada`
+- **`generarMovimientos(operacion, transacciones)`** — crea movimientos contables desde transacciones
+- **`calcularGanancia(operacion)`** — spread entre tasa aplicada y tasa de mercado snapshot
+- **`cuentasAfectadas(transacciones)`** — extrae IDs únicos de cuentas origen/destino
+
+## Migraciones recientes (Jul 2026)
+
+| Archivo | Tabla | Cambio |
+|---|---|---|
+| `2026_07_23_000001_...` | `transacciones` | ADD `cliente_id` nullable |
+| `2026_07_23_000002_...` | `clientes` | ADD `datos_bancarios` JSON |
+| `2026_07_23_000003_...` | `operaciones` | ADD `revertida_at` datetime nullable |
+
+## Novedades en rutas (Jul 2026)
+
+| Método | Ruta | Controlador |
+|---|---|---|
+| POST | `/api/v1/operaciones/venta` | `OperacionController::venta()` |
+| POST | `/api/v1/operaciones/{operacion}/revertir` | `OperacionController::revertir()` |
+| PATCH | `/api/v1/operaciones/{operacion}/transacciones/{transaccion}/fallar` | `TransaccionController::fallar()` |
+
 ## Frontend — Estructura de transacciones
 
 ### Payload que envía `submit()` al backend (`POST /api/v1/operaciones`)

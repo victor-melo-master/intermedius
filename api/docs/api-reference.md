@@ -115,6 +115,7 @@ Eager carga siempre: `titular`, `cliente`, `banco`, `moneda`.
 | telefono | string? | max:30 |
 | email | string? | email, max:255 |
 | notas | string? | — |
+| datos_bancarios | array? | nullable, estructura libre |
 | activo | bool | — |
 
 **GET /clientes?q=** — búsqueda por nombre/alias (paginated 50).  
@@ -238,11 +239,12 @@ Siempre `405` — las operaciones no se eliminan.
   "monto_comision": "0.0000",
   "tipo_comision": null,
   "verificado_at": null,
-  "estado_pool": "pendiente|asignada|pagada|cancelada",
+  "estado_pool": "pendiente|asignada|pagada|cancelada|completada",
   "pagador_id": null,
   "asignada_at": null,
   "pagada_at": null,
   "cancelada_at": null,
+  "revertida_at": null,
   "motivo_cancelacion": null,
   "pagador": { "id": 1, "name": "Admin" }|null,
   "tipo_operacion": { "id": 1, "codigo": "compra_usd", "nombre": "Compra de USD" },
@@ -308,9 +310,9 @@ Lista comisiones aplicadas a una operación. Incluye moneda, origen (morph), mov
 
 | Método | Ruta | Acción |
 |--------|------|--------|
-| GET | `/pool` | Órdenes pendientes (más viejas primero) |
-| GET | `/pool/mis-ordenes` | Órdenes asignadas al usuario autenticado |
-| POST | `/pool/{operacion}/tomar` | Asigna la operación al pagador |
+| GET | `/pool` | Órdenes pendientes (solo `compra_usd`, más viejas primero) |
+| GET | `/pool/mis-ordenes` | Órdenes asignadas al usuario (solo `compra_usd`) |
+| POST | `/pool/{operacion}/tomar` | Asigna la operación al pagador + avanza a `en_progreso` |
 | POST | `/pool/{operacion}/soltar` | Libera la operación |
 | POST | `/pool/{operacion}/pagar` | Marca como pagada |
 | POST | `/pool/{operacion}/cancelar` | Cancela (requiere `motivo_cancelacion`) |
@@ -322,6 +324,8 @@ Lista comisiones aplicadas a una operación. Incluye moneda, origen (morph), mov
 | POST | `/pool/{operacion}/cancelar` | Cancela cualquier operación |
 
 Todas devuelven `OperacionResource`.
+
+**Nota:** `GET /pool` y `GET /pool/mis-ordenes` filtran solo operaciones de tipo `compra_usd`. El endpoint `tomar()` además actualiza `estado = en_progreso` y `en_progreso_at`.
 
 ---
 
@@ -643,6 +647,39 @@ Pasa la operación de `solicitud` → `en_progreso`. Sin body.
 
 → `200` `{ "message": "Operación iniciada.", "operacion": OperacionResource }`
 
+### `POST /api/v1/operaciones/venta`
+`auth:sanctum` | `create`
+
+Crea una operación de venta y la cierra inmediatamente. Flujo atómico en una transacción.
+
+```json
+{
+  "fecha":              "required|date|before_or_equal:today",
+  "moneda_codigo":      "required|exists:monedas,codigo",
+  "tasa_aplicada":      "required|numeric|min:0.01",
+  "cliente_id":         "required|exists:clientes",
+  "operador_id":        "required|exists:users",
+  "monto_solicitado":   "required|numeric|min:0.01",
+  "tasa_mercado_snapshot": "numeric?",
+  "fuente_tasa_mercado":   "string?|max:30",
+  "descripcion":        "string?",
+  "origen":             "string?|in:manual",
+  "transacciones": [
+    {
+      "cuenta_origen_id":  "required|exists:cuentas",
+      "cuenta_destino_id": "required|exists:cuentas",
+      "moneda_id":         "required|exists:monedas",
+      "monto":             "required|numeric|min:0.01",
+      "metodo_pago":       "string?|max:50",
+      "comprobante":       "string?|max:255",
+      "cliente_id":        "int?|exists:clientes"
+    }
+  ]
+}
+```
+
+→ `201` `OperacionResource` con `estado: "cerrada"`, `estado_pool: "completada"`
+
 ### `POST /api/v1/operaciones/{operacion}/cerrar`
 `auth:sanctum` | `update`
 
@@ -708,6 +745,25 @@ Cancela la operación (estado `solicitud` o `en_progreso`):
 - Transacciones pendientes → `cancelada`
 - Operación → `cancelada`
 
+### `POST /api/v1/operaciones/{operacion}/revertir`
+`auth:sanctum` | `role:admin|super_admin`
+
+Revierte una operación de venta ya cerrada. Crea transacciones y movimientos inversos.
+
+**Validaciones:**
+- Estado debe ser `cerrada`
+- No debe tener `revertida_at` (solo una reversión por operación)
+- Tipo debe ser `venta_usd`
+- Máximo 30 días desde la creación
+
+```json
+{
+  "motivo": "required|string|max:500"
+}
+```
+
+→ `200` `{ "message": "Operación revertida.", "operacion": OperacionResource }`
+
 ---
 
 ## Transacciones (Flujo Multi-Paso)
@@ -755,6 +811,20 @@ Elimina una transacción pendiente.
 `auth:sanctum`
 
 Confirma la transacción: descuenta saldo de cuenta origen, acredita a destino.
+
+### `PATCH /api/v1/operaciones/{operacion}/transacciones/{transaccion}/fallar`
+`auth:sanctum` | `update`
+
+Marca una transacción pendiente como fallida. Requiere una razón.
+
+```json
+{
+  "razon": "required|string|max:500"
+}
+```
+
+→ `200` `{ "transaccion": TransaccionResource }` con `estado: "fallido"`
+→ `422` si la transacción no está `pendiente`
 
 ### `POST /api/v1/operaciones/{operacion}/transacciones/{transaccion}/revertir`
 `auth:sanctum`

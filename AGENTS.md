@@ -18,16 +18,24 @@ solicitud ──[iniciar]──→ en_progreso ──[cerrar]──→ cerrada
 **Backend:**
 - `RegistroOperacionService::crearSolicitud()` — crea sin movimientos, guarda `moneda_operacion_id`
 - `RegistroOperacionService::iniciarOperacion()` — `solicitud → en_progreso`
-- `RegistroOperacionService::cerrarOperacion()` — genera movimientos desde transacciones confirmadas, valida balance
+- `RegistroOperacionService::cerrarOperacion()` — delega en `CierreOperacionService`
 - `RegistroOperacionService::cancelarOperacion()` — revierte saldos si hay confirmadas
-- `RegistroOperacionService::validarBalanceCierre()` — verifica suma divisa = monto_solicitado, suma VES = monto × tasa
-- `TransaccionController` — CRUD completo de transacciones: store, update, delete, confirmar, revertir
+- `RegistroOperacionService::crearVenta()` — crea operación venta + cierre atómico (estado `cerrada` directo)
+- `RegistroOperacionService::revertirOperacion()` — reversión de ventas cerradas (máx 30 días, motivo requerido)
+- `CierreOperacionService` — contiene: `validarComprobantes`, `validarBalance`, `generarMovimientos`, `calcularGanancia`, `cuentasAfectadas`
+- `TransaccionController` — CRUD completo de transacciones: store, update, delete, confirmar, revertir, **fallar**
+- `TransaccionService::fallarTransaccion()` — marca transacción pendiente como `fallido` con razón
 - `SolicitudOperacionRequest` — requiere `moneda_codigo` (antes era implícito USD)
+- `VentaOperacionRequest` — valida creación de venta: `moneda_codigo`, `tasa_aplicada`, `cliente_id`, `monto_solicitado`, `transacciones[]`
 - `TransaccionResource` — expone `cuenta_origen.alias`, `cuenta_destino.alias`
 - Límite de monto excluye transacciones `revertida`/`cancelada`
+- PoolController: `index`/`mis-ordenes` filtran solo `compra_usd`; `tomar()` avanza a `en_progreso`
 
 **Base de datos:**
 - `operaciones.moneda_operacion_id` (FK → monedas.id, nullable) — qué moneda se negocia (USD/USDT/EUR/COP)
+- `transacciones.cliente_id` (FK → clientes.id, nullable) — cliente de la transacción directa
+- `clientes.datos_bancarios` (JSON, nullable) — datos bancarios del cliente
+- `operaciones.revertida_at` (datetime, nullable) — marca de reversión de venta
 
 **Frontend:**
 - Vistas: `OperacionFormView` (nueva/editar), `GestionarOperacionView`, `OperacionDetailView`
