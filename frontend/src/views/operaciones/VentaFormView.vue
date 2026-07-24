@@ -87,7 +87,11 @@
           <div>
             <label class="block text-xs text-gray-500 mb-1">Monto</label>
             <input v-model="txVes.monto" type="number" step="0.01" min="0" :max="restanteVes"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+              class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 outline-none"
+              :class="parseFloat(txVes.monto) > restanteVes + 0.01 ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'" />
+            <p v-if="parseFloat(txVes.monto) > restanteVes + 0.01" class="text-xs text-red-500 mt-1">
+              Excede el restante (Bs. {{ fmt(restanteVes) }})
+            </p>
           </div>
           <div v-if="txVes.metodo_pago && txVes.metodo_pago !== 'efectivo'">
             <label class="block text-xs text-gray-500 mb-1">Comprobante</label>
@@ -284,9 +288,14 @@ const cuentaIntermediusVes = computed(() => {
   return cuentasIntermedius.value.find(c => c.moneda?.codigo === 'VES') || null
 })
 
-const txVesValido = computed(() =>
-  txVes.metodo_pago && parseFloat(txVes.monto) > 0
-)
+const txVesValido = computed(() => {
+  const monto = parseFloat(txVes.monto)
+  if (!txVes.metodo_pago || isNaN(monto) || monto <= 0) return false
+  const max = movVesEditandoIdx.value !== null
+    ? restanteVes.value + movsVes.value[movVesEditandoIdx.value]?.monto
+    : restanteVes.value
+  return monto <= max + 0.01
+})
 
 function fmt(v) {
   const n = parseFloat(v)
