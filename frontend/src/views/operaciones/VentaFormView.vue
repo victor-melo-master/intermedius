@@ -311,7 +311,7 @@ function labelCuenta(c) {
 }
 
 const cuentasVesCliente = computed(() =>
-  cuentasCliente.value.filter(c => c.moneda?.codigo === 'VES')
+  cuentasCliente.value.filter(c => c.cliente_id == cliente.value?.id && c.moneda?.codigo === 'VES')
 )
 const cuentasVesIntermedius = computed(() =>
   cuentasIntermedius.value.filter(c => c.moneda?.codigo === 'VES')
