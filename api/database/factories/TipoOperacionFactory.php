@@ -20,7 +20,7 @@ class TipoOperacionFactory extends Factory
 
     public function ventaUsd(): static
     {
-        return $this->state(['codigo' => 'venta_usd', 'nombre' => 'Venta de USD', 'afecta_cliente' => true, 'afecta_fifo' => true, 'genera_ganancia' => true]);
+        return $this->state(['codigo' => 'venta_usd', 'nombre' => 'Venta de USD', 'afecta_cliente' => true, 'afecta_fifo' => true, 'genera_ganancia' => false]);
     }
 
     public function compraUsd(): static
