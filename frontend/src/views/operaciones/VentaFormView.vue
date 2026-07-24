@@ -86,7 +86,8 @@
           </div>
           <div>
             <label class="block text-xs text-gray-500 mb-1">Monto</label>
-            <input v-model="txVes.monto" type="number" step="0.01" min="0" :max="restanteVes"
+            <input :value="fmt(txVes.monto)" @input="onMontoVesInput($event)"
+              type="text" inputmode="decimal" placeholder="0.00"
               class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 outline-none"
               :class="parseFloat(txVes.monto) > restanteVes + 0.01 ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'" />
             <p v-if="parseFloat(txVes.monto) > restanteVes + 0.01" class="text-xs text-red-500 mt-1">
@@ -155,8 +156,8 @@
           </div>
           <div>
             <label class="block text-xs text-gray-500 mb-1">Monto</label>
-            <input v-model="txDiv.monto" type="number" step="0.01" min="0" :max="restanteDivisa"
-              :placeholder="fmt(restanteDivisa)"
+            <input :value="fmt(txDiv.monto)" @input="onMontoDivInput($event)"
+              type="text" inputmode="decimal" :placeholder="fmt(restanteDivisa)"
               class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 outline-none"
               :class="parseFloat(txDiv.monto) > restanteDivisa + 0.01 ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'" />
             <p v-if="parseFloat(txDiv.monto) > restanteDivisa + 0.01" class="text-xs text-red-500 mt-1">
@@ -358,6 +359,14 @@ function resetTxForm(form) {
   form.monto = ''
   form.metodo_pago = ''
   form.comprobante = ''
+}
+
+function onMontoVesInput(e) {
+  txVes.monto = String(e.target.value).replace(/,/g, '')
+}
+
+function onMontoDivInput(e) {
+  txDiv.monto = String(e.target.value).replace(/,/g, '')
 }
 
 function resetTxDiv(form) {
