@@ -113,29 +113,32 @@
           <span class="text-gray-500">Total:</span>
           <span class="font-bold text-gray-800">{{ fmt(montoDivisaNum) }} {{ moneda }}</span>
         </div>
+        <div class="flex justify-between text-sm bg-gray-50 rounded-lg px-3 py-2">
+          <span class="text-gray-500">Restante:</span>
+          <span class="font-bold" :class="restanteDivisa === 0 ? 'text-green-600' : 'text-amber-600'">{{ fmt(restanteDivisa) }} {{ moneda }}</span>
+        </div>
 
-        <!-- Estado confirmado -->
-        <div v-if="movDivConfirmado" class="bg-green-50 border border-green-200 rounded-lg p-3 space-y-2">
-          <div class="flex items-center justify-between text-sm">
-            <span class="text-green-700 font-medium">✓ Confirmado</span>
-            <div class="flex gap-2">
-              <button type="button" @click="editarMovDiv"
+        <!-- Lista de movimientos confirmados -->
+        <div v-if="movsDiv.length" class="space-y-1.5">
+          <div v-for="(tx, i) in movsDiv" :key="i"
+            class="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg px-3 py-2 text-sm">
+            <span class="text-green-700">
+              <span class="font-medium">✓</span>
+              {{ tx._origen }} → {{ tx._destino }} · <span class="font-bold">{{ fmt(tx.monto) }} {{ moneda }}</span>
+              <span class="text-gray-500 ml-1">· {{ tx.metodo_pago }}</span>
+            </span>
+            <div class="flex gap-2 ml-2 shrink-0">
+              <button type="button" @click="editarMovDiv(i)"
                 class="text-xs text-blue-600 hover:text-blue-800 font-medium">Editar</button>
-              <button type="button" @click="eliminarMovDiv"
-                class="text-xs text-red-500 hover:text-red-700 font-medium">Eliminar</button>
+              <button type="button" @click="eliminarMovDiv(i)"
+                class="text-xs text-red-500 hover:text-red-700 font-medium">✕</button>
             </div>
-          </div>
-          <div class="text-sm text-gray-700 space-y-0.5">
-            <p><span class="text-gray-500">Origen:</span> {{ movDivConfirmado._origen }}</p>
-            <p><span class="text-gray-500">Destino:</span> {{ movDivConfirmado._destino }}</p>
-            <p><span class="text-gray-500">Monto:</span> <span class="font-bold">{{ fmt(movDivConfirmado.monto) }} {{ moneda }}</span></p>
-            <p><span class="text-gray-500">Método:</span> {{ movDivConfirmado.metodo_pago }}</p>
-            <p v-if="movDivConfirmado.comprobante"><span class="text-gray-500">Comprobante:</span> {{ movDivConfirmado.comprobante }}</p>
           </div>
         </div>
 
         <!-- Formulario -->
-        <div v-else class="space-y-3 pt-2 border-t border-gray-100">
+        <div v-if="restanteDivisa > 0 || movDivEditandoIdx !== null" class="space-y-3 pt-2 border-t border-gray-100">
+          <p v-if="movDivEditandoIdx !== null" class="text-xs text-blue-600 font-medium">Editando movimiento #{{ movDivEditandoIdx + 1 }}</p>
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-xs text-gray-500 mb-1">Cuenta origen <span class="text-gray-400">(Intermedius)</span></label>
@@ -179,7 +182,7 @@
           </div>
           <button type="button" @click="confirmarMovDiv" :disabled="!txDivValido"
             class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white text-sm font-semibold rounded-xl transition">
-            Confirmar
+            {{ movDivEditandoIdx !== null ? 'Actualizar movimiento' : 'Confirmar' }}
           </button>
         </div>
       </div>
@@ -202,7 +205,7 @@
           </div>
           <div class="bg-gray-50 rounded-lg px-3 py-2">
             <p class="text-gray-400">Movimientos</p>
-            <p class="font-bold text-gray-800">{{ movsVes.length + (movDivConfirmado ? 1 : 0) }}</p>
+            <p class="font-bold text-gray-800">{{ movsVes.length + movsDiv.length }}</p>
           </div>
         </div>
 
@@ -256,7 +259,8 @@ const enviando = ref(false)
 
 const movsVes = ref([])
 const movVesEditandoIdx = ref(null)
-const movDivConfirmado = ref(null)
+const movsDiv = ref([])
+const movDivEditandoIdx = ref(null)
 
 const txVes = reactive({ monto: '', metodo_pago: '', comprobante: '' })
 const txDiv = reactive({ cuenta_origen_id: '', cuenta_destino_id: '', monto: '', metodo_pago: '', comprobante: '' })
@@ -272,13 +276,13 @@ const montoDivisaNum = computed(() => parseFloat(montoDivisa.value) || 0)
 const tasaNum = computed(() => parseFloat(tasa.value) || 0)
 
 const sumaVes = computed(() => movsVes.value.reduce((s, t) => s + t.monto, 0))
-const sumaDivisa = computed(() => movDivConfirmado.value?.monto || 0)
+const sumaDivisa = computed(() => movsDiv.value.reduce((s, t) => s + t.monto, 0))
 
 const restanteVes = computed(() => Math.max(0, montoVesNum.value - sumaVes.value))
 const restanteDivisa = computed(() => Math.max(0, montoDivisaNum.value - sumaDivisa.value))
 
 const sumaValida = computed(() =>
-  movsVes.value.length > 0 && movDivConfirmado.value
+  movsVes.value.length > 0 && movsDiv.value.length > 0
   && Math.abs(sumaVes.value - montoVesNum.value) <= 0.01
   && Math.abs(sumaDivisa.value - montoDivisaNum.value) <= 0.01
 )
@@ -356,7 +360,11 @@ const metodosDivDisponibles = computed(() => {
 
 const txDivValido = computed(() => {
   const monto = parseFloat(txDiv.monto)
-  return txDiv.cuenta_origen_id && txDiv.cuenta_destino_id && monto > 0 && txDiv.metodo_pago && monto <= restanteDivisa.value + 0.01
+  if (!txDiv.cuenta_origen_id || !txDiv.cuenta_destino_id || isNaN(monto) || monto <= 0 || !txDiv.metodo_pago) return false
+  const max = movDivEditandoIdx.value !== null
+    ? restanteDivisa.value + movsDiv.value[movDivEditandoIdx.value]?.monto
+    : restanteDivisa.value
+  return monto <= max + 0.01
 })
 
 function resetTxForm(form) {
@@ -404,17 +412,17 @@ function buildTxVes() {
   }
 }
 
-function buildTx(form, monedaCodigo) {
+function buildTxDiv() {
   return {
-    cuenta_origen_id: form.cuenta_origen_id ? Number(form.cuenta_origen_id) : null,
-    cuenta_destino_id: form.cuenta_destino_id ? Number(form.cuenta_destino_id) : null,
-    moneda_id: monedas.value.find(m => m.codigo === monedaCodigo)?.id,
-    monto: parseFloat(form.monto),
+    cuenta_origen_id: txDiv.cuenta_origen_id ? Number(txDiv.cuenta_origen_id) : null,
+    cuenta_destino_id: txDiv.cuenta_destino_id ? Number(txDiv.cuenta_destino_id) : null,
+    moneda_id: monedas.value.find(m => m.codigo === moneda.value)?.id,
+    monto: parseFloat(txDiv.monto),
     tasa_aplicada: tasaNum.value,
-    metodo_pago: form.metodo_pago,
-    comprobante: form.comprobante || null,
-    _origen: allCuentas.value.find(c => c.id == form.cuenta_origen_id)?.alias || '',
-    _destino: allCuentas.value.find(c => c.id == form.cuenta_destino_id)?.alias || '',
+    metodo_pago: txDiv.metodo_pago,
+    comprobante: txDiv.comprobante || null,
+    _origen: allCuentas.value.find(c => c.id == txDiv.cuenta_origen_id)?.alias || '',
+    _destino: allCuentas.value.find(c => c.id == txDiv.cuenta_destino_id)?.alias || '',
   }
 }
 
@@ -433,7 +441,15 @@ function confirmarMovVes() {
 
 function confirmarMovDiv() {
   if (!txDivValido.value) return
-  movDivConfirmado.value = buildTx(txDiv, moneda.value)
+  const tx = buildTxDiv()
+  if (movDivEditandoIdx.value !== null) {
+    movsDiv.value[movDivEditandoIdx.value] = tx
+    movDivEditandoIdx.value = null
+  } else {
+    movsDiv.value.push(tx)
+  }
+  resetTxDiv(txDiv)
+  txDiv.monto = restanteDivisa.value > 0 ? restanteDivisa.value : ''
 }
 
 function editarMovVes(idx) {
@@ -444,14 +460,14 @@ function editarMovVes(idx) {
   movVesEditandoIdx.value = idx
 }
 
-function editarMovDiv() {
-  const tx = movDivConfirmado.value
-  txDiv.cuenta_origen_id = tx.cuenta_origen_id
-  txDiv.cuenta_destino_id = tx.cuenta_destino_id
+function editarMovDiv(idx) {
+  const tx = movsDiv.value[idx]
+  txDiv.cuenta_origen_id = tx.cuenta_origen_id || ''
+  txDiv.cuenta_destino_id = tx.cuenta_destino_id || ''
   txDiv.monto = tx.monto
   txDiv.metodo_pago = tx.metodo_pago
   txDiv.comprobante = tx.comprobante || ''
-  movDivConfirmado.value = null
+  movDivEditandoIdx.value = idx
 }
 
 function eliminarMovVes(idx) {
@@ -464,9 +480,14 @@ function eliminarMovVes(idx) {
   }
 }
 
-function eliminarMovDiv() {
-  movDivConfirmado.value = null
-  resetTxDiv(txDiv)
+function eliminarMovDiv(idx) {
+  movsDiv.value.splice(idx, 1)
+  if (movDivEditandoIdx.value === idx) {
+    movDivEditandoIdx.value = null
+    resetTxDiv(txDiv)
+  } else if (movDivEditandoIdx.value !== null && movDivEditandoIdx.value > idx) {
+    movDivEditandoIdx.value--
+  }
 }
 
 async function cargarCuentas() {
@@ -508,7 +529,7 @@ async function registrarVenta() {
       tasa_mercado_snapshot: tasaReferencia.value || tasaNum.value,
       cliente_id: cliente.value?.id,
       monto_solicitado: montoDivisaNum.value,
-      transacciones: [...movsVes.value, movDivConfirmado.value].map(tx => ({
+      transacciones: [...movsVes.value, ...movsDiv.value].map(tx => ({
         cuenta_origen_id: tx.cuenta_origen_id,
         cuenta_destino_id: tx.cuenta_destino_id,
         moneda_id: tx.moneda_id,
@@ -539,7 +560,10 @@ watch(() => cliente.value?.id, () => {
   registrosPago.value = []
   movsVes.value = []
   movVesEditandoIdx.value = null
+  movsDiv.value = []
+  movDivEditandoIdx.value = null
   resetTxForm(txVes)
+  resetTxDiv(txDiv)
   cargarRegistrosPago()
 })
 
@@ -566,7 +590,7 @@ function autoDetectarMetodo(form) {
 }
 
 watch(restanteDivisa, (val) => {
-  if (val > 0 && !movDivConfirmado.value && !txDiv.monto) {
+  if (val > 0 && movDivEditandoIdx.value === null && !txDiv.monto) {
     txDiv.monto = val
   }
 }, { immediate: true })
@@ -574,7 +598,8 @@ watch(restanteDivisa, (val) => {
 watch(moneda, () => {
   movsVes.value = []
   movVesEditandoIdx.value = null
-  movDivConfirmado.value = null
+  movsDiv.value = []
+  movDivEditandoIdx.value = null
   resetTxForm(txVes)
   resetTxDiv(txDiv)
 })
