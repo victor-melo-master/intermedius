@@ -78,21 +78,21 @@
         </div>
       </div>
 
-      <!-- Transacciones -->
+      <!-- Movimientos -->
       <div v-if="ops.detail.transacciones?.length" class="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
-        <h3 class="font-semibold text-gray-700">Transacciones</h3>
+        <h3 class="font-semibold text-gray-700">Movimientos</h3>
         <div class="space-y-2">
           <div v-for="tx in ops.detail.transacciones" :key="tx.id"
             class="flex items-center gap-3 text-sm bg-gray-50 rounded-lg px-4 py-3"
             :class="{ 'opacity-50': ['revertida', 'cancelada', 'fallido'].includes(tx.estado) }">
             <div class="flex-1 text-right">
               <p class="text-gray-500 text-xs">{{ tx.cuenta_origen?.alias || txLabelMetodo(tx) }}</p>
-              <p class="font-medium text-red-600">{{ formatMoney(tx.monto) }} {{ tx.moneda?.codigo }}</p>
+              <p class="font-medium text-red-600">{{ formatMoney(tx.monto, tx.moneda?.codigo) }}</p>
             </div>
             <span class="text-gray-400 text-lg shrink-0">→</span>
             <div class="flex-1">
               <p class="text-gray-500 text-xs">{{ tx.cuenta_destino?.alias || `Cuenta #${tx.cuenta_destino_id}` }}</p>
-              <p class="font-medium text-green-600">{{ formatMoney(tx.monto) }} {{ tx.moneda?.codigo }}</p>
+              <p class="font-medium text-green-600">{{ formatMoney(tx.monto, tx.moneda?.codigo) }}</p>
             </div>
             <span class="px-2 py-0.5 rounded-full text-[10px] font-medium shrink-0" :class="txEstadoBadge(tx).clase">
               {{ txEstadoBadge(tx).label }}
