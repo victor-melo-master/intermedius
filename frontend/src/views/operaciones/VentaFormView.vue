@@ -85,10 +85,10 @@
             </div>
             <div>
               <label class="block text-xs text-gray-500 mb-1">Cuenta destino <span class="text-gray-400">(Intermedius)</span></label>
-              <select v-model="txVes.cuenta_destino_id" required
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none">
-                <option value="">Seleccionar</option>
-                <option v-for="c in cuentasVesIntermedius" :key="c.id" :value="c.id">{{ labelCuenta(c) }}</option>
+              <select v-model="txVes.cuenta_destino_id" required :disabled="!txVes.cuenta_origen_id"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none disabled:bg-gray-100 disabled:text-gray-400">
+                <option value="">{{ txVes.cuenta_origen_id ? 'Seleccionar' : 'Elegí origen primero' }}</option>
+                <option v-for="c in cuentasVesIntermediusFiltradas" :key="c.id" :value="c.id">{{ labelCuenta(c) }}</option>
               </select>
             </div>
           </div>
@@ -323,15 +323,25 @@ const cuentasDivisaIntermedius = computed(() =>
   cuentasIntermedius.value.filter(c => c.moneda?.codigo === moneda.value)
 )
 
-const destinoVes = computed(() =>
-  allCuentas.value.find(c => c.id == txVes.cuenta_destino_id) || null
+const origenVes = computed(() =>
+  allCuentas.value.find(c => c.id == txVes.cuenta_origen_id) || null
 )
-const esDestinoBanco = computed(() => destinoVes.value?.tipo === 'banco')
-const esDestinoEfectivo = computed(() => destinoVes.value?.tipo === 'efectivo')
+const esOrigenVesBanco = computed(() => origenVes.value?.tipo === 'banco')
+const esOrigenVesEfectivo = computed(() => origenVes.value?.tipo === 'efectivo')
+
+const cuentasVesIntermediusFiltradas = computed(() => {
+  if (esOrigenVesEfectivo.value) {
+    return cuentasVesIntermedius.value.filter(c => c.tipo === 'efectivo')
+  }
+  if (esOrigenVesBanco.value) {
+    return cuentasVesIntermedius.value.filter(c => c.tipo === 'banco')
+  }
+  return []
+})
 
 const metodosBsDisponibles = computed(() => {
-  if (esDestinoEfectivo.value) return [{ value: 'efectivo', label: 'Efectivo' }]
-  if (esDestinoBanco.value) return [
+  if (esOrigenVesEfectivo.value) return [{ value: 'efectivo', label: 'Efectivo' }]
+  if (esOrigenVesBanco.value) return [
     { value: 'pagomovil', label: 'Pago móvil' },
     { value: 'transferencia', label: 'Transferencia' },
   ]
@@ -497,16 +507,15 @@ async function registrarVenta() {
   enviando.value = false
 }
 
-watch(() => txVes.cuenta_destino_id, () => {
+watch(() => txVes.cuenta_origen_id, () => {
+  txVes.cuenta_destino_id = ''
   txVes.metodo_pago = ''
   txVes.comprobante = ''
   if (movVesEditandoIdx.value === null) {
     txVes.monto = restanteVes.value > 0 ? restanteVes.value : ''
   }
-  if (esDestinoEfectivo.value) {
+  if (esOrigenVesEfectivo.value) {
     txVes.metodo_pago = 'efectivo'
-  } else if (esDestinoBanco.value) {
-    txVes.metodo_pago = 'pagomovil'
   }
 })
 watch(() => txDiv.cuenta_origen_id, () => {
