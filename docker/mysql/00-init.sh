@@ -618,7 +618,7 @@ WHERE r.name = 'super_admin' AND u.email = 'admin@test.com';
 
 -- Tipos de operación (ON DUPLICATE KEY actualiza si ya existe)
 INSERT INTO `tipos_operacion` (`codigo`, `nombre`, `afecta_cliente`, `afecta_fifo`, `genera_ganancia`, `activo`, `created_at`, `updated_at`) VALUES
-('venta_usd',       'Venta de USD',           1, 1, 1, 1, NOW(), NOW()),
+('venta_usd',       'Venta de USD',           1, 1, 0, 1, NOW(), NOW()),
 ('compra_usd',      'Compra de USD',          1, 1, 1, 1, NOW(), NOW()),
 ('cambio',          'Cambio de moneda',       0, 0, 0, 1, NOW(), NOW()),
 ('intermediada',    'Operación Intermediada', 1, 1, 1, 1, NOW(), NOW()),
