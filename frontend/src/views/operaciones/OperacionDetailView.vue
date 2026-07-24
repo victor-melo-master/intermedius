@@ -14,13 +14,13 @@
           <div class="bg-blue-50 rounded-xl px-4 py-3 text-center">
             <p class="text-[11px] text-blue-500 mb-1">El cliente entrega</p>
             <p class="text-lg font-bold" :class="esCompra ? 'text-green-700' : 'text-blue-700'">
-              {{ esCompra ? formatMoney(montoDivisa) + ' ' + monedaDivisa : 'Bs. ' + formatMoney(montoBolivares) }}
+              {{ esCompra ? formatMoney(montoDivisa) + ' ' + monedaDivisa : formatVes(montoBolivares) }}
             </p>
           </div>
           <div class="bg-green-50 rounded-xl px-4 py-3 text-center">
             <p class="text-[11px] text-green-500 mb-1">La casa entrega</p>
             <p class="text-lg font-bold" :class="esCompra ? 'text-blue-700' : 'text-green-700'">
-              {{ esCompra ? 'Bs. ' + formatMoney(montoBolivares) : formatMoney(montoDivisa) + ' ' + monedaDivisa }}
+              {{ esCompra ? formatVes(montoBolivares) : formatMoney(montoDivisa) + ' ' + monedaDivisa }}
             </p>
           </div>
         </div>
@@ -115,14 +115,14 @@
             <p class="text-lg font-bold" :class="gananciaBrutaUsd >= 0 ? 'text-green-600' : 'text-red-600'">
               {{ formatMoney(gananciaBrutaUsd) }} USD
             </p>
-            <p class="text-xs text-gray-400">Bs. {{ formatMoney(gananciaBrutaVes) }}</p>
+            <p class="text-xs text-gray-400">{{ formatVes(gananciaBrutaVes) }}</p>
           </div>
           <div>
             <p class="text-xs text-gray-500">Neta</p>
             <p class="text-lg font-bold" :class="gananciaNetaUsd >= 0 ? 'text-green-600' : 'text-red-600'">
               {{ formatMoney(gananciaNetaUsd) }} USD
             </p>
-            <p class="text-xs text-gray-400">Bs. {{ formatMoney(gananciaNetaVes) }}</p>
+            <p class="text-xs text-gray-400">{{ formatVes(gananciaNetaVes) }}</p>
           </div>
         </div>
       </div>
@@ -243,7 +243,7 @@ const route = useRoute()
 const router = useRouter()
 /** Store de operaciones */
 const ops = useOperacionesStore()
-const { formatMoney, formatRate, formatDate } = useFormatting()
+const { formatMoney, formatVes, formatRate, formatDate } = useFormatting()
 const notifier = useNotification()
 /** Store de autenticación (permisos) */
 const auth = useAuthStore()
