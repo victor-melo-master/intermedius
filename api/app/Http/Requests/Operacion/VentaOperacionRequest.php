@@ -12,6 +12,15 @@ class VentaOperacionRequest extends FormRequest
         return $this->user()->can('create', \App\Models\Operacion::class);
     }
 
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'fecha'       => $this->fecha ?? now()->toDateString(),
+            'tipo_codigo' => $this->tipo_codigo ?? 'venta_usd',
+            'operador_id' => $this->operador_id ?? $this->user()?->id,
+        ]);
+    }
+
     public function rules(): array
     {
         return [

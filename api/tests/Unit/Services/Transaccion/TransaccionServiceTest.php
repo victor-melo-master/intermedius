@@ -8,6 +8,7 @@ use App\Models\Operacion;
 use App\Models\TipoOperacion;
 use App\Models\Titular;
 use App\Models\User;
+use App\Services\FlujoCuentaService;
 use App\Services\Transaccion\SaldoValidator;
 use App\Services\Transaccion\TransaccionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -48,7 +49,8 @@ class TransaccionServiceTest extends TestCase
         ]);
 
         $saldoValidator = new SaldoValidator();
-        $this->service = new TransaccionService($saldoValidator);
+        $flujoCuentaService = new FlujoCuentaService();
+        $this->service = new TransaccionService($saldoValidator, $flujoCuentaService);
     }
 
     public function test_crear_transacciones_crea_transacciones_pendientes()

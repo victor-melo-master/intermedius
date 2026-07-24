@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Banco;
 use App\Models\Cliente;
 use App\Models\Cuenta;
+use App\Models\FlujoCuenta;
 use App\Models\Moneda;
 use App\Models\TasaDiaria;
 use App\Models\Titular;
@@ -209,6 +210,7 @@ class DesarrolloSeeder extends Seeder
         $this->command->info('✅ Tasas diarias creadas');
 
         // 7. Clientes de prueba (2 clientes)
+        // Al crearse, el ClienteObserver auto-genera 4 cuentas efectivo (VES, USD, EUR, COP)
         $clientesPrueba = [
             [
                 'nombre'    => 'María Pérez',
@@ -237,7 +239,8 @@ class DesarrolloSeeder extends Seeder
                     'activo'   => true,
                 ]
             );
-            // Cuenta VES para el cliente (banco venezolano)
+
+            // Cuenta bancaria VES para el cliente (solo registro, sin saldo)
             $bancoAleatorio = Banco::where('pais', 'VE')->inRandomOrder()->first();
             if ($bancoAleatorio) {
                 Cuenta::firstOrCreate(
@@ -247,17 +250,16 @@ class DesarrolloSeeder extends Seeder
                         'alias'      => "Cuenta {$bancoAleatorio->nombre} - {$cliente->alias}",
                     ],
                     [
-                        'moneda_id'       => $ves->id,
-                        'tipo'            => 'banco',
-                        'numero_cuenta'   => '111' . rand(10000, 99999),
-                        'saldo_cache'     => 50000.00,
-                        'saldo_cache_at'  => now(),
-                        'activa'          => true,
+                        'moneda_id'     => $ves->id,
+                        'tipo'          => 'banco',
+                        'numero_cuenta' => '111' . rand(10000, 99999),
+                        'saldo_cache'   => 0,
+                        'activa'        => true,
                     ]
                 );
             }
 
-            // Cuenta USD para el cliente (banco de USA)
+            // Cuenta bancaria USD para el cliente (solo registro, sin saldo)
             $bancoUsa = Banco::where('pais', 'US')->inRandomOrder()->first();
             if ($bancoUsa) {
                 Cuenta::firstOrCreate(
@@ -267,18 +269,50 @@ class DesarrolloSeeder extends Seeder
                         'alias'      => "{$cliente->alias} - {$bancoUsa->nombre} (USD)",
                     ],
                     [
-                        'moneda_id'       => $usd->id,
-                        'tipo'            => 'banco',
-                        'numero_cuenta'   => '999' . rand(10000, 99999),
-                        'saldo_cache'     => 5000.00,
-                        'saldo_cache_at'  => now(),
-                        'activa'          => true,
+                        'moneda_id'     => $usd->id,
+                        'tipo'          => 'banco',
+                        'numero_cuenta' => '999' . rand(10000, 99999),
+                        'saldo_cache'   => 0,
+                        'activa'        => true,
                     ]
                 );
             }
+
+            // Flujos de ejemplo para la cuenta efectivo del cliente
+            $cuentaEfectivoUsd = Cuenta::where('cliente_id', $cliente->id)
+                ->where('tipo', 'efectivo')
+                ->where('moneda_id', $usd->id)
+                ->first();
+
+            if ($cuentaEfectivoUsd) {
+                FlujoCuenta::create([
+                    'cuenta_id'      => $cuentaEfectivoUsd->id,
+                    'tipo'           => 'entrada',
+                    'monto'          => 500.00,
+                    'moneda_id'      => $usd->id,
+                    'descripcion'    => 'Entrega inicial en efectivo',
+                    'registrado_por_id' => $userIntermedius->id,
+                ]);
+            }
+
+            $cuentaEfectivoVes = Cuenta::where('cliente_id', $cliente->id)
+                ->where('tipo', 'efectivo')
+                ->where('moneda_id', $ves->id)
+                ->first();
+
+            if ($cuentaEfectivoVes) {
+                FlujoCuenta::create([
+                    'cuenta_id'      => $cuentaEfectivoVes->id,
+                    'tipo'           => 'entrada',
+                    'monto'          => 30000.00,
+                    'moneda_id'      => $ves->id,
+                    'descripcion'    => 'Pago en bolívares',
+                    'registrado_por_id' => $userIntermedius->id,
+                ]);
+            }
         }
 
-        $this->command->info('✅ Clientes de prueba creados');
+        $this->command->info('✅ Clientes de prueba creados (con cuentas efectivo auto-generadas)');
 
         $this->command->info('🎉 Seeding completado exitosamente.');
     }

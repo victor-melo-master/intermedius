@@ -6,6 +6,7 @@ use App\Models\Cuenta;
 use App\Models\Operacion;
 use App\Models\Transaccion;
 use App\Models\User;
+use App\Services\FlujoCuentaService;
 use App\Services\Transaccion\SaldoValidator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -14,6 +15,7 @@ class TransaccionService
 {
     public function __construct(
         private readonly SaldoValidator $saldoValidator,
+        private readonly FlujoCuentaService $flujoCuentaService,
     ) {}
 
     /**
@@ -98,6 +100,22 @@ class TransaccionService
                 ->withProperties($props)
                 ->event('transaccion_confirmada')
                 ->log($actualizarSaldo ? 'Transacción confirmada - saldo descontado' : 'Transacción confirmada - cuenta de cliente, saldo no modificado');
+
+            // Registrar flujo en cuenta de cliente (destino)
+            if ($transaccion->cuenta_destino_id) {
+                $cuentaDestino = Cuenta::find($transaccion->cuenta_destino_id);
+                if ($cuentaDestino && $cuentaDestino->cliente_id) {
+                    $this->flujoCuentaService->registrarEntrada(
+                        $cuentaDestino,
+                        $transaccion->monto,
+                        $transaccion->moneda,
+                        "Operación #{$transaccion->operacion_id}",
+                        $transaccion->operacion,
+                        $transaccion,
+                        $usuario,
+                    );
+                }
+            }
         });
 
         return $transaccion->fresh();
@@ -147,6 +165,14 @@ class TransaccionService
                 ->withProperties($props)
                 ->event('transaccion_revertida')
                 ->log($actualizarSaldo ? 'Transacción revertida - saldo reingresado' : 'Transacción revertida - cuenta de cliente, saldo no modificado');
+
+            // Eliminar flujo registrado en cuenta de cliente (destino)
+            if ($transaccion->cuenta_destino_id) {
+                $cuentaDestino = Cuenta::find($transaccion->cuenta_destino_id);
+                if ($cuentaDestino && $cuentaDestino->cliente_id) {
+                    $this->flujoCuentaService->eliminarPorTransaccion($transaccion);
+                }
+            }
         });
 
         return $transaccion->fresh();

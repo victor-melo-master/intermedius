@@ -722,6 +722,33 @@ CREATE TABLE IF NOT EXISTS `transacciones` (
   CONSTRAINT `transacciones_confirmada_por_id_foreign` FOREIGN KEY (`confirmada_por_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+CREATE TABLE IF NOT EXISTS `flujo_cuentas` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `cuenta_id` bigint(20) unsigned NOT NULL,
+  `tipo` enum('entrada','salida') NOT NULL,
+  `monto` decimal(20,2) NOT NULL,
+  `moneda_id` bigint(20) unsigned NOT NULL,
+  `descripcion` varchar(255) DEFAULT NULL,
+  `operacion_id` bigint(20) unsigned DEFAULT NULL,
+  `transaccion_id` bigint(20) unsigned DEFAULT NULL,
+  `registrado_por_id` bigint(20) unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `flujo_cuentas_cuenta_id_foreign` (`cuenta_id`),
+  KEY `flujo_cuentas_moneda_id_foreign` (`moneda_id`),
+  KEY `flujo_cuentas_operacion_id_foreign` (`operacion_id`),
+  KEY `flujo_cuentas_transaccion_id_foreign` (`transaccion_id`),
+  KEY `flujo_cuentas_registrado_por_id_foreign` (`registrado_por_id`),
+  KEY `flujo_cuentas_cuenta_tipo_idx` (`cuenta_id`, `tipo`),
+  KEY `flujo_cuentas_cuenta_created_idx` (`cuenta_id`, `created_at`),
+  CONSTRAINT `flujo_cuentas_cuenta_id_foreign` FOREIGN KEY (`cuenta_id`) REFERENCES `cuentas` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `flujo_cuentas_moneda_id_foreign` FOREIGN KEY (`moneda_id`) REFERENCES `monedas` (`id`),
+  CONSTRAINT `flujo_cuentas_operacion_id_foreign` FOREIGN KEY (`operacion_id`) REFERENCES `operaciones` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `flujo_cuentas_transaccion_id_foreign` FOREIGN KEY (`transaccion_id`) REFERENCES `transacciones` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `flujo_cuentas_registrado_por_id_foreign` FOREIGN KEY (`registrado_por_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 -- Reactivamos las claves foráneas
 SET FOREIGN_KEY_CHECKS=1;
 EOSQL

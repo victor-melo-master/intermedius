@@ -119,12 +119,15 @@ class ClienteEndpointTest extends TestCase
             'titular_id' => null,
         ]);
 
+        // +4 cuentas efectivo creadas por ClienteObserver
+        $totalEsperado = 1 + 4;
+
         $response = $this->actingAs($this->admin)
             ->getJson("/api/v1/clientes/{$cliente->id}");
 
         $response->assertOk()
             ->assertJsonPath('id', $cliente->id)
-            ->assertJsonCount(1, 'cuentas');
+            ->assertJsonCount($totalEsperado, 'cuentas');
     }
 
     public function test_show_404_si_no_existe(): void
@@ -204,11 +207,14 @@ class ClienteEndpointTest extends TestCase
         ]);
         Cuenta::factory()->create(); // de otro titular
 
+        // +4 cuentas efectivo creadas por ClienteObserver
+        $totalEsperado = 2 + 4;
+
         $response = $this->actingAs($this->admin)
             ->getJson("/api/v1/clientes/{$cliente->id}/cuentas");
 
         $response->assertOk()
-            ->assertJsonCount(2);
+            ->assertJsonCount($totalEsperado);
     }
 
     // ── Operaciones ────────────────────────────────────────────────────────────

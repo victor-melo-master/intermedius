@@ -85,10 +85,10 @@
             </div>
             <div>
               <label class="block text-xs text-gray-500 mb-1">Cuenta destino <span class="text-gray-400">(Intermedius)</span></label>
-              <select v-model="txVes.cuenta_destino_id" required :disabled="!txVes.cuenta_origen_id"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none disabled:bg-gray-100 disabled:text-gray-400">
-                <option value="">{{ txVes.cuenta_origen_id ? 'Seleccionar' : 'Elegí origen primero' }}</option>
-                <option v-for="c in cuentasVesDestinoFiltradas" :key="c.id" :value="c.id">{{ labelCuenta(c) }}</option>
+              <select v-model="txVes.cuenta_destino_id" required
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+                <option value="">Seleccionar</option>
+                <option v-for="c in cuentasVesIntermedius" :key="c.id" :value="c.id">{{ labelCuenta(c) }}</option>
               </select>
             </div>
           </div>
@@ -99,9 +99,9 @@
           </div>
           <div>
             <label class="block text-xs text-gray-500 mb-1">Método de pago</label>
-            <select v-model="txVes.metodo_pago" required :disabled="!txVes.cuenta_origen_id"
+            <select v-model="txVes.metodo_pago" required :disabled="!txVes.cuenta_destino_id"
               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none disabled:bg-gray-100 disabled:text-gray-400">
-              <option value="">{{ txVes.cuenta_origen_id ? 'Seleccionar' : 'Elegí origen primero' }}</option>
+              <option value="">{{ txVes.cuenta_destino_id ? 'Seleccionar' : 'Elegí destino primero' }}</option>
               <option v-for="m in metodosBsDisponibles" :key="m.value" :value="m.value">{{ m.label }}</option>
             </select>
           </div>
@@ -158,10 +158,10 @@
             </div>
             <div>
               <label class="block text-xs text-gray-500 mb-1">Cuenta destino <span class="text-gray-400">(Cliente)</span></label>
-              <select v-model="txDiv.cuenta_destino_id" required
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none">
-                <option value="">Seleccionar</option>
-                <option v-for="c in cuentasDivisaCliente" :key="c.id" :value="c.id">{{ labelCuenta(c) }}</option>
+              <select v-model="txDiv.cuenta_destino_id" required :disabled="!txDiv.cuenta_origen_id"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none disabled:bg-gray-100 disabled:text-gray-400">
+                <option value="">{{ txDiv.cuenta_origen_id ? 'Seleccionar' : 'Elegí origen primero' }}</option>
+                <option v-for="c in cuentasDivisaDestinoFiltradas" :key="c.id" :value="c.id">{{ labelCuenta(c) }}</option>
               </select>
             </div>
           </div>
@@ -173,15 +173,10 @@
           </div>
           <div>
             <label class="block text-xs text-gray-500 mb-1">Método de pago</label>
-            <select v-model="txDiv.metodo_pago" required
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none">
-              <option value="">Seleccionar</option>
-              <option value="efectivo">Efectivo</option>
-              <option value="pagomovil">Pago móvil</option>
-              <option value="transferencia">Transferencia</option>
-              <option value="zelle">Zelle</option>
-              <option value="binance">Binance</option>
-              <option value="otro">Otro</option>
+            <select v-model="txDiv.metodo_pago" required :disabled="!txDiv.cuenta_origen_id"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none disabled:bg-gray-100 disabled:text-gray-400">
+              <option value="">{{ txDiv.cuenta_origen_id ? 'Seleccionar' : 'Elegí origen primero' }}</option>
+              <option v-for="m in metodosDivDisponibles" :key="m.value" :value="m.value">{{ m.label }}</option>
             </select>
           </div>
           <div v-if="txDiv.metodo_pago && txDiv.metodo_pago !== 'efectivo'">
@@ -322,33 +317,49 @@ const cuentasVesIntermedius = computed(() =>
   cuentasIntermedius.value.filter(c => c.moneda?.codigo === 'VES')
 )
 const cuentasDivisaCliente = computed(() =>
-  cuentasCliente.value.filter(c => c.moneda?.codigo === moneda.value)
+  cuentasCliente.value.filter(c => c.cliente_id == cliente.value?.id && c.moneda?.codigo === moneda.value)
 )
 const cuentasDivisaIntermedius = computed(() =>
   cuentasIntermedius.value.filter(c => c.moneda?.codigo === moneda.value)
 )
 
-const origenVes = computed(() =>
-  allCuentas.value.find(c => c.id == txVes.cuenta_origen_id) || null
+const destinoVes = computed(() =>
+  allCuentas.value.find(c => c.id == txVes.cuenta_destino_id) || null
 )
-const esOrigenBanco = computed(() => origenVes.value?.tipo === 'banco')
-const esOrigenEfectivo = computed(() => origenVes.value?.tipo === 'efectivo')
+const esDestinoBanco = computed(() => destinoVes.value?.tipo === 'banco')
+const esDestinoEfectivo = computed(() => destinoVes.value?.tipo === 'efectivo')
 
-const cuentasVesDestinoFiltradas = computed(() => {
-  if (esOrigenEfectivo.value) {
-    return cuentasVesIntermedius.value.filter(c => c.tipo === 'efectivo')
+const metodosBsDisponibles = computed(() => {
+  if (esDestinoEfectivo.value) return [{ value: 'efectivo', label: 'Efectivo' }]
+  if (esDestinoBanco.value) return [
+    { value: 'pagomovil', label: 'Pago móvil' },
+    { value: 'transferencia', label: 'Transferencia' },
+  ]
+  return []
+})
+
+const origenDivisa = computed(() =>
+  allCuentas.value.find(c => c.id == txDiv.cuenta_origen_id) || null
+)
+const esOrigenDivBanco = computed(() => origenDivisa.value?.tipo === 'banco')
+const esOrigenDivEfectivo = computed(() => origenDivisa.value?.tipo === 'efectivo')
+
+const cuentasDivisaDestinoFiltradas = computed(() => {
+  if (esOrigenDivEfectivo.value) {
+    return cuentasDivisaCliente.value.filter(c => c.tipo === 'efectivo')
   }
-  if (esOrigenBanco.value) {
-    return cuentasVesIntermedius.value.filter(c => c.tipo === 'banco')
+  if (esOrigenDivBanco.value) {
+    return cuentasDivisaCliente.value.filter(c => c.tipo === 'banco')
   }
   return []
 })
 
-const metodosBsDisponibles = computed(() => {
-  if (esOrigenEfectivo.value) return [{ value: 'efectivo', label: 'Efectivo' }]
-  if (esOrigenBanco.value) return [
-    { value: 'pagomovil', label: 'Pago móvil' },
+const metodosDivDisponibles = computed(() => {
+  if (esOrigenDivEfectivo.value) return [{ value: 'efectivo', label: 'Efectivo' }]
+  if (esOrigenDivBanco.value) return [
     { value: 'transferencia', label: 'Transferencia' },
+    { value: 'zelle', label: 'Zelle' },
+    { value: 'otro', label: 'Otro' },
   ]
   return []
 })
@@ -370,8 +381,8 @@ function resetTxForm(form) {
 
 function buildTx(form, monedaCodigo) {
   return {
-    cuenta_origen_id: Number(form.cuenta_origen_id),
-    cuenta_destino_id: Number(form.cuenta_destino_id),
+    cuenta_origen_id: form.cuenta_origen_id ? Number(form.cuenta_origen_id) : null,
+    cuenta_destino_id: form.cuenta_destino_id ? Number(form.cuenta_destino_id) : null,
     moneda_id: monedas.value.find(m => m.codigo === monedaCodigo)?.id,
     monto: parseFloat(form.monto),
     tasa_aplicada: tasaNum.value,
@@ -402,7 +413,6 @@ function confirmarMovDiv() {
 
 function editarMovVes(idx) {
   const tx = movsVes.value[idx]
-  txVes.cuenta_origen_id = tx.cuenta_origen_id
   txVes.cuenta_destino_id = tx.cuenta_destino_id
   txVes.monto = tx.monto
   txVes.metodo_pago = tx.metodo_pago
@@ -463,6 +473,7 @@ async function registrarVenta() {
     const payload = {
       moneda_codigo: moneda.value,
       tasa_aplicada: tasaNum.value,
+      tasa_mercado_snapshot: tasaReferencia.value || tasaNum.value,
       cliente_id: cliente.value?.id,
       monto_solicitado: montoDivisaNum.value,
       transacciones: [...movsVes.value, movDivConfirmado.value].map(tx => ({
@@ -486,21 +497,26 @@ async function registrarVenta() {
   enviando.value = false
 }
 
-watch(() => txVes.cuenta_origen_id, () => {
-  txVes.cuenta_destino_id = ''
+watch(() => txVes.cuenta_destino_id, () => {
   txVes.metodo_pago = ''
   txVes.comprobante = ''
   if (movVesEditandoIdx.value === null) {
     txVes.monto = restanteVes.value > 0 ? restanteVes.value : ''
   }
-  if (esOrigenEfectivo.value) {
+  if (esDestinoEfectivo.value) {
     txVes.metodo_pago = 'efectivo'
-  } else if (esOrigenBanco.value) {
+  } else if (esDestinoBanco.value) {
     txVes.metodo_pago = 'pagomovil'
   }
 })
-watch(() => txVes.cuenta_destino_id, () => autoDetectarMetodo(txVes))
-watch(() => txDiv.cuenta_origen_id, () => autoDetectarMetodo(txDiv))
+watch(() => txDiv.cuenta_origen_id, () => {
+  txDiv.cuenta_destino_id = ''
+  txDiv.metodo_pago = ''
+  txDiv.comprobante = ''
+  if (esOrigenDivEfectivo.value) {
+    txDiv.metodo_pago = 'efectivo'
+  }
+})
 watch(() => txDiv.cuenta_destino_id, () => autoDetectarMetodo(txDiv))
 
 function autoDetectarMetodo(form) {

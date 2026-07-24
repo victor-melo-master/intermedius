@@ -9,6 +9,7 @@ use App\Models\Cuenta;
 use App\Models\Moneda;
 use App\Models\Operacion;
 use App\Models\Titular;
+use App\Observers\ClienteObserver;
 use App\Policies\BancoPolicy;
 use App\Policies\OperacionPolicy;
 use App\Policies\CategoriaGastoPolicy;
@@ -39,6 +40,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Cliente::observe(ClienteObserver::class);
+
         Gate::policy(Titular::class,       TitularPolicy::class);
         Gate::policy(Banco::class,         BancoPolicy::class);
         Gate::policy(Moneda::class,        MonedaPolicy::class);

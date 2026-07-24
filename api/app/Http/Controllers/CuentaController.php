@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Cuenta\StoreCuentaRequest;
 use App\Http\Requests\Cuenta\UpdateCuentaRequest;
+use App\Http\Resources\FlujoCuentaResource;
 use App\Models\Cuenta;
+use App\Services\FlujoCuentaService;
 use App\Services\Transaccion\SaldoValidator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -131,5 +133,15 @@ class CuentaController extends Controller
             'moneda_id' => $cuenta->moneda_id,
             'saldo'     => round($saldo, 2),
         ]);
+    }
+
+    public function flujos(Cuenta $cuenta): JsonResponse
+    {
+        $this->authorize('view', $cuenta);
+
+        $flujoService = app(FlujoCuentaService::class);
+        $flujos = $flujoService->obtenerHistorial($cuenta, (int) $request->get('per_page', 20));
+
+        return response()->json(FlujoCuentaResource::collection($flujos));
     }
 }
