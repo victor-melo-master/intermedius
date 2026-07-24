@@ -169,11 +169,21 @@ function onTasaInput(e) {
 }
 
 function onBolivaresInput(e) {
-  const val = String(e.target.value).replace(/,/g, '')
-  emit('update:bolivares', val)
+  let val = String(e.target.value).replace(/,/g, '')
   const b = parse(val)
   const m = parse(props.monto)
   const t = parse(props.tasa)
+
+  if (m > 0 && t > 0) {
+    const max = Math.round(m * t * 100) / 100
+    if (b > max) {
+      val = round2(max)
+      emit('update:bolivares', val)
+      return
+    }
+  }
+
+  emit('update:bolivares', val)
 
   if (b > 0 && m > 0) {
     emit('update:tasa', round2(b / m))

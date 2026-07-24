@@ -289,7 +289,9 @@ const txVesValido = computed(() =>
 )
 
 function fmt(v) {
-  return Number(v).toFixed(2)
+  const n = parseFloat(v)
+  if (isNaN(n)) return '0.00'
+  return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
 function labelCuenta(c) {
