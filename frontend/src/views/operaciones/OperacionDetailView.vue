@@ -10,27 +10,7 @@
     <div v-else-if="ops.detail" class="space-y-4">
       <!-- Resumen de monto -->
       <div class="bg-white border border-gray-200 rounded-xl p-5 space-y-4">
-        <div class="grid grid-cols-3 gap-4 text-center">
-          <div>
-            <p class="text-xs text-gray-400 mb-1">{{ esCompra ? 'Monto divisa' : 'Monto divisa' }}</p>
-            <p class="text-xl font-bold text-gray-800">
-              {{ formatMoney(montoDivisa) }} {{ monedaDivisa }}
-            </p>
-          </div>
-          <div>
-            <p class="text-xs text-gray-400 mb-1">Tasa</p>
-            <p class="text-xl font-bold text-blue-600">
-              {{ formatRate(ops.detail.tasa_aplicada) }}
-            </p>
-          </div>
-          <div>
-            <p class="text-xs text-gray-400 mb-1">Bolívares</p>
-            <p class="text-xl font-bold text-green-600">
-              Bs. {{ formatMoney(montoBolivares) }}
-            </p>
-          </div>
-        </div>
-        <div class="grid grid-cols-2 gap-3 pt-3 border-t border-gray-100">
+        <div class="grid grid-cols-2 gap-3">
           <div class="bg-blue-50 rounded-xl px-4 py-3 text-center">
             <p class="text-[11px] text-blue-500 mb-1">El cliente entrega</p>
             <p class="text-lg font-bold" :class="esCompra ? 'text-green-700' : 'text-blue-700'">
@@ -43,6 +23,9 @@
               {{ esCompra ? 'Bs. ' + formatMoney(montoBolivares) : formatMoney(montoDivisa) + ' ' + monedaDivisa }}
             </p>
           </div>
+        </div>
+        <div class="text-center text-xs text-gray-400">
+          Tasa: {{ formatRate(ops.detail.tasa_aplicada) }}
         </div>
       </div>
 
