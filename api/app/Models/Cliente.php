@@ -67,4 +67,9 @@ class Cliente extends Model
     {
         return $this->hasMany(Documento::class);
     }
+
+    public function registrosPago(): HasMany
+    {
+        return $this->hasMany(RegistroPagoCliente::class);
+    }
 }

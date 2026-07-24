@@ -749,6 +749,19 @@ CREATE TABLE IF NOT EXISTS `flujo_cuentas` (
   CONSTRAINT `flujo_cuentas_registrado_por_id_foreign` FOREIGN KEY (`registrado_por_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+CREATE TABLE IF NOT EXISTS `registros_pago_cliente` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `cliente_id` bigint(20) unsigned NOT NULL,
+  `metodo_pago` varchar(50) NOT NULL,
+  `alias` varchar(255) NOT NULL,
+  `activa` tinyint(1) NOT NULL DEFAULT 1,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `registros_pago_cliente_cliente_metodo_unique` (`cliente_id`, `metodo_pago`),
+  CONSTRAINT `registros_pago_cliente_cliente_id_foreign` FOREIGN KEY (`cliente_id`) REFERENCES `clientes` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 -- Reactivamos las claves foráneas
 SET FOREIGN_KEY_CHECKS=1;
 EOSQL

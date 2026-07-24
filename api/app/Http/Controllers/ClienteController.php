@@ -172,6 +172,21 @@ class ClienteController extends Controller
     }
 
     /**
+     * Devuelve los registros de pago de un cliente.
+     *
+     * @param Cliente $cliente
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function registrosPago(Cliente $cliente): \Illuminate\Http\JsonResponse
+    {
+        $this->authorize('view', $cliente);
+
+        return response()->json(
+            $cliente->registrosPago()->get()
+        );
+    }
+
+    /**
      * Restaura un cliente eliminado (soft delete).
      *
      * @param Cliente $cliente

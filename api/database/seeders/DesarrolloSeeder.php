@@ -125,8 +125,8 @@ class DesarrolloSeeder extends Seeder
             );
         }
 
-        // 5b. Cuentas en efectivo (cash) para cada moneda (USD, EUR, COP, USDT) — excepto VES
-        $monedasEfectivo = [$usd, $eur, $cop, $usdt];
+        // 5b. Cuentas en efectivo (cash) para cada moneda (USD, VES, EUR, COP, USDT)
+        $monedasEfectivo = [$ves, $usd, $eur, $cop, $usdt];
         foreach ($monedasEfectivo as $moneda) {
             if (!$moneda) continue;
             Cuenta::firstOrCreate(

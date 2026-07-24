@@ -59,7 +59,7 @@
             class="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg px-3 py-2 text-sm">
             <span class="text-green-700">
               <span class="font-medium">✓</span>
-              {{ tx._origen }} → {{ tx._destino }} · <span class="font-bold">Bs. {{ fmt(tx.monto) }}</span>
+              {{ tx._registroLabel }} · <span class="font-bold">Bs. {{ fmt(tx.monto) }}</span>
               <span class="text-gray-500 ml-1">· {{ tx.metodo_pago }}</span>
             </span>
             <div class="flex gap-2 ml-2 shrink-0">
@@ -74,36 +74,20 @@
         <!-- Formulario -->
         <div v-if="restanteVes > 0 || movVesEditandoIdx !== null" class="space-y-3 pt-2 border-t border-gray-100">
           <p v-if="movVesEditandoIdx !== null" class="text-xs text-blue-600 font-medium">Editando movimiento #{{ movVesEditandoIdx + 1 }}</p>
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs text-gray-500 mb-1">Cuenta origen <span class="text-gray-400">(Cliente)</span></label>
-              <select v-model="txVes.cuenta_origen_id" required
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none">
-                <option value="">Seleccionar</option>
-                <option v-for="c in cuentasVesCliente" :key="c.id" :value="c.id">{{ labelCuenta(c) }}</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-xs text-gray-500 mb-1">Cuenta destino <span class="text-gray-400">(Intermedius)</span></label>
-              <select v-model="txVes.cuenta_destino_id" required :disabled="!txVes.cuenta_origen_id"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none disabled:bg-gray-100 disabled:text-gray-400">
-                <option value="">{{ txVes.cuenta_origen_id ? 'Seleccionar' : 'Elegí origen primero' }}</option>
-                <option v-for="c in cuentasVesIntermediusFiltradas" :key="c.id" :value="c.id">{{ labelCuenta(c) }}</option>
-              </select>
-            </div>
+          <div>
+            <label class="block text-xs text-gray-500 mb-1">Método de pago</label>
+            <select v-model="txVes.metodo_pago" required
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+              <option value="">Seleccionar método</option>
+              <option value="efectivo">Efectivo</option>
+              <option value="pagomovil">Pago móvil</option>
+              <option value="transferencia">Transferencia</option>
+            </select>
           </div>
           <div>
             <label class="block text-xs text-gray-500 mb-1">Monto</label>
             <input v-model="txVes.monto" type="number" step="0.01" min="0" :max="restanteVes"
               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
-          </div>
-          <div>
-            <label class="block text-xs text-gray-500 mb-1">Método de pago</label>
-            <select v-model="txVes.metodo_pago" required :disabled="!txVes.cuenta_destino_id"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none disabled:bg-gray-100 disabled:text-gray-400">
-              <option value="">{{ txVes.cuenta_destino_id ? 'Seleccionar' : 'Elegí destino primero' }}</option>
-              <option v-for="m in metodosBsDisponibles" :key="m.value" :value="m.value">{{ m.label }}</option>
-            </select>
           </div>
           <div v-if="txVes.metodo_pago && txVes.metodo_pago !== 'efectivo'">
             <label class="block text-xs text-gray-500 mb-1">Comprobante</label>
@@ -241,7 +225,6 @@ import { useNotification } from '@/composables/useNotification'
 import { useFormatting } from '@/composables/useFormatting'
 import { useTasasReferencia } from '@/composables/useTasasReferencia'
 import { useTitulares } from '@/composables/useTitulares'
-import { useMetodoPago } from '@/composables/useMetodoPago'
 import ClienteSelector from '@/components/clientes/ClienteSelector.vue'
 import CalculadoraBidireccional from '@/components/operaciones/CalculadoraBidireccional.vue'
 import AppErrorState from '@/components/common/AppErrorState.vue'
@@ -253,7 +236,6 @@ const notifier = useNotification()
 const { formatMoney } = useFormatting()
 const tasasRef = useTasasReferencia()
 const titulares = useTitulares()
-const metodoPagoUtil = useMetodoPago()
 
 const moneda = ref('')
 const cliente = ref(null)
@@ -267,12 +249,13 @@ const movsVes = ref([])
 const movVesEditandoIdx = ref(null)
 const movDivConfirmado = ref(null)
 
-const txVes = reactive({ cuenta_origen_id: '', cuenta_destino_id: '', monto: '', metodo_pago: '', comprobante: '' })
+const txVes = reactive({ monto: '', metodo_pago: '', comprobante: '' })
 const txDiv = reactive({ cuenta_origen_id: '', cuenta_destino_id: '', monto: '', metodo_pago: '', comprobante: '' })
 
 const allCuentas = ref([])
 const cuentasIntermedius = ref([])
 const cuentasCliente = ref([])
+const registrosPago = ref([])
 const monedas = ref([])
 
 const montoVesNum = computed(() => parseFloat(montoVes.value) || 0)
@@ -297,6 +280,14 @@ const tasaReferencia = computed(() => {
   return ref ? parseFloat(ref).toFixed(2) : null
 })
 
+const cuentaIntermediusVes = computed(() => {
+  return cuentasIntermedius.value.find(c => c.moneda?.codigo === 'VES') || null
+})
+
+const txVesValido = computed(() =>
+  txVes.metodo_pago && parseFloat(txVes.monto) > 0
+)
+
 function fmt(v) {
   return Number(v).toFixed(2)
 }
@@ -310,43 +301,12 @@ function labelCuenta(c) {
   return `${c.alias} · ${tipo}${saldo}`
 }
 
-const cuentasVesCliente = computed(() =>
-  cuentasCliente.value.filter(c => c.cliente_id == cliente.value?.id && c.moneda?.codigo === 'VES')
-)
-const cuentasVesIntermedius = computed(() =>
-  cuentasIntermedius.value.filter(c => c.moneda?.codigo === 'VES')
+const cuentasDivisaIntermedius = computed(() =>
+  cuentasIntermedius.value.filter(c => c.moneda?.codigo === moneda.value)
 )
 const cuentasDivisaCliente = computed(() =>
   cuentasCliente.value.filter(c => c.cliente_id == cliente.value?.id && c.moneda?.codigo === moneda.value)
 )
-const cuentasDivisaIntermedius = computed(() =>
-  cuentasIntermedius.value.filter(c => c.moneda?.codigo === moneda.value)
-)
-
-const origenVes = computed(() =>
-  allCuentas.value.find(c => c.id == txVes.cuenta_origen_id) || null
-)
-const esOrigenVesBanco = computed(() => origenVes.value?.tipo === 'banco')
-const esOrigenVesEfectivo = computed(() => origenVes.value?.tipo === 'efectivo')
-
-const cuentasVesIntermediusFiltradas = computed(() => {
-  if (esOrigenVesEfectivo.value) {
-    return cuentasVesIntermedius.value.filter(c => c.tipo === 'efectivo')
-  }
-  if (esOrigenVesBanco.value) {
-    return cuentasVesIntermedius.value.filter(c => c.tipo === 'banco')
-  }
-  return []
-})
-
-const metodosBsDisponibles = computed(() => {
-  if (esOrigenVesEfectivo.value) return [{ value: 'efectivo', label: 'Efectivo' }]
-  if (esOrigenVesBanco.value) return [
-    { value: 'pagomovil', label: 'Pago móvil' },
-    { value: 'transferencia', label: 'Transferencia' },
-  ]
-  return []
-})
 
 const origenDivisa = computed(() =>
   allCuentas.value.find(c => c.id == txDiv.cuenta_origen_id) || null
@@ -374,19 +334,49 @@ const metodosDivDisponibles = computed(() => {
   return []
 })
 
-const txVesValido = computed(() =>
-  txVes.cuenta_origen_id && txVes.cuenta_destino_id && parseFloat(txVes.monto) > 0 && txVes.metodo_pago
-)
 const txDivValido = computed(() =>
   txDiv.cuenta_origen_id && txDiv.cuenta_destino_id && parseFloat(txDiv.monto) > 0 && txDiv.metodo_pago
 )
 
 function resetTxForm(form) {
+  form.monto = ''
+  form.metodo_pago = ''
+  form.comprobante = ''
+}
+
+function resetTxDiv(form) {
   form.cuenta_origen_id = ''
   form.cuenta_destino_id = ''
   form.monto = ''
   form.metodo_pago = ''
   form.comprobante = ''
+}
+
+function buildTxVes() {
+  const metodo = txVes.metodo_pago
+  const registro = registrosPago.value.find(r => r.metodo_pago === metodo)
+  const esEfectivo = metodo === 'efectivo'
+  const tipoCuenta = esEfectivo ? 'efectivo' : 'banco'
+
+  const origenCliente = cuentasCliente.value.find(
+    c => c.cliente_id == cliente.value?.id && c.moneda?.codigo === 'VES' && c.tipo === tipoCuenta
+  )
+  const destinoIntermedius = esEfectivo
+    ? cuentasIntermedius.value.find(c => c.moneda?.codigo === 'VES' && c.tipo === 'efectivo')
+    : cuentasIntermedius.value.find(c => c.moneda?.codigo === 'VES' && c.tipo === 'banco')
+
+  return {
+    cuenta_origen_id: origenCliente ? Number(origenCliente.id) : null,
+    cuenta_destino_id: destinoIntermedius ? Number(destinoIntermedius.id) : null,
+    moneda_id: monedas.value.find(m => m.codigo === 'VES')?.id,
+    monto: parseFloat(txVes.monto),
+    tasa_aplicada: tasaNum.value,
+    metodo_pago: metodo,
+    comprobante: txVes.comprobante || null,
+    _registroLabel: registro?.alias || metodo,
+    _origen: registro?.alias || metodo,
+    _destino: destinoIntermedius?.alias || 'Intermedius',
+  }
 }
 
 function buildTx(form, monedaCodigo) {
@@ -405,7 +395,7 @@ function buildTx(form, monedaCodigo) {
 
 function confirmarMovVes() {
   if (!txVesValido.value) return
-  const tx = buildTx(txVes, 'VES')
+  const tx = buildTxVes()
   if (movVesEditandoIdx.value !== null) {
     movsVes.value[movVesEditandoIdx.value] = tx
     movVesEditandoIdx.value = null
@@ -423,7 +413,6 @@ function confirmarMovDiv() {
 
 function editarMovVes(idx) {
   const tx = movsVes.value[idx]
-  txVes.cuenta_destino_id = tx.cuenta_destino_id
   txVes.monto = tx.monto
   txVes.metodo_pago = tx.metodo_pago
   txVes.comprobante = tx.comprobante || ''
@@ -452,7 +441,7 @@ function eliminarMovVes(idx) {
 
 function eliminarMovDiv() {
   movDivConfirmado.value = null
-  resetTxForm(txDiv)
+  resetTxDiv(txDiv)
 }
 
 async function cargarCuentas() {
@@ -467,6 +456,14 @@ async function cargarCuentas() {
     }
     cuentasCliente.value = list.filter(c => c.cliente_id)
   } catch { }
+}
+
+async function cargarRegistrosPago() {
+  if (!cliente.value?.id) { registrosPago.value = []; return }
+  try {
+    const { data } = await api.get(`/clientes/${cliente.value.id}/registros-pago`)
+    registrosPago.value = Array.isArray(data) ? data : (data.data || [])
+  } catch { registrosPago.value = [] }
 }
 
 async function cargarMonedas() {
@@ -507,17 +504,20 @@ async function registrarVenta() {
   enviando.value = false
 }
 
-watch(() => txVes.cuenta_origen_id, () => {
-  txVes.cuenta_destino_id = ''
-  txVes.metodo_pago = ''
-  txVes.comprobante = ''
+watch(() => txVes.metodo_pago, () => {
   if (movVesEditandoIdx.value === null) {
     txVes.monto = restanteVes.value > 0 ? restanteVes.value : ''
   }
-  if (esOrigenVesEfectivo.value) {
-    txVes.metodo_pago = 'efectivo'
-  }
 })
+
+watch(() => cliente.value?.id, () => {
+  registrosPago.value = []
+  movsVes.value = []
+  movVesEditandoIdx.value = null
+  resetTxForm(txVes)
+  cargarRegistrosPago()
+})
+
 watch(() => txDiv.cuenta_origen_id, () => {
   txDiv.cuenta_destino_id = ''
   txDiv.metodo_pago = ''
@@ -533,8 +533,11 @@ function autoDetectarMetodo(form) {
   const origen = allCuentas.value.find(c => c.id == form.cuenta_origen_id)
   const destino = allCuentas.value.find(c => c.id == form.cuenta_destino_id)
   if (!origen || !destino) return
-  const detectado = metodoPagoUtil.detectar(origen, destino)
-  if (detectado) form.metodo_pago = detectado
+  if (origen.tipo === 'efectivo' && destino.tipo === 'efectivo') {
+    form.metodo_pago = 'efectivo'
+  } else if (origen.tipo === 'banco' && destino.tipo === 'banco') {
+    form.metodo_pago = 'transferencia'
+  }
 }
 
 watch(restanteDivisa, (val) => {
@@ -548,11 +551,12 @@ watch(moneda, () => {
   movVesEditandoIdx.value = null
   movDivConfirmado.value = null
   resetTxForm(txVes)
-  resetTxForm(txDiv)
+  resetTxDiv(txDiv)
 })
 
 onMounted(async () => {
   await Promise.all([tasasRef.fetch(), titulares.fetchAll(), cargarMonedas()])
   await cargarCuentas()
+  await cargarRegistrosPago()
 })
 </script>
