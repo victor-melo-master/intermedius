@@ -356,17 +356,13 @@ function buildTxVes() {
   const metodo = txVes.metodo_pago
   const registro = registrosPago.value.find(r => r.metodo_pago === metodo)
   const esEfectivo = metodo === 'efectivo'
-  const tipoCuenta = esEfectivo ? 'efectivo' : 'banco'
 
-  const origenCliente = cuentasCliente.value.find(
-    c => c.cliente_id == cliente.value?.id && c.moneda?.codigo === 'VES' && c.tipo === tipoCuenta
-  )
   const destinoIntermedius = esEfectivo
     ? cuentasIntermedius.value.find(c => c.moneda?.codigo === 'VES' && c.tipo === 'efectivo')
     : cuentasIntermedius.value.find(c => c.moneda?.codigo === 'VES' && c.tipo === 'banco')
 
   return {
-    cuenta_origen_id: origenCliente ? Number(origenCliente.id) : null,
+    cuenta_origen_id: null,
     cuenta_destino_id: destinoIntermedius ? Number(destinoIntermedius.id) : null,
     moneda_id: monedas.value.find(m => m.codigo === 'VES')?.id,
     monto: parseFloat(txVes.monto),

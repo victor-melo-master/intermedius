@@ -86,7 +86,7 @@
             class="flex items-center gap-3 text-sm bg-gray-50 rounded-lg px-4 py-3"
             :class="{ 'opacity-50': ['revertida', 'cancelada', 'fallido'].includes(tx.estado) }">
             <div class="flex-1 text-right">
-              <p class="text-gray-500 text-xs">{{ tx.cuenta_origen?.alias || `Cuenta #${tx.cuenta_origen_id}` }}</p>
+              <p class="text-gray-500 text-xs">{{ tx.cuenta_origen?.alias || txLabelMetodo(tx) }}</p>
               <p class="font-medium text-red-600">{{ formatMoney(tx.monto) }} {{ tx.moneda?.codigo }}</p>
             </div>
             <span class="text-gray-400 text-lg shrink-0">→</span>
@@ -348,6 +348,15 @@ function txEstadoBadge(tx) {
     fallido:    { label: 'Fallido',    clase: 'bg-red-200 text-red-800' },
   }
   return map[tx.estado] || { label: tx.estado, clase: 'bg-gray-100 text-gray-600' }
+}
+
+function txLabelMetodo(tx) {
+  const map = {
+    efectivo:      'Efectivo',
+    pagomovil:     'Pago móvil',
+    transferencia: 'Transferencia',
+  }
+  return map[tx.metodo_pago] || tx.metodo_pago || `Cuenta #${tx.cuenta_origen_id}`
 }
 
 const gananciaBrutaUsd = computed(() => parseFloat(ops.detail?.ganancia?.bruta_usd ?? ops.detail?.ganancia_bruta_usd ?? 0))
