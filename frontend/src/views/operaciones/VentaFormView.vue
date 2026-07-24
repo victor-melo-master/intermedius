@@ -303,9 +303,13 @@ const txVesValido = computed(() => {
 })
 
 function fmt(v) {
-  const n = parseFloat(v)
-  if (isNaN(n)) return '0.00'
-  return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  if (v === '' || v == null) return ''
+  const s = String(v).replace(/,/g, '')
+  const n = parseFloat(s)
+  if (isNaN(n)) return s
+  const parts = s.split('.')
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+  return parts.join('.')
 }
 
 function labelCuenta(c) {
