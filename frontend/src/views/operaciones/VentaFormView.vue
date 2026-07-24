@@ -157,7 +157,11 @@
             <label class="block text-xs text-gray-500 mb-1">Monto</label>
             <input v-model="txDiv.monto" type="number" step="0.01" min="0" :max="restanteDivisa"
               :placeholder="fmt(restanteDivisa)"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+              class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 outline-none"
+              :class="parseFloat(txDiv.monto) > restanteDivisa + 0.01 ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'" />
+            <p v-if="parseFloat(txDiv.monto) > restanteDivisa + 0.01" class="text-xs text-red-500 mt-1">
+              Excede el restante ({{ fmt(restanteDivisa) }} {{ moneda }})
+            </p>
           </div>
           <div>
             <label class="block text-xs text-gray-500 mb-1">Método de pago</label>
@@ -345,9 +349,10 @@ const metodosDivDisponibles = computed(() => {
   return []
 })
 
-const txDivValido = computed(() =>
-  txDiv.cuenta_origen_id && txDiv.cuenta_destino_id && parseFloat(txDiv.monto) > 0 && txDiv.metodo_pago
-)
+const txDivValido = computed(() => {
+  const monto = parseFloat(txDiv.monto)
+  return txDiv.cuenta_origen_id && txDiv.cuenta_destino_id && monto > 0 && txDiv.metodo_pago && monto <= restanteDivisa.value + 0.01
+})
 
 function resetTxForm(form) {
   form.monto = ''
