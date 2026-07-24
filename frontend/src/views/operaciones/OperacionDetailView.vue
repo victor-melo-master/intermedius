@@ -24,8 +24,9 @@
             </p>
           </div>
         </div>
-        <div class="text-center text-xs text-gray-400">
-          Tasa: {{ formatRate(ops.detail.tasa_aplicada) }}
+        <div class="text-center py-2">
+          <span class="text-sm text-gray-500">Tasa:</span>
+          <span class="ml-2 text-lg font-bold text-blue-600">{{ formatRate(ops.detail.tasa_aplicada) }}</span>
         </div>
       </div>
 
