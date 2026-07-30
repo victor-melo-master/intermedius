@@ -13,12 +13,12 @@
     <!-- Tabs -->
     <div class="flex bg-gray-100 rounded-xl p-1">
       <button @click="tab = 'pool'"
-        class="flex-1 py-2.5 text-sm font-semibold rounded-lg transition"
+        class="flex-1 py-2.5 text-sm font-semibold rounded-lg transition active:scale-[0.98]"
         :class="tab === 'pool' ? 'bg-white text-blue-700 shadow' : 'text-gray-500'">
         Pool <span v-if="store.pool.length" class="ml-1 text-xs">({{ store.pool.length }})</span>
       </button>
       <button @click="tab = 'mias'"
-        class="flex-1 py-2.5 text-sm font-semibold rounded-lg transition"
+        class="flex-1 py-2.5 text-sm font-semibold rounded-lg transition active:scale-[0.98]"
         :class="tab === 'mias' ? 'bg-white text-blue-700 shadow' : 'text-gray-500'">
         Mis órdenes <span v-if="store.misOrdenes.length" class="ml-1 text-xs">({{ store.misOrdenes.length }})</span>
       </button>

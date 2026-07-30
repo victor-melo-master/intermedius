@@ -88,7 +88,7 @@
       <div class="space-y-2">
         <button v-if="store.detail.estado === 'solicitud'"
           @click="iniciarOperacion" :disabled="acting"
-          class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-semibold py-3 rounded-xl transition flex items-center justify-center gap-2">
+          class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-semibold py-3 rounded-xl transition active:scale-[0.98] flex items-center justify-center gap-2">
           <span v-if="acting" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
           <Iconoir v-if="!acting" name="rocket-launch" class="w-5 h-5" />
           {{ acting ? 'Iniciando...' : 'Iniciar operación' }}
@@ -100,16 +100,16 @@
           </div>
           <button v-else
             @click="mostrarAgregarTx = true"
-            class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-3 rounded-xl transition flex items-center justify-center gap-2">
+            class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-3 rounded-xl transition active:scale-[0.98] flex items-center justify-center gap-2">
             + Agregar movimiento
           </button>
 
           <button
             @click="mostrarCerrar = true" :disabled="acting || !operacionBalanceada"
-            class="w-full bg-green-600 hover:bg-green-700 disabled:bg-green-300 text-white font-semibold py-3 rounded-xl transition flex items-center justify-center gap-2">
-            <span v-if="acting" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-            <Iconoir v-if="!acting" name="lock-closed" class="w-5 h-5" />
-            {{ acting ? 'Cerrando...' : 'Cerrar operación' }}
+class="w-full bg-green-600 hover:bg-green-700 disabled:bg-green-300 text-white font-semibold py-3 rounded-xl transition active:scale-[0.98] flex items-center justify-center gap-2">
+          <span v-if="acting" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+          <Iconoir v-if="!acting" name="lock-closed" class="w-5 h-5" />
+          {{ acting ? 'Cerrando...' : 'Cerrar operación' }}
           </button>
           <p v-if="!operacionBalanceada" class="text-xs text-gray-400 text-center">
             Confirma todos los movimientos para cerrar la operación
@@ -118,7 +118,7 @@
 
         <button v-if="store.detail.estado !== 'cerrada' && store.detail.estado !== 'cancelada'"
           @click="mostrarCancelar = true"
-          class="w-full bg-red-50 hover:bg-red-100 text-red-600 font-semibold py-3 rounded-xl transition">
+          class="w-full bg-red-50 hover:bg-red-100 text-red-600 font-semibold py-3 rounded-xl transition active:scale-[0.98]">
           Cancelar operación
         </button>
       </div>
@@ -160,9 +160,9 @@
           </div>
           <div class="flex gap-3">
             <button type="button" @click="mostrarCerrar = false"
-              class="flex-1 py-2.5 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition">Volver</button>
+              class="flex-1 py-2.5 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition active:scale-[0.98]">Volver</button>
             <button type="submit" :disabled="acting || !tasaMercadoCierre"
-              class="flex-1 py-2.5 bg-green-600 text-white text-sm font-medium rounded-xl hover:bg-green-700 disabled:bg-green-300 transition flex items-center justify-center gap-2">
+              class="flex-1 py-2.5 bg-green-600 text-white text-sm font-medium rounded-xl hover:bg-green-700 disabled:bg-green-300 transition active:scale-[0.98] flex items-center justify-center gap-2">
               <span v-if="acting" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
               {{ acting ? 'Cerrando...' : 'Cerrar operación' }}
             </button>
@@ -181,9 +181,9 @@
             class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 outline-none resize-none"></textarea>
           <div class="flex gap-3">
             <button type="button" @click="mostrarCancelar = false"
-              class="flex-1 py-2.5 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition">Volver</button>
+              class="flex-1 py-2.5 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition active:scale-[0.98]">Volver</button>
             <button type="submit" :disabled="!motivoCancelacion.trim() || acting"
-              class="flex-1 py-2.5 bg-red-600 text-white text-sm font-medium rounded-xl hover:bg-red-700 disabled:bg-red-300 transition flex items-center justify-center gap-2">
+              class="flex-1 py-2.5 bg-red-600 text-white text-sm font-medium rounded-xl hover:bg-red-700 disabled:bg-red-300 transition active:scale-[0.98] flex items-center justify-center gap-2">
               <span v-if="acting" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
               {{ acting ? 'Cancelando...' : 'Cancelar operación' }}
             </button>

@@ -46,32 +46,32 @@
         <div v-if="!['solicitud', 'cerrada', 'cancelada'].includes(estado)" class="flex gap-2 pt-1 flex-wrap">
           <button v-if="tx.estado === 'pendiente'"
             @click="editarTx(tx)"
-            class="text-xs px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg transition">
+            class="text-xs px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg transition active:scale-[0.98]">
             Editar
           </button>
           <button v-if="tx.estado === 'pendiente'"
             @click="confirmarTx(tx)"
-            class="text-xs px-3 py-1.5 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg transition">
+            class="text-xs px-3 py-1.5 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg transition active:scale-[0.98]">
             Confirmar
           </button>
           <button v-if="tx.estado === 'pendiente'"
             @click="abrirFallar(tx)"
-            class="text-xs px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition">
+            class="text-xs px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition active:scale-[0.98]">
             Fallar
           </button>
           <button v-if="tx.estado === 'pendiente'"
             @click="abrirCancelar(tx)"
-            class="text-xs px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-700 rounded-lg transition">
+            class="text-xs px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-700 rounded-lg transition active:scale-[0.98]">
             Cancelar
           </button>
           <button v-if="tx.estado === 'pendiente'"
             @click="eliminarTx(tx)"
-            class="text-xs px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg transition">
+            class="text-xs px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg transition active:scale-[0.98]">
             Eliminar
           </button>
           <button v-if="tx.estado === 'confirmada'"
             @click="mostrarRevertir = tx.id"
-            class="text-xs px-3 py-1.5 bg-orange-50 hover:bg-orange-100 text-orange-600 rounded-lg transition">
+            class="text-xs px-3 py-1.5 bg-orange-50 hover:bg-orange-100 text-orange-600 rounded-lg transition active:scale-[0.98]">
             Revertir
           </button>
         </div>
@@ -123,9 +123,9 @@
           <div v-if="editError" class="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{{ editError }}</div>
           <div class="flex gap-3">
             <button type="button" @click="cerrarEdicion"
-              class="flex-1 py-2.5 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition">Cancelar</button>
+              class="flex-1 py-2.5 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition active:scale-[0.98]">Cancelar</button>
             <button type="submit" :disabled="editando || !editForm.monto"
-              class="flex-1 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-xl hover:bg-blue-700 disabled:bg-blue-300 transition flex items-center justify-center gap-2">
+              class="flex-1 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-xl hover:bg-blue-700 disabled:bg-blue-300 transition active:scale-[0.98] flex items-center justify-center gap-2">
               <span v-if="editando" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
               {{ editando ? 'Guardando...' : 'Guardar' }}
             </button>
@@ -144,9 +144,9 @@
             class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none resize-none"></textarea>
           <div class="flex gap-3">
             <button type="button" @click="mostrarRevertir = null"
-              class="flex-1 py-2.5 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition">Volver</button>
+              class="flex-1 py-2.5 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition active:scale-[0.98]">Volver</button>
             <button type="submit" :disabled="!motivoRevertir.trim() || revertiendo"
-              class="flex-1 py-2.5 bg-orange-600 text-white text-sm font-medium rounded-xl hover:bg-orange-700 disabled:bg-orange-300 transition">
+              class="flex-1 py-2.5 bg-orange-600 text-white text-sm font-medium rounded-xl hover:bg-orange-700 disabled:bg-orange-300 transition active:scale-[0.98]">
               {{ revertiendo ? 'Revirtiendo...' : 'Revertir movimiento' }}
             </button>
           </div>
@@ -164,9 +164,9 @@
             class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 outline-none resize-none"></textarea>
           <div class="flex gap-3">
             <button type="button" @click="cerrarFallar"
-              class="flex-1 py-2.5 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition">Volver</button>
+              class="flex-1 py-2.5 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition active:scale-[0.98]">Volver</button>
             <button type="submit" :disabled="!razonFallar.trim() || fallando"
-              class="flex-1 py-2.5 bg-red-600 text-white text-sm font-medium rounded-xl hover:bg-red-700 disabled:bg-red-300 transition">
+              class="flex-1 py-2.5 bg-red-600 text-white text-sm font-medium rounded-xl hover:bg-red-700 disabled:bg-red-300 transition active:scale-[0.98]">
               {{ fallando ? 'Procesando...' : 'Marcar como fallido' }}
             </button>
           </div>
@@ -184,9 +184,9 @@
             class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none resize-none"></textarea>
           <div class="flex gap-3">
             <button type="button" @click="cerrarCancelar"
-              class="flex-1 py-2.5 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition">Volver</button>
+              class="flex-1 py-2.5 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition active:scale-[0.98]">Volver</button>
             <button type="submit" :disabled="!razonCancelar.trim() || cancelando"
-              class="flex-1 py-2.5 bg-amber-600 text-white text-sm font-medium rounded-xl hover:bg-amber-700 disabled:bg-amber-300 transition">
+              class="flex-1 py-2.5 bg-amber-600 text-white text-sm font-medium rounded-xl hover:bg-amber-700 disabled:bg-amber-300 transition active:scale-[0.98]">
               {{ cancelando ? 'Procesando...' : 'Cancelar movimiento' }}
             </button>
           </div>

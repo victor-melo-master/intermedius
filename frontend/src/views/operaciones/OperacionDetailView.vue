@@ -138,7 +138,7 @@
       <!-- Revertir venta (solo admin/super_admin, venta cerrada no revertida) -->
       <div v-if="puedeRevertir" class="space-y-2">
         <button @click="mostrarRevertirOp = true"
-          class="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold py-3 rounded-xl transition flex items-center justify-center gap-2">
+          class="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold py-3 rounded-xl transition active:scale-[0.98] flex items-center justify-center gap-2">
           <Iconoir name="arrow-uturn-left" class="w-5 h-5 text-gray-500" /> Revertir venta
         </button>
       </div>
@@ -148,7 +148,7 @@
         <button
           v-if="puedeEditar"
           @click="abrirEdicion"
-          class="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold py-3 rounded-xl transition flex items-center justify-center gap-2"
+          class="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold py-3 rounded-xl transition active:scale-[0.98] flex items-center justify-center gap-2"
         >
           <Iconoir name="pencil-square" class="w-5 h-5 text-gray-500" /> Editar operación
         </button>
@@ -157,7 +157,7 @@
           v-if="auth.isAdmin && !esFlujoMultipaso && ops.detail.estatus === 'sin_verificar'"
           @click="iniciarVerificacion"
           :disabled="verifying"
-          class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-semibold py-3 rounded-xl transition flex items-center justify-center gap-2"
+          class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-semibold py-3 rounded-xl transition active:scale-[0.98] flex items-center justify-center gap-2"
         >
           <span v-if="verifying" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
           {{ verifying ? 'Iniciando...' : 'Verificar transacciones' }}
@@ -166,7 +166,7 @@
         <button
           v-if="auth.isAdmin && !esFlujoMultipaso && ops.detail.estatus === 'en_verificacion'"
           @click="irAVerificacion"
-          class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-xl transition flex items-center justify-center gap-2"
+          class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-xl transition active:scale-[0.98] flex items-center justify-center gap-2"
         >
           Continuar verificación
         </button>
@@ -184,9 +184,9 @@
           <div v-if="errorRevertir" class="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{{ errorRevertir }}</div>
           <div class="flex gap-3">
             <button type="button" @click="mostrarRevertirOp = false"
-              class="flex-1 py-2.5 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition">Cancelar</button>
+              class="flex-1 py-2.5 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition active:scale-[0.98]">Cancelar</button>
             <button type="submit" :disabled="!motivoRevertirOp.trim() || revertiendoOp"
-              class="flex-1 py-2.5 bg-amber-600 text-white text-sm font-medium rounded-xl hover:bg-amber-700 disabled:bg-amber-300 transition flex items-center justify-center gap-2">
+              class="flex-1 py-2.5 bg-amber-600 text-white text-sm font-medium rounded-xl hover:bg-amber-700 disabled:bg-amber-300 transition active:scale-[0.98] flex items-center justify-center gap-2">
               <span v-if="revertiendoOp" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
               {{ revertiendoOp ? 'Revirtiendo...' : 'Revertir venta' }}
             </button>
@@ -207,9 +207,9 @@
         <template #footer>
           <div class="flex gap-3">
             <button type="button" @click="showEditModal = false"
-              class="flex-1 py-2.5 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition">Cancelar</button>
+              class="flex-1 py-2.5 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition active:scale-[0.98]">Cancelar</button>
             <button @click="guardarEdicion" :disabled="!motivoEdicion.trim()"
-              class="flex-1 py-2.5 bg-amber-500 text-white text-sm font-medium rounded-xl hover:bg-amber-600 transition">
+              class="flex-1 py-2.5 bg-amber-500 text-white text-sm font-medium rounded-xl hover:bg-amber-600 transition active:scale-[0.98]">
               Continuar a edición
             </button>
           </div>

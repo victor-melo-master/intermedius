@@ -81,7 +81,7 @@
       <AppErrorState v-if="error" :message="error" :retry="false" />
 
       <button type="submit" :disabled="saving || !formularioValido"
-        class="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-purple-300 text-white font-semibold py-3 rounded-xl transition">
+        class="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-purple-300 text-white font-semibold py-3 rounded-xl transition active:scale-[0.98]">
         {{ saving ? 'Registrando...' : 'Registrar intermediada' }}
       </button>
     </form>

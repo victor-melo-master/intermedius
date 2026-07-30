@@ -168,7 +168,7 @@
       <!-- Botón cerrar verificación -->
       <div class="pt-2 pb-8">
         <button @click="cerrar" :disabled="!todasValidados || cerrando"
-          class="w-full py-3 rounded-xl font-semibold transition flex items-center justify-center gap-2"
+          class="w-full py-3 rounded-xl font-semibold transition active:scale-[0.98] flex items-center justify-center gap-2"
           :class="todasValidados
             ? 'bg-green-600 hover:bg-green-700 text-white'
             : 'bg-gray-200 text-gray-400 cursor-not-allowed'">
@@ -192,9 +192,9 @@
         <template #footer>
           <div class="flex gap-3">
             <button type="button" @click="showRechazoModal = false"
-              class="flex-1 py-2.5 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition">Cancelar</button>
+              class="flex-1 py-2.5 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition active:scale-[0.98]">Cancelar</button>
             <button @click="confirmarRechazo" :disabled="!rechazoMotivo.trim() || savingRechazo"
-              class="flex-1 py-2.5 bg-red-600 text-white text-sm font-medium rounded-xl hover:bg-red-700 transition">
+              class="flex-1 py-2.5 bg-red-600 text-white text-sm font-medium rounded-xl hover:bg-red-700 transition active:scale-[0.98]">
               {{ savingRechazo ? 'Rechazando...' : 'Rechazar' }}
             </button>
           </div>

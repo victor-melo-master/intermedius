@@ -11,7 +11,7 @@
         <label class="block text-sm font-medium text-gray-600">Moneda a vender</label>
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
           <button type="button" v-for="m in monedasDisponibles" :key="m.codigo" @click="moneda = m.codigo"
-            class="py-3 rounded-xl text-sm font-medium transition border-2"
+            class="py-3 rounded-xl text-sm font-medium transition active:scale-[0.98] border-2"
             :class="moneda === m.codigo ? 'bg-blue-50 border-blue-500 text-blue-700' : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300'">
             <span class="block text-lg">{{ m.icono }}</span>
             {{ m.codigo }}
@@ -100,7 +100,7 @@
               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
           </div>
           <button type="button" @click="confirmarMovVes" :disabled="!txVesValido"
-            class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white text-sm font-semibold rounded-xl transition">
+            class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white text-sm font-semibold rounded-xl transition active:scale-[0.98]">
             {{ movVesEditandoIdx !== null ? 'Actualizar movimiento' : 'Confirmar' }}
           </button>
         </div>
@@ -181,7 +181,7 @@
               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
           </div>
           <button type="button" @click="confirmarMovDiv" :disabled="!txDivValido"
-            class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white text-sm font-semibold rounded-xl transition">
+            class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white text-sm font-semibold rounded-xl transition active:scale-[0.98]">
             {{ movDivEditandoIdx !== null ? 'Actualizar movimiento' : 'Confirmar' }}
           </button>
         </div>
@@ -220,7 +220,7 @@
         <AppErrorState v-if="error" :message="error" :retry="false" />
 
         <button type="submit" :disabled="enviando || !sumaValida"
-          class="w-full bg-green-600 hover:bg-green-700 disabled:bg-green-300 text-white font-semibold py-3 rounded-xl transition flex items-center justify-center gap-2">
+          class="w-full bg-green-600 hover:bg-green-700 disabled:bg-green-300 text-white font-semibold py-3 rounded-xl transition active:scale-[0.98] flex items-center justify-center gap-2">
           <span v-if="enviando" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
           {{ enviando ? 'Registrando...' : 'Registrar Venta' }}
         </button>

@@ -104,7 +104,7 @@
       <div v-if="formError" class="bg-red-50 text-red-600 text-sm p-3 rounded-lg mt-4 whitespace-pre-line">{{ formError }}</div>
 
       <button type="button" @click="submit" :disabled="saving || !puedeGuardar"
-        class="w-full mt-5 bg-blue-600 text-white font-semibold py-2.5 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition flex items-center justify-center gap-2">
+        class="w-full mt-5 bg-blue-600 text-white font-semibold py-2.5 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition active:scale-[0.98] flex items-center justify-center gap-2">
         <span v-if="saving" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
         {{ saving ? 'Guardando...' : (isEdit ? 'Actualizar' : 'Publicar') }}
       </button>

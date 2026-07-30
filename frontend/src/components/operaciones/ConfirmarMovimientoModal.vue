@@ -1,8 +1,9 @@
 <template>
   <Teleport to="body">
-    <div v-if="visible" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div class="fixed inset-0 bg-black/40" @click="$emit('cancel')"></div>
-      <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4">
+    <Transition name="modal">
+      <div v-if="visible" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="fixed inset-0 bg-black/40" @click="$emit('cancel')"></div>
+        <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4">
         <h3 class="text-lg font-bold text-gray-800">Confirmar movimiento</h3>
 
         <div class="space-y-2 text-sm">
@@ -34,17 +35,18 @@
 
         <div class="flex gap-3 pt-2">
           <button @click="$emit('cancel')"
-            class="flex-1 py-2.5 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition">
+            class="flex-1 py-2.5 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition active:scale-[0.98]">
             Cancelar
           </button>
           <button @click="confirmar" :disabled="confirmando || !comprobanteValido"
-            class="flex-1 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-xl hover:bg-blue-700 disabled:bg-blue-300 transition flex items-center justify-center gap-2">
+            class="flex-1 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-xl hover:bg-blue-700 disabled:bg-blue-300 transition active:scale-[0.98] flex items-center justify-center gap-2">
             <span v-if="confirmando" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
             {{ confirmando ? 'Confirmando...' : 'Confirmar movimiento' }}
           </button>
         </div>
       </div>
     </div>
+    </Transition>
   </Teleport>
 </template>
 
@@ -86,3 +88,22 @@ async function confirmar() {
   confirmando.value = false
 }
 </script>
+
+<style scoped>
+.modal-enter-active,
+.modal-leave-active {
+  transition: opacity 0.2s ease;
+}
+.modal-enter-active > div:last-child,
+.modal-leave-active > div:last-child {
+  transition: transform 0.2s ease;
+}
+.modal-enter-from,
+.modal-leave-to {
+  opacity: 0;
+}
+.modal-enter-from > div:last-child,
+.modal-leave-to > div:last-child {
+  transform: scale(0.95);
+}
+</style>

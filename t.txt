@@ -1,0 +1,13 @@
+Una venta (DIVISA sale de la cas ) es directa siempre 
+    -   El cliente primero paga y luego se le entrega la divisa
+    -   No hay pasos intermedios, un solo paso en el programa.
+    -   No genera ganacia
+    -   Puede generar un gasto?
+
+
+Compra (DIVISA entra a la casa) lleva varios pasos
+    - Recepcionista propone movimientos y va al 'pool de operaciones'
+    - El Operador toma la operacion y confirma los movimientos o reajusta
+    - Confirmado los movimiento (pagos entrantes y salientes realizados) se cierra la operacion
+    - La ganacia se calcula en base a la operacion (diferencial de monto de compra menos gastos{gatos puede ser cero})
+    - 

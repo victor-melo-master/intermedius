@@ -1,11 +1,12 @@
 <template>
   <Teleport to="body">
-    <div
-      v-if="showAlarm"
-      class="fixed inset-0 z-50 flex items-center justify-center"
-    >
-      <div class="absolute inset-0 bg-black bg-opacity-50"></div>
-      <div class="relative bg-white rounded-lg shadow-xl max-w-md w-full p-6 mx-4 animate-bounce">
+    <Transition name="alarm">
+      <div
+        v-if="showAlarm"
+        class="fixed inset-0 z-50 flex items-center justify-center"
+      >
+        <div class="absolute inset-0 bg-black/40"></div>
+        <div class="relative bg-white rounded-2xl shadow-xl max-w-md w-full p-6 mx-4">
         <div class="flex items-center gap-4 mb-4">
           <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
             <Iconoir name="bell" class="w-6 h-6 text-red-500" />
@@ -34,6 +35,7 @@
         </div>
       </div>
     </div>
+    </Transition>
   </Teleport>
 </template>
 
@@ -92,3 +94,22 @@ onUnmounted(() => {
   window.removeEventListener('sla-excedida', handleSlaExcedida)
 })
 </script>
+
+<style scoped>
+.alarm-enter-active,
+.alarm-leave-active {
+  transition: opacity 0.3s ease;
+}
+.alarm-enter-active > div:last-child,
+.alarm-leave-active > div:last-child {
+  transition: transform 0.3s ease;
+}
+.alarm-enter-from,
+.alarm-leave-to {
+  opacity: 0;
+}
+.alarm-enter-from > div:last-child,
+.alarm-leave-to > div:last-child {
+  transform: scale(0.9) translateY(20px);
+}
+</style>

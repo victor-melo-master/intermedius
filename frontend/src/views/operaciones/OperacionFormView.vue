@@ -13,13 +13,13 @@
         <label class="block text-sm font-medium text-gray-600">Tipo</label>
         <div class="flex gap-3">
           <button type="button" @click="form.tipo = 'compra'"
-            class="flex-1 py-3 rounded-xl text-sm font-medium transition border-2"
+            class="flex-1 py-3 rounded-xl text-sm font-medium transition active:scale-[0.98] border-2"
             :class="form.tipo === 'compra' ? 'bg-blue-50 border-blue-500 text-blue-700' : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300'">
             {{ textoCompra }}
             <span class="block text-xs mt-1 opacity-70">El cliente entrega {{ monedaSel }}</span>
           </button>
           <button type="button" @click="form.tipo = 'venta'"
-            class="flex-1 py-3 rounded-xl text-sm font-medium transition border-2"
+            class="flex-1 py-3 rounded-xl text-sm font-medium transition active:scale-[0.98] border-2"
             :class="form.tipo === 'venta' ? 'bg-green-50 border-green-500 text-green-700' : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300'">
             {{ textoVenta }}
             <span class="block text-xs mt-1 opacity-70">La casa entrega {{ monedaSel }}</span>
@@ -154,7 +154,7 @@
           </template>
 
           <button type="button" @click="agregarMovimientoLocal" :disabled="!txFormValido"
-            class="w-full py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-xl disabled:opacity-50 transition">
+            class="w-full py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-xl disabled:opacity-50 transition active:scale-[0.98]">
             + Agregar movimiento
           </button>
         </div>
@@ -165,7 +165,7 @@
       <button
         type="submit"
         :disabled="saving || !formularioValido"
-        class="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 text-white font-semibold py-3 rounded-xl transition flex items-center justify-center gap-2"
+        class="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 text-white font-semibold py-3 rounded-xl transition active:scale-[0.98] flex items-center justify-center gap-2"
       >
         <span v-if="saving" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
         {{ saving ? 'Creando...' : 'Crear solicitud' }}

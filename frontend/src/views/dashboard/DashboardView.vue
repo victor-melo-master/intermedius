@@ -57,7 +57,7 @@
           </select>
         </div>
         <button @click="aplicarFiltros" :disabled="loadingResumen"
-          class="bg-blue-600 text-white text-sm font-semibold py-2 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition col-span-2 lg:col-span-1">
+          class="bg-blue-600 text-white text-sm font-semibold py-2 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition active:scale-[0.98] col-span-2 lg:col-span-1">
           Aplicar filtros
         </button>
       </div>

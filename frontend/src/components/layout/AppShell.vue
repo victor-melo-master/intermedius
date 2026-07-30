@@ -26,7 +26,7 @@
       <aside class="hidden lg:block w-56 shrink-0 border-r border-gray-200 bg-white h-[calc(100vh-3.5rem)] sticky top-14">
         <nav class="p-3 space-y-1">
           <router-link v-for="item in nav" :key="item.path" :to="item.path"
-            class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition active:scale-[0.98]"
              :class="$route.path.startsWith(item.path) ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50'">
             <Iconoir :name="item.icon" :class="$route.path.startsWith(item.path) ? 'text-blue-700' : item.color" />
             {{ item.label }}
@@ -35,28 +35,34 @@
       </aside>
 
       <!-- Mobile drawer -->
-      <div v-if="drawer" class="fixed inset-0 z-40 lg:hidden" @click="drawer = false">
-        <div class="absolute inset-0 bg-black/40"></div>
-        <aside class="absolute left-0 top-0 bottom-0 w-64 bg-white p-4" @click.stop>
-          <div class="flex items-center justify-between mb-6">
-            <span class="font-bold text-lg">Intermedius</span>
-            <button @click="drawer = false" class="p-1 hover:bg-gray-100 rounded"><Iconoir name="x-mark" class="text-gray-400" /></button>
-          </div>
-          <nav class="space-y-1">
-            <router-link v-for="item in nav" :key="item.path" :to="item.path" @click="drawer = false"
-              class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition"
-              :class="$route.path.startsWith(item.path) ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50'">
-              <Iconoir :name="item.icon" :class="$route.path.startsWith(item.path) ? 'text-blue-700' : item.color" />
-              {{ item.label }}
-            </router-link>
-          </nav>
-        </aside>
-      </div>
+      <Transition name="drawer">
+        <div v-if="drawer" class="fixed inset-0 z-40 lg:hidden" @click="drawer = false">
+          <div class="absolute inset-0 bg-black/40"></div>
+          <aside class="absolute left-0 top-0 bottom-0 w-64 bg-white p-4" @click.stop>
+            <div class="flex items-center justify-between mb-6">
+              <span class="font-bold text-lg">Intermedius</span>
+              <button @click="drawer = false" class="p-1 hover:bg-gray-100 rounded"><Iconoir name="x-mark" class="text-gray-400" /></button>
+            </div>
+            <nav class="space-y-1">
+              <router-link v-for="item in nav" :key="item.path" :to="item.path" @click="drawer = false"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition active:scale-[0.98]"
+                :class="$route.path.startsWith(item.path) ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50'">
+                <Iconoir :name="item.icon" :class="$route.path.startsWith(item.path) ? 'text-blue-700' : item.color" />
+                {{ item.label }}
+              </router-link>
+            </nav>
+          </aside>
+        </div>
+      </Transition>
 
       <!-- Main -->
       <main class="flex-1 min-w-0 p-4 lg:p-6 overflow-auto">
         <div class="max-w-7xl mx-auto">
-          <router-view />
+          <router-view v-slot="{ Component, route }">
+            <Transition name="page" mode="out-in">
+              <component :is="Component" :key="route.path" />
+            </Transition>
+          </router-view>
         </div>
       </main>
     </div>
@@ -140,3 +146,37 @@ onUnmounted(() => {
   echo.leave('pool')
 })
 </script>
+
+<style scoped>
+.drawer-enter-active,
+.drawer-leave-active {
+  transition: opacity 0.25s ease;
+}
+.drawer-enter-active aside,
+.drawer-leave-active aside {
+  transition: transform 0.25s ease;
+}
+.drawer-enter-from,
+.drawer-leave-to {
+  opacity: 0;
+}
+.drawer-enter-from aside,
+.drawer-leave-to aside {
+  transform: translateX(-100%);
+}
+</style>
+
+<style>
+.page-enter-active,
+.page-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.page-enter-from {
+  opacity: 0;
+  transform: translateY(6px);
+}
+.page-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+</style>
