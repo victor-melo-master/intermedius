@@ -1,6 +1,6 @@
 <template>
-  <div class="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
-    <h3 class="font-semibold text-gray-700">Cliente</h3>
+  <div :class="flat ? '' : 'bg-white border border-gray-200 rounded-xl p-5 space-y-3'">
+    <h3 v-if="!flat" class="font-semibold text-gray-700">Cliente</h3>
 
     <!-- Cliente seleccionado -->
     <div v-if="selectedCliente" class="flex items-center justify-between bg-blue-50 rounded-lg px-3 py-2">
@@ -238,6 +238,8 @@ const props = defineProps({
   modelValue: { type: Object, default: () => ({ id: '', nombre: '' }) },
   /** @type {boolean} - Indica si el cliente tiene cuentas */
   clienteTieneCuentas: { type: Boolean, default: false },
+  /** @type {boolean} - Sin borde/box cuando está dentro de un card */
+  flat: { type: Boolean, default: false },
 })
 
 const clientesStore = useClientesStore()

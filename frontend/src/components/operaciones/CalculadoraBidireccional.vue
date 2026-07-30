@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-white border border-gray-200 rounded-xl p-5 space-y-4">
+  <div :class="flat ? 'space-y-4' : 'bg-white border border-gray-200 rounded-xl p-5 space-y-4'">
     <h3 class="font-semibold text-gray-700">Monto y tasa</h3>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -86,6 +86,7 @@ const props = defineProps({
   parStr: String,
   tasaSugerida: [String, Number, null],
   desfavorable: Boolean,
+  flat: Boolean,
 })
 
 const emit = defineEmits(['update:monto', 'update:bolivares', 'update:tasa'])

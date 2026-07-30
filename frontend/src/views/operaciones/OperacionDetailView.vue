@@ -1,173 +1,200 @@
 <template>
-  <div class="max-w-2xl mx-auto space-y-4">
-    <div class="flex items-center gap-3">
-      <button @click="$router.back()" class="p-2 hover:bg-gray-100 rounded-lg text-gray-500"><Iconoir name="arrow-left" class="w-5 h-5" /></button>
-      <h2 class="text-xl font-bold text-gray-800">Operación #{{ ops.detail?.id }}</h2>
+  <div class="max-w-7xl mx-auto pb-6">
+    <div class="mb-4">
+      <button @click="$router.back()" class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition"><Iconoir name="arrow-left" class="w-4 h-4" /> Volver</button>
     </div>
 
     <AppLoadingSpinner v-if="ops.loading" />
     <AppErrorState v-else-if="ops.error" :message="ops.error" @retry="ops.fetchOne(route.params.id)" />
-    <div v-else-if="ops.detail" class="space-y-4">
-      <!-- Resumen de monto -->
-      <div class="bg-white border border-gray-200 rounded-xl p-5 space-y-4">
-        <div class="grid grid-cols-2 gap-3">
-          <div class="bg-blue-50 rounded-xl px-4 py-3 text-center">
-            <p class="text-[11px] text-blue-500 mb-1">El cliente entrega</p>
-            <p class="text-lg font-bold" :class="esCompra ? 'text-green-700' : 'text-blue-700'">
-              {{ esCompra ? formatMoney(montoDivisa) + ' ' + monedaDivisa : formatVes(montoBolivares) }}
-            </p>
-          </div>
-          <div class="bg-green-50 rounded-xl px-4 py-3 text-center">
-            <p class="text-[11px] text-green-500 mb-1">La casa entrega</p>
-            <p class="text-lg font-bold" :class="esCompra ? 'text-blue-700' : 'text-green-700'">
-              {{ esCompra ? formatVes(montoBolivares) : formatMoney(montoDivisa) + ' ' + monedaDivisa }}
-            </p>
-          </div>
-        </div>
-        <div class="text-center py-2">
-          <span class="text-sm text-gray-500">Tasa:</span>
-          <span class="ml-2 text-lg font-bold text-blue-600">{{ formatRate(ops.detail.tasa_aplicada) }}</span>
-        </div>
-      </div>
 
-      <!-- Datos generales -->
-      <div class="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
-        <div class="flex items-center justify-between">
-          <span class="text-sm text-gray-500">#{{ ops.detail.id }}</span>
-          <div class="flex items-center gap-2">
-            <span v-if="ops.detail.estado" class="px-3 py-1 rounded-full text-xs font-bold"
-              :class="ops.detail.estado === 'cerrada' ? 'bg-green-50 text-green-700' :
-                       ops.detail.estado === 'en_progreso' ? 'bg-blue-50 text-blue-700' :
-                       ops.detail.estado === 'solicitud' ? 'bg-yellow-50 text-yellow-700' :
-                       ops.detail.estado === 'cancelada' ? 'bg-red-50 text-red-700' :
-                       ops.detail.estado === 'revertida' ? 'bg-amber-50 text-amber-700' :
-                       'bg-gray-50 text-gray-700'">
-              {{ ops.detail.estado?.replace('_', ' ') }}
-            </span>
-            <span v-if="!esFlujoMultipaso" class="px-3 py-1 rounded-full text-xs font-bold"
-              :class="ops.detail.estatus === 'verificado' ? 'bg-green-50 text-green-700' :
-                       ops.detail.estatus === 'en_verificacion' ? 'bg-blue-50 text-blue-700' :
-                       ops.detail.estatus === 'en_revision' ? 'bg-orange-50 text-orange-700' :
-                       'bg-gray-50 text-gray-700'">
-              {{ ops.detail.estatus?.replace('_', ' ') }}
-            </span>
-          </div>
-        </div>
-        <p class="font-semibold text-lg">{{ nombreOperacion }}</p>
-        <p v-if="ops.detail.cliente?.nombre" class="text-sm text-gray-500">Cliente: {{ ops.detail.cliente.nombre }}</p>
-        <p class="text-sm text-gray-400">{{ formatDate(ops.detail.fecha) }}</p>
-        <p v-if="ops.detail.referencia" class="text-sm text-gray-500">Ref: {{ ops.detail.referencia }}</p>
-        <p v-if="ops.detail.descripcion" class="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">{{ ops.detail.descripcion }}</p>
-        <p v-if="ops.detail.motivo_reversion" class="text-sm text-amber-700 bg-amber-50 p-3 rounded-lg">
-          <Iconoir name="arrow-uturn-left" class="w-4 h-4 inline" /> Reversión: {{ ops.detail.motivo_reversion }}
-        </p>
-        <p v-if="ops.detail.motivo_cancelacion" class="text-sm text-red-600 bg-red-50 p-3 rounded-lg">
-          <Iconoir name="x-mark" class="w-4 h-4 inline" /> Cancelación: {{ ops.detail.motivo_cancelacion }}
-        </p>
-      </div>
+    <div v-else-if="ops.detail">
+      <div class="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
 
-      <!-- Historial de estados -->
-      <div class="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
-        <h3 class="font-semibold text-gray-700">Historial</h3>
-        <div class="space-y-2 text-sm">
-          <div v-for="ev in historial" :key="ev.label" class="flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full" :class="ev.color"></span>
-            <span class="text-gray-600">{{ ev.label }}</span>
-            <span class="text-gray-400 ml-auto text-xs">{{ ev.fecha }}</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Movimientos -->
-      <div v-if="ops.detail.transacciones?.length" class="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
-        <h3 class="font-semibold text-gray-700">Movimientos</h3>
-        <div class="space-y-2">
-          <div v-for="tx in ops.detail.transacciones" :key="tx.id"
-            class="flex items-center gap-3 text-sm bg-gray-50 rounded-lg px-4 py-3"
-            :class="{ 'opacity-50': ['revertida', 'cancelada', 'fallido'].includes(tx.estado) }">
-            <div class="flex-1 text-right">
-              <p class="text-gray-500 text-xs">{{ tx.cuenta_origen?.alias || txLabelMetodo(tx) }}</p>
-              <p class="font-medium text-red-600">{{ formatMoney(tx.monto, tx.moneda?.codigo) }}</p>
+        <!-- Header: resumen + datos -->
+        <div class="p-5">
+          <div class="flex items-center justify-between mb-4">
+            <p class="font-bold text-lg text-gray-800">{{ nombreOperacion }}</p>
+            <div class="flex items-center gap-2">
+              <span v-if="ops.detail.estado" class="px-3 py-1 rounded-full text-xs font-bold"
+                :class="ops.detail.estado === 'cerrada' ? 'bg-green-50 text-green-700' :
+                         ops.detail.estado === 'en_progreso' ? 'bg-blue-50 text-blue-700' :
+                         ops.detail.estado === 'solicitud' ? 'bg-yellow-50 text-yellow-700' :
+                         ops.detail.estado === 'cancelada' ? 'bg-red-50 text-red-700' :
+                         ops.detail.estado === 'revertida' ? 'bg-amber-50 text-amber-700' :
+                         'bg-gray-50 text-gray-700'">
+                {{ ops.detail.estado?.replace('_', ' ') }}
+              </span>
+              <span v-if="!esFlujoMultipaso" class="px-3 py-1 rounded-full text-xs font-bold"
+                :class="ops.detail.estatus === 'verificado' ? 'bg-green-50 text-green-700' :
+                         ops.detail.estatus === 'en_verificacion' ? 'bg-blue-50 text-blue-700' :
+                         ops.detail.estatus === 'en_revision' ? 'bg-orange-50 text-orange-700' :
+                         'bg-gray-50 text-gray-700'">
+                {{ ops.detail.estatus?.replace('_', ' ') }}
+              </span>
             </div>
-            <Iconoir name="arrow-right" class="w-5 h-5 shrink-0 text-gray-400" />
-            <div class="flex-1">
-              <p class="text-gray-500 text-xs">{{ tx.cuenta_destino?.alias || `Cuenta #${tx.cuenta_destino_id}` }}</p>
-              <p class="font-medium text-green-600">{{ formatMoney(tx.monto, tx.moneda?.codigo) }}</p>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <!-- Montos -->
+            <div>
+              <div class="grid grid-cols-2 gap-3">
+                <div class="bg-blue-50 rounded-xl px-4 py-3 text-center">
+                  <p class="text-xs text-blue-500 mb-1">El cliente entrega</p>
+                  <p class="text-lg font-bold" :class="esCompra ? 'text-green-700' : 'text-blue-700'">
+                    {{ esCompra ? formatMoney(montoDivisa) + ' ' + monedaDivisa : formatVes(montoBolivares) }}
+                  </p>
+                </div>
+                <div class="bg-green-50 rounded-xl px-4 py-3 text-center">
+                  <p class="text-xs text-green-500 mb-1">La casa entrega</p>
+                  <p class="text-lg font-bold" :class="esCompra ? 'text-blue-700' : 'text-green-700'">
+                    {{ esCompra ? formatVes(montoBolivares) : formatMoney(montoDivisa) + ' ' + monedaDivisa }}
+                  </p>
+                </div>
+              </div>
+              <div class="text-center mt-2">
+                <span class="text-sm text-gray-500">Tasa:</span>
+                <span class="ml-1 text-lg font-bold text-blue-600">{{ formatRate(ops.detail.tasa_aplicada) }}</span>
+              </div>
             </div>
-            <span class="px-2 py-0.5 rounded-full text-[10px] font-medium shrink-0" :class="txEstadoBadge(tx).clase">
-              {{ txEstadoBadge(tx).label }}
-            </span>
+
+            <!-- Datos -->
+            <div class="grid grid-cols-2 gap-3">
+              <div class="bg-gray-50 rounded-xl px-4 py-3">
+                <p class="text-xs text-gray-500 flex items-center gap-1 mb-0.5">
+                  <Iconoir name="identification" class="w-3.5 h-3.5" /> Número de operación
+                </p>
+                <p class="text-lg font-bold text-gray-800">{{ ops.detail.id }}</p>
+              </div>
+              <div v-if="ops.detail.cliente?.nombre" class="bg-gray-50 rounded-xl px-4 py-3">
+                <p class="text-xs text-gray-500 flex items-center gap-1 mb-0.5">
+                  <Iconoir name="users" class="w-3.5 h-3.5" /> Cliente
+                </p>
+                <p class="text-lg font-bold text-gray-800 truncate">{{ ops.detail.cliente.nombre }}</p>
+              </div>
+              <div class="bg-gray-50 rounded-xl px-4 py-3">
+                <p class="text-xs text-gray-500 flex items-center gap-1 mb-0.5">
+                  <Iconoir name="document-text" class="w-3.5 h-3.5" /> Fecha
+                </p>
+                <p class="text-lg font-bold text-gray-800">{{ formatDate(ops.detail.fecha) }}</p>
+              </div>
+              <div v-if="ops.detail.moneda_operacion" class="bg-gray-50 rounded-xl px-4 py-3">
+                <p class="text-xs text-gray-500 flex items-center gap-1 mb-0.5">
+                  <Iconoir name="currency-dollar" class="w-3.5 h-3.5" /> Moneda
+                </p>
+                <p class="text-lg font-bold text-gray-800">{{ ops.detail.moneda_operacion.codigo }}</p>
+              </div>
+              <div v-if="ops.detail.referencia" class="bg-gray-50 rounded-xl px-4 py-3">
+                <p class="text-xs text-gray-500 flex items-center gap-1 mb-0.5">
+                  <Iconoir name="link" class="w-3.5 h-3.5" /> Referencia
+                </p>
+                <p class="text-lg font-bold text-gray-800 truncate">{{ ops.detail.referencia }}</p>
+              </div>
+            </div>
           </div>
-          <div v-for="tx in ops.detail.transacciones" :key="'motivo-'+tx.id">
-            <p v-if="tx.motivo_rechazo" class="text-xs text-red-500 bg-red-50 rounded-lg px-3 py-1 ml-12">
-              Motivo: {{ tx.motivo_rechazo }}
-            </p>
+
+          <!-- Alertas -->
+          <p v-if="ops.detail.descripcion" class="mt-4 text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">{{ ops.detail.descripcion }}</p>
+          <p v-if="ops.detail.motivo_reversion" class="mt-3 text-sm text-amber-700 bg-amber-50 p-3 rounded-lg">
+            <Iconoir name="arrow-uturn-left" class="w-4 h-4 inline" /> Reversión: {{ ops.detail.motivo_reversion }}
+          </p>
+          <p v-if="ops.detail.motivo_cancelacion" class="mt-3 text-sm text-red-600 bg-red-50 p-3 rounded-lg">
+            <Iconoir name="x-mark" class="w-4 h-4 inline" /> Cancelación: {{ ops.detail.motivo_cancelacion }}
+          </p>
+        </div>
+
+        <!-- Movimientos -->
+        <div v-if="ops.detail.transacciones?.length" class="p-5">
+          <h3 class="text-base font-semibold text-gray-700 mb-3">Movimientos</h3>
+          <div class="space-y-2">
+            <div v-for="tx in ops.detail.transacciones" :key="tx.id"
+              class="flex items-center gap-3 bg-gray-50 rounded-lg px-4 py-3"
+              :class="{ 'opacity-50': ['revertida', 'cancelada', 'fallido'].includes(tx.estado) }">
+              <div class="flex-1 text-right">
+                <p class="text-gray-500 text-sm">{{ tx.cuenta_origen?.alias || txLabelMetodo(tx) }}</p>
+                <p class="font-semibold text-red-600">{{ formatMoney(tx.monto, tx.moneda?.codigo) }}</p>
+              </div>
+              <Iconoir name="arrow-right" class="w-5 h-5 shrink-0 text-gray-400" />
+              <div class="flex-1">
+                <p class="text-gray-500 text-sm">{{ tx.cuenta_destino?.alias || `Cuenta #${tx.cuenta_destino_id}` }}</p>
+                <p class="font-semibold text-green-600">{{ formatMoney(tx.monto, tx.moneda?.codigo) }}</p>
+              </div>
+              <span class="px-2 py-0.5 rounded-full text-xs font-medium shrink-0" :class="txEstadoBadge(tx).clase">
+                {{ txEstadoBadge(tx).label }}
+              </span>
+            </div>
+            <div v-for="tx in ops.detail.transacciones" :key="'motivo-'+tx.id">
+              <p v-if="tx.motivo_rechazo" class="text-sm text-red-500 bg-red-50 rounded-lg px-3 py-1 ml-12">
+                Motivo: {{ tx.motivo_rechazo }}
+              </p>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- Ganancia -->
-      <div v-if="ops.detail.estado === 'cerrada'" class="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
-        <h3 class="font-semibold text-gray-700">Ganancia</h3>
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <p class="text-xs text-gray-500">Bruta</p>
-            <p class="text-lg font-bold" :class="gananciaBrutaUsd >= 0 ? 'text-green-600' : 'text-red-600'">
-              {{ formatMoney(gananciaBrutaUsd) }} USD
-            </p>
-            <p class="text-xs text-gray-400">{{ formatVes(gananciaBrutaVes) }}</p>
-          </div>
-          <div>
-            <p class="text-xs text-gray-500">Neta</p>
-            <p class="text-lg font-bold" :class="gananciaNetaUsd >= 0 ? 'text-green-600' : 'text-red-600'">
-              {{ formatMoney(gananciaNetaUsd) }} USD
-            </p>
-            <p class="text-xs text-gray-400">{{ formatVes(gananciaNetaVes) }}</p>
+        <!-- Historial -->
+        <div class="p-5">
+          <h3 class="text-base font-semibold text-gray-700 mb-3">Historial</h3>
+          <div class="grid gap-3" :class="historial.length <= 4 ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-2 sm:grid-cols-3'">
+            <div v-for="ev in historial" :key="ev.label" class="flex items-center gap-3 bg-gray-50 rounded-lg px-4 py-3">
+              <span class="w-3 h-3 rounded-full shrink-0" :class="ev.color"></span>
+              <div>
+                <p class="text-gray-700 font-semibold">{{ ev.label }}</p>
+                <p class="text-gray-500 text-sm">{{ ev.fecha }}</p>
+              </div>
+            </div>
           </div>
         </div>
+
+        <!-- Ganancia -->
+        <div v-if="ops.detail.estado === 'cerrada'" class="p-5">
+          <h3 class="text-base font-semibold text-gray-700 mb-3">Ganancia</h3>
+          <div class="grid grid-cols-2 gap-4 max-w-sm">
+            <div>
+              <p class="text-xs text-gray-500">Bruta</p>
+              <p class="text-lg font-bold" :class="gananciaBrutaUsd >= 0 ? 'text-green-600' : 'text-red-600'">
+                {{ formatMoney(gananciaBrutaUsd) }} USD
+              </p>
+              <p class="text-xs text-gray-400">{{ formatVes(gananciaBrutaVes) }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-gray-500">Neta</p>
+              <p class="text-lg font-bold" :class="gananciaNetaUsd >= 0 ? 'text-green-600' : 'text-red-600'">
+                {{ formatMoney(gananciaNetaUsd) }} USD
+              </p>
+              <p class="text-xs text-gray-400">{{ formatVes(gananciaNetaVes) }}</p>
+            </div>
+          </div>
+        </div>
+
       </div>
 
-      <!-- Botón: Gestionar movimientos (flujo multi-paso) -->
-      <div v-if="ops.detail.estado && ['solicitud', 'en_progreso'].includes(ops.detail.estado)" class="space-y-2">
-        <router-link :to="`/operaciones/${ops.detail.id}/gestionar`"
+      <!-- Acciones -->
+      <div class="mt-4 space-y-2">
+        <router-link v-if="ops.detail.estado && ['solicitud', 'en_progreso'].includes(ops.detail.estado)"
+          :to="`/operaciones/${ops.detail.id}/gestionar`"
           class="block w-full bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-3 rounded-xl transition text-center">
-          <Iconoir name="clipboard" class="w-5 h-5 text-gray-500" /> Gestionar movimientos
+          Gestionar movimientos
         </router-link>
-      </div>
 
-      <!-- Revertir venta (solo admin/super_admin, venta cerrada no revertida) -->
-      <div v-if="puedeRevertir" class="space-y-2">
-        <button @click="mostrarRevertirOp = true"
-          class="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold py-3 rounded-xl transition active:scale-[0.98] flex items-center justify-center gap-2">
-          <Iconoir name="arrow-uturn-left" class="w-5 h-5 text-gray-500" /> Revertir venta
-        </button>
-      </div>
-
-      <!-- Botones de acción -->
-      <div class="space-y-2">
-        <button
-          v-if="puedeEditar"
-          @click="abrirEdicion"
-          class="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold py-3 rounded-xl transition active:scale-[0.98] flex items-center justify-center gap-2"
-        >
-          <Iconoir name="pencil-square" class="w-5 h-5 text-gray-500" /> Editar operación
+        <button v-if="puedeRevertir" @click="mostrarRevertirOp = true"
+          class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded-xl transition active:scale-[0.98] flex items-center justify-center gap-2">
+          <Iconoir name="arrow-uturn-left" class="w-5 h-5" /> Revertir venta
         </button>
 
-        <button
-          v-if="auth.isAdmin && !esFlujoMultipaso && ops.detail.estatus === 'sin_verificar'"
-          @click="iniciarVerificacion"
-          :disabled="verifying"
-          class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-semibold py-3 rounded-xl transition active:scale-[0.98] flex items-center justify-center gap-2"
-        >
+        <button v-if="puedeEditar" @click="abrirEdicion"
+          class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition active:scale-[0.98] flex items-center justify-center gap-2">
+          <Iconoir name="pencil-square" class="w-5 h-5" /> Editar operación
+        </button>
+
+        <button v-if="auth.isAdmin && !esFlujoMultipaso && ops.detail.estatus === 'sin_verificar'"
+          @click="iniciarVerificacion" :disabled="verifying"
+          class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-semibold py-3 rounded-xl transition active:scale-[0.98] flex items-center justify-center gap-2">
           <span v-if="verifying" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
           {{ verifying ? 'Iniciando...' : 'Verificar transacciones' }}
         </button>
 
-        <button
-          v-if="auth.isAdmin && !esFlujoMultipaso && ops.detail.estatus === 'en_verificacion'"
+        <button v-if="auth.isAdmin && !esFlujoMultipaso && ops.detail.estatus === 'en_verificacion'"
           @click="irAVerificacion"
-          class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-xl transition active:scale-[0.98] flex items-center justify-center gap-2"
-        >
+          class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-xl transition active:scale-[0.98] flex items-center justify-center gap-2">
           Continuar verificación
         </button>
       </div>

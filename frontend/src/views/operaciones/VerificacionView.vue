@@ -3,7 +3,7 @@
     <!-- Spinner -->
     <template v-if="loading">
       <div class="flex items-center gap-3 mb-4">
-        <button @click="$router.back()" class="p-2 hover:bg-gray-100 rounded-lg text-gray-500"><Iconoir name="arrow-left" class="w-5 h-5" /></button>
+        <button @click="$router.back()" class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition"><Iconoir name="arrow-left" class="w-4 h-4" /> Volver</button>
         <h2 class="text-xl font-bold text-gray-800">Verificación</h2>
       </div>
       <div class="flex justify-center py-12">
@@ -14,7 +14,7 @@
     <!-- Error -->
     <template v-else-if="error">
       <div class="flex items-center gap-3 mb-4">
-        <button @click="$router.back()" class="p-2 hover:bg-gray-100 rounded-lg text-gray-500"><Iconoir name="arrow-left" class="w-5 h-5" /></button>
+        <button @click="$router.back()" class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition"><Iconoir name="arrow-left" class="w-4 h-4" /> Volver</button>
         <h2 class="text-xl font-bold text-gray-800">Verificación</h2>
       </div>
       <AppErrorState :message="error" @retry="cargar" />
@@ -23,7 +23,7 @@
     <!-- Sin datos -->
     <template v-else-if="!operacion">
       <div class="flex items-center gap-3 mb-4">
-        <button @click="$router.back()" class="p-2 hover:bg-gray-100 rounded-lg text-gray-500"><Iconoir name="arrow-left" class="w-5 h-5" /></button>
+        <button @click="$router.back()" class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition"><Iconoir name="arrow-left" class="w-4 h-4" /> Volver</button>
         <h2 class="text-xl font-bold text-gray-800">Verificación</h2>
       </div>
       <div class="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700">
@@ -35,7 +35,7 @@
     <template v-else>
       <!-- Header -->
       <div class="flex items-center gap-3">
-        <button @click="$router.back()" class="p-2 hover:bg-gray-100 rounded-lg text-gray-500"><Iconoir name="arrow-left" class="w-5 h-5" /></button>
+        <button @click="$router.back()" class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition"><Iconoir name="arrow-left" class="w-4 h-4" /> Volver</button>
         <div class="flex-1">
           <h2 class="text-xl font-bold text-gray-800">Verificación #{{ operacion.id }}</h2>
           <p class="text-sm text-gray-500">{{ tipoNombre }}</p>
