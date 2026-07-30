@@ -147,7 +147,7 @@
         <form @submit.prevent="cerrarOperacion" class="space-y-4">
           <p class="text-sm text-gray-500">Confirma el cierre de esta operación. Se generarán los movimientos contables.</p>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Tasa de mercado (BCV/Binance) *</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Tasa de mercado ({{ fuenteTasaLabel }}) *</label>
             <input v-model.number="tasaMercadoCierre" type="number" step="0.01" min="0" required
               placeholder="Ej: 64.00"
               class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 outline-none" />
@@ -291,6 +291,11 @@ const montoDivisa = computed(() => {
 
 const monedaDivisa = computed(() => {
   return store.detail?.moneda_operacion?.codigo || 'USD'
+})
+
+const fuenteTasaLabel = computed(() => {
+  const map = { USD: 'BCV', EUR: 'BCV', USDT: 'Binance' }
+  return map[monedaDivisa.value] || 'BCV'
 })
 
 const montoBolivares = computed(() => {

@@ -23,8 +23,8 @@ class SolicitudOperacionRequest extends FormRequest
             'monto_solicitado' => ['required', 'numeric', 'min:0.01'],
             'descripcion'      => ['nullable', 'string'],
             'transacciones'             => ['nullable', 'array', 'min:1'],
-            'transacciones.*.cuenta_origen_id'  => ['required', 'integer', 'exists:cuentas,id'],
-            'transacciones.*.cuenta_destino_id' => ['required', 'integer', 'exists:cuentas,id'],
+            'transacciones.*.cuenta_origen_id'  => ['nullable', 'integer', 'exists:cuentas,id'],
+            'transacciones.*.cuenta_destino_id' => ['nullable', 'integer', 'exists:cuentas,id'],
             'transacciones.*.moneda_id'         => ['required', 'integer', 'exists:monedas,id'],
             'transacciones.*.monto'             => ['required', 'numeric', 'gt:0'],
             'transacciones.*.tasa_aplicada'     => ['nullable', 'numeric', 'gt:0'],
@@ -36,8 +36,8 @@ class SolicitudOperacionRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'transacciones.*.cuenta_origen_id.required' => 'Cada transacción debe tener una cuenta de origen.',
-            'transacciones.*.cuenta_destino_id.required' => 'Cada transacción debe tener una cuenta de destino.',
+            'transacciones.*.cuenta_origen_id.exists' => 'La cuenta de origen no existe.',
+            'transacciones.*.cuenta_destino_id.exists' => 'La cuenta de destino no existe.',
             'transacciones.*.moneda_id.required' => 'Cada transacción debe tener una moneda.',
             'transacciones.*.monto.required' => 'Cada transacción debe tener un monto.',
             'transacciones.*.monto.gt' => 'El monto de cada transacción debe ser mayor a 0.',

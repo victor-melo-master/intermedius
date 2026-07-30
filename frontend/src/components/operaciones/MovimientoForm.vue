@@ -70,7 +70,7 @@
         :class="excedeLimite ? 'text-red-500 font-medium' : 'text-gray-400'">
         {{ excedeLimite ? 'Excede el límite. ' : '' }}Disponible: {{ monedaSel?.simbolo || '' }}{{ formatMoney(disponible) }} de {{ monedaSel?.simbolo || '' }}{{ formatMoney(limiteMoneda) }}
       </p>
-      <p v-if="saldoOrigen !== null && cuentaOrigenObj && !cuentaOrigenObj.titular_id && parseFloat(form.monto) > saldoOrigen" class="text-xs text-red-500 font-medium">
+      <p v-if="saldoOrigen !== null && cuentaOrigenObj && !(props.esCompra && esDivisa) && !cuentaOrigenObj.titular_id && parseFloat(form.monto) > saldoOrigen" class="text-xs text-red-500 font-medium">
         ⚠️ El monto excede el saldo disponible en la cuenta origen ({{ monedaSel?.simbolo || '' }}{{ formatMoney(saldoOrigen) }})
       </p>
     </div>
@@ -86,12 +86,7 @@
       <select v-model="form.metodo_pago" required
         class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none">
         <option value="">Seleccionar</option>
-        <option value="efectivo">Efectivo</option>
-        <option value="pago_movil">Pago móvil</option>
-        <option value="transferencia">Transferencia</option>
-        <option value="zelle">Zelle</option>
-        <option value="binance">Binance</option>
-        <option value="otro">Otro</option>
+        <option v-for="op in opcionesMetodoPago" :key="op.value" :value="op.value">{{ op.label }}</option>
       </select>
     </div>
 
@@ -254,6 +249,24 @@ const excedeLimite = computed(() => {
   return parseFloat(form.monto) > disponible.value
 })
 
+const opcionesMetodoPago = computed(() => {
+  if (!monedaSel.value) return []
+  if (esDivisa.value) {
+    return [
+      { value: 'efectivo', label: 'Efectivo' },
+      { value: 'transferencia', label: 'Transferencia' },
+      { value: 'zelle', label: 'Zelle' },
+      { value: 'binance', label: 'Binance' },
+      { value: 'otro', label: 'Otro' },
+    ]
+  }
+  return [
+    { value: 'efectivo', label: 'Efectivo' },
+    { value: 'pagomovil', label: 'Pago móvil' },
+    { value: 'transferencia', label: 'Transferencia' },
+  ]
+})
+
 function labelCuenta(c) {
   const tipo = c.banco?.nombre || c.tipo || 'cuenta'
   let saldo = ''
@@ -375,7 +388,7 @@ function autoDetectarMetodoPago() {
   const destino = cuentaDestinoObj.value
   if (!origen || !destino) return
   const detectado = metodoPago.detectar(origen, destino)
-  if (detectado && !form.metodo_pago) {
+  if (detectado && !form.metodo_pago && opcionesMetodoPago.value.some(o => o.value === detectado)) {
     form.metodo_pago = detectado
   }
 }

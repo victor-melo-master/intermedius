@@ -110,6 +110,7 @@ const nav = computed(() => {
   if (canCreateVenta.value) {
     const opIdx = items.findIndex(i => i.path === '/operaciones')
     items.splice(opIdx + 1, 0, { path: '/operaciones/venta/nueva', label: 'Nueva Venta', icon: '💰' })
+    items.splice(opIdx + 2, 0, { path: '/operaciones/nueva', label: 'Nueva Compra', icon: '🛒' })
   }
   if (auth.isSuperAdmin) {
     items.push({ path: '/usuarios', label: 'Usuarios', icon: '🔑' })

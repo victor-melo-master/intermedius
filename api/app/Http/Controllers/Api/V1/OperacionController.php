@@ -48,6 +48,9 @@ class OperacionController extends Controller
             ->when($request->filled('estatus'),      fn ($q) => $q->where('estatus', $request->estatus))
             ->when($request->filled('estado'),       fn ($q) => $q->where('estado', $request->estado))
             ->when($request->filled('cuenta_id'),    fn ($q) => $q->whereHas('movimientos', fn ($m) => $m->where('cuenta_id', $request->cuenta_id)))
+            ->when($request->filled('operacion_tipo'), fn ($q) => $q->whereHas('tipoOperacion', fn ($t) =>
+                $t->where('codigo', 'like', $request->operacion_tipo . '_%')
+            ))
             ->orderByDesc('fecha')
             ->orderByDesc('id');
 

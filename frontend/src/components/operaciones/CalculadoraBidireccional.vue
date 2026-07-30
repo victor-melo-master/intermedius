@@ -7,7 +7,7 @@
         <label class="block text-sm text-gray-600 mb-1">Monto {{ moneda }} *</label>
         <div class="flex gap-2 items-start">
           <input
-            :value="fmt(monto)"
+            :value="montoDisplay"
             @input="onMontoInput"
             type="text" inputmode="decimal" required
             placeholder="100.00"
@@ -27,7 +27,7 @@
         </label>
         <div class="flex gap-2 items-start">
           <input
-            :value="fmtTasa(tasa)"
+            :value="tasaDisplay"
             @input="onTasaInput"
             type="text" inputmode="decimal" required
             :placeholder="tasaSugerida ? formatTasa(tasaSugerida) : '36.50'"
@@ -57,7 +57,7 @@
       <div class="relative">
         <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">{{ quoteSimbolo }}</span>
         <input
-          :value="fmt(bolivares)"
+          :value="bolivaresDisplay"
           @input="onBolivaresInput"
           type="text" inputmode="decimal" placeholder="0.00"
           class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
@@ -71,7 +71,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 
 const props = defineProps({
   monto: [String, Number],
@@ -94,7 +94,10 @@ const fuenteLabel = computed(() => {
   return map[props.moneda] || props.moneda || 'BCV'
 })
 
-function parse(v) { return parseFloat(String(v).replace(/,/g, '')) || 0 }
+function parse(v) {
+  if (v === '' || v == null) return 0
+  return parseFloat(String(v).replace(/,/g, '')) || 0
+}
 
 function fmt(v) {
   if (v === '' || v == null) return ''
@@ -121,6 +124,10 @@ function round2(n) {
   return (Math.round((n + Number.EPSILON) * 100) / 100).toString()
 }
 
+const montoDisplay = computed(() => fmt(props.monto))
+const tasaDisplay = computed(() => fmtTasa(props.tasa))
+const bolivaresDisplay = computed(() => fmt(props.bolivares))
+
 function limpiarMonto() {
   emit('update:monto', '')
 }
@@ -128,67 +135,55 @@ function limpiarMonto() {
 function limpiarTasa() {
   emit('update:tasa', '')
   emit('update:bolivares', '')
-  emit('update:monto', '')
 }
 
-/**
- * Tres campos, dos de entrada + uno calculado:
- *   bolivares = monto × tasa
- *   monto     = bolivares / tasa
- *   tasa      = bolivares / monto
- *
- * Al editar cualquiera, se calcula el tercero usando los otros dos.
- */
+function calcularDesdeMonto(rawMonto) {
+  const m = parse(rawMonto)
+  const t = parse(props.tasa)
+  if (m > 0 && t > 0) {
+    emit('update:bolivares', round2(m * t))
+  }
+}
+
+function calcularDesdeTasa(rawTasa) {
+  const t = parse(rawTasa)
+  const m = parse(props.monto)
+  const b = parse(props.bolivares)
+  if (m > 0 && t > 0) {
+    emit('update:bolivares', round2(m * t))
+  } else if (b > 0 && t > 0) {
+    emit('update:monto', round2(b / t))
+  }
+}
+
+function calcularDesdeBolivares(rawBolivares) {
+  const b = parse(rawBolivares)
+  const m = parse(props.monto)
+  const t = parse(props.tasa)
+
+  emit('update:bolivares', rawBolivares)
+
+  if (b > 0 && m > 0) {
+    emit('update:tasa', round2(b / m))
+  } else if (b > 0 && t > 0) {
+    emit('update:monto', round2(b / t))
+  }
+}
 
 function onMontoInput(e) {
   const val = String(e.target.value).replace(/,/g, '')
   emit('update:monto', val)
-  const m = parse(val)
-  const t = parse(props.tasa)
-  const b = parse(props.bolivares)
-
-  if (m > 0 && t > 0) {
-    emit('update:bolivares', round2(m * t))
-  } else if (m > 0 && b > 0 && t === 0) {
-    emit('update:tasa', round2(b / m))
-  }
+  calcularDesdeMonto(val)
 }
 
 function onTasaInput(e) {
   const val = String(e.target.value).replace(/,/g, '')
   emit('update:tasa', val)
-  const t = parse(val)
-  const m = parse(props.monto)
-  const b = parse(props.bolivares)
-
-  if (m > 0 && t > 0) {
-    emit('update:bolivares', round2(m * t))
-  } else if (b > 0 && t > 0 && m === 0) {
-    emit('update:monto', round2(b / t))
-  }
+  calcularDesdeTasa(val)
 }
 
 function onBolivaresInput(e) {
-  let val = String(e.target.value).replace(/,/g, '')
-  const b = parse(val)
-  const m = parse(props.monto)
-  const t = parse(props.tasa)
-
-  if (m > 0 && t > 0) {
-    const max = Math.round(m * t * 100) / 100
-    if (b > max) {
-      val = round2(max)
-      emit('update:bolivares', val)
-      return
-    }
-  }
-
-  emit('update:bolivares', val)
-
-  if (b > 0 && m > 0) {
-    emit('update:tasa', round2(b / m))
-  } else if (b > 0 && t > 0 && m === 0) {
-    emit('update:monto', round2(b / t))
-  }
+  const val = String(e.target.value).replace(/,/g, '')
+  calcularDesdeBolivares(val)
 }
 </script>

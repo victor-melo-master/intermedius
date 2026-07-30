@@ -2,15 +2,28 @@
   <div class="space-y-4">
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
       <h2 class="text-xl font-bold text-gray-800">Operaciones</h2>
-      <div class="flex gap-2">
-        <button @click="showFilter = true" class="px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm hover:bg-gray-50 flex items-center gap-1">
-          <span>🔍</span> Filtrar
-          <span v-if="activeFilterCount" class="ml-1 bg-blue-600 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">{{ activeFilterCount }}</span>
-        </button>
-        <router-link to="/operaciones/nueva" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-1">
-          <span>+</span> Nueva
-        </router-link>
-      </div>
+      <button @click="showFilter = true" class="self-start sm:self-auto px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm hover:bg-gray-50 flex items-center gap-1">
+        <span>🔍</span> Filtrar
+        <span v-if="activeFilterCount" class="ml-1 bg-blue-600 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">{{ activeFilterCount }}</span>
+      </button>
+    </div>
+
+    <div class="flex gap-2">
+      <button @click="setTipoFiltro('compra')"
+        class="px-4 py-2 rounded-lg text-sm font-medium transition"
+        :class="operacionTipo === 'compra' ? 'bg-blue-600 text-white shadow-sm' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'">
+        Compras
+      </button>
+      <button @click="setTipoFiltro('venta')"
+        class="px-4 py-2 rounded-lg text-sm font-medium transition"
+        :class="operacionTipo === 'venta' ? 'bg-blue-600 text-white shadow-sm' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'">
+        Ventas
+      </button>
+      <button @click="setTipoFiltro(null)"
+        class="px-4 py-2 rounded-lg text-sm font-medium transition"
+        :class="operacionTipo === null ? 'bg-blue-600 text-white shadow-sm' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'">
+        Todos
+      </button>
     </div>
 
     <div v-if="ops.loading" class="text-center py-12">
@@ -18,7 +31,7 @@
     </div>
     <div v-else-if="ops.error" class="bg-red-50 text-red-600 p-4 rounded-xl">
       {{ ops.error }}
-      <button @click="ops.fetchAll(params)" class="underline ml-2">Reintentar</button>
+      <button @click="reintentar" class="underline ml-2">Reintentar</button>
     </div>
     <div v-else-if="ops.list.length === 0" class="text-center py-16">
       <span class="text-5xl block mb-4">📄</span>
@@ -142,7 +155,7 @@
  * montos desde movimientos, y un modal de filtros por tipo, estatus,
  * fechas, moneda y cliente (con autocomplete).
  */
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useOperacionesStore } from '../../stores/operaciones.js'
 import { useFormatting } from '@/composables/useFormatting'
 import api from '../../api/axios.js'
@@ -153,6 +166,35 @@ const ops = useOperacionesStore()
 const { formatMoney, formatRate, formatDate } = useFormatting()
 /** Controla visibilidad del modal de filtros */
 const showFilter = ref(false)
+
+/** Filtro rápido de tipo: 'compra' | 'venta' | null (todos) */
+const operacionTipo = ref('compra')
+
+function setTipoFiltro(tipo) {
+  operacionTipo.value = tipo
+}
+
+watch(operacionTipo, () => {
+  applyTipoFilter()
+})
+
+function paramsConTipo() {
+  const p = { ...params }
+  if (operacionTipo.value) {
+    p.operacion_tipo = operacionTipo.value
+  } else {
+    delete p.operacion_tipo
+  }
+  return p
+}
+
+function applyTipoFilter() {
+  ops.fetchAll(paramsConTipo())
+}
+
+function reintentar() {
+  ops.fetchAll(paramsConTipo())
+}
 
 /** Valores actuales de filtros en el modal */
 const filters = reactive({
@@ -323,7 +365,7 @@ function applyFilters() {
   if (filters.cliente_id) params.cliente_id = Number(filters.cliente_id)
   if (filters.moneda) params.moneda = filters.moneda
   if (filters.estado) params.estado = filters.estado
-  ops.fetchAll(params)
+  applyTipoFilter()
   showFilter.value = false
 }
 
@@ -331,10 +373,12 @@ function applyFilters() {
 function clearFilters() {
   Object.assign(filters, { tipo_codigo: '', estatus: '', estado: '', fecha_desde: '', fecha_hasta: '', cliente_id: '', cliente_nombre: '', moneda: '' })
   Object.keys(params).forEach(k => delete params[k])
-  ops.fetchAll(params)
+  applyTipoFilter()
   showFilter.value = false
 }
 
-/** Carga la lista de operaciones al montar */
-onMounted(() => ops.fetchAll())
+/** Carga la lista de operaciones al montar (default compras) */
+onMounted(() => {
+  ops.fetchAll({ operacion_tipo: 'compra' })
+})
 </script>

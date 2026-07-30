@@ -653,11 +653,12 @@ public function actualizar(Operacion $operacion, array $payload, \App\Models\Use
     {
         $cuentaIds = [];
         foreach ($transacciones as $t) {
-            $cuentaIds[] = $t['cuenta_origen_id'];
-            $cuentaIds[] = $t['cuenta_destino_id'];
+            if (!empty($t['cuenta_origen_id'])) $cuentaIds[] = $t['cuenta_origen_id'];
+            if (!empty($t['cuenta_destino_id'])) $cuentaIds[] = $t['cuenta_destino_id'];
         }
 
         $cuentaIds = array_unique($cuentaIds);
+        if (empty($cuentaIds)) return;
         $inactivas = Cuenta::whereIn('id', $cuentaIds)->where('activa', false)->get();
 
         if ($inactivas->isNotEmpty()) {

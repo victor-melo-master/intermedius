@@ -24,11 +24,10 @@ const routes = [
       { path: 'dashboard', name: 'Dashboard', component: () => import('../views/dashboard/DashboardView.vue') },
       /** Listado de operaciones registradas. */
       { path: 'operaciones', name: 'Operaciones', component: () => import('../views/operaciones/OperacionesView.vue') },
-      /** Selección de moneda para nueva operación. */
+      /** Formulario de nueva compra de divisa (flujo progresivo). */
       { path: 'operaciones/venta/nueva', name: 'VentaNueva', component: () => import('../views/operaciones/VentaFormView.vue') },
-      { path: 'operaciones/nueva', name: 'OperacionMoneda', component: () => import('../views/operaciones/OperacionMonedaView.vue') },
-      /** Formulario de nueva operación para una moneda específica. */
-      { path: 'operaciones/nueva/:moneda', name: 'OperacionNueva', component: () => import('../views/operaciones/OperacionFormView.vue') },
+      { path: 'operaciones/nueva', name: 'CompraNueva', component: () => import('../views/operaciones/CompraFormView.vue') },
+      { path: 'operaciones/nueva/:moneda', name: 'CompraNuevaConMoneda', component: () => import('../views/operaciones/CompraFormView.vue') },
       /** Formulario de operación intermediada. */
       { path: 'operaciones/intermediada/nueva', name: 'OperacionIntermediadaNueva', component: () => import('../views/operaciones/OperacionIntermediadaForm.vue') },
       /** Detalle de una operación existente. */

@@ -34,8 +34,8 @@ class TransaccionController extends Controller
         }
 
         $request->validate([
-            'cuenta_origen_id'  => 'required|exists:cuentas,id,deleted_at,NULL',
-            'cuenta_destino_id' => 'required|exists:cuentas,id,deleted_at,NULL',
+            'cuenta_origen_id'  => 'nullable|exists:cuentas,id,deleted_at,NULL',
+            'cuenta_destino_id' => 'nullable|exists:cuentas,id,deleted_at,NULL',
             'moneda_id'         => 'required|exists:monedas,id',
             'monto'             => 'required|numeric|min:0.01',
             'tasa_aplicada'     => 'nullable|numeric|min:0',
@@ -44,19 +44,22 @@ class TransaccionController extends Controller
             'comprobante'       => 'nullable|string|max:255',
         ]);
 
-        $cuentaOrigen = Cuenta::findOrFail($request->cuenta_origen_id);
-        $cuentaDestino = Cuenta::findOrFail($request->cuenta_destino_id);
-
-        if ($cuentaOrigen->moneda_id != $request->moneda_id) {
-            return response()->json([
-                'message' => 'La cuenta de origen no pertenece a la moneda indicada.',
-            ], 422);
+        if ($request->cuenta_origen_id) {
+            $cuentaOrigen = Cuenta::findOrFail($request->cuenta_origen_id);
+            if ($cuentaOrigen->moneda_id != $request->moneda_id) {
+                return response()->json([
+                    'message' => 'La cuenta de origen no pertenece a la moneda indicada.',
+                ], 422);
+            }
         }
 
-        if ($cuentaDestino->moneda_id != $request->moneda_id) {
-            return response()->json([
-                'message' => 'La cuenta de destino no pertenece a la moneda indicada.',
-            ], 422);
+        if ($request->cuenta_destino_id) {
+            $cuentaDestino = Cuenta::findOrFail($request->cuenta_destino_id);
+            if ($cuentaDestino->moneda_id != $request->moneda_id) {
+                return response()->json([
+                    'message' => 'La cuenta de destino no pertenece a la moneda indicada.',
+                ], 422);
+            }
         }
 
         // Validar que las transacciones no excedan el monto solicitado

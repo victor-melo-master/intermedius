@@ -9,14 +9,14 @@
       <!-- Moneda -->
       <div class="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
         <label class="block text-sm font-medium text-gray-600">Moneda a vender</label>
-        <select v-model="moneda" required
-          class="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none">
-          <option value="">Seleccionar moneda</option>
-          <option value="USD">💵 USD — Dólar Estadounidense</option>
-          <option value="USDT">₮ USDT — Tether</option>
-          <option value="EUR">€ EUR — Euro</option>
-          <option value="COP">$ COP — Peso Colombiano</option>
-        </select>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <button type="button" v-for="m in monedasDisponibles" :key="m.codigo" @click="moneda = m.codigo"
+            class="py-3 rounded-xl text-sm font-medium transition border-2"
+            :class="moneda === m.codigo ? 'bg-blue-50 border-blue-500 text-blue-700' : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300'">
+            <span class="block text-lg">{{ m.icono }}</span>
+            {{ m.codigo }}
+          </button>
+        </div>
       </div>
 
       <!-- Cliente -->
@@ -270,6 +270,13 @@ const cuentasIntermedius = ref([])
 const cuentasCliente = ref([])
 const registrosPago = ref([])
 const monedas = ref([])
+
+const monedasDisponibles = [
+  { codigo: 'USD', nombre: 'Dólar Estadounidense', icono: '💵' },
+  { codigo: 'USDT', nombre: 'Tether', icono: '₮' },
+  { codigo: 'EUR', nombre: 'Euro', icono: '€' },
+  { codigo: 'COP', nombre: 'Peso Colombiano', icono: '$' },
+]
 
 const montoVesNum = computed(() => parseFloat(montoVes.value) || 0)
 const montoDivisaNum = computed(() => parseFloat(montoDivisa.value) || 0)
