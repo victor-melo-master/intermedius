@@ -13,8 +13,8 @@
           <div class="grid grid-cols-4 gap-2">
             <button type="button" v-for="m in monedasDisponibles" :key="m.codigo" @click="moneda = m.codigo"
               class="py-2.5 rounded-lg text-sm font-medium transition active:scale-[0.98] border-2"
-              :class="moneda === m.codigo ? 'bg-blue-50 border-blue-500 text-blue-700' : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300'">
-              <span class="block text-base">{{ m.icono }}</span>
+              :class="moneda === m.codigo ? monedaColor(m.color) : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300'">
+              <Iconoir :name="m.icono" class="w-5 h-5 mx-auto" :class="iconoColor[m.color] || 'text-gray-500'" />
               <span class="text-xs">{{ m.codigo }}</span>
             </button>
           </div>
@@ -254,11 +254,17 @@ const registrosPago = ref([])
 const monedas = ref([])
 
 const monedasDisponibles = [
-  { codigo: 'USD', nombre: 'Dólar Estadounidense', icono: '$' },
-  { codigo: 'USDT', nombre: 'Tether', icono: '₮' },
-  { codigo: 'EUR', nombre: 'Euro', icono: '€' },
-  { codigo: 'COP', nombre: 'Peso Colombiano', icono: '$' },
+  { codigo: 'USD', nombre: 'Dólar Estadounidense', icono: 'banknotes', color: 'green' },
+  { codigo: 'USDT', nombre: 'Tether', icono: 'currency-dollar', color: 'blue' },
+  { codigo: 'EUR', nombre: 'Euro', icono: 'currency-euro', color: 'amber' },
+  { codigo: 'COP', nombre: 'Peso Colombiano', icono: 'credit-card', color: 'purple' },
 ]
+
+function monedaColor(c) {
+  const map = { green: 'bg-green-50 border-green-500 text-green-700', blue: 'bg-blue-50 border-blue-500 text-blue-700', purple: 'bg-purple-50 border-purple-500 text-purple-700', amber: 'bg-amber-50 border-amber-500 text-amber-700' }
+  return map[c] || 'bg-blue-50 border-blue-500 text-blue-700'
+}
+const iconoColor = { green: 'text-green-500', blue: 'text-blue-500', purple: 'text-purple-500', amber: 'text-amber-500' }
 
 const montoVesNum = computed(() => parseFloat(montoVes.value) || 0)
 const montoDivisaNum = computed(() => parseFloat(montoDivisa.value) || 0)
