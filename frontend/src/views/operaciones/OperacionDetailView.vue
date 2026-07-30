@@ -107,20 +107,24 @@
           <h3 class="text-base font-semibold text-gray-700 mb-3">Movimientos</h3>
           <div class="space-y-2">
             <div v-for="tx in ops.detail.transacciones" :key="tx.id"
-              class="flex items-center gap-3 bg-gray-50 rounded-lg px-4 py-3"
+              class="bg-gray-50 rounded-lg px-4 py-3 space-y-1.5"
               :class="{ 'opacity-50': ['revertida', 'cancelada', 'fallido'].includes(tx.estado) }">
-              <div class="flex-1 text-right">
-                <p class="text-gray-500 text-sm">{{ tx.cuenta_origen?.alias || txLabelMetodo(tx) }}</p>
-                <p class="font-semibold text-red-600">{{ formatMoney(tx.monto, tx.moneda?.codigo) }}</p>
+              <div class="flex justify-end">
+                <span class="px-2 py-0.5 rounded-full text-xs font-medium" :class="txEstadoBadge(tx).clase">
+                  {{ txEstadoBadge(tx).label }}
+                </span>
               </div>
-              <Iconoir name="arrow-right" class="w-5 h-5 shrink-0 text-gray-400" />
-              <div class="flex-1">
-                <p class="text-gray-500 text-sm">{{ tx.cuenta_destino?.alias || `Cuenta #${tx.cuenta_destino_id}` }}</p>
-                <p class="font-semibold text-green-600">{{ formatMoney(tx.monto, tx.moneda?.codigo) }}</p>
+              <div class="flex items-center gap-3">
+                <div class="flex-1 text-right">
+                  <p class="text-gray-500 text-sm">{{ tx.cuenta_origen?.alias || txLabelMetodo(tx) }}</p>
+                  <p class="font-semibold text-red-600">{{ formatMoney(tx.monto, tx.moneda?.codigo) }}</p>
+                </div>
+                <Iconoir name="arrow-right" class="w-5 h-5 shrink-0 text-gray-400" />
+                <div class="flex-1">
+                  <p class="text-gray-500 text-sm">{{ tx.cuenta_destino?.alias || `Cuenta #${tx.cuenta_destino_id}` }}</p>
+                  <p class="font-semibold text-green-600">{{ formatMoney(tx.monto, tx.moneda?.codigo) }}</p>
+                </div>
               </div>
-              <span class="px-2 py-0.5 rounded-full text-xs font-medium shrink-0" :class="txEstadoBadge(tx).clase">
-                {{ txEstadoBadge(tx).label }}
-              </span>
             </div>
             <div v-for="tx in ops.detail.transacciones" :key="'motivo-'+tx.id">
               <p v-if="tx.motivo_rechazo" class="text-sm text-red-500 bg-red-50 rounded-lg px-3 py-1 ml-12">
