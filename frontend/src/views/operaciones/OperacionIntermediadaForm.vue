@@ -1,12 +1,12 @@
 <template>
   <div class="max-w-2xl mx-auto space-y-4 pb-10">
     <div class="flex items-center gap-3 mb-2">
-      <button @click="$router.back()" class="p-2 hover:bg-gray-100 rounded-lg text-gray-500">←</button>
+      <button @click="$router.back()" class="p-2 hover:bg-gray-100 rounded-lg text-gray-500"><Iconoir name="arrow-left" class="w-5 h-5" /></button>
       <h2 class="text-xl font-bold text-gray-800">Nueva Intermediada</h2>
     </div>
 
     <div v-if="successRef" class="bg-green-50 border border-green-200 rounded-2xl p-6 text-center space-y-4">
-      <div class="text-4xl">✅</div>
+      <Iconoir name="check" class="w-12 h-12 text-green-600" />
       <p class="text-green-700 font-semibold">Operación registrada {{ successRef }}</p>
       <button @click="$router.push('/operaciones')" class="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm">Ver operaciones</button>
     </div>
@@ -64,10 +64,10 @@
           </div>
         </div>
         <div v-if="tasaVenta <= tasaCompra" class="bg-amber-50 border border-amber-200 text-amber-700 text-sm p-3 rounded-lg">
-          ⚠️ La tasa de venta debe ser mayor que la de compra.
+          <Iconoir name="exclamation-triangle" class="w-4 h-4 inline text-amber-500" /> La tasa de venta debe ser mayor que la de compra.
         </div>
         <div class="bg-green-50 border border-green-200 text-green-700 text-sm p-3 rounded-lg">
-          💰 Ganancia estimada: {{ gananciaEstimada }} Bs ({{ moneda }} {{ form.monto }} × {{ spread }})
+          <Iconoir name="currency-dollar" class="w-4 h-4 inline text-green-600" /> Ganancia estimada: {{ gananciaEstimada }} Bs ({{ moneda }} {{ form.monto }} × {{ spread }})
         </div>
       </div>
 
@@ -102,6 +102,7 @@ import { useBancosStore } from '../../stores/bancos.js'
 import { useOperacionesStore } from '../../stores/operaciones.js'
 import ClienteSelector from '../../components/clientes/ClienteSelector.vue'
 import CuentaSelector from '../../components/cuentas/CuentaSelector.vue'
+import Iconoir from '@/components/common/Iconoir.vue'
 import AppErrorState from '../../components/common/AppErrorState.vue'
 import api from '../../api/axios.js'
 

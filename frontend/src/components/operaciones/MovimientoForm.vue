@@ -71,7 +71,7 @@
         {{ excedeLimite ? 'Excede el límite. ' : '' }}Disponible: {{ monedaSel?.simbolo || '' }}{{ formatMoney(disponible) }} de {{ monedaSel?.simbolo || '' }}{{ formatMoney(limiteMoneda) }}
       </p>
       <p v-if="saldoOrigen !== null && cuentaOrigenObj && !(props.esCompra && esDivisa) && !cuentaOrigenObj.titular_id && parseFloat(form.monto) > saldoOrigen" class="text-xs text-red-500 font-medium">
-        ⚠️ El monto excede el saldo disponible en la cuenta origen ({{ monedaSel?.simbolo || '' }}{{ formatMoney(saldoOrigen) }})
+        <Iconoir name="exclamation-triangle" class="w-3.5 h-3.5 inline text-red-500" /> El monto excede el saldo disponible en la cuenta origen ({{ monedaSel?.simbolo || '' }}{{ formatMoney(saldoOrigen) }})
       </p>
     </div>
 
@@ -115,6 +115,7 @@
 
 <script setup>
 import { reactive, ref, computed, onMounted, watch } from 'vue'
+import Iconoir from '../common/Iconoir.vue'
 import { useMovimientos } from '@/composables/useMovimientos'
 import { useNotification } from '@/composables/useNotification'
 import { useFormatting } from '@/composables/useFormatting'

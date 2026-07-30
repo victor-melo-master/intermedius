@@ -18,7 +18,7 @@
             type="button"
             @click="limpiarMonto"
             class="shrink-0 px-2.5 h-[42px] bg-gray-100 hover:bg-red-100 hover:text-red-600 text-gray-500 rounded-xl text-xs font-medium transition flex items-center gap-1"
-          >✕ Limpiar</button>
+          ><Iconoir name="x-mark" class="w-3.5 h-3.5" /> Limpiar</button>
         </div>
       </div>
       <div>
@@ -39,7 +39,7 @@
             type="button"
             @click="limpiarTasa"
             class="shrink-0 px-2.5 h-[42px] bg-gray-100 hover:bg-red-100 hover:text-red-600 text-gray-500 rounded-xl text-xs font-medium transition flex items-center gap-1"
-          >✕ Limpiar</button>
+          ><Iconoir name="x-mark" class="w-3.5 h-3.5" /> Limpiar</button>
         </div>
         <p v-if="tasaSugerida" class="text-xs text-gray-400 mt-1">
           Referencia ({{ fuenteLabel }}): <span class="font-medium text-gray-600">{{ formatTasa(tasaSugerida) }}</span>
@@ -49,7 +49,7 @@
     </div>
 
     <div v-if="desfavorable" class="bg-amber-50 border border-amber-200 text-amber-700 text-sm p-3 rounded-lg">
-      ⚠️ La tasa es desfavorable para la casa.
+      <Iconoir name="exclamation-triangle" class="w-4 h-4 inline text-amber-500" /> La tasa es desfavorable para la casa.
     </div>
 
     <div>
@@ -72,6 +72,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import Iconoir from '../common/Iconoir.vue'
 
 const props = defineProps({
   monto: [String, Number],

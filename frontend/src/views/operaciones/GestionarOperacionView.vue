@@ -1,7 +1,7 @@
 <template>
   <div class="max-w-4xl mx-auto space-y-4">
     <div class="flex items-center gap-3">
-      <button @click="$router.back()" class="p-2 hover:bg-gray-100 rounded-lg text-gray-500">←</button>
+      <button @click="$router.back()" class="p-2 hover:bg-gray-100 rounded-lg text-gray-500"><Iconoir name="arrow-left" class="w-5 h-5" /></button>
       <h2 class="text-xl font-bold text-gray-800">Gestionar operación #{{ store.detail?.id }}</h2>
     </div>
 
@@ -90,12 +90,13 @@
           @click="iniciarOperacion" :disabled="acting"
           class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-semibold py-3 rounded-xl transition flex items-center justify-center gap-2">
           <span v-if="acting" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-          {{ acting ? 'Iniciando...' : '🚀 Iniciar operación' }}
+          <Iconoir v-if="!acting" name="rocket-launch" class="w-5 h-5" />
+          {{ acting ? 'Iniciando...' : 'Iniciar operación' }}
         </button>
 
         <template v-if="store.detail.estado === 'en_progreso'">
           <div v-if="operacionBalanceada" class="bg-green-50 border border-green-200 rounded-xl px-4 py-3">
-            <p class="text-green-700 text-sm font-medium text-center">✅ Movimientos balanceados</p>
+            <p class="text-green-700 text-sm font-medium text-center"><Iconoir name="check" class="w-4 h-4 text-green-500" /> Movimientos balanceados</p>
           </div>
           <button v-else
             @click="mostrarAgregarTx = true"
@@ -107,7 +108,8 @@
             @click="mostrarCerrar = true" :disabled="acting || !operacionBalanceada"
             class="w-full bg-green-600 hover:bg-green-700 disabled:bg-green-300 text-white font-semibold py-3 rounded-xl transition flex items-center justify-center gap-2">
             <span v-if="acting" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-            {{ acting ? 'Cerrando...' : '🔒 Cerrar operación' }}
+            <Iconoir v-if="!acting" name="lock-closed" class="w-5 h-5" />
+            {{ acting ? 'Cerrando...' : 'Cerrar operación' }}
           </button>
           <p v-if="!operacionBalanceada" class="text-xs text-gray-400 text-center">
             Confirma todos los movimientos para cerrar la operación
@@ -207,6 +209,7 @@ import AppErrorState from '@/components/common/AppErrorState.vue'
 import AppFormModal from '@/components/common/AppFormModal.vue'
 import { useTasasReferencia } from '@/composables/useTasasReferencia'
 import { useSaldoCuenta } from '@/composables/useSaldoCuenta'
+import Iconoir from '@/components/common/Iconoir.vue'
 
 const route = useRoute()
 const router = useRouter()

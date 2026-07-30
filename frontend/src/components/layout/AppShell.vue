@@ -27,8 +27,8 @@
         <nav class="p-3 space-y-1">
           <router-link v-for="item in nav" :key="item.path" :to="item.path"
             class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition"
-            :class="$route.path.startsWith(item.path) ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50'">
-            <span class="text-lg">{{ item.icon }}</span>
+             :class="$route.path.startsWith(item.path) ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50'">
+            <Iconoir :name="item.icon" :class="$route.path.startsWith(item.path) ? 'text-blue-700' : item.color" />
             {{ item.label }}
           </router-link>
         </nav>
@@ -40,13 +40,13 @@
         <aside class="absolute left-0 top-0 bottom-0 w-64 bg-white p-4" @click.stop>
           <div class="flex items-center justify-between mb-6">
             <span class="font-bold text-lg">Intermedius</span>
-            <button @click="drawer = false" class="p-1 hover:bg-gray-100 rounded">✕</button>
+            <button @click="drawer = false" class="p-1 hover:bg-gray-100 rounded"><Iconoir name="x-mark" class="text-gray-400" /></button>
           </div>
           <nav class="space-y-1">
             <router-link v-for="item in nav" :key="item.path" :to="item.path" @click="drawer = false"
               class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition"
               :class="$route.path.startsWith(item.path) ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50'">
-              <span class="text-lg">{{ item.icon }}</span>
+              <Iconoir :name="item.icon" :class="$route.path.startsWith(item.path) ? 'text-blue-700' : item.color" />
               {{ item.label }}
             </router-link>
           </nav>
@@ -75,6 +75,7 @@ import { useAuthStore } from '../../stores/auth.js'
 import { useInactivityTimer } from '../../composables/useInactivityTimer.js'
 import PoolAlarm from '../pool/PoolAlarm.vue'
 import echo from '../../plugins/echo'
+import Iconoir from '../../components/common/Iconoir.vue'
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -83,16 +84,16 @@ useInactivityTimer()
 /** @type {import('vue').Ref<boolean>} - Controla la apertura del drawer móvil */
 const drawer = ref(false)
 
-/** @type {Array<{path: string, label: string, icon: string}>} - Items fijos de navegación */
+/** @type {Array<{path: string, label: string, icon: string, color: string}>} - Items fijos de navegación */
 const baseNav = [
-  { path: '/dashboard', label: 'Dashboard', icon: '📊' },
-  { path: '/operaciones', label: 'Operaciones', icon: '📄' },
+  { path: '/dashboard', label: 'Dashboard', icon: 'chart-bar', color: 'text-sky-600' },
+  { path: '/operaciones', label: 'Operaciones', icon: 'document-text', color: 'text-indigo-600' },
 
-  { path: '/clientes', label: 'Clientes', icon: '👥' },
-  { path: '/cuentas', label: 'Cuentas', icon: '🏦' },
-  { path: '/bancos', label: 'Bancos', icon: '🏛️' },
-  { path: '/reportes', label: 'Reportes', icon: '📉' },
-  { path: '/comisiones', label: 'Comisiones', icon: '💰' },
+  { path: '/clientes', label: 'Clientes', icon: 'users', color: 'text-purple-600' },
+  { path: '/cuentas', label: 'Cuentas', icon: 'building-library', color: 'text-amber-600' },
+  { path: '/bancos', label: 'Bancos', icon: 'building-library', color: 'text-orange-600' },
+  { path: '/reportes', label: 'Reportes', icon: 'arrow-trending-down', color: 'text-red-600' },
+  { path: '/comisiones', label: 'Comisiones', icon: 'currency-dollar', color: 'text-emerald-600' },
 ]
 
 /** @type {import('vue').ComputedRef<boolean>} - Indica si el usuario puede acceder al pool de pagos */
@@ -105,15 +106,15 @@ const canCreateVenta = computed(() => auth.isAdmin || auth.isSuperAdmin || auth.
 const nav = computed(() => {
   const items = [...baseNav]
   if (canPool.value) {
-    items.push({ path: '/pool', label: 'Pool de pagos', icon: '💸' })
+    items.push({ path: '/pool', label: 'Pool de pagos', icon: 'banknotes', color: 'text-green-600' })
   }
   if (canCreateVenta.value) {
     const opIdx = items.findIndex(i => i.path === '/operaciones')
-    items.splice(opIdx + 1, 0, { path: '/operaciones/venta/nueva', label: 'Nueva Venta', icon: '💰' })
-    items.splice(opIdx + 2, 0, { path: '/operaciones/nueva', label: 'Nueva Compra', icon: '🛒' })
+    items.splice(opIdx + 1, 0, { path: '/operaciones/venta/nueva', label: 'Nueva Venta', icon: 'currency-dollar', color: 'text-emerald-600' })
+    items.splice(opIdx + 2, 0, { path: '/operaciones/nueva', label: 'Nueva Compra', icon: 'shopping-cart', color: 'text-cyan-600' })
   }
   if (auth.isSuperAdmin) {
-    items.push({ path: '/usuarios', label: 'Usuarios', icon: '🔑' })
+    items.push({ path: '/usuarios', label: 'Usuarios', icon: 'key', color: 'text-slate-600' })
   }
   return items
 })

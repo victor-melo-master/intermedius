@@ -1,7 +1,7 @@
 <template>
   <div class="max-w-2xl mx-auto space-y-6 pb-10">
     <div class="flex items-center gap-3 mb-2">
-      <button @click="$router.back()" class="p-2 hover:bg-gray-100 rounded-lg text-gray-500">←</button>
+      <button @click="$router.back()" class="p-2 hover:bg-gray-100 rounded-lg text-gray-500"><Iconoir name="arrow-left" class="w-5 h-5" /></button>
       <h2 class="text-xl font-bold text-gray-800">Seleccionar moneda</h2>
     </div>
 
@@ -21,7 +21,7 @@
       <router-link to="/operaciones/intermediada/nueva"
         class="bg-white border-2 border-purple-300 rounded-2xl p-6 text-left hover:border-purple-500 hover:shadow-md transition active:scale-[0.98] bg-purple-50">
         <div class="flex items-center gap-3 mb-2">
-          <span class="text-3xl">🔗</span>
+          <Iconoir name="link" class="w-8 h-8" />
           <span class="text-2xl font-bold text-purple-700">Intermediada</span>
         </div>
         <p class="text-sm text-purple-600">Conectar comprador y vendedor</p>
@@ -36,6 +36,7 @@
  * Muestra tarjetas con las monedas disponibles (USD, USDT, EUR, COP) y
  * un enlace directo a la operación intermediada.
  */
+import Iconoir from '@/components/common/Iconoir.vue'
 import { useRouter } from 'vue-router'
 
 /** Router para navegar a la URL de nueva operación con la moneda elegida */
@@ -43,7 +44,7 @@ const router = useRouter()
 
 /** Lista de monedas disponibles para operación directa */
 const monedas = [
-  { codigo: 'USD', nombre: 'Dólar Estadounidense', icono: '💵' },
+  { codigo: 'USD', nombre: 'Dólar Estadounidense', icono: '$' },
   { codigo: 'USDT', nombre: 'Tether', icono: '₮' },
   { codigo: 'EUR', nombre: 'Euro', icono: '€' },
   { codigo: 'COP', nombre: 'Peso Colombiano', icono: '$' },

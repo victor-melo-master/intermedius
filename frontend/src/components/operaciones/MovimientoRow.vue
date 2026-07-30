@@ -6,7 +6,7 @@
         type="button"
         @click="$emit('remove')"
         class="text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg p-1.5 text-sm transition"
-      >✕ Eliminar</button>
+      ><Iconoir name="x-mark" class="w-3.5 h-3.5 text-red-500" /> Eliminar</button>
     </div>
 
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -68,7 +68,7 @@
     </div>
 
     <p v-if="advertenciaSaldo" class="text-xs text-red-500">
-      ⚠️ El monto supera el saldo disponible en la cuenta de salida.
+      <Iconoir name="exclamation-triangle" class="w-3.5 h-3.5 inline text-amber-500" /> El monto supera el saldo disponible en la cuenta de salida.
     </p>
 
     <div class="border-t border-gray-100 pt-2">
@@ -110,6 +110,7 @@
 
 <script setup>
 import { computed, ref } from 'vue'
+import Iconoir from '../common/Iconoir.vue'
 
 const props = defineProps({
   index: Number,

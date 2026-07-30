@@ -15,7 +15,7 @@
       <button @click="titulares.fetchAll()" class="underline ml-2">Reintentar</button>
     </div>
     <div v-else-if="titulares.list.length === 0" class="text-center py-16">
-      <span class="text-5xl block mb-4">👤</span>
+      <Iconoir name="users-solid" class="w-12 h-12 mx-auto mb-4 text-gray-300" />
       <p class="text-gray-500">No hay titulares registrados</p>
     </div>
     <div v-else class="space-y-2">
@@ -69,6 +69,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { useApiError } from '@/composables/useApiError'
 import { useTitularesStore } from '../../stores/titulares.js'
 import AppFormModal from '@/components/common/AppFormModal.vue'
+import Iconoir from '../../components/common/Iconoir.vue'
 
 /** Store de titulares */
 const titulares = useTitularesStore()

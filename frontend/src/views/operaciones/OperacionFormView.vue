@@ -3,7 +3,7 @@
     <TasasReferencia />
 
     <div class="flex items-center gap-3 mb-2">
-      <button @click="$router.back()" class="p-2 hover:bg-gray-100 rounded-lg text-gray-500">←</button>
+      <button @click="$router.back()" class="p-2 hover:bg-gray-100 rounded-lg text-gray-500"><Iconoir name="arrow-left" class="w-5 h-5" /></button>
       <h2 class="text-xl font-bold text-gray-800">{{ titulo }}</h2>
     </div>
 
@@ -83,7 +83,7 @@
               {{ formatMoney(tx.monto) }}
             </span>
             <button type="button" @click="eliminarMovimientoLocal(i)"
-              class="text-red-500 hover:text-red-700 ml-2">✕</button>
+              class="text-red-500 hover:text-red-700 ml-2"><Iconoir name="x-mark" class="w-4 h-4" /></button>
           </div>
         </div>
 
@@ -181,6 +181,7 @@ import { useOperacionForm } from '@/composables/useOperacionForm'
 import ClienteSelector from '@/components/clientes/ClienteSelector.vue'
 import CalculadoraBidireccional from '@/components/operaciones/CalculadoraBidireccional.vue'
 import AppErrorState from '@/components/common/AppErrorState.vue'
+import Iconoir from '@/components/common/Iconoir.vue'
 import TasasReferencia from '@/components/common/TasasReferencia.vue'
 
 const router = useRouter()

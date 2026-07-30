@@ -7,7 +7,7 @@
         <span v-if="refTasas?.bcv_eur" class="font-semibold">BCV EUR: {{ formatVes(refTasas.bcv_eur.tasa) }}</span>
         <span v-if="refTasas?.binance_p2p" class="font-semibold">Binance USDT: {{ formatVes(refTasas.binance_p2p.tasa) }}</span>
         <span class="opacity-70">
-          <template v-if="refStale">⚠️ Datos desactualizados</template>
+          <template v-if="refStale"><Iconoir name="exclamation-triangle" class="w-3 h-3 inline text-amber-500" /> Datos desactualizados</template>
           <template v-else>(actualizado {{ refRelativo }})</template>
         </span>
       </div>
@@ -38,6 +38,7 @@
 
 <script setup>
 import { computed, onMounted } from 'vue'
+import Iconoir from './Iconoir.vue'
 import { useFormatting } from '@/composables/useFormatting'
 import { useTasasReferencia } from '@/composables/useTasasReferencia'
 

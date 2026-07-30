@@ -4,10 +4,15 @@
 
     <AppLoadingSpinner v-if="loading" />
     <AppErrorState v-else-if="error" :message="error" @retry="fetchCuentas" />
-    <AppEmptyState v-else-if="cuentas.length === 0" icon="🏦" message="No hay cuentas registradas" />
+    <template v-else-if="cuentas.length === 0">
+      <div class="text-center py-16">
+        <Iconoir name="building-library" class="w-12 h-12 mx-auto mb-4 text-gray-300" />
+        <p class="text-gray-500">No hay cuentas registradas</p>
+      </div>
+    </template>
     <div v-else class="space-y-2">
       <div v-for="c in cuentas" :key="c.id" class="bg-white border border-gray-200 rounded-xl p-4 flex items-center gap-3">
-        <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-lg">🏦</div>
+        <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center"><Iconoir name="building-library" class="w-5 h-5" /></div>
         <div class="flex-1 min-w-0">
           <p class="font-semibold text-sm truncate">{{ c.alias || `Cuenta #${c.id}` }}</p>
           <p v-if="c.titular?.alias" class="text-xs text-gray-500">{{ c.titular.alias }} — {{ c.titular.nombre }}</p>
@@ -26,7 +31,7 @@
             @click="openSaldoModal(c)"
             class="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded-lg hover:bg-emerald-200"
           >
-            💰 Saldo
+            <Iconoir name="currency-dollar" class="w-4 h-4" /> Saldo
           </button>
         </div>
       </div>
@@ -199,6 +204,7 @@ import AppErrorState from '../../components/common/AppErrorState.vue'
 import AppEmptyState from '../../components/common/AppEmptyState.vue'
 import ClienteSelector from '../../components/clientes/ClienteSelector.vue'
 import AppFormModal from '@/components/common/AppFormModal.vue'
+import Iconoir from '../../components/common/Iconoir.vue'
 
 /** Store de autenticación */
 const auth = useAuthStore()

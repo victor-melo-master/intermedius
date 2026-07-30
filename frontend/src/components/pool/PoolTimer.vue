@@ -14,13 +14,14 @@
       v-if="timeInMinutes >= 5 && estado === 'en_espera'"
       class="animate-pulse text-red-600 text-xs font-bold"
     >
-      ⚠️ SLA
+      <Iconoir name="exclamation-triangle" class="w-3.5 h-3.5 inline text-amber-500" /> SLA
     </span>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue'
+import Iconoir from '../common/Iconoir.vue'
 
 const props = defineProps({
   createdAt: { type: String, required: true },

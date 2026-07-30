@@ -4,11 +4,11 @@
 
     <!-- ── Alertas ─────────────────────────────────────────────────────── -->
     <div v-if="alertas.operaciones_sin_tasa_referencia_hoy || alertas.pares_sin_tasa_vigente?.length" class="flex flex-wrap gap-2">
-      <span v-if="alertas.operaciones_sin_tasa_referencia_hoy" class="bg-red-50 text-red-700 border border-red-200 px-3 py-1 rounded-full text-xs font-medium">
-        ⚠️ {{ alertas.operaciones_sin_tasa_referencia_hoy }} op. sin tasa de referencia hoy
+      <span v-if="alertas.operaciones_sin_tasa_referencia_hoy" class="bg-red-50 text-red-700 border border-red-200 px-3 py-1 rounded-full text-xs font-medium inline-flex items-center gap-1">
+        <Iconoir name="exclamation-triangle" class="w-4 h-4 text-amber-500" /> {{ alertas.operaciones_sin_tasa_referencia_hoy }} op. sin tasa de referencia hoy
       </span>
-      <span v-if="alertas.pares_sin_tasa_vigente?.length" class="bg-amber-50 text-amber-700 border border-amber-200 px-3 py-1 rounded-full text-xs font-medium">
-        📋 Falta publicar tasa: {{ alertas.pares_sin_tasa_vigente.join(', ') }}
+      <span v-if="alertas.pares_sin_tasa_vigente?.length" class="bg-amber-50 text-amber-700 border border-amber-200 px-3 py-1 rounded-full text-xs font-medium inline-flex items-center gap-1">
+        <Iconoir name="clipboard" class="w-4 h-4 text-amber-500" /> Falta publicar tasa: {{ alertas.pares_sin_tasa_vigente.join(', ') }}
       </span>
     </div>
 
@@ -19,7 +19,7 @@
         <p class="text-sm text-gray-500">Hola, {{ auth.user?.name }} · {{ hoy }}</p>
       </div>
       <router-link to="/bancos" class="flex items-center gap-2 bg-white border border-gray-200 hover:border-blue-300 text-gray-700 hover:text-blue-700 text-sm font-medium px-4 py-2 rounded-xl shadow-sm transition">
-        <span>🏛️</span>
+        <Iconoir name="building-library" class="w-5 h-5 text-gray-500" />
         Gestionar bancos
       </router-link>
     </div>
@@ -77,7 +77,7 @@
     <!-- ── Sin operaciones ──────────────────────────────────────────────── -->
     <div v-else-if="resumen && resumen.operaciones && resumen.operaciones.total === 0"
       class="bg-white border border-gray-200 rounded-xl p-10 text-center">
-      <span class="text-4xl block mb-3">📊</span>
+      <Iconoir name="chart-bar" class="w-10 h-10 mx-auto mb-3 text-gray-300" />
       <p class="text-gray-500">Sin operaciones para este período</p>
     </div>
 
@@ -170,6 +170,7 @@ import { useFormatting } from '@/composables/useFormatting'
 import { useApiError } from '@/composables/useApiError'
 import api from '../../api/axios.js'
 import TasasReferencia from '@/components/common/TasasReferencia.vue'
+import Iconoir from '../../components/common/Iconoir.vue'
 
 const auth = useAuthStore()
 const { formatUsd } = useFormatting()

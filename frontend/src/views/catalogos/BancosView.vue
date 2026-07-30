@@ -4,7 +4,12 @@
 
     <AppLoadingSpinner v-if="bancos.loading" />
     <AppErrorState v-else-if="bancos.error" :message="bancos.error" @retry="bancos.fetchAll()" />
-    <AppEmptyState v-else-if="bancos.list.length === 0" icon="🏛️" message="No hay bancos registrados" />
+    <template v-else-if="bancos.list.length === 0">
+      <div class="text-center py-16">
+        <Iconoir name="building-library" class="w-12 h-12 mx-auto mb-4 text-gray-300" />
+        <p class="text-gray-500">No hay bancos registrados</p>
+      </div>
+    </template>
 
     <div v-else class="space-y-2">
       <div v-for="b in bancos.list" :key="b.id" class="bg-white border border-gray-200 rounded-xl p-4 flex items-center gap-3">
@@ -88,6 +93,7 @@ import AppLoadingSpinner from '../../components/common/AppLoadingSpinner.vue'
 import AppErrorState from '../../components/common/AppErrorState.vue'
 import AppEmptyState from '../../components/common/AppEmptyState.vue'
 import AppFormModal from '@/components/common/AppFormModal.vue'
+import Iconoir from '../../components/common/Iconoir.vue'
 
 /** Store de bancos */
 const bancos = useBancosStore()

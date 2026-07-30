@@ -10,7 +10,7 @@
     <AppLoadingSpinner v-if="loading" />
 
     <div v-else-if="cuentas.length === 0" class="bg-amber-50 border border-amber-200 text-amber-700 text-sm p-4 rounded-lg">
-      ⚠️ No hay cuentas configuradas.
+      <Iconoir name="exclamation-triangle" class="w-4 h-4 inline text-amber-500" /> No hay cuentas configuradas.
     </div>
 
     <template v-else>
@@ -62,8 +62,8 @@
     <div v-if="resumen.length" class="text-xs text-gray-500 space-y-0.5 pt-1 border-t border-gray-100">
       <p v-for="r in resumen" :key="r.label" :class="r.ok ? 'text-gray-500' : 'text-red-500 font-medium'">
         {{ r.label }}: {{ r.total }} / {{ r.esperado }}
-        <span v-if="r.ok">✅</span>
-        <span v-else>⚠️ Diferencia: {{ r.diferencia }}</span>
+        <Iconoir v-if="r.ok" name="check" class="w-3.5 h-3.5 inline text-green-500" />
+        <span v-else><Iconoir name="exclamation-triangle" class="w-3.5 h-3.5 inline text-red-500" /> Diferencia: {{ r.diferencia }}</span>
       </p>
     </div>
   </div>
@@ -72,6 +72,7 @@
 <script setup>
 import MovimientoRow from '@/components/operaciones/MovimientoRow.vue'
 import AppLoadingSpinner from '@/components/common/AppLoadingSpinner.vue'
+import Iconoir from '@/components/common/Iconoir.vue'
 
 const props = defineProps({
   transacciones: Array,

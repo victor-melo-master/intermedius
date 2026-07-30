@@ -15,7 +15,7 @@
       <button @click="usuarios.fetchAll()" class="underline ml-2">Reintentar</button>
     </div>
     <div v-else-if="usuarios.list.length === 0" class="text-center py-16">
-      <span class="text-5xl block mb-4">👤</span>
+      <Iconoir name="users" class="w-12 h-12 mx-auto mb-4 text-gray-300" />
       <p class="text-gray-500">No hay usuarios registrados</p>
     </div>
     <div v-else class="space-y-2">
@@ -128,6 +128,7 @@ import { useApiError } from '@/composables/useApiError'
 import api from '../../api/axios.js'
 import { useUsuariosStore } from '../../stores/usuarios.js'
 import AppFormModal from '@/components/common/AppFormModal.vue'
+import Iconoir from '../../components/common/Iconoir.vue'
 
 /** Store de usuarios */
 const usuarios = useUsuariosStore()

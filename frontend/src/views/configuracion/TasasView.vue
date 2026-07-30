@@ -3,7 +3,7 @@
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
       <h2 class="text-xl font-bold text-gray-800">Tasas del día</h2>
       <div class="flex gap-2">
-        <button @click="tasas.fetchVigentes()" class="px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm hover:bg-gray-50">🔄 Actualizar</button>
+        <button @click="tasas.fetchVigentes()" class="px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm hover:bg-gray-50 inline-flex items-center gap-1"><Iconoir name="arrow-path" class="w-4 h-4" /> Actualizar</button>
         <button v-if="auth.isAdmin" @click="openNew" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">+ Publicar tasa</button>
       </div>
     </div>
@@ -17,8 +17,8 @@
     </div>
     <template v-else>
       <!-- Alerta sin tasas hoy -->
-      <div v-if="!hayTasasHoy" class="bg-amber-50 border border-amber-200 text-amber-700 p-4 rounded-xl text-sm">
-        ⚠️ No hay tasas publicadas para hoy
+      <div v-if="!hayTasasHoy" class="bg-amber-50 border border-amber-200 text-amber-700 p-4 rounded-xl text-sm flex items-center gap-1">
+        <Iconoir name="exclamation-triangle" class="w-4 h-4 shrink-0 text-amber-500" /> No hay tasas publicadas para hoy
         <span v-if="auth.isAdmin"> — usa <strong>+ Publicar tasa</strong> para crearlas.</span>
       </div>
 
@@ -33,7 +33,7 @@
           <div v-for="t in grupo.items" :key="t.id" class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
             <div class="flex items-center justify-between mb-3">
               <span class="bg-blue-50 text-blue-700 text-xs font-bold px-3 py-1 rounded-full">{{ t.par }}</span>
-              <button v-if="auth.isAdmin" @click="openEdit(t)" class="text-sm text-gray-400 hover:text-blue-600" title="Editar">✏️ Editar</button>
+              <button v-if="auth.isAdmin" @click="openEdit(t)" class="text-sm text-gray-400 hover:text-blue-600 inline-flex items-center gap-1" title="Editar"><Iconoir name="pencil-square" class="w-4 h-4" /> Editar</button>
             </div>
             <div class="grid grid-cols-2 gap-4">
               <div>
@@ -125,6 +125,7 @@ import { useAuthStore } from '../../stores/auth.js'
 import { useFormatting } from '@/composables/useFormatting'
 import { useApiError } from '@/composables/useApiError'
 import AppFormModal from '@/components/common/AppFormModal.vue'
+import Iconoir from '../../components/common/Iconoir.vue'
 
 /** Store de tasas */
 const tasas = useTasasStore()

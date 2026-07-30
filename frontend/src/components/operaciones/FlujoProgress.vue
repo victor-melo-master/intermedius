@@ -5,9 +5,9 @@
       <div class="flex flex-col items-center">
         <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition"
           :class="estadoClase(paso.key)">
-          <span v-if="estadoIndex > i && paso.key !== 'cancelada' && paso.key !== 'revertida'">✓</span>
-          <span v-else-if="paso.key === 'cancelada'">✕</span>
-          <span v-else-if="paso.key === 'revertida'">↩</span>
+          <Iconoir v-if="estadoIndex > i && paso.key !== 'cancelada' && paso.key !== 'revertida'" name="check" class="w-4 h-4 text-green-500" />
+          <Iconoir v-else-if="paso.key === 'cancelada'" name="x-mark" class="w-4 h-4 text-red-500" />
+          <Iconoir v-else-if="paso.key === 'revertida'" name="arrow-uturn-left" class="w-4 h-4" />
           <span v-else>{{ i + 1 }}</span>
         </div>
         <span class="text-[10px] mt-1 font-medium"
@@ -25,6 +25,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import Iconoir from '../common/Iconoir.vue'
 
 const props = defineProps({
   estado: { type: String, default: 'solicitud' },

@@ -9,23 +9,24 @@
     <div class="relative">
       <input v-model="search" @input="debounceSearch" placeholder="Buscar por nombre o alias..."
         class="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" />
-      <span class="absolute left-3 top-2.5 text-gray-400">🔍</span>
-      <button v-if="search" @click="search = ''; clientes.fetchAll()" class="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600">✕</button>
+      <Iconoir name="magnifying-glass" class="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
+      <button v-if="search" @click="search = ''; clientes.fetchAll()" class="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"><Iconoir name="x-mark" class="w-5 h-5" /></button>
     </div>
 
     <AppLoadingSpinner v-if="clientes.loading" />
     <div class="flex gap-2" v-if="auth.isAdmin">
       <button @click="mostrarPapelera = false; cargarLista()" class="text-sm px-3 py-1.5 rounded-lg transition" :class="mostrarPapelera ? 'bg-gray-100 text-gray-600' : 'bg-blue-600 text-white'">Activos</button>
-      <button @click="mostrarPapelera = true; cargarLista()" class="text-sm px-3 py-1.5 rounded-lg transition" :class="mostrarPapelera ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-600'">🗑 Papelera</button>
+      <button @click="mostrarPapelera = true; cargarLista()" class="text-sm px-3 py-1.5 rounded-lg transition inline-flex items-center gap-1" :class="mostrarPapelera ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-600'"><Iconoir name="trash" class="w-4 h-4" /> Papelera</button>
     </div>
 
     <AppLoadingSpinner v-if="clientes.loading" />
     <AppErrorState v-else-if="clientes.error" :message="clientes.error" @retry="cargarLista()" />
-    <AppEmptyState
-      v-else-if="clientes.list.length === 0"
-      icon="👥"
-      :message="search ? 'Sin resultados' : (mostrarPapelera ? 'No hay clientes eliminados' : 'No hay clientes')"
-    />
+    <template v-else-if="clientes.list.length === 0">
+      <div class="text-center py-16">
+        <Iconoir name="users" class="w-12 h-12 mx-auto mb-4 text-gray-300" />
+        <p class="text-gray-500">{{ search ? 'Sin resultados' : (mostrarPapelera ? 'No hay clientes eliminados' : 'No hay clientes') }}</p>
+      </div>
+    </template>
     <div v-else class="space-y-2">
       <div v-for="c in clientes.list" :key="c.id" @click="openDetail(c)" class="bg-white border border-gray-200 rounded-xl p-4 flex items-center gap-3 cursor-pointer hover:shadow-md transition" :class="c.deleted_at ? 'opacity-70 border-red-200' : ''">
         <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-700 font-bold text-sm">{{ c.nombre.charAt(0).toUpperCase() }}</div>
@@ -39,8 +40,8 @@
           <span v-if="c.deleted_at" class="text-[10px] bg-red-50 text-red-600 px-2 py-0.5 rounded-full">Eliminado</span>
           <span v-else-if="!c.activo" class="text-[10px] bg-red-50 text-red-600 px-2 py-0.5 rounded-full">Inactivo</span>
           <div class="mt-1 flex gap-2 justify-end">
-            <button v-if="c.deleted_at && (auth.isAdmin)" @click.stop="restaurarCliente(c)" class="text-xs text-green-600 hover:text-green-800 underline">↩ Recuperar</button>
-            <button v-else-if="auth.isAdmin" @click.stop="openEdit(c)" class="text-xs text-blue-600 hover:text-blue-800 underline">✏️ Editar</button>
+            <button v-if="c.deleted_at && (auth.isAdmin)" @click.stop="restaurarCliente(c)" class="text-xs text-green-600 hover:text-green-800 underline inline-flex items-center gap-1"><Iconoir name="arrow-uturn-left" class="w-3 h-3" /> Recuperar</button>
+            <button v-else-if="auth.isAdmin" @click.stop="openEdit(c)" class="text-xs text-blue-600 hover:text-blue-800 underline inline-flex items-center gap-1"><Iconoir name="pencil-square" class="w-3 h-3" /> Editar</button>
           </div>
         </div>
       </div>
@@ -70,8 +71,8 @@
         <div class="flex items-center justify-between mb-4">
           <h3 class="font-bold text-lg">{{ detailCliente?.nombre }}</h3>
           <div class="flex gap-2">
-            <button v-if="detailCliente?.deleted_at && (auth.isAdmin)" @click="restaurarCliente(detailCliente)" class="text-xs bg-green-600 text-white px-2 py-1 rounded-lg hover:bg-green-700">↩ Recuperar</button>
-            <button @click="showDetail = false" class="text-gray-400 hover:text-gray-600">✕</button>
+            <button v-if="detailCliente?.deleted_at && (auth.isAdmin)" @click="restaurarCliente(detailCliente)" class="text-xs bg-green-600 text-white px-2 py-1 rounded-lg hover:bg-green-700 inline-flex items-center gap-1"><Iconoir name="arrow-uturn-left" class="w-3 h-3" /> Recuperar</button>
+            <button @click="showDetail = false" class="text-gray-400 hover:text-gray-600"><Iconoir name="x-mark" class="w-5 h-5" /></button>
           </div>
         </div>
 
@@ -81,7 +82,7 @@
           <p v-if="detailCliente?.email" class="text-sm text-gray-500"><span class="font-medium text-gray-700">Email:</span> {{ detailCliente.email }}</p>
           <p v-if="detailCliente?.notas" class="text-sm text-gray-500"><span class="font-medium text-gray-700">Notas:</span> {{ detailCliente.notas }}</p>
           <p class="text-sm text-gray-500"><span class="font-medium text-gray-700">Saldo:</span> <span :class="(detailCliente?.saldo_cache_usd || 0) >= 0 ? 'text-green-600' : 'text-red-600'">${{ formatMoney(detailCliente?.saldo_cache_usd) }}</span></p>
-          <button v-if="!detailCliente?.deleted_at && (auth.isAdmin)" @click="eliminarCliente(detailCliente)" class="text-xs bg-red-600 text-white px-2 py-1 rounded-lg hover:bg-red-700">🗑 Eliminar cliente</button>
+          <button v-if="!detailCliente?.deleted_at && (auth.isAdmin)" @click="eliminarCliente(detailCliente)" class="text-xs bg-red-600 text-white px-2 py-1 rounded-lg hover:bg-red-700 inline-flex items-center gap-1"><Iconoir name="trash" class="w-3 h-3" /> Eliminar cliente</button>
         </div>
 
         <!-- Cuentas bancarias -->
@@ -92,7 +93,12 @@
           </div>
 
           <AppLoadingSpinner v-if="loadingCuentas" />
-          <AppEmptyState v-else-if="clienteCuentas.length === 0" icon="🏦" message="No hay cuentas registradas." />
+          <template v-else-if="clienteCuentas.length === 0">
+            <div class="text-center py-16">
+              <Iconoir name="building-library" class="w-12 h-12 mx-auto mb-4 text-gray-300" />
+              <p class="text-gray-500">No hay cuentas registradas.</p>
+            </div>
+          </template>
           <div v-else class="space-y-3">
             <div v-for="cu in clienteCuentas" :key="cu.id" class="bg-gray-50 border border-gray-200 rounded-lg p-3">
               <p class="font-medium text-sm">{{ cu.alias }}</p>
@@ -112,11 +118,20 @@
             </label>
           </div>
           <AppLoadingSpinner v-if="loadingDocumentos" />
-          <AppEmptyState v-else-if="documentos.length === 0" icon="📄" message="No hay documentos." />
+          <template v-else-if="documentos.length === 0">
+            <div class="text-center py-16">
+              <Iconoir name="document-text" class="w-12 h-12 mx-auto mb-4 text-gray-300" />
+              <p class="text-gray-500">No hay documentos.</p>
+            </div>
+          </template>
           <div v-else class="space-y-3">
             <div v-for="doc in documentos" :key="doc.id" class="bg-gray-50 border border-gray-200 rounded-lg p-3 flex items-center justify-between">
               <div class="flex items-center gap-2 cursor-pointer" @click="abrirDocumento(doc)">
-                <span class="text-lg">{{ doc.tipo === 'cedula' ? '🪪' : doc.tipo === 'rif' ? '📋' : '📄' }}</span>
+                <span class="text-lg inline-flex items-center">
+                  <Iconoir v-if="doc.tipo === 'cedula'" name="identification" class="w-5 h-5" />
+                  <Iconoir v-else-if="doc.tipo === 'rif'" name="clipboard" class="w-5 h-5" />
+                  <Iconoir v-else name="document-text" class="w-5 h-5" />
+                </span>
                 <div>
                   <p class="font-medium text-sm truncate max-w-[200px] hover:text-blue-600 underline">{{ doc.nombre_archivo }}</p>
                   <p class="text-xs text-gray-400">{{ formatTamano(doc.tamano) }} · {{ doc.tipo }}</p>
@@ -124,7 +139,7 @@
               </div>
               <div class="flex flex-col items-end gap-1">
                 <a :href="documentoDownloadUrlById(doc)" class="text-xs text-blue-600 hover:text-blue-800">⬇ Descargar</a>
-                <button @click="eliminarDocumento(doc)" class="text-xs text-red-600 hover:text-red-800">🗑 Eliminar</button>
+                <button @click="eliminarDocumento(doc)" class="text-xs text-red-600 hover:text-red-800 inline-flex items-center gap-1"><Iconoir name="trash" class="w-3 h-3" /> Eliminar</button>
               </div>
             </div>
           </div>
@@ -134,8 +149,9 @@
         <div class="border-t-2 border-gray-300 pt-6 pb-2 mt-4">
           <div class="flex items-center justify-between mb-4">
             <h4 class="font-semibold text-gray-800 text-base">Historial de transacciones</h4>
-            <button @click="exportarPDF" :disabled="exportando" class="text-xs bg-red-600 text-white px-2 py-1 rounded-lg hover:bg-red-700">
-              {{ exportando ? 'Generando...' : '📄 PDF' }}
+            <button @click="exportarPDF" :disabled="exportando" class="text-xs bg-red-600 text-white px-2 py-1 rounded-lg hover:bg-red-700 inline-flex items-center gap-1">
+              <Iconoir v-if="!exportando" name="document-text" class="w-4 h-4" />
+              {{ exportando ? 'Generando...' : 'PDF' }}
             </button>
           </div>
 
@@ -253,7 +269,7 @@
   <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 relative z-10">
     <div class="flex items-center justify-between mb-4">
       <h3 class="font-bold text-lg">{{ documentoPreview?.nombre_archivo }}</h3>
-      <button @click="showDocumentoModal = false" class="text-gray-400 hover:text-gray-600 text-xl leading-none">✕</button>
+      <button @click="showDocumentoModal = false" class="text-gray-400 hover:text-gray-600"><Iconoir name="x-mark" class="w-5 h-5" /></button>
     </div>
     <div class="flex flex-col items-center justify-center">
       <!-- Spinner mientras carga la URL -->
@@ -268,7 +284,7 @@
            class="max-w-full max-h-[70vh] rounded-lg shadow-md" />
       <!-- No imagen -->
       <div v-else-if="!loadingPreviewUrl" class="text-center py-8">
-        <span class="text-5xl block mb-4">📄</span>
+        <Iconoir name="document-text" class="w-12 h-12 mx-auto mb-4 text-gray-300" />
         <p class="text-gray-500">No se puede previsualizar este tipo de archivo.</p>
       </div>
       <!-- Botón de descarga -->
@@ -303,6 +319,7 @@ import AppLoadingSpinner from '../../components/common/AppLoadingSpinner.vue'
 import AppErrorState from '../../components/common/AppErrorState.vue'
 import AppEmptyState from '../../components/common/AppEmptyState.vue'
 import AppFormModal from '@/components/common/AppFormModal.vue'
+import Iconoir from '../../components/common/Iconoir.vue'
 
 /** Store de clientes */
 const clientes = useClientesStore()

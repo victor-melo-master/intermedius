@@ -1,7 +1,7 @@
 <template>
   <div class="max-w-2xl mx-auto space-y-4 pb-10">
     <div class="flex items-center gap-3 mb-2">
-      <button @click="$router.back()" class="p-2 hover:bg-gray-100 rounded-lg text-gray-500">←</button>
+      <button @click="$router.back()" class="p-2 hover:bg-gray-100 rounded-lg text-gray-500"><Iconoir name="arrow-left" class="w-5 h-5" /></button>
       <h2 class="text-xl font-bold text-gray-800">Nueva compra</h2>
     </div>
 
@@ -58,7 +58,7 @@
           <div v-for="(tx, i) in movsDivisa" :key="i"
             class="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg px-3 py-2 text-sm">
             <span class="text-green-700">
-              <span class="font-medium">✓</span>
+              <Iconoir name="check" class="w-4 h-4 text-green-500" />
               {{ tx._origen }} → {{ tx._destino }} · <span class="font-bold">{{ fmt(tx.monto) }} {{ moneda }}</span>
               <span class="text-gray-500 ml-1">· {{ tx.metodo_pago }}</span>
             </span>
@@ -66,7 +66,7 @@
               <button type="button" @click="editarMovDivisa(i)"
                 class="text-xs text-blue-600 hover:text-blue-800 font-medium">Editar</button>
               <button type="button" @click="eliminarMovDivisa(i)"
-                class="text-xs text-red-500 hover:text-red-700 font-medium">✕</button>
+                class="text-xs text-red-500 hover:text-red-700 font-medium"><Iconoir name="x-mark" class="w-4 h-4" /></button>
             </div>
           </div>
         </div>
@@ -124,7 +124,7 @@
           <div v-for="(tx, i) in movsVes" :key="i"
             class="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg px-3 py-2 text-sm">
             <span class="text-green-700">
-              <span class="font-medium">✓</span>
+              <Iconoir name="check" class="w-4 h-4 text-green-500" />
               {{ tx._origen }} · <span class="font-bold">Bs. {{ fmt(tx.monto) }}</span>
               <span class="text-gray-500 ml-1">· {{ tx.metodo_pago }}</span>
             </span>
@@ -132,7 +132,7 @@
               <button type="button" @click="editarMovVes(i)"
                 class="text-xs text-blue-600 hover:text-blue-800 font-medium">Editar</button>
               <button type="button" @click="eliminarMovVes(i)"
-                class="text-xs text-red-500 hover:text-red-700 font-medium">✕</button>
+                class="text-xs text-red-500 hover:text-red-700 font-medium"><Iconoir name="x-mark" class="w-4 h-4" /></button>
             </div>
           </div>
         </div>
@@ -195,7 +195,7 @@
 
         <div v-if="sumaValida"
           class="bg-green-50 border border-green-200 rounded-lg p-3 text-sm text-green-700 text-center font-medium">
-          ✅ Transacciones balanceadas
+          <Iconoir name="check" class="text-green-500" /> Transacciones balanceadas
         </div>
         <div v-else class="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-700 text-center">
           Faltan movimientos por registrar
@@ -224,6 +224,7 @@ import { useTitulares } from '@/composables/useTitulares'
 import { useAuthStore } from '@/stores/auth'
 import ClienteSelector from '@/components/clientes/ClienteSelector.vue'
 import CalculadoraBidireccional from '@/components/operaciones/CalculadoraBidireccional.vue'
+import Iconoir from '@/components/common/Iconoir.vue'
 import AppErrorState from '@/components/common/AppErrorState.vue'
 import api from '@/api/axios'
 
@@ -259,7 +260,7 @@ const cuentasCliente = ref([])
 const monedas = ref([])
 
 const monedasDisponibles = [
-  { codigo: 'USD', nombre: 'Dólar Estadounidense', icono: '💵' },
+  { codigo: 'USD', nombre: 'Dólar Estadounidense', icono: '$' },
   { codigo: 'USDT', nombre: 'Tether', icono: '₮' },
   { codigo: 'EUR', nombre: 'Euro', icono: '€' },
   { codigo: 'COP', nombre: 'Peso Colombiano', icono: '$' },

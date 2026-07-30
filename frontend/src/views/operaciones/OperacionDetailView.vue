@@ -1,7 +1,7 @@
 <template>
   <div class="max-w-2xl mx-auto space-y-4">
     <div class="flex items-center gap-3">
-      <button @click="$router.back()" class="p-2 hover:bg-gray-100 rounded-lg text-gray-500">←</button>
+      <button @click="$router.back()" class="p-2 hover:bg-gray-100 rounded-lg text-gray-500"><Iconoir name="arrow-left" class="w-5 h-5" /></button>
       <h2 class="text-xl font-bold text-gray-800">Operación #{{ ops.detail?.id }}</h2>
     </div>
 
@@ -59,10 +59,10 @@
         <p v-if="ops.detail.referencia" class="text-sm text-gray-500">Ref: {{ ops.detail.referencia }}</p>
         <p v-if="ops.detail.descripcion" class="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">{{ ops.detail.descripcion }}</p>
         <p v-if="ops.detail.motivo_reversion" class="text-sm text-amber-700 bg-amber-50 p-3 rounded-lg">
-          ↩️ Reversión: {{ ops.detail.motivo_reversion }}
+          <Iconoir name="arrow-uturn-left" class="w-4 h-4 inline" /> Reversión: {{ ops.detail.motivo_reversion }}
         </p>
         <p v-if="ops.detail.motivo_cancelacion" class="text-sm text-red-600 bg-red-50 p-3 rounded-lg">
-          ✕ Cancelación: {{ ops.detail.motivo_cancelacion }}
+          <Iconoir name="x-mark" class="w-4 h-4 inline" /> Cancelación: {{ ops.detail.motivo_cancelacion }}
         </p>
       </div>
 
@@ -89,7 +89,7 @@
               <p class="text-gray-500 text-xs">{{ tx.cuenta_origen?.alias || txLabelMetodo(tx) }}</p>
               <p class="font-medium text-red-600">{{ formatMoney(tx.monto, tx.moneda?.codigo) }}</p>
             </div>
-            <span class="text-gray-400 text-lg shrink-0">→</span>
+            <Iconoir name="arrow-right" class="w-5 h-5 shrink-0 text-gray-400" />
             <div class="flex-1">
               <p class="text-gray-500 text-xs">{{ tx.cuenta_destino?.alias || `Cuenta #${tx.cuenta_destino_id}` }}</p>
               <p class="font-medium text-green-600">{{ formatMoney(tx.monto, tx.moneda?.codigo) }}</p>
@@ -131,7 +131,7 @@
       <div v-if="ops.detail.estado && ['solicitud', 'en_progreso'].includes(ops.detail.estado)" class="space-y-2">
         <router-link :to="`/operaciones/${ops.detail.id}/gestionar`"
           class="block w-full bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-3 rounded-xl transition text-center">
-          📋 Gestionar movimientos
+          <Iconoir name="clipboard" class="w-5 h-5 text-gray-500" /> Gestionar movimientos
         </router-link>
       </div>
 
@@ -139,7 +139,7 @@
       <div v-if="puedeRevertir" class="space-y-2">
         <button @click="mostrarRevertirOp = true"
           class="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold py-3 rounded-xl transition flex items-center justify-center gap-2">
-          ↩️ Revertir venta
+          <Iconoir name="arrow-uturn-left" class="w-5 h-5 text-gray-500" /> Revertir venta
         </button>
       </div>
 
@@ -150,7 +150,7 @@
           @click="abrirEdicion"
           class="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold py-3 rounded-xl transition flex items-center justify-center gap-2"
         >
-          ✏️ Editar operación
+          <Iconoir name="pencil-square" class="w-5 h-5 text-gray-500" /> Editar operación
         </button>
 
         <button
@@ -235,6 +235,7 @@ import { useNotification } from '@/composables/useNotification'
 import api from '@/api/axios'
 import AppLoadingSpinner from '../../components/common/AppLoadingSpinner.vue'
 import AppErrorState from '../../components/common/AppErrorState.vue'
+import Iconoir from '@/components/common/Iconoir.vue'
 import AppFormModal from '@/components/common/AppFormModal.vue'
 
 /** Ruta actual (contiene params.id) */

@@ -8,7 +8,7 @@
       <div class="relative bg-white rounded-lg shadow-xl max-w-md w-full p-6 mx-4 animate-bounce">
         <div class="flex items-center gap-4 mb-4">
           <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-            <span class="text-2xl">🔔</span>
+            <Iconoir name="bell" class="w-6 h-6 text-red-500" />
           </div>
           <div>
             <h3 class="text-lg font-bold text-red-600">¡SLA Excedido!</h3>
@@ -39,6 +39,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
+import Iconoir from '../common/Iconoir.vue'
 
 const showAlarm = ref(false)
 const alarmData = ref(null)

@@ -3,7 +3,7 @@
     <div class="w-full max-w-sm bg-white rounded-2xl shadow-lg p-8">
       <div class="text-center mb-8">
         <div class="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-          <span class="text-3xl">💱</span>
+          <Iconoir name="arrows-right-left" class="w-8 h-8 text-blue-600" />
         </div>
         <h1 class="text-2xl font-bold text-gray-800">Intermedius</h1>
         <p class="text-sm text-gray-500 mt-1">Sistema de Casa de Cambio</p>
@@ -44,6 +44,7 @@
  * y redirige al dashboard en caso de éxito.
  */
 import { reactive } from 'vue'
+import Iconoir from '../../components/common/Iconoir.vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth.js'
 

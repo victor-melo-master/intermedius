@@ -31,7 +31,7 @@
     <div v-if="error" class="bg-red-50 text-red-600 p-4 rounded-xl">{{ error }}</div>
 
     <div v-if="loaded && data.length === 0" class="text-center py-12">
-      <span class="text-5xl block mb-4">📉</span>
+      <Iconoir name="arrow-trending-down" class="w-12 h-12 mx-auto mb-4 text-gray-300" />
       <p class="text-gray-500">Sin datos para el período seleccionado</p>
     </div>
 
@@ -60,6 +60,7 @@ import { ref } from 'vue'
 import { useFormatting } from '@/composables/useFormatting'
 import { useApiError } from '@/composables/useApiError'
 import api from '../../api/axios.js'
+import Iconoir from '../../components/common/Iconoir.vue'
 
 const { formatMoney } = useFormatting()
 const { parseError } = useApiError()

@@ -4,7 +4,12 @@
 
     <AppLoadingSpinner v-if="loading" />
     <AppErrorState v-else-if="error" :message="error" @retry="fetchComisiones" />
-    <AppEmptyState v-else-if="comisiones.length === 0" icon="💰" message="No hay comisiones registradas" />
+    <template v-else-if="comisiones.length === 0">
+      <div class="text-center py-16">
+        <Iconoir name="currency-dollar" class="w-12 h-12 mx-auto mb-4 text-gray-300" />
+        <p class="text-gray-500">No hay comisiones registradas</p>
+      </div>
+    </template>
     <div v-else class="space-y-2">
       <div v-for="c in comisiones" :key="c.id" class="bg-white border border-gray-200 rounded-xl p-4 flex items-center gap-3">
         <div class="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center text-amber-700 font-bold text-sm">%</div>
@@ -103,6 +108,7 @@ import AppLoadingSpinner from '../../components/common/AppLoadingSpinner.vue'
 import AppErrorState from '../../components/common/AppErrorState.vue'
 import AppEmptyState from '../../components/common/AppEmptyState.vue'
 import AppFormModal from '@/components/common/AppFormModal.vue'
+import Iconoir from '../../components/common/Iconoir.vue'
 
 const { parseError } = useApiError()
 

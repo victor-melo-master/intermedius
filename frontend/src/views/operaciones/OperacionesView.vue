@@ -3,7 +3,7 @@
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
       <h2 class="text-xl font-bold text-gray-800">Operaciones</h2>
       <button @click="showFilter = true" class="self-start sm:self-auto px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm hover:bg-gray-50 flex items-center gap-1">
-        <span>🔍</span> Filtrar
+        <Iconoir name="magnifying-glass" class="w-4 h-4" /> Filtrar
         <span v-if="activeFilterCount" class="ml-1 bg-blue-600 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">{{ activeFilterCount }}</span>
       </button>
     </div>
@@ -34,7 +34,7 @@
       <button @click="reintentar" class="underline ml-2">Reintentar</button>
     </div>
     <div v-else-if="ops.list.length === 0" class="text-center py-16">
-      <span class="text-5xl block mb-4">📄</span>
+      <Iconoir name="document-text" class="w-12 h-12 block mb-4 mx-auto text-gray-300" />
       <p class="text-gray-500">No hay operaciones</p>
       <p class="text-sm text-gray-400 mt-1">Pulsa + para registrar una nueva</p>
     </div>
@@ -159,6 +159,7 @@ import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useOperacionesStore } from '../../stores/operaciones.js'
 import { useFormatting } from '@/composables/useFormatting'
 import api from '../../api/axios.js'
+import Iconoir from '@/components/common/Iconoir.vue'
 import AppFormModal from '@/components/common/AppFormModal.vue'
 
 /** Store de operaciones */

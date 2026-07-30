@@ -2,11 +2,11 @@
   <div class="max-w-2xl mx-auto space-y-4">
     <div class="flex items-center justify-between gap-3">
       <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
-        <span>💸</span> Pool de pagos
+        <Iconoir name="banknotes" class="w-6 h-6 text-green-500" /> Pool de pagos
       </h2>
       <button v-if="tab === 'pool'" @click="refrescarPool" :disabled="store.loadingPool"
         class="px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm hover:bg-gray-50 flex items-center gap-1 active:scale-95 transition">
-        <span :class="store.loadingPool ? 'animate-spin' : ''">🔄</span> Refrescar
+        <Iconoir name="arrow-path" class="w-4 h-4" :class="store.loadingPool ? 'animate-spin' : ''" /> Refrescar
       </button>
     </div>
 
@@ -38,7 +38,7 @@
         <div class="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
       </div>
       <div v-else-if="store.pool.length === 0" class="text-center py-16">
-        <span class="text-5xl block mb-4">📭</span>
+        <Iconoir name="envelope-open" class="w-12 h-12 mx-auto mb-4 text-gray-300" />
         <p class="text-gray-500">No hay órdenes pendientes</p>
         <p class="text-sm text-gray-400 mt-1">Las nuevas órdenes aparecerán aquí automáticamente</p>
       </div>
@@ -86,7 +86,7 @@
         <div class="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
       </div>
       <div v-else-if="store.misOrdenes.length === 0" class="text-center py-16">
-        <span class="text-5xl block mb-4">🗂️</span>
+        <Iconoir name="queue-list" class="w-12 h-12 mx-auto mb-4 text-gray-300" />
         <p class="text-gray-500">No tienes órdenes asignadas</p>
         <p class="text-sm text-gray-400 mt-1">Toma una orden del pool para empezar</p>
       </div>
@@ -118,7 +118,8 @@
           <button @click="copiar(op)"
             class="w-full mb-2 border-2 font-semibold py-3 rounded-xl transition active:scale-[0.98] flex items-center justify-center gap-2"
             :class="copiedId === op.id ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'">
-            <span>{{ copiedId === op.id ? '✓' : '📋' }}</span>
+            <Iconoir v-if="copiedId === op.id" name="check" class="w-5 h-5" />
+            <Iconoir v-else name="clipboard" class="w-5 h-5" />
             {{ copiedId === op.id ? '¡Copiado!' : 'Copiar datos' }}
           </button>
 
@@ -151,6 +152,7 @@ import { useRouter } from 'vue-router'
 import { usePoolStore } from '../../stores/pool.js'
 import { useFormatting } from '@/composables/useFormatting'
 import { useApiError } from '@/composables/useApiError'
+import Iconoir from '../../components/common/Iconoir.vue'
 
 /** Store del pool de pagos */
 const store = usePoolStore()
