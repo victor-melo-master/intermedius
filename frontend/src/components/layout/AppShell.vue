@@ -21,9 +21,9 @@
       </div>
     </header>
 
-    <div class="flex flex-1 max-w-7xl mx-auto w-full">
+    <div class="flex flex-1 w-full">
       <!-- Sidebar desktop -->
-      <aside class="hidden lg:block w-56 border-r border-gray-200 bg-white h-[calc(100vh-3.5rem)] sticky top-14">
+      <aside class="hidden lg:block w-56 shrink-0 border-r border-gray-200 bg-white h-[calc(100vh-3.5rem)] sticky top-14">
         <nav class="p-3 space-y-1">
           <router-link v-for="item in nav" :key="item.path" :to="item.path"
             class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition"
@@ -54,8 +54,10 @@
       </div>
 
       <!-- Main -->
-      <main class="flex-1 p-4 lg:p-6 overflow-auto">
-        <router-view />
+      <main class="flex-1 min-w-0 p-4 lg:p-6 overflow-auto">
+        <div class="max-w-7xl mx-auto">
+          <router-view />
+        </div>
       </main>
     </div>
     <PoolAlarm />
