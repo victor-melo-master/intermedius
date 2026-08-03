@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-4">
+  <div class="max-w-7xl mx-auto space-y-4">
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
       <h2 class="text-xl font-bold text-gray-800">Operaciones</h2>
       <button @click="showFilter = true" class="self-start sm:self-auto px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm hover:bg-gray-50 flex items-center gap-1">
@@ -40,24 +40,43 @@
     </div>
     <div v-else class="space-y-2">
       <router-link v-for="op in ops.list" :key="op.id" :to="`/operaciones/${op.id}`"
-        class="block bg-white border border-gray-200 rounded-xl p-4 hover:shadow-md transition">
-        <div class="flex items-start justify-between gap-3">
-          <div class="min-w-0">
-            <div class="flex items-center gap-2 flex-wrap">
-              <span class="text-[11px] font-bold px-2 py-0.5 rounded-full" :class="tipoBadge(op).class">{{ tipoBadge(op).label }}</span>
+        class="block bg-white border border-gray-200 rounded-xl hover:shadow-md transition">
+        <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2 p-4">
+          <div class="min-w-0 space-y-1">
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-bold px-2 py-0.5 rounded-full" :class="tipoBadge(op).class">{{ tipoBadge(op).label }}</span>
               <span class="text-xs text-gray-400">#{{ op.id }}</span>
-              <span class="text-[11px] font-medium px-2 py-0.5 rounded-full" :class="estatusBadge(op).class">{{ estatusBadge(op).label }}</span>
+              <span class="text-xs font-medium px-2 py-0.5 rounded-full" :class="estatusBadge(op).class">{{ estatusBadge(op).label }}</span>
             </div>
-            <p v-if="op.cliente?.nombre" class="text-sm font-medium text-gray-700 mt-1">{{ op.cliente.nombre }}</p>
-            <p class="text-xs text-gray-400 mt-0.5">{{ formatDate(op.fecha) }} · {{ op.operador?.name || '—' }}</p>
+            <div class="flex items-center gap-3 text-sm">
+              <span v-if="op.cliente?.nombre" class="font-medium text-gray-700">{{ op.cliente.nombre }}</span>
+              <span class="text-gray-400">{{ formatDate(op.fecha) }}</span>
+              <span class="text-gray-400">·</span>
+              <span class="text-gray-400">{{ op.operador?.name || '—' }}</span>
+            </div>
           </div>
-          <div class="text-right shrink-0">
-            <p class="font-bold text-sm text-gray-800">$ {{ formatRate(montoUsd(op)) }}</p>
-            <p class="text-xs text-gray-500">Bs. {{ formatMoney(bolivares(op)) }}</p>
-            <p v-if="gananciaOp(op)" class="text-[11px] font-medium mt-0.5" :class="gananciaOp(op) >= 0 ? 'text-green-600' : 'text-red-500'">
-              G: ${{ formatRate(gananciaOp(op)) }}
-            </p>
-            <p class="text-[11px] text-gray-400">Tasa {{ formatRate(op.tasa_aplicada) }}</p>
+          <div class="flex items-center gap-4 sm:text-right">
+            <div>
+              <p class="text-xs text-gray-400">Monto</p>
+              <p class="font-semibold text-sm text-gray-800">{{ formatMoney(montoUsd(op)) }} USD</p>
+            </div>
+            <div class="hidden sm:block w-px h-8 bg-gray-200"></div>
+            <div>
+              <p class="text-xs text-gray-400">Bs.</p>
+              <p class="text-sm text-gray-600">Bs. {{ formatMoney(bolivares(op)) }}</p>
+            </div>
+            <div class="hidden sm:block w-px h-8 bg-gray-200"></div>
+            <div>
+              <p class="text-xs text-gray-400">Tasa</p>
+              <p class="text-sm text-gray-600">{{ formatRate(op.tasa_aplicada) }}</p>
+            </div>
+            <div v-if="gananciaOp(op)" class="hidden sm:block w-px h-8 bg-gray-200"></div>
+            <div v-if="gananciaOp(op)">
+              <p class="text-xs text-gray-400">Ganancia</p>
+              <p class="text-sm font-medium" :class="gananciaOp(op) >= 0 ? 'text-green-600' : 'text-red-500'">
+                ${{ formatRate(gananciaOp(op)) }}
+              </p>
+            </div>
           </div>
         </div>
       </router-link>

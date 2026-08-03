@@ -10,6 +10,7 @@ import HeroiconsUsers from '~icons/heroicons/users'
 import HeroiconsBuildingLibrary from '~icons/heroicons/building-library'
 import HeroiconsArrowTrendingDown from '~icons/heroicons/arrow-trending-down'
 import HeroiconsCurrencyDollar from '~icons/heroicons/currency-dollar'
+import HeroiconsCurrencyEuro from '~icons/heroicons/currency-euro'
 import HeroiconsBanknotes from '~icons/heroicons/banknotes'
 import HeroiconsShoppingCart from '~icons/heroicons/shopping-cart'
 import HeroiconsKey from '~icons/heroicons/key'
@@ -48,6 +49,7 @@ const map = {
   'building-library': HeroiconsBuildingLibrary,
   'arrow-trending-down': HeroiconsArrowTrendingDown,
   'currency-dollar': HeroiconsCurrencyDollar,
+  'currency-euro': HeroiconsCurrencyEuro,
   'banknotes': HeroiconsBanknotes,
   'shopping-cart': HeroiconsShoppingCart,
   'key': HeroiconsKey,
