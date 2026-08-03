@@ -31,16 +31,50 @@ INSERT IGNORE INTO role_has_permissions (permission_id, role_id)
 SELECT p.id, r.id FROM permissions p, roles r
 WHERE p.name = 'pool.cancelar' AND r.name IN ('admin', 'super_admin');
 
--- Usuario administrador por defecto
--- Contraseña: admin (debe ser cambiada inmediatamente en producción)
+-- Usuarios por defecto (un usuario por rol)
+-- Contraseña de todos: password123 (debe ser cambiada inmediatamente en producción)
 INSERT IGNORE INTO users (name, email, password, activo, email_verified_at, created_at, updated_at) VALUES
-('Admin Principal', 'admin@test.com', '$2y$12$MG35Y8Ei4AGqy3Glw4OMaOzRnqux1O5S0pw62Rs9IjjpMs2lVjLay', 1, NOW(), NOW(), NOW());
+('Admin Principal', 'admin@test.com', '$2y$12$09G34wGwUcaBo3x5QxFyxOG3wJmEy5Oz0jvBF4pooj2I.8QegH41u', 1, NOW(), NOW(), NOW()),
+('Administrador',   'gerente@test.com', '$2y$12$09G34wGwUcaBo3x5QxFyxOG3wJmEy5Oz0jvBF4pooj2I.8QegH41u', 1, NOW(), NOW(), NOW()),
+('Operador',        'operador@test.com', '$2y$12$09G34wGwUcaBo3x5QxFyxOG3wJmEy5Oz0jvBF4pooj2I.8QegH41u', 1, NOW(), NOW(), NOW()),
+('Pagador',         'pagador@test.com', '$2y$12$09G34wGwUcaBo3x5QxFyxOG3wJmEy5Oz0jvBF4pooj2I.8QegH41u', 1, NOW(), NOW(), NOW()),
+('Contador',        'contador@test.com', '$2y$12$09G34wGwUcaBo3x5QxFyxOG3wJmEy5Oz0jvBF4pooj2I.8QegH41u', 1, NOW(), NOW(), NOW()),
+('Lectura',         'lectura@test.com', '$2y$12$09G34wGwUcaBo3x5QxFyxOG3wJmEy5Oz0jvBF4pooj2I.8QegH41u', 1, NOW(), NOW(), NOW());
 
--- Asignación del rol super_admin al usuario administrador
+-- Actualizar clave de usuarios existentes (INSERT IGNORE no modifica filas ya creadas)
+UPDATE users SET password = '$2y$12$09G34wGwUcaBo3x5QxFyxOG3wJmEy5Oz0jvBF4pooj2I.8QegH41u'
+WHERE email IN ('admin@test.com', 'gerente@test.com', 'operador@test.com', 'pagador@test.com', 'contador@test.com', 'lectura@test.com');
+
+-- Asignación de roles a cada usuario
 INSERT IGNORE INTO model_has_roles (role_id, model_type, model_id)
 SELECT r.id, 'App\\Models\\User', u.id
 FROM roles r, users u
 WHERE r.name = 'super_admin' AND u.email = 'admin@test.com';
+
+INSERT IGNORE INTO model_has_roles (role_id, model_type, model_id)
+SELECT r.id, 'App\\Models\\User', u.id
+FROM roles r, users u
+WHERE r.name = 'admin' AND u.email = 'gerente@test.com';
+
+INSERT IGNORE INTO model_has_roles (role_id, model_type, model_id)
+SELECT r.id, 'App\\Models\\User', u.id
+FROM roles r, users u
+WHERE r.name = 'operador' AND u.email = 'operador@test.com';
+
+INSERT IGNORE INTO model_has_roles (role_id, model_type, model_id)
+SELECT r.id, 'App\\Models\\User', u.id
+FROM roles r, users u
+WHERE r.name = 'pagador' AND u.email = 'pagador@test.com';
+
+INSERT IGNORE INTO model_has_roles (role_id, model_type, model_id)
+SELECT r.id, 'App\\Models\\User', u.id
+FROM roles r, users u
+WHERE r.name = 'contador' AND u.email = 'contador@test.com';
+
+INSERT IGNORE INTO model_has_roles (role_id, model_type, model_id)
+SELECT r.id, 'App\\Models\\User', u.id
+FROM roles r, users u
+WHERE r.name = 'lectura' AND u.email = 'lectura@test.com';
 
 -- Tipos de operación
 INSERT INTO tipos_operacion (codigo, nombre, afecta_cliente, afecta_fifo, genera_ganancia, activo, created_at, updated_at) VALUES
