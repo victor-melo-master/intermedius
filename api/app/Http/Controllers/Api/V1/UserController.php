@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\Ajuste;
+use App\Models\SesionUsuario;
 use App\Models\User;
 use App\Notifications\VerifyEmailNotification;
 use Illuminate\Http\JsonResponse;
@@ -21,12 +22,30 @@ class UserController extends Controller
 {
     /**
      * Obtiene la lista de todos los usuarios activos con su titular.
+     * Acepta filtros por query params: q (nombre/email), rol, activo.
+     *
+     * @param Request $request Filtros opcionales
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $usuarios = User::with('titular')
-            ->withTrashed(false)
-            ->orderBy('name')
+        $query = User::query()->with('titular')->withTrashed(false);
+
+        if ($search = trim((string) $request->query('q'))) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->has('activo')) {
+            $query->where('activo', $request->boolean('activo'));
+        }
+
+        if ($rol = $request->query('rol')) {
+            $query->role($rol);
+        }
+
+        $usuarios = $query->orderBy('name')
             ->get()
             ->map(fn (User $u) => $this->formatUser($u));
 
@@ -200,6 +219,38 @@ class UserController extends Controller
                 'La contraseña elegida aparece en filtraciones públicas conocidas. Se recomienda usar una más segura.',
             ];
         }
+    }
+
+    /**
+     * Historial de sesiones (login/logout) de un usuario.
+     * Las sesiones abiertas se reportan como 'vigente' o 'expirada'
+     * según la vigencia del token Sanctum.
+     *
+     * @param User $usuario Usuario del historial
+     * @return JsonResponse Lista de sesiones con tipo_cierre
+     */
+    public function sesiones(User $usuario): JsonResponse
+    {
+        $minutos = SesionUsuario::minutosExpiracion();
+
+        $sesiones = SesionUsuario::where('user_id', $usuario->id)
+            ->orderByDesc('login_at')
+            ->get()
+            ->map(function (SesionUsuario $s) use ($minutos) {
+                $vigente = is_null($s->logout_at);
+                $expirada = $vigente && $s->login_at->copy()->addMinutes($minutos)->lt(now());
+
+                return [
+                    'id'          => $s->id,
+                    'ip_address'  => $s->ip_address,
+                    'user_agent'  => $s->user_agent,
+                    'login_at'    => $s->login_at,
+                    'logout_at'   => $s->logout_at,
+                    'tipo_cierre' => $s->logout_tipo ?? ($expirada ? 'expirada' : 'vigente'),
+                ];
+            });
+
+        return response()->json($sesiones);
     }
 
     private function formatUser(User $u): array

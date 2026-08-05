@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\SesionUsuario;
 use App\Models\User;
 use App\Models\LoginAttempt;
 use Illuminate\Http\JsonResponse;
@@ -66,11 +67,44 @@ class AuthController extends Controller
 
         $usuario->update(['last_login_at' => now()]);
 
-        $token = $usuario->createToken('api-token')->plainTextToken;
+        $token = $usuario->createToken('api-token');
+
+        $this->registrarSesion($request, $usuario, $token->accessToken->id);
 
         return response()->json([
-            'token' => $token,
+            'token' => $token->plainTextToken,
             'user'  => $this->usuarioConRol($usuario),
+        ]);
+    }
+
+    /**
+     * Cierra de forma diferida las sesiones abiertas vencidas del usuario
+     * (sin logout manual) y registra la nueva sesión de inicio.
+     *
+     * @param Request $request
+     * @param User $usuario
+     * @param int|null $tokenId ID del token Sanctum recién creado
+     */
+    private function registrarSesion(Request $request, User $usuario, ?int $tokenId): void
+    {
+        $ahora = now();
+        $minutos = SesionUsuario::minutosExpiracion();
+
+        // Marcar como 'expirada' las sesiones abiertas cuyo vencimiento ya pasó.
+        SesionUsuario::where('user_id', $usuario->id)
+            ->whereNull('logout_at')
+            ->where('login_at', '<', $ahora->copy()->subMinutes($minutos))
+            ->update([
+                'logout_at'  => DB::raw('DATE_ADD(login_at, INTERVAL ' . (int) $minutos . ' MINUTE)'),
+                'logout_tipo' => 'expirada',
+            ]);
+
+        SesionUsuario::create([
+            'user_id'     => $usuario->id,
+            'token_id'    => $tokenId,
+            'ip_address'  => $request->ip(),
+            'user_agent'  => $request->userAgent(),
+            'login_at'    => $ahora,
         ]);
     }
 
@@ -82,7 +116,17 @@ class AuthController extends Controller
      */
     public function logout(Request $request): JsonResponse
     {
-        $request->user()->currentAccessToken()->delete();
+        $token = $request->user()->currentAccessToken();
+
+        // Cerrar la sesión de historial vinculada al token (logout manual).
+        SesionUsuario::where('token_id', $token->id)
+            ->whereNull('logout_at')
+            ->update([
+                'logout_at'  => now(),
+                'logout_tipo' => 'manual',
+            ]);
+
+        $token->delete();
 
         return response()->json(['message' => 'Sesión cerrada correctamente.']);
     }

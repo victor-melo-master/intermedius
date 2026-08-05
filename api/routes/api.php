@@ -187,6 +187,9 @@ Route::prefix('v1')->group(function () {
         Route::middleware('role:admin|super_admin')->group(function () {
             Route::get('usuarios/disponible', [UserController::class, 'disponible'])
                 ->middleware('throttle:60,1');
+            // Historial de sesiones (login/logout) de un usuario
+            Route::get('usuarios/{usuario}/sesiones', [UserController::class, 'sesiones'])
+                ->middleware('throttle:60,1');
             Route::apiResource('usuarios', UserController::class)
                 ->middleware('throttle:60,1');
         });

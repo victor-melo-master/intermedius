@@ -15,14 +15,15 @@ export const useUsuariosStore = defineStore('usuarios', () => {
   const error = ref('')
 
   /**
-   * Obtiene todos los usuarios del sistema.
+   * Obtiene todos los usuarios del sistema con filtros opcionales.
+   * @param {Object} [params] - Filtros: q (búsqueda), rol, activo
    * @returns {Promise<void>}
    */
-  async function fetchAll() {
+  async function fetchAll(params = {}) {
     loading.value = true
     error.value = ''
     try {
-      const { data } = await api.get('/usuarios')
+      const { data } = await api.get('/usuarios', { params })
       list.value = Array.isArray(data) ? data : (data.data || [])
     } catch (err) {
       error.value = err.response?.data?.message || err.message

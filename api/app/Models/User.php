@@ -88,6 +88,14 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\SesionUsuario>
+     */
+    public function sesiones(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(SesionUsuario::class);
+    }
+
+    /**
      * Envía la notificación de verificación de correo, salvo que el ajuste
      * global 'envio_emails' esté desactivado.
      */

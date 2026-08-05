@@ -137,4 +137,25 @@ INSERT IGNORE INTO categorias_gasto (nombre, activa, created_at, updated_at) VAL
 ('Comunicaciones',  1, NOW(), NOW()),
 ('Varios',          1, NOW(), NOW());
 
+-- Historial de sesiones de usuario (login/logout)
+CREATE TABLE IF NOT EXISTS `sesiones_usuario` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` bigint(20) unsigned NOT NULL,
+  `token_id` bigint(20) unsigned DEFAULT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `user_agent` text DEFAULT NULL,
+  `login_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `logout_at` timestamp NULL DEFAULT NULL,
+  `logout_tipo` enum('manual','expirada') DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `sesiones_usuario_user_id_login_at_index` (`user_id`,`login_at`),
+  KEY `sesiones_usuario_token_id_index` (`token_id`),
+  KEY `sesiones_usuario_user_id_foreign` (`user_id`),
+  KEY `sesiones_usuario_token_id_foreign` (`token_id`),
+  CONSTRAINT `sesiones_usuario_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `sesiones_usuario_token_id_foreign` FOREIGN KEY (`token_id`) REFERENCES `personal_access_tokens` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 SET FOREIGN_KEY_CHECKS=1;

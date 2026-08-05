@@ -11,6 +11,35 @@
       </button>
     </div>
 
+    <!-- Filtros -->
+    <div class="space-y-2">
+      <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+        <div class="relative flex-1">
+          <input v-model="search" @input="onSearch" placeholder="Buscar por nombre o correo..."
+            class="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
+          <Iconoir name="magnifying-glass" class="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
+          <button v-if="search" @click="search = ''; cargarUsuarios()"
+            class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600" title="Limpiar búsqueda">
+            <Iconoir name="x-mark" class="w-5 h-5" />
+          </button>
+        </div>
+        <div class="flex gap-2 overflow-x-auto pb-1">
+          <button v-for="estado in estadoOpciones" :key="estado.value" @click="cambiarEstado(estado.value)"
+            class="px-3 py-1.5 rounded-full text-xs font-medium border whitespace-nowrap transition-colors"
+            :class="estadoFiltro === estado.value ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'">
+            {{ estado.label }}
+          </button>
+        </div>
+      </div>
+      <div class="flex gap-2 overflow-x-auto pb-1">
+        <button v-for="rol in rolOpciones" :key="rol.value" @click="cambiarRol(rol.value)"
+          class="px-3 py-1.5 rounded-full text-xs font-medium border whitespace-nowrap transition-colors"
+          :class="rolFiltro === rol.value ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'">
+          {{ rol.label }}
+        </button>
+      </div>
+    </div>
+
     <div v-if="usuarios.loading" class="text-center py-12">
       <div class="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
     </div>
@@ -50,6 +79,11 @@
             :class="u.activo ? 'bg-green-500' : 'bg-gray-300'">
             <span class="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform"
               :class="u.activo ? 'translate-x-5' : 'translate-x-0.5'"></span>
+          </button>
+          <button @click="openSesiones(u)" title="Historial de sesiones"
+            class="text-xs text-slate-600 hover:text-slate-900 font-medium px-2 py-1 border border-slate-200 rounded-lg hover:bg-slate-50 flex items-center gap-1">
+            <Iconoir name="clock" class="w-3.5 h-3.5" />
+            Historial
           </button>
           <button @click="openForm(u)" class="text-xs text-blue-600 hover:text-blue-800 font-medium px-2 py-1 border border-blue-200 rounded-lg hover:bg-blue-50">
             Editar
@@ -190,6 +224,66 @@
         </button>
       </template>
     </AppFormModal>
+
+    <!-- Historial de sesiones -->
+    <AppFormModal :model-value="mostrarSesiones" title="Historial de sesiones" @close="mostrarSesiones = false">
+      <template #header>
+        <div class="flex items-center gap-2">
+          <Iconoir name="clock" class="w-5 h-5 text-gray-500" />
+          <div>
+            <h3 class="text-lg font-bold text-gray-800">Historial de sesiones</h3>
+            <p v-if="usuarioSesiones" class="text-xs text-gray-500">{{ usuarioSesiones.name }} — {{ usuarioSesiones.email }}</p>
+          </div>
+        </div>
+      </template>
+
+      <div v-if="sesionesLoading" class="text-center py-10">
+        <div class="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+      </div>
+      <div v-else-if="sesionesError" class="bg-red-50 text-red-600 p-4 rounded-xl text-sm">
+        {{ sesionesError }}
+      </div>
+      <div v-else-if="sesiones.length === 0" class="text-center py-10">
+        <p class="text-gray-500 text-sm">No hay sesiones registradas para este usuario.</p>
+      </div>
+      <div v-else class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="text-left text-xs uppercase text-gray-400 border-b border-gray-200">
+              <th class="py-2 pr-3 font-semibold">Inicio</th>
+              <th class="py-2 pr-3 font-semibold">IP</th>
+              <th class="py-2 pr-3 font-semibold">Dispositivo</th>
+              <th class="py-2 pr-3 font-semibold">Duración</th>
+              <th class="py-2 font-semibold">Cierre</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="s in sesiones" :key="s.id" class="border-b border-gray-100 last:border-0">
+              <td class="py-2.5 pr-3 whitespace-nowrap text-gray-700">{{ formatDateTime(s.login_at) }}</td>
+              <td class="py-2.5 pr-3 whitespace-nowrap text-gray-600">{{ s.ip_address || '—' }}</td>
+              <td class="py-2.5 pr-3 text-gray-600">
+                {{ dispositivo(s) }}
+              </td>
+              <td class="py-2.5 pr-3 whitespace-nowrap text-gray-600">
+                {{ duracion(s) }}
+              </td>
+              <td class="py-2.5">
+                <span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full"
+                  :class="cierreBadge(s).clase">
+                  {{ cierreBadge(s).texto }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <template #footer>
+        <button @click="mostrarSesiones = false"
+          class="w-full bg-gray-200 text-gray-700 font-semibold py-2.5 rounded-lg hover:bg-gray-300 transition">
+          Cerrar
+        </button>
+      </template>
+    </AppFormModal>
   </div>
 </template>
 
@@ -207,10 +301,11 @@ import api from '../../api/axios.js'
 import { useUsuariosStore } from '../../stores/usuarios.js'
 import AppFormModal from '@/components/common/AppFormModal.vue'
 import Iconoir from '../../components/common/Iconoir.vue'
+import { parseUserAgent } from '../../utils/device.js'
 
 /** Store de usuarios */
 const usuarios = useUsuariosStore()
-const { formatDate } = useFormatting()
+const { formatDate, formatDateTime } = useFormatting()
 const { parseError } = useApiError()
 /** Lista de titulares para el selector del formulario */
 const titulares = ref([])
@@ -386,6 +481,133 @@ const roleLabel = (rol) => roleLabels[rol] || rol
 const rolOptions = ['admin', 'operador', 'contador', 'lectura']
   .map((value) => ({ value, label: roleLabels[value] }))
 
+// ── Filtros del listado ────────────────────────────────────────────────
+/** Búsqueda por nombre/correo */
+const search = ref('')
+/** Filtro de estado: todos | activos | inactivos */
+const estadoFiltro = ref('todos')
+/** Filtro por rol: '' = todos */
+const rolFiltro = ref('')
+/** Timer del debounce de búsqueda */
+let debounce = null
+
+/** Opciones del filtro de estado */
+const estadoOpciones = [
+  { value: 'todos', label: 'Todos' },
+  { value: 'activos', label: 'Activos' },
+  { value: 'inactivos', label: 'Inactivos' },
+]
+
+/** Opciones del filtro por rol (incluye pagador aunque no se cree desde la UI) */
+const rolOpciones = [
+  { value: '', label: 'Todos los roles' },
+  ...['super_admin', 'admin', 'operador', 'pagador', 'contador', 'lectura']
+    .map((value) => ({ value, label: roleLabels[value] })),
+]
+
+/**
+ * Recarga la lista de usuarios aplicando los filtros activos.
+ * @returns {void}
+ */
+function cargarUsuarios() {
+  const params = {}
+  const q = search.value.trim()
+  if (q) params.q = q
+  if (estadoFiltro.value !== 'todos') params.activo = estadoFiltro.value === 'activos'
+  if (rolFiltro.value) params.rol = rolFiltro.value
+  usuarios.fetchAll(params)
+}
+
+/** Busca con debounce de 400 ms al escribir */
+function onSearch() {
+  clearTimeout(debounce)
+  debounce = setTimeout(cargarUsuarios, 400)
+}
+
+/** Cambia el filtro de estado y recarga */
+function cambiarEstado(value) {
+  estadoFiltro.value = value
+  cargarUsuarios()
+}
+
+/** Cambia el filtro de rol y recarga */
+function cambiarRol(value) {
+  rolFiltro.value = value
+  cargarUsuarios()
+}
+
+// ── Historial de sesiones ──────────────────────────────────────────────
+/** Controla la visibilidad del modal de historial */
+const mostrarSesiones = ref(false)
+/** Usuario cuyo historial se muestra */
+const usuarioSesiones = ref(null)
+/** Sesiones del usuario (login/logout) */
+const sesiones = ref([])
+/** Carga de sesiones en curso */
+const sesionesLoading = ref(false)
+/** Error al cargar sesiones */
+const sesionesError = ref('')
+
+/**
+ * Abre el modal con el historial de sesiones del usuario.
+ * @param {Object} u - Usuario
+ * @returns {Promise<void>}
+ */
+async function openSesiones(u) {
+  usuarioSesiones.value = u
+  mostrarSesiones.value = true
+  sesiones.value = []
+  sesionesError.value = ''
+  sesionesLoading.value = true
+  try {
+    const { data } = await api.get(`/usuarios/${u.id}/sesiones`)
+    sesiones.value = Array.isArray(data) ? data : (data.data || [])
+  } catch (err) {
+    sesionesError.value = parseError(err)
+  } finally {
+    sesionesLoading.value = false
+  }
+}
+
+/**
+ * Etiqueta legible de navegador y SO de una sesión.
+ * @param {Object} s - Sesión
+ * @returns {string}
+ */
+function dispositivo(s) {
+  const { navegador, so } = parseUserAgent(s.user_agent)
+  const texto = `${navegador} · ${so}`
+  return texto === '— · —' ? '—' : texto
+}
+
+/**
+ * Duración de una sesión (entre inicio y cierre). 'Activa' si sigue vigente.
+ * @param {Object} s - Sesión
+ * @returns {string}
+ */
+function duracion(s) {
+  if (s.tipo_cierre === 'vigente') return 'Activa'
+  if (!s.login_at) return '—'
+  const fin = s.logout_at || s.login_at
+  const ms = new Date(fin) - new Date(s.login_at)
+  if (isNaN(ms) || ms < 0) return '—'
+  const mins = Math.round(ms / 60000)
+  const h = Math.floor(mins / 60)
+  const m = mins % 60
+  return h === 0 ? `${m} min` : `${h}h ${m}m`
+}
+
+/**
+ * Clase y texto del badge de cierre de sesión.
+ * @param {Object} s - Sesión
+ * @returns {{texto: string, clase: string}}
+ */
+function cierreBadge(s) {
+  if (s.tipo_cierre === 'manual') return { texto: 'Manual', clase: 'bg-green-100 text-green-700' }
+  if (s.tipo_cierre === 'expirada') return { texto: 'Expirada', clase: 'bg-amber-100 text-amber-700' }
+  return { texto: 'Vigente', clase: 'bg-blue-100 text-blue-700' }
+}
+
 /** Controla apertura del dropdown de rol */
 const rolDropdownOpen = ref(false)
 /** Referencia al contenedor del dropdown para cerrar al hacer clic fuera */
@@ -476,7 +698,7 @@ function closeForm() {
 async function handleToggle(u) {
   try {
     await usuarios.toggleActivo(u)
-    usuarios.fetchAll()
+    cargarUsuarios()
   } catch (err) {
     alert(parseError(err))
   }
@@ -555,7 +777,7 @@ async function submit() {
       mostrarToast(res.advertencias.join(' '))
     }
     closeForm()
-    usuarios.fetchAll()
+    cargarUsuarios()
   } catch (err) {
     formError.value = parseError(err)
   } finally {
@@ -565,7 +787,7 @@ async function submit() {
 
 /** Carga usuarios y lista de titulares al montar */
 onMounted(async () => {
-  usuarios.fetchAll()
+  cargarUsuarios()
   try {
     const { data } = await api.get('/titulares')
     titulares.value = Array.isArray(data) ? data : (data.data || [])
