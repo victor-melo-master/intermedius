@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Mail;
 /**
  * Job programado que genera el reporte mensual de comisiones de operadores
  * (Excel + PDF) y opcionalmente envía notificación por email a los destinatarios configurados.
+ * El envío requiere además que el ajuste global 'envio_emails' esté activo.
  */
 class GenerarReporteMensualComisionesJob implements ShouldQueue
 {
@@ -25,7 +26,7 @@ class GenerarReporteMensualComisionesJob implements ShouldQueue
     public int $timeout = 300;
 
     /**
-     * Execute the job.
+     * Ejecuta el job: exporta el reporte del mes anterior y notifica por email si está habilitado.
      *
      * @param  ReporteComisionesOperadoresService  $service
      */

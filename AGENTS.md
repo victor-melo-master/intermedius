@@ -67,6 +67,31 @@ solicitud ──[iniciar]──→ en_progreso ──[cerrar]──→ cerrada
 
 **`genera_ganancia`:** `venta_usd`, `compra_usd`, `intermediada`, `comision` = `true`. Resto = `false`.
 
+### Ajustes Globales (Control General)
+
+Sistema de opciones clave→valor persistidas en la tabla `ajustes` para configurar la app desde un futuro panel de control. El backend ya está completo; falta la vista (ver `PENDIENTES.md`).
+
+**Tabla / Modelo:**
+- `ajustes` (clave unique, valor, descripcion) — sembrada en migraciones `2026_08_05_000002_create_ajustes_table` y `2026_08_05_000003_add_envio_emails_ajuste` y en `docker/mysql/00-init.sh`/`seed.sql` (fuente de verdad para BDs frescas).
+- `Ajuste::obtener(string $clave, mixed $default)` — valor crudo o default si no existe.
+- `Ajuste::activo(string $clave, bool $default = false)` — interpreta el valor como booleano (`filter_var` FILTER_VALIDATE_BOOLEAN; acepta '1', 'true', 'on').
+
+**API:**
+- `GET configuracion/ajustes` (autenticado) — lista `[{clave, valor, descripcion}]` ordenados por clave.
+- `PATCH configuracion/ajustes` (`role:admin|super_admin`) — body `{ ajustes: { clave: valor } }` o `{ ajustes: [{ clave, valor }] }`; normaliza bool→'1'/'0' y hace `updateOrCreate`.
+- Controlador: `api/app/Http/Controllers/Api/V1/Configuracion/AjusteController.php`.
+
+**Ajustes existentes:**
+- `password_segura` ('1' por defecto) — en `UserController::reglaPassword()` añade `->uncompromised()` (HIBP) a `Password::min(8)->mixedCase()->numbers()->symbols()`. Si está desactivada, la contraseña se acepta pero la respuesta incluye `advertencias` (via `agregarAdvertenciasPassword` con `Str::isUncompromised`). Mensaje español personalizado: clave `password.uncompromised` en `UserController::mensajesValidacion()` (resuelta por el validador interno de la regla Password).
+- `envio_emails` ('1' por defecto) — activa/desactiva correos. Guardas en 4 puntos: `UserController::store`, `User::sendEmailVerificationNotification()`, `AlertarTasasFaltantesJob` (solo registra en log si está desactivado), `GenerarReporteMensualComisionesJob` (conjunto con `config('reportes.comisiones_operadores.enviar_email')`).
+
+**Frontend (`UsuariosView.vue`):**
+- Botón "Generar contraseña segura": 16 caracteres (4 clases garantizadas + 12 aleatorios) con `crypto.getRandomValues` sin sesgo de módulo (`indiceAleatorio`) y barajado Fisher-Yates; la muestra en claro para copiarla.
+- Validación de unicidad en vivo de `name`/`email` contra `GET /usuarios/disponible?campo=&valor=&exclude_id=`.
+- Toast ámbar que muestra `res.advertencias` (contraseña comprometida con `password_segura` off); timer limpiado en `onBeforeUnmount`.
+- Requisitos de contraseña en vivo (`passwordRequisitos`) alineados con la regla del backend (min 8, mixta, número, símbolo).
+- `name`/`email` se normalizan a minúsculas: mutators en `User` + migración `2026_08_05_000001_normalize_user_name_email_lowercase`.
+
 ## Rendimiento (diagnóstico Jul 2026)
 
 ### 🔴 Críticos (arreglar ya)

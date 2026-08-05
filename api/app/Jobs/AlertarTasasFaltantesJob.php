@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Mail;
 /**
  * Job programado que verifica si hay tasas diarias vigentes para los pares principales
  * y, si faltan, envía una alerta por email a los administradores.
+ * Si el ajuste global 'envio_emails' está desactivado, solo registra la falta en el log.
  */
 class AlertarTasasFaltantesJob implements ShouldQueue
 {
@@ -25,7 +26,7 @@ class AlertarTasasFaltantesJob implements ShouldQueue
     public int $tries = 2;
 
     /**
-     * Execute the job.
+     * Ejecuta el job: detecta pares sin tasa vigente hoy y alerta a los administradores.
      */
     public function handle(): void
     {

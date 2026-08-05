@@ -87,6 +87,10 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->belongsTo(Titular::class);
     }
 
+    /**
+     * Envía la notificación de verificación de correo, salvo que el ajuste
+     * global 'envio_emails' esté desactivado.
+     */
     public function sendEmailVerificationNotification(): void
     {
         if (Ajuste::activo('envio_emails', true)) {

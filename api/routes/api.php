@@ -159,11 +159,13 @@ Route::prefix('v1')->group(function () {
             Route::get('tasas-vigentes', [TasaDiariaController::class, 'vigentes']);
             Route::get('tasas-diarias',  [TasaDiariaController::class, 'index']);
             Route::get('tasas-diarias/historial/{base}/{cotizada}', [TasaDiariaController::class, 'historial']);
+            // Ajustes globales (clave→valor) para el control general de la app
             Route::get('ajustes', [AjusteController::class, 'index']);
 
             // ── Escritura solo admin ─────────────────────────────────
             Route::middleware('role:admin|super_admin')->group(function () {
                 Route::post('tasas-diarias',  [TasaDiariaController::class, 'store']);
+                // Actualización de ajustes globales (normaliza bool→'1'/'0')
                 Route::patch('ajustes', [AjusteController::class, 'update']);
                 Route::apiResource('comisiones-cuenta',        ComisionCuentaController::class)
                     ->parameters(['comisiones-cuenta' => 'comisionCuenta']);
