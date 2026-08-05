@@ -53,8 +53,8 @@
     </div>
     <div v-else class="space-y-2">
       <div v-for="u in usuarios.list" :key="u.id"
-        class="bg-white border border-gray-200 rounded-xl p-4 flex items-center gap-3"
-        :class="{ 'opacity-60': !u.activo }">
+        class="bg-white border border-gray-200 rounded-xl p-4 flex items-center gap-3 cursor-pointer hover:border-blue-300 hover:shadow-sm transition"
+        :class="{ 'opacity-60': !u.activo }" @click="openDetalle(u)">
         <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-700 font-bold text-sm">
           {{ u.name?.charAt(0).toUpperCase() }}
         </div>
@@ -74,18 +74,18 @@
         </div>
         <div v-if="!isSuperAdmin(u)" class="flex items-center gap-2">
           <!-- Toggle activo -->
-          <button @click="handleToggle(u)" :title="u.activo ? 'Desactivar' : 'Activar'"
+          <button @click.stop="handleToggle(u)" :title="u.activo ? 'Desactivar' : 'Activar'"
             class="relative w-10 h-5 rounded-full transition-colors"
             :class="u.activo ? 'bg-green-500' : 'bg-gray-300'">
             <span class="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform"
               :class="u.activo ? 'translate-x-5' : 'translate-x-0.5'"></span>
           </button>
-          <button @click="openSesiones(u)" title="Historial de sesiones"
+          <button @click.stop="openDetalle(u)" title="Ver detalle"
             class="text-xs text-slate-600 hover:text-slate-900 font-medium px-2 py-1 border border-slate-200 rounded-lg hover:bg-slate-50 flex items-center gap-1">
-            <Iconoir name="clock" class="w-3.5 h-3.5" />
-            Historial
+            <Iconoir name="eye" class="w-3.5 h-3.5" />
+            Detalle
           </button>
-          <button @click="openForm(u)" class="text-xs text-blue-600 hover:text-blue-800 font-medium px-2 py-1 border border-blue-200 rounded-lg hover:bg-blue-50">
+          <button @click.stop="openForm(u)" class="text-xs text-blue-600 hover:text-blue-800 font-medium px-2 py-1 border border-blue-200 rounded-lg hover:bg-blue-50">
             Editar
           </button>
         </div>
@@ -225,17 +225,55 @@
       </template>
     </AppFormModal>
 
-    <!-- Historial de sesiones -->
-    <AppFormModal :model-value="mostrarSesiones" title="Historial de sesiones" @close="mostrarSesiones = false">
+    <!-- Detalle del usuario -->
+    <AppFormModal :model-value="mostrarDetalle" title="Detalle del usuario" @close="mostrarDetalle = false">
       <template #header>
-        <div class="flex items-center gap-2">
-          <Iconoir name="clock" class="w-5 h-5 text-gray-500" />
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-700 font-bold">
+            {{ usuarioDetalle?.name?.charAt(0).toUpperCase() }}
+          </div>
           <div>
-            <h3 class="text-lg font-bold text-gray-800">Historial de sesiones</h3>
-            <p v-if="usuarioSesiones" class="text-xs text-gray-500">{{ usuarioSesiones.name }} — {{ usuarioSesiones.email }}</p>
+            <div class="flex items-center gap-2 flex-wrap">
+              <h3 class="text-lg font-bold text-gray-800">{{ usuarioDetalle?.name }}</h3>
+              <span v-for="rol in usuarioDetalle?.roles ?? []" :key="rol"
+                class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full"
+                :class="roleBadgeClass(rol)">
+                <Iconoir :name="roleIcon(rol)" class="w-3 h-3" />
+                {{ roleLabel(rol) }}
+              </span>
+            </div>
+            <p class="text-xs text-gray-500">{{ usuarioDetalle?.email }}</p>
           </div>
         </div>
       </template>
+
+      <div v-if="usuarioDetalle" class="grid grid-cols-2 gap-3 mb-5">
+        <div class="bg-gray-50 rounded-lg p-3">
+          <p class="text-[10px] uppercase tracking-wide text-gray-400 font-semibold mb-1">Estado</p>
+          <p class="text-sm font-medium" :class="usuarioDetalle.activo ? 'text-green-600' : 'text-gray-500'">
+            {{ usuarioDetalle.activo ? 'Activo' : 'Inactivo' }}
+          </p>
+        </div>
+        <div class="bg-gray-50 rounded-lg p-3">
+          <p class="text-[10px] uppercase tracking-wide text-gray-400 font-semibold mb-1">Titular</p>
+          <p class="text-sm font-medium text-gray-700">
+            {{ usuarioDetalle.titular ? `${usuarioDetalle.titular.alias} — ${usuarioDetalle.titular.nombre}` : 'Sin titular' }}
+          </p>
+        </div>
+        <div class="bg-gray-50 rounded-lg p-3">
+          <p class="text-[10px] uppercase tracking-wide text-gray-400 font-semibold mb-1">Último acceso</p>
+          <p class="text-sm font-medium text-gray-700">{{ usuarioDetalle.last_login_at ? formatDateTime(usuarioDetalle.last_login_at) : 'Nunca' }}</p>
+        </div>
+        <div class="bg-gray-50 rounded-lg p-3">
+          <p class="text-[10px] uppercase tracking-wide text-gray-400 font-semibold mb-1">Creado el</p>
+          <p class="text-sm font-medium text-gray-700">{{ formatDateTime(usuarioDetalle.created_at) }}</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 mb-2">
+        <Iconoir name="clock" class="w-4 h-4 text-gray-500" />
+        <h4 class="text-sm font-bold text-gray-700">Historial de sesiones</h4>
+      </div>
 
       <div v-if="sesionesLoading" class="text-center py-10">
         <div class="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
@@ -278,10 +316,16 @@
         </table>
       </div>
       <template #footer>
-        <button @click="mostrarSesiones = false"
-          class="w-full bg-gray-200 text-gray-700 font-semibold py-2.5 rounded-lg hover:bg-gray-300 transition">
-          Cerrar
-        </button>
+        <div class="flex gap-2">
+          <button v-if="auth.isAdmin && !isSuperAdmin(usuarioDetalle)" @click="editarDesdeDetalle"
+            class="flex-1 bg-blue-600 text-white font-semibold py-2.5 rounded-lg hover:bg-blue-700 transition">
+            Editar usuario
+          </button>
+          <button @click="mostrarDetalle = false"
+            class="flex-1 bg-gray-200 text-gray-700 font-semibold py-2.5 rounded-lg hover:bg-gray-300 transition">
+            Cerrar
+          </button>
+        </div>
       </template>
     </AppFormModal>
   </div>
@@ -299,12 +343,15 @@ import { useFormatting } from '@/composables/useFormatting'
 import { useApiError } from '@/composables/useApiError'
 import api from '../../api/axios.js'
 import { useUsuariosStore } from '../../stores/usuarios.js'
+import { useAuthStore } from '../../stores/auth.js'
 import AppFormModal from '@/components/common/AppFormModal.vue'
 import Iconoir from '../../components/common/Iconoir.vue'
 import { parseUserAgent } from '../../utils/device.js'
 
 /** Store de usuarios */
 const usuarios = useUsuariosStore()
+/** Store de autenticación (para condicionar el filtro super_admin) */
+const auth = useAuthStore()
 const { formatDate, formatDateTime } = useFormatting()
 const { parseError } = useApiError()
 /** Lista de titulares para el selector del formulario */
@@ -472,6 +519,7 @@ const roleLabels = {
   'super_admin': 'Super Administrador',
   'admin':       'Administrador',
   'operador':    'Operador',
+  'pagador':     'Pagador',
   'contador':    'Contador',
   'lectura':     'Lectura',
 }
@@ -498,12 +546,16 @@ const estadoOpciones = [
   { value: 'inactivos', label: 'Inactivos' },
 ]
 
-/** Opciones del filtro por rol (incluye pagador aunque no se cree desde la UI) */
-const rolOpciones = [
-  { value: '', label: 'Todos los roles' },
-  ...['super_admin', 'admin', 'operador', 'pagador', 'contador', 'lectura']
-    .map((value) => ({ value, label: roleLabels[value] })),
-]
+/** Opciones del filtro por rol (incluye pagador aunque no se cree desde la UI).
+ * El filtro super_admin solo aparece para usuarios con ese rol. */
+const rolOpciones = computed(() => {
+  const roles = ['admin', 'operador', 'pagador', 'contador', 'lectura']
+  if (auth.isSuperAdmin) roles.unshift('super_admin')
+  return [
+    { value: '', label: 'Todos los roles' },
+    ...roles.map((value) => ({ value, label: roleLabels[value] })),
+  ]
+})
 
 /**
  * Recarga la lista de usuarios aplicando los filtros activos.
@@ -536,11 +588,11 @@ function cambiarRol(value) {
   cargarUsuarios()
 }
 
-// ── Historial de sesiones ──────────────────────────────────────────────
-/** Controla la visibilidad del modal de historial */
-const mostrarSesiones = ref(false)
-/** Usuario cuyo historial se muestra */
-const usuarioSesiones = ref(null)
+// ── Detalle del usuario y sesiones ─────────────────────────────────────
+/** Controla la visibilidad del modal de detalle */
+const mostrarDetalle = ref(false)
+/** Usuario cuyo detalle se muestra */
+const usuarioDetalle = ref(null)
 /** Sesiones del usuario (login/logout) */
 const sesiones = ref([])
 /** Carga de sesiones en curso */
@@ -549,13 +601,13 @@ const sesionesLoading = ref(false)
 const sesionesError = ref('')
 
 /**
- * Abre el modal con el historial de sesiones del usuario.
+ * Abre el modal con el detalle del usuario y su historial de sesiones.
  * @param {Object} u - Usuario
  * @returns {Promise<void>}
  */
-async function openSesiones(u) {
-  usuarioSesiones.value = u
-  mostrarSesiones.value = true
+async function openDetalle(u) {
+  usuarioDetalle.value = u
+  mostrarDetalle.value = true
   sesiones.value = []
   sesionesError.value = ''
   sesionesLoading.value = true
@@ -567,6 +619,15 @@ async function openSesiones(u) {
   } finally {
     sesionesLoading.value = false
   }
+}
+
+/**
+ * Abre el formulario de edición desde el modal de detalle.
+ * @returns {void}
+ */
+function editarDesdeDetalle() {
+  openForm(usuarioDetalle.value)
+  mostrarDetalle.value = false
 }
 
 /**
