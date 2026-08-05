@@ -2,7 +2,7 @@
   <div class="space-y-4">
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
       <h2 class="text-xl font-bold text-gray-800">Titulares</h2>
-      <button @click="openForm" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-1">
+      <button v-if="auth.canWrite" @click="openForm" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-1">
         <span>+</span> Nuevo titular
       </button>
     </div>
@@ -33,7 +33,7 @@
           <span v-if="t.activo" class="text-[10px] bg-green-50 text-green-600 px-2 py-0.5 rounded-full">Activo</span>
           <span v-else class="text-[10px] bg-red-50 text-red-600 px-2 py-0.5 rounded-full">Inactivo</span>
         </div>
-        <button @click="editTitular(t)" class="text-xs text-blue-600 hover:text-blue-800 font-medium px-2 py-1 border border-blue-200 rounded-lg hover:bg-blue-50">Editar</button>
+        <button v-if="auth.canWrite" @click="editTitular(t)" class="text-xs text-blue-600 hover:text-blue-800 font-medium px-2 py-1 border border-blue-200 rounded-lg hover:bg-blue-50">Editar</button>
       </div>
     </div>
 
@@ -68,11 +68,14 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useApiError } from '@/composables/useApiError'
 import { useTitularesStore } from '../../stores/titulares.js'
+import { useAuthStore } from '../../stores/auth.js'
 import AppFormModal from '@/components/common/AppFormModal.vue'
 import Iconoir from '../../components/common/Iconoir.vue'
 
 /** Store de titulares */
 const titulares = useTitularesStore()
+/** Store de autenticación para permisos por rol */
+const auth = useAuthStore()
 const { parseError } = useApiError()
 /** Controla visibilidad del modal */
 const showForm = ref(false)

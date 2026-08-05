@@ -29,6 +29,33 @@ export const useAuthStore = defineStore('auth', () => {
   const isPagador = computed(() => user.value?.roles?.includes('pagador'))
   /** @type {import('vue').ComputedRef<boolean>} Verdadero si el usuario tiene rol operador */
   const isOperador = computed(() => user.value?.roles?.includes('operador'))
+  /** @type {import('vue').ComputedRef<boolean>} Verdadero si el usuario tiene rol contador */
+  const isContador = computed(() => user.value?.roles?.includes('contador'))
+  /** @type {import('vue').ComputedRef<boolean>} Verdadero si el usuario tiene rol lectura (solo lectura) */
+  const isLectura = computed(() => user.value?.roles?.includes('lectura'))
+
+  /**
+   * Verifica si el usuario tiene un rol específico.
+   * @param {string} role - Nombre del rol (admin, super_admin, operador, pagador, contador, lectura)
+   * @returns {boolean}
+   */
+  const hasRole = (role) => user.value?.roles?.includes(role) ?? false
+
+  /**
+   * Verifica si el usuario tiene al menos uno de los roles dados.
+   * @param {string[]} roles - Lista de roles permitidos
+   * @returns {boolean}
+   */
+  const hasAnyRole = (roles) => (user.value?.roles ?? []).some((r) => roles.includes(r))
+
+  /** @type {import('vue').ComputedRef<boolean>} Puede crear/editar catálogos y gestionar operaciones (admin, super_admin, operador) */
+  const canWrite = computed(() => hasAnyRole(['admin', 'super_admin', 'operador']))
+  /** @type {import('vue').ComputedRef<boolean>} Puede operar el pool de pagos (admin, super_admin, pagador) */
+  const canPool = computed(() => hasAnyRole(['admin', 'super_admin', 'pagador']))
+  /** @type {import('vue').ComputedRef<boolean>} Puede ver reportes y comisiones (admin, super_admin, contador) */
+  const canReports = computed(() => hasAnyRole(['admin', 'super_admin', 'contador']))
+  /** @type {import('vue').ComputedRef<boolean>} Puede gestionar configuración y usuarios (admin, super_admin) */
+  const canConfig = computed(() => hasAnyRole(['admin', 'super_admin']))
 
   /**
    * Verifica la sesión actual consultando /auth/me.
@@ -87,5 +114,5 @@ localStorage.setItem('token', token.value)
     localStorage.removeItem('token')
   }
 
-  return { user, token, loading, error, initialized, isAuthenticated, isAdmin, isSuperAdmin, isPagador, isOperador, init, login, logout }
+  return { user, token, loading, error, initialized, isAuthenticated, isAdmin, isSuperAdmin, isPagador, isOperador, isContador, isLectura, hasRole, hasAnyRole, canWrite, canPool, canReports, canConfig, init, login, logout }
 })

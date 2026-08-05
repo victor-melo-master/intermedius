@@ -41,6 +41,10 @@ import HeroiconsDocument from '~icons/heroicons/document'
 import HeroiconsReceiptPercent from '~icons/heroicons/receipt-percent'
 import HeroiconsCreditCard from '~icons/heroicons/credit-card'
 import HeroiconsUsersSolid from '~icons/heroicons/users-solid'
+import HeroiconsShieldCheck from '~icons/heroicons/shield-check'
+import HeroiconsCalculator from '~icons/heroicons/calculator'
+import HeroiconsEye from '~icons/heroicons/eye'
+import HeroiconsEyeSlash from '~icons/heroicons/eye-slash'
 
 const map = {
   'chart-bar': HeroiconsChartBar,
@@ -80,6 +84,11 @@ const map = {
   'receipt-percent': HeroiconsReceiptPercent,
   'credit-card': HeroiconsCreditCard,
   'users-solid': HeroiconsUsersSolid,
+  'shield-check': HeroiconsShieldCheck,
+  'arrows-right-left': HeroiconsArrowsRightLeft,
+  'calculator': HeroiconsCalculator,
+  'eye': HeroiconsEye,
+  'eye-slash': HeroiconsEyeSlash,
 }
 
 const props = defineProps({

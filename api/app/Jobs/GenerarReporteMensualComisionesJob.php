@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Models\Ajuste;
 use App\Services\Reportes\ReporteComisionesOperadoresService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -41,7 +42,7 @@ class GenerarReporteMensualComisionesJob implements ShouldQueue
 
             Log::info("Reporte mensual generado: Excel={$pathExcel} | PDF={$pathPdf}");
 
-            if (config('reportes.comisiones_operadores.enviar_email', false)) {
+            if (config('reportes.comisiones_operadores.enviar_email', false) && Ajuste::activo('envio_emails', true)) {
                 $destinatariosRaw = config('reportes.comisiones_operadores.destinatarios', '');
 
                 if (empty(trim($destinatariosRaw))) {

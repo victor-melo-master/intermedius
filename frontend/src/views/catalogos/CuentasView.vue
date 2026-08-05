@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-4">
-    <AppPageHeader title="Cuentas" action-label="Nueva cuenta" @action="openForm" />
+    <AppPageHeader title="Cuentas" :action-label="auth.canWrite ? 'Nueva cuenta' : ''" @action="openForm" />
 
     <AppLoadingSpinner v-if="loading" />
     <AppErrorState v-else-if="error" :message="error" @retry="fetchCuentas" />
@@ -27,7 +27,7 @@
             {{ c.moneda.codigo }}
           </div>
           <button
-            v-if="auth.isAdmin"
+            v-if="auth.canConfig"
             @click="openSaldoModal(c)"
             class="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded-lg hover:bg-emerald-200"
           >

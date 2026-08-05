@@ -98,6 +98,11 @@ INSERT INTO monedas (codigo, nombre, simbolo, es_fiat, es_cripto, decimales, act
 ('COP',  'Peso Colombiano',    '$',   1, 0, 2, 1, NOW(), NOW())
 ON DUPLICATE KEY UPDATE nombre = VALUES(nombre);
 
+-- Ajustes generales de la aplicación
+INSERT IGNORE INTO ajustes (clave, valor, descripcion, created_at, updated_at) VALUES
+('password_segura', '1', 'Rechaza contraseñas comprometidas en filtraciones públicas (HIBP).', NOW(), NOW()),
+('envio_emails', '1', 'Habilita o deshabilita el envío de correos electrónicos desde la aplicación.', NOW(), NOW());
+
 -- Bancos de Venezuela
 INSERT IGNORE INTO bancos (nombre, codigo, pais, activo, created_at, updated_at) VALUES
 ('Banesco',           '0134', 'VE', 1, NOW(), NOW()),

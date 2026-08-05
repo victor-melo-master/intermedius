@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Models\Ajuste;
 use App\Models\Moneda;
 use App\Models\TasaDiaria;
 use App\Models\User;
@@ -53,6 +54,12 @@ class AlertarTasasFaltantesJob implements ShouldQueue
         }
 
         if (empty($paresFaltantes)) {
+            return;
+        }
+
+        // Si el envío de correos está desactivado, solo se registra la falta.
+        if (! Ajuste::activo('envio_emails', true)) {
+            Log::info('AlertarTasasFaltantesJob: envío de emails desactivado. Pares faltantes: ' . implode(', ', $paresFaltantes));
             return;
         }
 

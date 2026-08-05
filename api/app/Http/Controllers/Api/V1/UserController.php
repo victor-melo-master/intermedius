@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\Ajuste;
 use App\Models\User;
 use App\Notifications\VerifyEmailNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 
@@ -32,6 +34,29 @@ class UserController extends Controller
     }
 
     /**
+     * Verifica si un nombre de usuario o correo ya está en uso.
+     *
+     * @param Request $request Parámetros: campo (name|email), valor, exclude_id (opcional)
+     * @return JsonResponse {disponible: bool}
+     */
+    public function disponible(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'campo'      => ['required', 'string', 'in:name,email'],
+            'valor'      => ['required', 'string', 'max:255'],
+            'exclude_id' => ['nullable', 'integer'],
+        ]);
+
+        $query = User::withTrashed()->where($validated['campo'], $validated['valor']);
+
+        if ($request->filled('exclude_id')) {
+            $query->where('id', '!=', (int) $validated['exclude_id']);
+        }
+
+        return response()->json(['disponible' => $query->doesntExist()]);
+    }
+
+    /**
      * Crea un nuevo usuario con rol y lo asigna al sistema.
      *
      * @param Request $request Datos del usuario (name, email, password, rol, titular_id, activo)
@@ -42,11 +67,11 @@ class UserController extends Controller
         $validated = $request->validate([
             'name'       => ['required', 'string', 'max:255'],
             'email'      => ['required', 'email', 'unique:users,email'],
-            'password'   => ['required', 'string', Password::min(12)->mixedCase()->numbers()->symbols()->uncompromised()],
-            'rol'        => ['required', 'string', 'in:super_admin,admin,operador,contador,lectura'],
+            'password'   => ['required', 'string', $this->reglaPassword()],
+            'rol'        => ['required', 'string', 'in:admin,operador,contador,lectura'],
             'titular_id' => ['nullable', 'integer', 'exists:titulares,id'],
             'activo'     => ['boolean'],
-        ]);
+        ], $this->mensajesValidacion());
 
         $usuario = User::create([
             'name'       => $validated['name'],
@@ -58,10 +83,15 @@ class UserController extends Controller
 
         $usuario->assignRole($validated['rol']);
 
-        // Enviar email de verificación
-        $usuario->notify(new VerifyEmailNotification());
+        // Enviar email de verificación (solo si el envío de correos está activo)
+        if (Ajuste::activo('envio_emails', true)) {
+            $usuario->notify(new VerifyEmailNotification());
+        }
 
-        return response()->json($this->formatUser($usuario->load('titular')), 201);
+        $respuesta = $this->formatUser($usuario->load('titular'));
+        $this->agregarAdvertenciasPassword($respuesta, $validated['password']);
+
+        return response()->json($respuesta, 201);
     }
 
     /**
@@ -79,11 +109,11 @@ class UserController extends Controller
         $validated = $request->validate([
             'name'       => ['sometimes', 'required', 'string', 'max:255'],
             'email'      => ['sometimes', 'required', 'email', Rule::unique('users', 'email')->ignore($usuario->id)],
-            'password'   => ['nullable', 'string', Password::min(12)->mixedCase()->numbers()->symbols()->uncompromised()],
-            'rol'        => ['sometimes', 'required', 'string', 'in:super_admin,admin,operador,contador,lectura'],
+            'password'   => ['nullable', 'string', $this->reglaPassword()],
+            'rol'        => ['sometimes', 'required', 'string', 'in:admin,operador,contador,lectura'],
             'titular_id' => ['nullable', 'integer', 'exists:titulares,id'],
             'activo'     => ['sometimes', 'boolean'],
-        ]);
+        ], $this->mensajesValidacion());
 
         $datos = collect($validated)->except(['password', 'rol'])->toArray();
 
@@ -97,7 +127,13 @@ class UserController extends Controller
             $usuario->syncRoles([$validated['rol']]);
         }
 
-        return response()->json($this->formatUser($usuario->fresh('titular')));
+        $respuesta = $this->formatUser($usuario->fresh('titular'));
+
+        if (!empty($validated['password'])) {
+            $this->agregarAdvertenciasPassword($respuesta, $validated['password']);
+        }
+
+        return response()->json($respuesta);
     }
 
     /**
@@ -111,6 +147,59 @@ class UserController extends Controller
         $usuario->update(['activo' => false]);
 
         return response()->json($this->formatUser($usuario->fresh('titular')));
+    }
+
+    /**
+     * Mensajes personalizados de validación en español.
+     * Sobrescribe el mensaje genérico de contraseña comprometida (HIBP).
+     */
+    private function mensajesValidacion(): array
+    {
+        return [
+            'password.uncompromised' => 'Por seguridad, esta contraseña no se permite porque aparece en filtraciones públicas conocidas. Elige una contraseña diferente y que no uses en otros sitios.',
+        ];
+    }
+
+    /**
+     * Indica si la opción 'password_segura' está activa (rechaza contraseñas
+     * comprometidas en filtraciones públicas vía HIBP).
+     */
+    private function passwordSeguraActivada(): bool
+    {
+        return (bool) Ajuste::obtener('password_segura', true);
+    }
+
+    /**
+     * Construye la regla de contraseña. Si 'password_segura' está activa,
+     * añade la comprobación de contraseñas comprometidas (uncompromised).
+     */
+    private function reglaPassword(): Password
+    {
+        $regla = Password::min(8)->mixedCase()->numbers()->symbols();
+
+        if ($this->passwordSeguraActivada()) {
+            $regla->uncompromised();
+        }
+
+        return $regla;
+    }
+
+    /**
+     * Si 'password_segura' está desactivada y la contraseña aparece en
+     * filtraciones conocidas, agrega una advertencia (no bloqueante) a la respuesta.
+     */
+    private function agregarAdvertenciasPassword(array &$respuesta, string $password): void
+    {
+        if ($this->passwordSeguraActivada()) {
+            return;
+        }
+
+        // Str::isUncompromised devuelve true si la contraseña NO está comprometida.
+        if (! Str::isUncompromised($password)) {
+            $respuesta['advertencias'] = [
+                'La contraseña elegida aparece en filtraciones públicas conocidas. Se recomienda usar una más segura.',
+            ];
+        }
     }
 
     private function formatUser(User $u): array

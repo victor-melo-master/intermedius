@@ -59,7 +59,7 @@ const puedePagar = computed(() => {
 })
 
 const puedeCancelar = computed(() => {
-  return user.value?.roles?.some(r => ['admin', 'super_admin'].includes(r.name))
+  return authStore.hasAnyRole(['admin', 'super_admin'])
 })
 
 const handleSoltar = () => {

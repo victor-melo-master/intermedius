@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -59,6 +60,26 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Normaliza el nombre de usuario a minúsculas para mantener consistencia.
+     */
+    protected function name(): Attribute
+    {
+        return Attribute::make(
+            set: fn (string $value) => trim(strtolower($value)),
+        );
+    }
+
+    /**
+     * Normaliza el correo electrónico a minúsculas para mantener consistencia.
+     */
+    protected function email(): Attribute
+    {
+        return Attribute::make(
+            set: fn (string $value) => trim(strtolower($value)),
+        );
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\App\Models\Titular>
      */
     public function titular(): BelongsTo
@@ -68,6 +89,8 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function sendEmailVerificationNotification(): void
     {
-        $this->notify(new \App\Notifications\VerifyEmailNotification());
+        if (Ajuste::activo('envio_emails', true)) {
+            $this->notify(new \App\Notifications\VerifyEmailNotification());
+        }
     }
 }

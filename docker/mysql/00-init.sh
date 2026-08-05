@@ -106,6 +106,7 @@ CREATE TABLE IF NOT EXISTS `clientes` (
   `telefono` varchar(255) DEFAULT NULL,
   `email` varchar(255) DEFAULT NULL,
   `notas` text DEFAULT NULL,
+  `datos_bancarios` json DEFAULT NULL,
   `saldo_cache_usd` decimal(20,2) NOT NULL DEFAULT 0.00,
   `saldo_cache_at` timestamp NULL DEFAULT NULL,
   `activo` tinyint(1) NOT NULL DEFAULT 1,
@@ -387,6 +388,8 @@ CREATE TABLE IF NOT EXISTS `operaciones` (
   `cancelada_at` timestamp NULL DEFAULT NULL,
   `en_progreso_at` timestamp NULL DEFAULT NULL,
   `motivo_cancelacion` text DEFAULT NULL,
+  `revertida_at` timestamp NULL DEFAULT NULL,
+  `motivo_reversion` text DEFAULT NULL,
   `verificado_at` timestamp NULL DEFAULT NULL,
   `verificado_por_id` bigint(20) unsigned DEFAULT NULL,
   `origen` enum('manual','importado','ajuste_apertura') NOT NULL DEFAULT 'manual',
@@ -572,6 +575,17 @@ CREATE TABLE IF NOT EXISTS `users` (
   CONSTRAINT `users_titular_id_foreign` FOREIGN KEY (`titular_id`) REFERENCES `titulares` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+CREATE TABLE IF NOT EXISTS `ajustes` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `clave` varchar(255) NOT NULL,
+  `valor` text DEFAULT NULL,
+  `descripcion` varchar(255) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `ajustes_clave_unique` (`clave`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 
 -- ============================================================
 -- Datos iniciales (inserciones seguras)
@@ -638,6 +652,11 @@ INSERT INTO `monedas` (`codigo`, `nombre`, `simbolo`, `es_fiat`, `es_cripto`, `d
 ('COP', 'Peso Colombiano', '$', 1, 0, 2, 1, NOW(), NOW())
 ON DUPLICATE KEY UPDATE `nombre` = VALUES(`nombre`);
 
+-- Ajustes generales de la aplicación (INSERT IGNORE)
+INSERT IGNORE INTO ajustes (clave, valor, descripcion, created_at, updated_at) VALUES
+('password_segura', '1', 'Rechaza contraseñas comprometidas en filtraciones públicas (HIBP).', NOW(), NOW()),
+('envio_emails', '1', 'Habilita o deshabilita el envío de correos electrónicos desde la aplicación.', NOW(), NOW());
+
 -- Bancos de Venezuela
 INSERT IGNORE INTO bancos (nombre, codigo, pais, activo, created_at, updated_at) VALUES
 ('Banesco',           '0134', 'VE', 1, NOW(), NOW()),
@@ -694,9 +713,10 @@ CREATE TABLE IF NOT EXISTS `documentos` (
 CREATE TABLE IF NOT EXISTS `transacciones` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `operacion_id` bigint(20) unsigned NOT NULL,
-  `cuenta_origen_id` bigint(20) unsigned NOT NULL,
+  `cuenta_origen_id` bigint(20) unsigned DEFAULT NULL,
   `cuenta_destino_id` bigint(20) unsigned NOT NULL,
   `moneda_id` bigint(20) unsigned NOT NULL,
+  `cliente_id` bigint(20) unsigned DEFAULT NULL,
   `monto` decimal(20,2) NOT NULL,
   `tasa_aplicada` decimal(20,8) DEFAULT NULL,
   `tasas_snapshot` json DEFAULT NULL,
@@ -706,6 +726,7 @@ CREATE TABLE IF NOT EXISTS `transacciones` (
   `comprobante` varchar(255) DEFAULT NULL,
   `confirmada_en` timestamp NULL DEFAULT NULL,
   `confirmada_por_id` bigint(20) unsigned DEFAULT NULL,
+  `reversion_de_id` bigint(20) unsigned DEFAULT NULL,
   `orden` smallint(5) unsigned NOT NULL DEFAULT 1,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
@@ -714,12 +735,16 @@ CREATE TABLE IF NOT EXISTS `transacciones` (
   KEY `transacciones_cuenta_origen_id_foreign` (`cuenta_origen_id`),
   KEY `transacciones_cuenta_destino_id_foreign` (`cuenta_destino_id`),
   KEY `transacciones_moneda_id_foreign` (`moneda_id`),
+  KEY `transacciones_cliente_id_foreign` (`cliente_id`),
   KEY `transacciones_confirmada_por_id_foreign` (`confirmada_por_id`),
+  KEY `transacciones_reversion_de_id_foreign` (`reversion_de_id`),
   CONSTRAINT `transacciones_operacion_id_foreign` FOREIGN KEY (`operacion_id`) REFERENCES `operaciones` (`id`) ON DELETE CASCADE,
   CONSTRAINT `transacciones_cuenta_origen_id_foreign` FOREIGN KEY (`cuenta_origen_id`) REFERENCES `cuentas` (`id`),
   CONSTRAINT `transacciones_cuenta_destino_id_foreign` FOREIGN KEY (`cuenta_destino_id`) REFERENCES `cuentas` (`id`),
   CONSTRAINT `transacciones_moneda_id_foreign` FOREIGN KEY (`moneda_id`) REFERENCES `monedas` (`id`),
-  CONSTRAINT `transacciones_confirmada_por_id_foreign` FOREIGN KEY (`confirmada_por_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
+  CONSTRAINT `transacciones_cliente_id_foreign` FOREIGN KEY (`cliente_id`) REFERENCES `clientes` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `transacciones_confirmada_por_id_foreign` FOREIGN KEY (`confirmada_por_id`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `transacciones_reversion_de_id_foreign` FOREIGN KEY (`reversion_de_id`) REFERENCES `transacciones` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE IF NOT EXISTS `flujo_cuentas` (

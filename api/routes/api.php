@@ -27,6 +27,7 @@ use App\Http\Controllers\Api\V1\Configuracion\ComisionCuentaController;
 use App\Http\Controllers\Api\V1\Configuracion\ComisionOperadorController;
 use App\Http\Controllers\Api\V1\Configuracion\ComisionMetodoPagoController;
 use App\Http\Controllers\Api\V1\Configuracion\ComisionOperacionController;
+use App\Http\Controllers\Api\V1\Configuracion\AjusteController;
 use App\Http\Controllers\TasasController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\DocumentoController;
@@ -158,10 +159,12 @@ Route::prefix('v1')->group(function () {
             Route::get('tasas-vigentes', [TasaDiariaController::class, 'vigentes']);
             Route::get('tasas-diarias',  [TasaDiariaController::class, 'index']);
             Route::get('tasas-diarias/historial/{base}/{cotizada}', [TasaDiariaController::class, 'historial']);
+            Route::get('ajustes', [AjusteController::class, 'index']);
 
             // ── Escritura solo admin ─────────────────────────────────
             Route::middleware('role:admin|super_admin')->group(function () {
                 Route::post('tasas-diarias',  [TasaDiariaController::class, 'store']);
+                Route::patch('ajustes', [AjusteController::class, 'update']);
                 Route::apiResource('comisiones-cuenta',        ComisionCuentaController::class)
                     ->parameters(['comisiones-cuenta' => 'comisionCuenta']);
                 Route::apiResource('comisiones-operador',      ComisionOperadorController::class)
@@ -180,8 +183,10 @@ Route::prefix('v1')->group(function () {
 
         // ── Gestión de usuarios (solo admin|super_admin, con rate limiting) ──
         Route::middleware('role:admin|super_admin')->group(function () {
+            Route::get('usuarios/disponible', [UserController::class, 'disponible'])
+                ->middleware('throttle:60,1');
             Route::apiResource('usuarios', UserController::class)
-                ->middleware('throttle:10,1');
+                ->middleware('throttle:60,1');
         });
 
         // ── Bitácora (solo super_admin) ──────────────────────────────

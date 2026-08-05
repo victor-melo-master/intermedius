@@ -2,7 +2,7 @@
   <div class="space-y-4">
     <AppPageHeader
       title="Clientes"
-      :action-label="(auth.isAdmin) ? 'Nuevo cliente' : ''"
+      :action-label="auth.canWrite ? 'Nuevo cliente' : ''"
       @action="openCreate"
     />
 
@@ -14,7 +14,7 @@
     </div>
 
     <AppLoadingSpinner v-if="clientes.loading" />
-    <div class="flex gap-2" v-if="auth.isAdmin">
+    <div class="flex gap-2" v-if="auth.canConfig">
       <button @click="mostrarPapelera = false; cargarLista()" class="text-sm px-3 py-1.5 rounded-lg transition active:scale-[0.98]" :class="mostrarPapelera ? 'bg-gray-100 text-gray-600' : 'bg-blue-600 text-white'">Activos</button>
       <button @click="mostrarPapelera = true; cargarLista()" class="text-sm px-3 py-1.5 rounded-lg transition active:scale-[0.98] inline-flex items-center gap-1" :class="mostrarPapelera ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-600'"><Iconoir name="trash" class="w-4 h-4" /> Papelera</button>
     </div>
@@ -40,8 +40,8 @@
           <span v-if="c.deleted_at" class="text-[10px] bg-red-50 text-red-600 px-2 py-0.5 rounded-full">Eliminado</span>
           <span v-else-if="!c.activo" class="text-[10px] bg-red-50 text-red-600 px-2 py-0.5 rounded-full">Inactivo</span>
           <div class="mt-1 flex gap-2 justify-end">
-            <button v-if="c.deleted_at && (auth.isAdmin)" @click.stop="restaurarCliente(c)" class="text-xs text-green-600 hover:text-green-800 underline inline-flex items-center gap-1"><Iconoir name="arrow-uturn-left" class="w-3 h-3" /> Recuperar</button>
-            <button v-else-if="auth.isAdmin" @click.stop="openEdit(c)" class="text-xs text-blue-600 hover:text-blue-800 underline inline-flex items-center gap-1"><Iconoir name="pencil-square" class="w-3 h-3" /> Editar</button>
+            <button v-if="c.deleted_at && (auth.canConfig)" @click.stop="restaurarCliente(c)" class="text-xs text-green-600 hover:text-green-800 underline inline-flex items-center gap-1"><Iconoir name="arrow-uturn-left" class="w-3 h-3" /> Recuperar</button>
+            <button v-else-if="auth.canWrite" @click.stop="openEdit(c)" class="text-xs text-blue-600 hover:text-blue-800 underline inline-flex items-center gap-1"><Iconoir name="pencil-square" class="w-3 h-3" /> Editar</button>
           </div>
         </div>
       </div>
@@ -71,7 +71,7 @@
         <div class="flex items-center justify-between mb-4">
           <h3 class="font-bold text-lg">{{ detailCliente?.nombre }}</h3>
           <div class="flex gap-2">
-            <button v-if="detailCliente?.deleted_at && (auth.isAdmin)" @click="restaurarCliente(detailCliente)" class="text-xs bg-green-600 text-white px-2 py-1 rounded-lg hover:bg-green-700 inline-flex items-center gap-1"><Iconoir name="arrow-uturn-left" class="w-3 h-3" /> Recuperar</button>
+            <button v-if="detailCliente?.deleted_at && (auth.canConfig)" @click="restaurarCliente(detailCliente)" class="text-xs bg-green-600 text-white px-2 py-1 rounded-lg hover:bg-green-700 inline-flex items-center gap-1"><Iconoir name="arrow-uturn-left" class="w-3 h-3" /> Recuperar</button>
             <button @click="showDetail = false" class="text-gray-400 hover:text-gray-600"><Iconoir name="x-mark" class="w-5 h-5" /></button>
           </div>
         </div>
@@ -82,14 +82,14 @@
           <p v-if="detailCliente?.email" class="text-sm text-gray-500"><span class="font-medium text-gray-700">Email:</span> {{ detailCliente.email }}</p>
           <p v-if="detailCliente?.notas" class="text-sm text-gray-500"><span class="font-medium text-gray-700">Notas:</span> {{ detailCliente.notas }}</p>
           <p class="text-sm text-gray-500"><span class="font-medium text-gray-700">Saldo:</span> <span :class="(detailCliente?.saldo_cache_usd || 0) >= 0 ? 'text-green-600' : 'text-red-600'">${{ formatMoney(detailCliente?.saldo_cache_usd) }}</span></p>
-          <button v-if="!detailCliente?.deleted_at && (auth.isAdmin)" @click="eliminarCliente(detailCliente)" class="text-xs bg-red-600 text-white px-2 py-1 rounded-lg hover:bg-red-700 inline-flex items-center gap-1"><Iconoir name="trash" class="w-3 h-3" /> Eliminar cliente</button>
+          <button v-if="!detailCliente?.deleted_at && (auth.canWrite)" @click="eliminarCliente(detailCliente)" class="text-xs bg-red-600 text-white px-2 py-1 rounded-lg hover:bg-red-700 inline-flex items-center gap-1"><Iconoir name="trash" class="w-3 h-3" /> Eliminar cliente</button>
         </div>
 
         <!-- Cuentas bancarias -->
         <div class="border-t-2 border-gray-300 pt-6 pb-2">
           <div class="flex items-center justify-between mb-4">
             <h4 class="font-semibold text-gray-800 text-base">Cuentas bancarias</h4>
-            <button v-if="auth.isAdmin" @click="openCuentaForm" class="text-xs bg-blue-600 text-white px-2 py-1 rounded-lg hover:bg-blue-700">+ Agregar cuenta</button>
+            <button v-if="auth.canWrite" @click="openCuentaForm" class="text-xs bg-blue-600 text-white px-2 py-1 rounded-lg hover:bg-blue-700">+ Agregar cuenta</button>
           </div>
 
           <AppLoadingSpinner v-if="loadingCuentas" />

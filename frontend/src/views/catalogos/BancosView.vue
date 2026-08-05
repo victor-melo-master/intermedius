@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-4">
-    <AppPageHeader title="Bancos" action-label="Nuevo banco" @action="openForm" />
+    <AppPageHeader title="Bancos" :action-label="auth.canWrite ? 'Nuevo banco' : ''" @action="openForm" />
 
     <AppLoadingSpinner v-if="bancos.loading" />
     <AppErrorState v-else-if="bancos.error" :message="bancos.error" @retry="bancos.fetchAll()" />
@@ -25,7 +25,7 @@
           <span v-if="b.activo" class="text-[10px] bg-green-50 text-green-600 px-2 py-0.5 rounded-full">Activo</span>
           <span v-else class="text-[10px] bg-red-50 text-red-600 px-2 py-0.5 rounded-full">Inactivo</span>
         </div>
-        <button @click="editBanco(b)" class="text-xs text-blue-600 hover:text-blue-800 font-medium px-2 py-1 border border-blue-200 rounded-lg hover:bg-blue-50">Editar</button>
+        <button v-if="auth.canWrite" @click="editBanco(b)" class="text-xs text-blue-600 hover:text-blue-800 font-medium px-2 py-1 border border-blue-200 rounded-lg hover:bg-blue-50">Editar</button>
       </div>
     </div>
 
@@ -88,6 +88,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useApiError } from '@/composables/useApiError'
 import { useBancosStore } from '../../stores/bancos.js'
+import { useAuthStore } from '../../stores/auth.js'
 import AppPageHeader from '../../components/common/AppPageHeader.vue'
 import AppLoadingSpinner from '../../components/common/AppLoadingSpinner.vue'
 import AppErrorState from '../../components/common/AppErrorState.vue'
@@ -97,6 +98,8 @@ import Iconoir from '../../components/common/Iconoir.vue'
 
 /** Store de bancos */
 const bancos = useBancosStore()
+/** Store de autenticación para permisos por rol */
+const auth = useAuthStore()
 const { parseError } = useApiError()
 /** Controla visibilidad del modal de formulario */
 const showForm = ref(false)

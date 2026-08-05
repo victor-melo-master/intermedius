@@ -25,21 +25,21 @@ const routes = [
       /** Listado de operaciones registradas. */
       { path: 'operaciones', name: 'Operaciones', component: () => import('../views/operaciones/OperacionesView.vue') },
       /** Formulario de nueva compra de divisa (flujo progresivo). */
-      { path: 'operaciones/venta/nueva', name: 'VentaNueva', component: () => import('../views/operaciones/VentaFormView.vue') },
-      { path: 'operaciones/nueva', name: 'CompraNueva', component: () => import('../views/operaciones/CompraFormView.vue') },
-      { path: 'operaciones/nueva/:moneda', name: 'CompraNuevaConMoneda', component: () => import('../views/operaciones/CompraFormView.vue') },
+      { path: 'operaciones/venta/nueva', name: 'VentaNueva', component: () => import('../views/operaciones/VentaFormView.vue'), meta: { roles: ['admin', 'super_admin', 'operador'] } },
+      { path: 'operaciones/nueva', name: 'CompraNueva', component: () => import('../views/operaciones/CompraFormView.vue'), meta: { roles: ['admin', 'super_admin', 'operador'] } },
+      { path: 'operaciones/nueva/:moneda', name: 'CompraNuevaConMoneda', component: () => import('../views/operaciones/CompraFormView.vue'), meta: { roles: ['admin', 'super_admin', 'operador'] } },
       /** Formulario de operación intermediada. */
-      { path: 'operaciones/intermediada/nueva', name: 'OperacionIntermediadaNueva', component: () => import('../views/operaciones/OperacionIntermediadaForm.vue') },
+      { path: 'operaciones/intermediada/nueva', name: 'OperacionIntermediadaNueva', component: () => import('../views/operaciones/OperacionIntermediadaForm.vue'), meta: { roles: ['admin', 'super_admin', 'operador'] } },
       /** Detalle de una operación existente. */
       { path: 'operaciones/:id', name: 'OperacionDetail', component: () => import('../views/operaciones/OperacionDetailView.vue') },
       /** Verificación de una operación. */
-      { path: 'operaciones/:id/verificar', name: 'Verificacion', component: () => import('../views/operaciones/VerificacionView.vue') },
+      { path: 'operaciones/:id/verificar', name: 'Verificacion', component: () => import('../views/operaciones/VerificacionView.vue'), meta: { roles: ['admin', 'super_admin'] } },
       /** Gestión multi-paso de una operación (solicitud → en_progreso → cerrada). */
-      { path: 'operaciones/:id/gestionar', name: 'GestionarOperacion', component: () => import('../views/operaciones/GestionarOperacionView.vue') },
+      { path: 'operaciones/:id/gestionar', name: 'GestionarOperacion', component: () => import('../views/operaciones/GestionarOperacionView.vue'), meta: { roles: ['admin', 'super_admin', 'operador'] } },
       /** Edición de una operación existente. */
-      { path: 'operaciones/:id/editar', name: 'OperacionEdit', component: () => import('../views/operaciones/OperacionFormView.vue') },
+      { path: 'operaciones/:id/editar', name: 'OperacionEdit', component: () => import('../views/operaciones/OperacionFormView.vue'), meta: { roles: ['admin', 'super_admin', 'operador'] } },
       /** Vista del pool de operaciones. */
-      { path: 'pool', name: 'Pool', component: () => import('../views/pool/PoolView.vue') },
+      { path: 'pool', name: 'Pool', component: () => import('../views/pool/PoolView.vue'), meta: { roles: ['admin', 'super_admin', 'pagador'] } },
       /** Gestión de tasas de cambio. */
       { path: 'tasas', name: 'Tasas', component: () => import('../views/configuracion/TasasView.vue') },
       /** Gestión de titulares de cuentas. */
@@ -51,11 +51,11 @@ const routes = [
       /** Gestión de cuentas bancarias. */
       { path: 'cuentas', name: 'Cuentas', component: () => import('../views/catalogos/CuentasView.vue') },
       /** Visualización de reportes y estadísticas. */
-      { path: 'reportes', name: 'Reportes', component: () => import('../views/reportes/ReportesView.vue') },
+      { path: 'reportes', name: 'Reportes', component: () => import('../views/reportes/ReportesView.vue'), meta: { roles: ['admin', 'super_admin', 'contador'] } },
       /** Administración de usuarios del sistema. */
-      { path: 'usuarios', name: 'Usuarios', component: () => import('../views/catalogos/UsuariosView.vue') },
+      { path: 'usuarios', name: 'Usuarios', component: () => import('../views/catalogos/UsuariosView.vue'), meta: { roles: ['admin', 'super_admin'] } },
       /** Gestión de comisiones. */
-      { path: 'comisiones', name: 'Comisiones', component: () => import('../views/configuracion/ComisionesView.vue') },
+      { path: 'comisiones', name: 'Comisiones', component: () => import('../views/configuracion/ComisionesView.vue'), meta: { roles: ['admin', 'super_admin', 'contador'] } },
       { path: '/:pathMatch(.*)*', name: 'NotFound', component: () => import('../views/NotFoundView.vue') }
     ]
   }
@@ -67,15 +67,18 @@ const router = createRouter({
   routes,
 })
 
-/** Guard de navegación: verifica autenticación y redirige según el estado. */
+/** Guard de navegación: verifica autenticación y permisos por rol. */
 router.beforeEach(async (to) => {
   const auth = useAuthStore()
 
-  // Iniciar verificación en paralelo, sin esperar
-  if (!auth.initialized) auth.init()
+  // Cargar la sesión (y los roles del usuario) antes de evaluar permisos
+  if (auth.token && !auth.initialized) await auth.init()
 
   // No bloquear: verificar solo si hay token
   if (to.meta.requiresAuth && !auth.token) return '/login'
   if (to.path === '/login' && auth.token) return '/dashboard'
+
+  // Verificar roles permitidos para la ruta
+  if (to.meta.roles && !auth.hasAnyRole(to.meta.roles)) return '/dashboard'
 })
 export default router

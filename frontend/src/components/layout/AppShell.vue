@@ -100,30 +100,39 @@ const baseNav = [
   { path: '/clientes', label: 'Clientes', icon: 'users', color: 'text-purple-600' },
   { path: '/cuentas', label: 'Cuentas', icon: 'building-library', color: 'text-amber-600' },
   { path: '/bancos', label: 'Bancos', icon: 'building-library', color: 'text-orange-600' },
-  { path: '/reportes', label: 'Reportes', icon: 'arrow-trending-down', color: 'text-red-600' },
-  { path: '/comisiones', label: 'Comisiones', icon: 'currency-dollar', color: 'text-emerald-600' },
 ]
 
 /** @type {import('vue').ComputedRef<boolean>} - Indica si el usuario puede acceder al pool de pagos */
-const canPool = computed(() => auth.isAdmin || auth.isPagador)
+const canPool = computed(() => auth.canPool)
 
-/** @type {import('vue').ComputedRef<boolean>} - Indica si el usuario puede crear ventas directas */
-const canCreateVenta = computed(() => auth.isAdmin || auth.isSuperAdmin || auth.isOperador)
+/** @type {import('vue').ComputedRef<boolean>} - Indica si el usuario puede crear operaciones directas */
+const canCreateVenta = computed(() => auth.canWrite)
 
-/** @type {import('vue').ComputedRef<Array<{path: string, label: string, icon: string}>>} - Items de navegación dinámicos según rol */
+/** @type {import('vue').ComputedRef<Array<{path: string, label: string, icon: string}>>} - Items de navegación según rol */
 const nav = computed(() => {
   const items = [...baseNav]
+
+  if (canCreateVenta.value) {
+    const opIdx = items.findIndex(i => i.path === '/operaciones')
+    items.splice(opIdx + 1, 0,
+      { path: '/operaciones/venta/nueva', label: 'Nueva Venta', icon: 'currency-dollar', color: 'text-emerald-600' },
+      { path: '/operaciones/nueva', label: 'Nueva Compra', icon: 'shopping-cart', color: 'text-cyan-600' })
+  }
+
   if (canPool.value) {
     items.push({ path: '/pool', label: 'Pool de pagos', icon: 'banknotes', color: 'text-green-600' })
   }
-  if (canCreateVenta.value) {
-    const opIdx = items.findIndex(i => i.path === '/operaciones')
-    items.splice(opIdx + 1, 0, { path: '/operaciones/venta/nueva', label: 'Nueva Venta', icon: 'currency-dollar', color: 'text-emerald-600' })
-    items.splice(opIdx + 2, 0, { path: '/operaciones/nueva', label: 'Nueva Compra', icon: 'shopping-cart', color: 'text-cyan-600' })
+
+  if (auth.canReports) {
+    items.push({ path: '/reportes', label: 'Reportes', icon: 'arrow-trending-down', color: 'text-red-600' })
+    items.push({ path: '/comisiones', label: 'Comisiones', icon: 'currency-dollar', color: 'text-emerald-600' })
   }
-  if (auth.isSuperAdmin) {
+
+  if (auth.canConfig) {
+    items.push({ path: '/tasas', label: 'Tasas', icon: 'currency-dollar', color: 'text-teal-600' })
     items.push({ path: '/usuarios', label: 'Usuarios', icon: 'key', color: 'text-slate-600' })
   }
+
   return items
 })
 
