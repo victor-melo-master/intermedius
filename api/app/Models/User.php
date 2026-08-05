@@ -22,6 +22,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string $password
  * @property int|null $titular_id
  * @property bool $activo
+ * @property string|null $avatar_path
  * @property \Illuminate\Support\Carbon|null $last_login_at
  * @property \Illuminate\Support\Carbon|null $email_verified_at
  * @property string|null $remember_token
@@ -42,6 +43,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'titular_id',
         'activo',
         'last_login_at',
+        'avatar_path',
     ];
 
     protected $hidden = [

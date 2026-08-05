@@ -7,7 +7,9 @@ use App\Models\User;
 use App\Notifications\VerifyEmailNotification;
 use Database\Seeders\CatalogosBaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class UserEndpointTest extends TestCase
@@ -240,6 +242,72 @@ class UserEndpointTest extends TestCase
 
         $this->putJson("/api/v1/usuarios/{$usuario->id}", ['name' => 'X'])
             ->assertUnauthorized();
+    }
+
+    // ── avatar ────────────────────────────────────────────────────────
+
+    public function test_update_avatar_convierte_a_webp_512_cuadrado(): void
+    {
+        Storage::fake('s3');
+        $usuario = User::factory()->create();
+
+        $imagen = UploadedFile::fake()->image('foto.png', 100, 200);
+
+        $this->actingAs($this->admin)
+            ->withHeaders(['Accept' => 'application/json'])
+            ->put("/api/v1/usuarios/{$usuario->id}", ['avatar' => $imagen])
+            ->assertOk()
+            ->assertJsonPath('avatar_path', fn ($v) => is_string($v) && str_ends_with($v, '.webp'));
+
+        $usuario->refresh();
+        $this->assertNotNull($usuario->avatar_path);
+
+        $archivo = Storage::disk('s3')->get($usuario->avatar_path);
+        $this->assertNotFalse($archivo, 'El avatar no se guardó en el disco.');
+        $gd = @imagecreatefromstring($archivo);
+        $this->assertNotFalse($gd, 'El archivo guardado no es una imagen decodificable.');
+        $this->assertSame(512, imagesx($gd), 'El avatar no tiene 512px de ancho.');
+        $this->assertSame(512, imagesy($gd), 'El avatar no tiene 512px de alto.');
+        $this->assertNotSame('image/png', (new \finfo(FILEINFO_MIME_TYPE))->buffer($archivo));
+    }
+
+    public function test_update_avatar_rechaza_archivo_no_imagen(): void
+    {
+        $usuario = User::factory()->create();
+        $archivo = UploadedFile::fake()->create('falso.txt', 10, 'text/plain');
+
+        $this->actingAs($this->admin)
+            ->withHeaders(['Accept' => 'application/json'])
+            ->put("/api/v1/usuarios/{$usuario->id}", ['avatar' => $archivo])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['avatar']);
+    }
+
+    public function test_avatar_endpoint_requiere_token_y_sirve_webp(): void
+    {
+        Storage::fake('s3');
+        $usuario = User::factory()->create();
+        $imagen = UploadedFile::fake()->image('foto.png', 100, 200);
+        $this->actingAs($this->admin)
+            ->withHeaders(['Accept' => 'application/json'])
+            ->put("/api/v1/usuarios/{$usuario->id}", ['avatar' => $imagen])
+            ->assertOk();
+
+        $this->getJson("/api/v1/usuarios/{$usuario->id}/avatar")->assertUnauthorized();
+
+        $token = $usuario->createToken('test')->plainTextToken;
+        $this->get("/api/v1/usuarios/{$usuario->id}/avatar?token={$token}")
+            ->assertOk()
+            ->assertHeader('Content-Type', 'image/webp');
+    }
+
+    public function test_avatar_endpoint_404_sin_avatar(): void
+    {
+        $usuario = User::factory()->create();
+        $token = $this->admin->createToken('test')->plainTextToken;
+
+        $this->get("/api/v1/usuarios/{$usuario->id}/avatar?token={$token}")
+            ->assertNotFound();
     }
 
     // ── destroy ──────────────────────────────────────────────────────

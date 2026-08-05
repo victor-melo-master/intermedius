@@ -57,12 +57,16 @@ export const useUsuariosStore = defineStore('usuarios', () => {
 
   /**
    * Activa o desactiva un usuario alternando su estado.
+   * Actualiza el usuario en la lista en el lugar (sin recargar el listado completo).
    * @param {Object} usuario - Objeto usuario con al menos { id, activo }
    * @returns {Promise<Object>} Respuesta de la API
    */
   async function toggleActivo(usuario) {
     const { data } = await api.put(`/usuarios/${usuario.id}`, { activo: !usuario.activo })
-    list.value = []
+    const idx = list.value.findIndex((u) => u.id === usuario.id)
+    if (idx !== -1) {
+      list.value[idx] = { ...list.value[idx], ...data, activo: !usuario.activo }
+    }
     return data
   }
 

@@ -55,8 +55,12 @@
       <div v-for="u in usuarios.list" :key="u.id"
         class="bg-white border border-gray-200 rounded-xl p-4 flex items-center gap-3 cursor-pointer hover:border-blue-300 hover:shadow-sm transition"
         :class="{ 'opacity-60': !u.activo }" @click="openDetalle(u)">
-        <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-700 font-bold text-sm">
-          {{ u.name?.charAt(0).toUpperCase() }}
+        <div class="shrink-0">
+          <img v-if="avatarUrl(u)" :src="avatarUrl(u)" alt="Avatar de {{ u.name }}"
+            class="w-10 h-10 rounded-full object-cover border border-gray-200" />
+          <div v-else class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-700 font-bold text-sm">
+            {{ u.name?.charAt(0).toUpperCase() }}
+          </div>
         </div>
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2 flex-wrap">
@@ -74,18 +78,18 @@
         </div>
         <div v-if="!isSuperAdmin(u)" class="flex items-center gap-2">
           <!-- Toggle activo -->
-          <button @click.stop="handleToggle(u)" :title="u.activo ? 'Desactivar' : 'Activar'"
+          <button type="button" @click.stop="handleToggle(u)" :title="u.activo ? 'Desactivar' : 'Activar'"
             class="relative w-10 h-5 rounded-full transition-colors"
             :class="u.activo ? 'bg-green-500' : 'bg-gray-300'">
             <span class="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform"
               :class="u.activo ? 'translate-x-5' : 'translate-x-0.5'"></span>
           </button>
-          <button @click.stop="openDetalle(u)" title="Ver detalle"
+          <button type="button" @click.stop="openDetalle(u)" title="Ver detalle"
             class="text-xs text-slate-600 hover:text-slate-900 font-medium px-2 py-1 border border-slate-200 rounded-lg hover:bg-slate-50 flex items-center gap-1">
             <Iconoir name="eye" class="w-3.5 h-3.5" />
             Detalle
           </button>
-          <button @click.stop="openForm(u)" class="text-xs text-blue-600 hover:text-blue-800 font-medium px-2 py-1 border border-blue-200 rounded-lg hover:bg-blue-50">
+          <button type="button" @click.stop="openForm(u)" class="text-xs text-blue-600 hover:text-blue-800 font-medium px-2 py-1 border border-blue-200 rounded-lg hover:bg-blue-50">
             Editar
           </button>
         </div>
@@ -94,6 +98,37 @@
 
     <AppFormModal v-model="showForm" :title="editing ? 'Editar usuario' : 'Nuevo usuario'" @close="closeForm">
       <form @submit.prevent="submit" novalidate class="space-y-3">
+        <!-- Avatar -->
+        <div class="flex items-center gap-4">
+          <div class="relative shrink-0">
+            <div v-if="avatarPreview || avatarUrl(usuarioEnEdicion)"
+              class="w-16 h-16 rounded-full overflow-hidden border border-gray-200">
+              <img v-if="avatarPreview" :src="avatarPreview" alt="Vista previa del avatar"
+                class="w-full h-full object-cover" />
+              <img v-else :src="avatarUrl(usuarioEnEdicion)" alt="Avatar del usuario"
+                class="w-full h-full object-cover" />
+            </div>
+            <div v-else
+              class="w-16 h-16 rounded-full bg-blue-600 text-white flex items-center justify-center text-2xl font-semibold">
+              {{ (form.name || '?').charAt(0).toUpperCase() }}
+            </div>
+          </div>
+          <div class="flex-1">
+            <label class="text-sm text-gray-600 mb-1 block">Foto de perfil</label>
+            <input ref="avatarInput" type="file" accept="image/jpeg,image/png,image/gif,image/webp,image/bmp"
+              @change="onAvatarSelected"
+              class="block w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700 file:font-semibold hover:file:bg-blue-100 cursor-pointer" />
+            <div class="flex items-center gap-3 mt-1">
+              <p class="text-xs text-gray-400">JPG, PNG, GIF, WebP o BMP · máx 2MB</p>
+              <button v-if="avatarPreview || avatarFile" type="button" @click="limpiarAvatar"
+                class="text-xs font-medium text-red-600 hover:text-red-800 underline">
+                Quitar selección
+              </button>
+            </div>
+            <p v-if="avatarError" class="text-xs text-red-600 mt-1">{{ avatarError }}</p>
+          </div>
+        </div>
+
         <!-- Nombre -->
         <div>
           <label class="text-sm text-gray-600 mb-1 block">Nuevo nombre de usuario *</label>
@@ -229,7 +264,9 @@
     <AppFormModal :model-value="mostrarDetalle" title="Detalle del usuario" @close="mostrarDetalle = false">
       <template #header>
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-700 font-bold">
+          <img v-if="avatarUrl(usuarioDetalle)" :src="avatarUrl(usuarioDetalle)" alt="Avatar de {{ usuarioDetalle?.name }}"
+            class="w-10 h-10 rounded-full object-cover border border-gray-200" />
+          <div v-else class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-700 font-bold">
             {{ usuarioDetalle?.name?.charAt(0).toUpperCase() }}
           </div>
           <div>
@@ -354,6 +391,17 @@ const usuarios = useUsuariosStore()
 const auth = useAuthStore()
 const { formatDate, formatDateTime } = useFormatting()
 const { parseError } = useApiError()
+
+/**
+ * URL autenticada del avatar de un usuario (imagen WebP servida por la API).
+ * @param {Object} u - Usuario con { id, avatar_path }
+ * @returns {string|null} URL con token, o null si no tiene avatar
+ */
+function avatarUrl(u) {
+  if (!u?.avatar_path) return null
+  const token = localStorage.getItem('token')
+  return `${import.meta.env.VITE_API_URL}/usuarios/${u.id}/avatar?token=${token}`
+}
 /** Lista de titulares para el selector del formulario */
 const titulares = ref([])
 /** Controla visibilidad del modal */
@@ -376,6 +424,14 @@ const emailError = ref('')
 const emailOk = ref('')
 /** Controla la visibilidad de la contraseña en el formulario */
 const mostrarPassword = ref(false)
+/** Archivo de avatar seleccionado en el formulario (aún sin subir) */
+const avatarFile = ref(null)
+/** Vista previa local del avatar seleccionado (URL de objeto) */
+const avatarPreview = ref('')
+/** Error de validación del archivo de avatar */
+const avatarError = ref('')
+/** Usuario que se está editando (para mostrar su avatar actual) */
+const usuarioEnEdicion = computed(() => (editing.value ? usuarios.list.find((u) => u.id === editId.value) || null : null))
 /** Toast de advertencia (contraseña comprometida) */
 const toast = ref({ msg: '' })
 let toastTimer = null
@@ -433,6 +489,44 @@ function generarPassword() {
 
   form.password = pass.join('')
   mostrarPassword.value = true
+}
+
+/** Tipos de imagen aceptados para el avatar (se convierten a WebP en el backend) */
+const avatarTiposAceptados = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp']
+
+/**
+ * Maneja la selección de un archivo de avatar: valida tipo y tamaño,
+ * y genera una vista previa local.
+ * @param {Event} evt - Evento change del input file
+ */
+function onAvatarSelected(evt) {
+  const file = evt.target.files?.[0]
+  avatarError.value = ''
+  if (!file) return
+  if (!avatarTiposAceptados.includes(file.type)) {
+    avatarError.value = 'Formato no permitido. Usa JPG, PNG, GIF, WebP o BMP.'
+    avatarFile.value = null
+    avatarPreview.value = ''
+    evt.target.value = ''
+    return
+  }
+  if (file.size > 2 * 1024 * 1024) {
+    avatarError.value = 'La imagen supera los 2MB. Elige una más pequeña.'
+    avatarFile.value = null
+    avatarPreview.value = ''
+    evt.target.value = ''
+    return
+  }
+  avatarFile.value = file
+  avatarPreview.value = URL.createObjectURL(file)
+}
+
+/** Limpia la selección de avatar del formulario. */
+function limpiarAvatar() {
+  if (avatarPreview.value) URL.revokeObjectURL(avatarPreview.value)
+  avatarFile.value = null
+  avatarPreview.value = ''
+  avatarError.value = ''
 }
 
 /**
@@ -743,6 +837,7 @@ function openForm(u = null) {
     Object.assign(form, { name: '', email: '', password: '', rol: '', titular_id: null, activo: true })
   }
   formError.value = ''
+  limpiarAvatar()
   showForm.value = true
 }
 
@@ -753,13 +848,13 @@ function closeForm() {
 
 /**
  * Alterna el estado activo/inactivo de un usuario.
+ * Actualiza la fila en su lugar (sin recargar ni refetchear la lista).
  * @param {Object} u - Usuario a togglear
  * @returns {Promise<void>}
  */
 async function handleToggle(u) {
   try {
     await usuarios.toggleActivo(u)
-    cargarUsuarios()
   } catch (err) {
     alert(parseError(err))
   }
@@ -823,14 +918,26 @@ async function submit() {
   if (!nameOk || !emailOk) return
   saving.value = true
   try {
-    const body = {
-      name: form.name.trim().toLowerCase(),
-      email: form.email.trim().toLowerCase(),
-      rol: form.rol,
-      titular_id: form.titular_id || null,
-      activo: form.activo,
+    let body
+    if (avatarFile.value) {
+      body = new FormData()
+      body.append('name', form.name.trim().toLowerCase())
+      body.append('email', form.email.trim().toLowerCase())
+      body.append('rol', form.rol)
+      if (form.titular_id) body.append('titular_id', form.titular_id)
+      body.append('activo', form.activo ? '1' : '0')
+      if (form.password) body.append('password', form.password)
+      body.append('avatar', avatarFile.value)
+    } else {
+      body = {
+        name: form.name.trim().toLowerCase(),
+        email: form.email.trim().toLowerCase(),
+        rol: form.rol,
+        titular_id: form.titular_id || null,
+        activo: form.activo,
+      }
+      if (form.password) body.password = form.password
     }
-    if (form.password) body.password = form.password
     const res = editing.value
       ? await usuarios.update(editId.value, body)
       : await usuarios.create(body)

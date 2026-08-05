@@ -47,10 +47,12 @@ Route::prefix('v1')->group(function () {
         ->middleware('signed');
 
     // ─────────────────────────────────────────────────────────────────
-    // Documentos (públicos, autenticados por token en query param)
+    // Documentos y avatares (públicos, autenticados por token en query param)
     // ─────────────────────────────────────────────────────────────────
     Route::get('documentos/{documento}/preview', [DocumentoController::class, 'preview']);
     Route::get('documentos/{documento}/download', [DocumentoController::class, 'download']);
+    Route::get('usuarios/{usuario}/avatar', [UserController::class, 'avatar'])
+        ->middleware('throttle:120,1');
 
     // ─────────────────────────────────────────────────────────────────
     // Rutas protegidas con Sanctum
