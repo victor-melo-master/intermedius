@@ -82,6 +82,21 @@ describe('CalculadoraBidireccional', () => {
     expect(wrapper.props('tasa')).toBe('36.5')
   })
 
+  it('borrar a mano deja el campo como candidato a calcularse', async () => {
+    const wrapper = mountCalc()
+    await typeInto(wrapper, 'monto', '100')
+    await typeInto(wrapper, 'tasa', '36.5')
+    expect(wrapper.props('bolivares')).toBe('3650')
+
+    await typeInto(wrapper, 'monto', '')
+    await typeInto(wrapper, 'bolivares', '5000')
+
+    expect(lastEmit(wrapper, 'update:monto')).toEqual(['136.99'])
+    expect(wrapper.props('monto')).toBe('136.99')
+    expect(wrapper.props('tasa')).toBe('36.5')
+    expect(wrapper.props('bolivares')).toBe('5000')
+  })
+
   it('el botón Limpiar vacía el campo de bolívares', async () => {
     const wrapper = mountCalc()
     await typeInto(wrapper, 'monto', '100')
@@ -96,6 +111,52 @@ describe('CalculadoraBidireccional', () => {
     expect(lastEmit(wrapper, 'update:bolivares')).toEqual([''])
     expect(wrapper.props('bolivares')).toBe('')
     expect(wrapper.props('monto')).toBe('100')
+    expect(wrapper.props('tasa')).toBe('36.5')
+  })
+
+  it('Limpiar monto y luego escribir bolívares reactiva la calculadora', async () => {
+    const wrapper = mountCalc()
+    await typeInto(wrapper, 'monto', '100')
+    await typeInto(wrapper, 'tasa', '36.5')
+    expect(wrapper.props('bolivares')).toBe('3650')
+
+    await wrapper.findAll('button').at(0).trigger('click')
+    await wrapper.setProps({ monto: '' })
+
+    await typeInto(wrapper, 'bolivares', '5000')
+    expect(lastEmit(wrapper, 'update:monto')).toEqual(['136.99'])
+    expect(wrapper.props('monto')).toBe('136.99')
+    expect(wrapper.props('tasa')).toBe('36.5')
+  })
+
+  it('Limpiar tasa y luego escribir bolívares reactiva la calculadora', async () => {
+    const wrapper = mountCalc()
+    await typeInto(wrapper, 'monto', '100')
+    await typeInto(wrapper, 'tasa', '36.5')
+    expect(wrapper.props('bolivares')).toBe('3650')
+
+    await wrapper.findAll('button').at(1).trigger('click')
+    await wrapper.setProps({ tasa: '', bolivares: '' })
+
+    await typeInto(wrapper, 'tasa', '40')
+    expect(lastEmit(wrapper, 'update:bolivares')).toEqual(['4000'])
+    expect(wrapper.props('bolivares')).toBe('4000')
+    expect(wrapper.props('monto')).toBe('100')
+    expect(wrapper.props('tasa')).toBe('40')
+  })
+
+  it('Limpiar bolívares y volver a escribir reactiva la calculadora', async () => {
+    const wrapper = mountCalc()
+    await typeInto(wrapper, 'monto', '100')
+    await typeInto(wrapper, 'tasa', '36.5')
+    expect(wrapper.props('bolivares')).toBe('3650')
+
+    await wrapper.findAll('button').at(-1).trigger('click')
+    await wrapper.setProps({ bolivares: '' })
+
+    await typeInto(wrapper, 'bolivares', '5000')
+    expect(lastEmit(wrapper, 'update:monto')).toEqual(['136.99'])
+    expect(wrapper.props('monto')).toBe('136.99')
     expect(wrapper.props('tasa')).toBe('36.5')
   })
 })

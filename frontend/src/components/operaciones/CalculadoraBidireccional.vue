@@ -99,14 +99,20 @@ const props = defineProps({
 
 const emit = defineEmits(['update:monto', 'update:bolivares', 'update:tasa'])
 
-// Orden de edición: índice 0 = más reciente. Los dos primeros son los
-// campos "conocidos"; el último (índice 2) es el que se recalcula.
+// Orden de edición: índice 0 = más "conocido"/reciente.
+// El último (índice 2) es el que se recalcula.
 const editOrder = ref(['monto', 'tasa', 'bolivares'])
 
-function marcarEditado(campo) {
+function marcarConocido(campo) {
   const idx = editOrder.value.indexOf(campo)
   if (idx !== -1) editOrder.value.splice(idx, 1)
   editOrder.value.unshift(campo)
+}
+
+function marcarDesconocido(campo) {
+  const idx = editOrder.value.indexOf(campo)
+  if (idx !== -1) editOrder.value.splice(idx, 1)
+  editOrder.value.push(campo)
 }
 
 const fuenteLabel = computed(() => {
@@ -150,46 +156,53 @@ const bolivaresDisplay = computed(() => fmt(props.bolivares))
 
 function limpiarMonto() {
   emit('update:monto', '')
+  marcarDesconocido('monto')
 }
 
 function limpiarTasa() {
   emit('update:tasa', '')
   emit('update:bolivares', '')
+  marcarDesconocido('tasa')
+  marcarDesconocido('bolivares')
 }
 
 function limpiarBolivares() {
   emit('update:bolivares', '')
+  marcarDesconocido('bolivares')
 }
 
 /**
- * Handler único: emite el campo editado, lo marca como el más reciente
- * y recalcula el tercer campo a partir de los dos más recientemente
- * tocados (sin pisar el que el usuario acaba de escribir).
+ * Handler único: emite el campo editado y lo marca como "conocido" si
+ * tiene valor, o como "desconocido" (candidato a calcularse) si quedó
+ * vacío. El tercer campo (índice 2 del orden) se recalcula a partir de
+ * los dos más conocidos, sin pisar el que el usuario acaba de escribir.
  */
 function handleInput(campo, rawValue) {
   emit(`update:${campo}`, rawValue)
-  marcarEditado(campo)
+
+  const val = parse(rawValue)
+
+  if (val > 0) {
+    marcarConocido(campo)
+  } else {
+    marcarDesconocido(campo)
+    return
+  }
 
   const valores = {
-    monto: campo === 'monto' ? parse(rawValue) : parse(props.monto),
-    tasa: campo === 'tasa' ? parse(rawValue) : parse(props.tasa),
-    bolivares: campo === 'bolivares' ? parse(rawValue) : parse(props.bolivares),
+    monto: campo === 'monto' ? val : parse(props.monto),
+    tasa: campo === 'tasa' ? val : parse(props.tasa),
+    bolivares: campo === 'bolivares' ? val : parse(props.bolivares),
   }
 
   const target = editOrder.value[2]
 
-  if (target === 'bolivares') {
-    if (valores.monto > 0 && valores.tasa > 0) {
-      emit('update:bolivares', round2(valores.monto * valores.tasa))
-    }
-  } else if (target === 'tasa') {
-    if (valores.monto > 0 && valores.bolivares > 0) {
-      emit('update:tasa', round2(valores.bolivares / valores.monto))
-    }
-  } else if (target === 'monto') {
-    if (valores.tasa > 0 && valores.bolivares > 0) {
-      emit('update:monto', round2(valores.bolivares / valores.tasa))
-    }
+  if (target === 'bolivares' && valores.monto > 0 && valores.tasa > 0) {
+    emit('update:bolivares', round2(valores.monto * valores.tasa))
+  } else if (target === 'tasa' && valores.monto > 0 && valores.bolivares > 0) {
+    emit('update:tasa', round2(valores.bolivares / valores.monto))
+  } else if (target === 'monto' && valores.tasa > 0 && valores.bolivares > 0) {
+    emit('update:monto', round2(valores.bolivares / valores.tasa))
   }
 }
 
