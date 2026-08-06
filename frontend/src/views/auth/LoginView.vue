@@ -1,5 +1,11 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-navy to-navy-dark flex items-center justify-center p-4">
+  <div class="min-h-screen bg-gradient-to-br from-navy to-navy-dark dark:from-surface dark:to-surface-alt flex items-center justify-center p-4 relative">
+    <button @click="theme.toggle()" :title="theme.isDark ? 'Modo claro' : 'Modo oscuro'"
+      class="absolute top-4 right-4 p-2 rounded-lg text-white/70 dark:text-ink-muted hover:bg-white/10 dark:hover:bg-surface-muted hover:text-white dark:hover:text-heading transition"
+      aria-label="Cambiar tema">
+      <Iconoir :name="theme.isDark ? 'sun' : 'moon'" class="w-5 h-5" />
+    </button>
+
     <div class="w-full max-w-sm bg-surface rounded-2xl shadow-lg p-8 border border-edge">
       <div class="text-center mb-8">
         <img :src="theme.isDark ? logoNegativo : logoPositivo" alt="Intermedius" class="h-12 w-auto mx-auto mb-4" />
@@ -8,16 +14,16 @@
 
       <form @submit.prevent="submit" class="space-y-4">
         <div>
-          <label class="block text-sm font-medium text-ink mb-1">Correo electrónico</label>
-          <input v-model="form.email" type="email" required
+          <label class="block text-sm font-medium text-ink mb-1">Correo o usuario</label>
+          <input v-model="form.login" type="text" required autocomplete="username"
             class="w-full px-4 py-2.5 border border-edge-strong rounded-xl focus:ring-2 focus:ring-gold focus:border-gold outline-none transition bg-surface text-ink placeholder:text-ink-soft"
-            placeholder="admin@test.com" />
+            placeholder="admin@test.com o admin" />
         </div>
         <div>
           <label class="block text-sm font-medium text-ink mb-1">Contraseña</label>
-          <input v-model="form.password" type="password" required
+          <input v-model="form.password" type="password" required autocomplete="current-password"
             class="w-full px-4 py-2.5 border border-edge-strong rounded-xl focus:ring-2 focus:ring-gold focus:border-gold outline-none transition bg-surface text-ink placeholder:text-ink-soft"
-            placeholder="password123" />
+            placeholder="••••••••" />
         </div>
 
         <div v-if="auth.error" class="bg-danger-soft text-danger text-sm p-3 rounded-lg">
@@ -37,13 +43,15 @@
 <script setup>
 /**
  * LoginView — Pantalla de inicio de sesión del sistema.
- * Formulario simple de email/contraseña que consume el store de autenticación
- * y redirige al dashboard en caso de éxito.
+ * Formulario de usuario/contraseña (acepta email o username) que consume
+ * el store de autenticación y redirige al dashboard en caso de éxito.
+ * Incluye toggle de tema claro/oscuro.
  */
 import { reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth.js'
 import { useThemeStore } from '../../stores/theme.js'
+import Iconoir from '../../components/common/Iconoir.vue'
 import logoPositivo from '../../assets/logo-positivo.png'
 import logoNegativo from '../../assets/logo-negativo.png'
 
@@ -51,10 +59,10 @@ import logoNegativo from '../../assets/logo-negativo.png'
 const router = useRouter()
 /** Store de autenticación */
 const auth = useAuthStore()
-/** Store de tema para elegir la variante de logo */
+/** Store de tema para la variante de logo y el modo claro/oscuro */
 const theme = useThemeStore()
 /** Datos del formulario de login */
-const form = reactive({ email: '', password: '' })
+const form = reactive({ login: '', password: '' })
 
 /**
  * Envía las credenciales al store de autenticación.
@@ -62,7 +70,7 @@ const form = reactive({ email: '', password: '' })
  * @returns {Promise<void>}
  */
 async function submit() {
-  const ok = await auth.login(form.email, form.password)
+  const ok = await auth.login(form.login, form.password)
   if (ok) router.push('/dashboard')
 }
 </script>

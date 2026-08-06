@@ -23,7 +23,10 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email'    => ['required', 'email'],
+            // 'login' acepta email o username (campo `name` del usuario).
+            // 'email' se mantiene por compatibilidad con clientes previos.
+            'login'    => ['required_without:email', 'string'],
+            'email'    => ['required_without:login', 'email'],
             'password' => ['required', 'string'],
         ];
     }

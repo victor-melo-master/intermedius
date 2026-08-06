@@ -21,6 +21,10 @@ echo "=== Inicializando base de datos Intermedius ==="
 # Crear la base de datos si no existe (idempotente)
 mysql -u root -p"$MYSQL_ROOT_PASSWORD" -e "CREATE DATABASE IF NOT EXISTS \`$MYSQL_DATABASE\` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;"
 
+# Base de datos para los tests (RefreshDatabase ejecuta migrate:fresh aquí).
+: "${MYSQL_USER:?Falta la variable MYSQL_USER}"
+mysql -u root -p"$MYSQL_ROOT_PASSWORD" -e "CREATE DATABASE IF NOT EXISTS \`${MYSQL_DATABASE}_test\` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci; GRANT ALL PRIVILEGES ON \`${MYSQL_DATABASE}_test\`.* TO '$MYSQL_USER'@'%'; FLUSH PRIVILEGES;"
+
 mysql -u root -p"$MYSQL_ROOT_PASSWORD" "$MYSQL_DATABASE" <<'EOSQL'
 -- Desactivamos temporalmente las claves foráneas para poder crear las tablas
 -- en cualquier orden sin conflictos.
@@ -563,6 +567,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   `email` varchar(255) NOT NULL,
   `email_verified_at` timestamp NULL DEFAULT NULL,
   `avatar_path` varchar(255) DEFAULT NULL,
+  `telefono` varchar(255) DEFAULT NULL,
   `password` varchar(255) NOT NULL,
   `remember_token` varchar(100) DEFAULT NULL,
   `activo` tinyint(1) NOT NULL DEFAULT 1,
@@ -621,9 +626,9 @@ SELECT p.id, r.id FROM permissions p, roles r
 WHERE p.name = 'pool.cancelar' AND r.name IN ('admin', 'super_admin');
 
 -- Usuario administrador por defecto (INSERT IGNORE)
--- Contraseña: debe ser cambiada inmediatamente en producción.
+-- Usuario: admin | Contraseña: admin (debe ser cambiada inmediatamente en producción)
 INSERT IGNORE INTO users (name, email, password, activo, email_verified_at, created_at, updated_at) VALUES
-('Admin Principal', 'admin@test.com', '$2y$12$MG35Y8Ei4AGqy3Glw4OMaOzRnqux1O5S0pw62Rs9IjjpMs2lVjLay', 1, NOW(), NOW(), NOW());
+('admin', 'admin@test.com', '$2y$12$F7hUNhghrNq96JWCB1A3g.bEBtzN0/UTmPv1BTWLz9n4CZgzJqMDW', 1, NOW(), NOW(), NOW());
 
 -- Asignación del rol super_admin al usuario administrador (INSERT IGNORE)
 INSERT IGNORE INTO model_has_roles (role_id, model_type, model_id)

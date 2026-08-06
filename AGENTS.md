@@ -65,7 +65,7 @@ solicitud ──[iniciar]──→ en_progreso ──[cerrar]──→ cerrada
 
 **Preview:** `GET /operaciones/{id}/ganancia-preview?tasa_mercado=X` retorna ganancia estimada sin persistir.
 
-**`genera_ganancia`:** `venta_usd`, `compra_usd`, `intermediada`, `comision` = `true`. Resto = `false`.
+**`genera_ganancia`:** `compra_usd`, `intermediada`, `comision` = `true`. `venta_usd` y el resto = `false` (decisión c69687c: las ventas nunca generan ganancia).
 
 ### Ajustes Globales (Control General)
 
@@ -99,7 +99,7 @@ Sistema de opciones clave→valor persistidas en la tabla `ajustes` para configu
 Vista donde cualquier usuario autenticado modifica su correo, teléfono, foto de perfil y contraseña. El rol/tipo de usuario es solo lectura.
 
 **Backend:**
-- `users.telefono` (string, nullable) — teléfono de contacto; migración `2026_08_06_000001_add_telefono_to_users_table`. Sin migración en seeds (solo DDL).
+- `users.telefono` (string, nullable) — teléfono de contacto; migración `2026_08_06_000001_add_telefono_to_users_table` + columna reflejada en el seed `docker/mysql/00-init.sh` (para BDs Docker frescas).
 - `UserController::perfil()` — `GET perfil` (autenticado) → `formatUser($request->user())`.
 - `UserController::perfilUpdate()` — `PATCH perfil` (autenticado): valida `email` (unique, ignora al propio), `telefono` (nullable), `avatar` (imagen→webp) y `password` (`confirmed` + `reglaPassword()`). Cambiar correo o contraseña **exige `password_actual`** (`Hash::check`); si el correo cambia, `email_verified_at` se pone en `null` y se reenvía `VerifyEmailNotification` (respeta `envio_emails`). El `rol` no se acepta ni se toca.
 - Rutas en `routes/api.php`: `GET/PATCH api/v1/perfil` (auth:sanctum, sin role).

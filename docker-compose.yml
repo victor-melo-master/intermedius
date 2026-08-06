@@ -70,7 +70,7 @@ services:
     environment:
       APP_ENV: local
       APP_DEBUG: "true"
-      APP_KEY: "${APP_KEY:-base64:}"
+      APP_KEY: "${APP_KEY:-base64:IzE2VZwKdExLMxrblBK2fLdOIW8a8KVdn/+LQgRSqdQ=}"
       APP_URL: http://localhost:8000
       DB_CONNECTION: mysql
       DB_HOST: db
@@ -101,7 +101,7 @@ services:
       REVERB_PORT: 8080
       REVERB_SCHEME: http
       PHP_IDE_CONFIG: "serverName=intermedius"
-      RUN_MIGRATIONS: "true"
+      RUN_MIGRATIONS: "false"
     volumes:
       - ./api:/var/www
       - api_vendor:/var/www/vendor
@@ -138,7 +138,7 @@ services:
     environment:
       APP_ENV: local
       APP_DEBUG: "true"
-      APP_KEY: "${APP_KEY:-base64:}"
+      APP_KEY: "${APP_KEY:-base64:IzE2VZwKdExLMxrblBK2fLdOIW8a8KVdn/+LQgRSqdQ=}"
       DB_CONNECTION: mysql
       DB_HOST: db
       DB_PORT: 3306
@@ -151,6 +151,9 @@ services:
       REVERB_HOST: 0.0.0.0
       REVERB_PORT: 8080
       REVERB_SCHEME: http
+      REVERB_APP_ID: intermedius
+      REVERB_APP_KEY: /QVGKL87GroFIObQgh530LTVpQ8ha9AKj6kd9j8TDDs=
+      REVERB_APP_SECRET: zjELPempeigEkNl2WABr/Igs3eQjWrkSYAOOcLOwSBA=
     networks:
       - intermedius
 
@@ -189,7 +192,7 @@ services:
     environment:
       APP_ENV: local
       APP_DEBUG: "true"
-      APP_KEY: "${APP_KEY:-base64:}"
+      APP_KEY: "${APP_KEY:-base64:IzE2VZwKdExLMxrblBK2fLdOIW8a8KVdn/+LQgRSqdQ=}"
       DB_CONNECTION: mysql
       DB_HOST: db
       DB_PORT: 3306
@@ -235,7 +238,7 @@ services:
     environment:
       APP_ENV: local
       APP_DEBUG: "true"
-      APP_KEY: "${APP_KEY:-base64:}"
+      APP_KEY: "${APP_KEY:-base64:IzE2VZwKdExLMxrblBK2fLdOIW8a8KVdn/+LQgRSqdQ=}"
       DB_CONNECTION: mysql
       DB_HOST: db
       DB_PORT: 3306

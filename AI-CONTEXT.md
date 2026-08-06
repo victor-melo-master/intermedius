@@ -50,6 +50,10 @@ Todos los servicios corren en Docker Compose. Archivo: `docker-compose.yml`.
 
 **Build args:** `UID` y `GID` del usuario host (default 1000).
 
+**Requisitos del host:**
+- **BuildKit / plugin `docker-buildx`:** el `api/Dockerfile` usa `RUN --mount=type=cache` (solo BuildKit). Docker Compose v5 requiere el plugin `buildx` instalado, de lo contrario falla con `the --mount option requires BuildKit`. Instalación a nivel de usuario (sin sudo): `mkdir -p ~/.docker/cli-plugins && curl -sL -o ~/.docker/cli-plugins/docker-buildx https://github.com/docker/buildx/releases/download/v0.36.1/buildx-v0.36.1.linux-amd64 && chmod +x ~/.docker/cli-plugins/docker-buildx`. En daemons legacy también hay que habilitar el feature en `/etc/docker/daemon.json` → `{"features":{"buildkit":true}}` + `sudo systemctl restart docker`.
+- **`APP_KEY`:** el compose define `APP_KEY` con fallback a una clave de desarrollo (los 4 contenedores api/reverb/horizon/schedule comparten la misma). Si se quiere otra, exportarla antes de `up`: `export APP_KEY=base64:...`.
+
 **Nota PHP:** Localmente tenés PHP 8.5, pero los contenedores usan PHP 8.4. Siempre correr `composer update/install` DENTRO de Docker:
 ```bash
 docker compose exec api composer update
@@ -96,7 +100,7 @@ api/
     filesystems.php               # Disk s3 con 'throw' => true
     google2fa.php                 # Usa string literal 'svg' (evita error de clase)
   database/
-    migrations/                   # Solo 2 migrations (login_attempts, documentos stub)
+    migrations/                   # ~36 migraciones (schema core + features)
     schema/mysql.sql              # Schema SQL completo (referencia)
     seed.sql                      # Seed data
   routes/api.php                  # Todas las rutas API bajo prefix v1
@@ -177,11 +181,32 @@ Todas bajo `/api/v1/`. Auth por Sanctum token.
 3. Espera MinIO (loop polling)
 4. Verifica/crea el bucket S3 si no existe
 
-**IMPORTANTE:** Las migraciones de las tablas core (users, titulares, bancos, monedas, cuentas, clientes, etc.) NO existen como migraciones de Laravel. Solo existen como SQL en `api/database/schema/mysql.sql`. Las tablas se crean por el `00-init.sh` o por importación previa. Solo hay 2 migraciones en Laravel: `login_attempts` y `documentos` (esta última es un stub incompleto).
+**IMPORTANTE (estado actual, fix 2026-08-06):** En el flujo Docker la **fuente de verdad para BDs frescas es el seed SQL** (`docker/mysql/00-init.sh` + `docker/mysql/seed.sql`): crea todas las tablas con `IF NOT EXISTS` y siembra datos (roles, permisos, usuarios, monedas, bancos, tipos_operacion, ajustes, etc.). Por eso `RUN_MIGRATIONS=false` en `docker-compose.yml`: si se pone a `true`, `php artisan migrate` intenta recrear tablas que el seed ya creó y falla con `SQLSTATE[42S01]: Base table or view already exists`.
+
+**Consecuencia:** cuando se agregue una migración nueva (columna, tabla, dato), hay que reflejarla también en `00-init.sh`/`seed.sql`, o no estará en una BD Docker fresca. Ejemplo: la columna `users.telefono` (migración `2026_08_06_000001_add_telefono_to_users_table`) se añadió al seed `00-init.sh` para que exista en Docker.
+
+> Nota histórica: antes este doc decía que las tablas core "no tienen migraciones" y solo existían en `api/database/schema/mysql.sql`. Eso ya no es exacto: existe `2026_07_14_000000_create_core_schema.php` y ~36 migraciones en `api/database/migrations/`. Las migraciones son la vía para entornos no-seed (prod/CI); el seed es la vía Docker.
 
 ---
 
 ## 9. Bugs corregidos recientemente
+
+### Docker: entorno no levantaba (2026-08-06)
+Síntomas y arreglos aplicados para poder correr `docker compose up`:
+
+1. **`the --mount option requires BuildKit`** al construir la imagen `api` → Docker del host (CachyOS) no tenía el plugin `docker-buildx` (requerido por Compose v5) ni el feature BuildKit activo. Fix: instalar `docker-buildx` en `~/.docker/cli-plugins` (ver §3) y habilitar `features.buildkit` en `/etc/docker/daemon.json`.
+2. **`Base table or view already exists` en `migrate`** (API en 500) → el seed crea el schema completo pero `RUN_MIGRATIONS=true` hacía correr `php artisan migrate` encima. Fix: `RUN_MIGRATIONS=false` en `docker-compose.yml` + agregar la columna `users.telefono` a `00-init.sh` (quedó sincronizado con la migración). Se reseteó el volumen `db_data` para re-sembrar limpio.
+3. **`Unsupported cipher or incorrect key length`** (API en 500) → `APP_KEY` quedaba vacía porque el compose usaba el fallback `base64:` (sin valor) y no había `api/.env`. Fix: clave de desarrollo generada (`base64:IzE2...`) como fallback en `APP_KEY` de los 4 servicios en `docker-compose.yml`. El entrypoint solo genera la key si `APP_KEY` está vacía.
+
+**Flujo de reset completo que funciona:**
+```bash
+docker compose down -v          # elimina volumes (incluido api_vendor stale)
+docker compose up -d --build
+docker compose logs api --tail=20
+```
+Usuario por defecto: `admin@test.com` / `password123` (según `seed.sql`).
+
+---
 
 ### Documentos (commit 01eafd7)
 - **Problema:** `Cliente` no tenía relación `documentos()` → 500 al listar documentos
@@ -216,6 +241,8 @@ Todas bajo `/api/v1/`. Auth por Sanctum token.
 
 ## 11. Cómo levantar el entorno
 
+**Requisitos previos:** Docker + plugin `docker-buildx` instalado (§3). Opcional: `export APP_KEY=...` para override de la clave de desarrollo.
+
 ```bash
 # Limpiar todo y reconstruir
 docker compose down -v          # -v elimina volumes (incluido api_vendor stale)
@@ -236,6 +263,8 @@ docker compose exec api php artisan tinker
 # http://localhost:9001 (minioadmin / minioadmin)
 ```
 
+**BD:** la crea el seed al primer arranque (`docker-entrypoint-initdb.d`). Si se modifica `00-init.sh`/`seed.sql` hay que resetear el volumen: `docker compose down -v && docker compose up -d`. Las migraciones no corren automáticamente en Docker (`RUN_MIGRATIONS=false`); para aplicarlas a mano: `docker compose exec api php artisan migrate --force`.
+
 ---
 
 ## 12. Archivos clave para modificar
@@ -250,7 +279,7 @@ docker compose exec api php artisan tinker
 | `api/config/google2fa.php` | Config 2FA |
 | `docker-compose.yml` | Servicios Docker |
 | `docker/entrypoint.sh` | Init del contenedor API |
-| `docker/mysql/00-init.sh` | Solo crea la DB |
+| `docker/mysql/00-init.sh` | Seed BDs frescas: crea el schema completo + datos base |
 | `docker/mysql/seed.sql` | Seed data (roles, users, monedas, etc.) |
 | `api/database/schema/mysql.sql` | Schema SQL completo (referencia) |
 | `api/composer.json` | Dependencias PHP |

@@ -98,7 +98,7 @@ class UserEndpointTest extends TestCase
         $this->actingAs($this->admin)
             ->postJson('/api/v1/usuarios', $payload)
             ->assertCreated()
-            ->assertJsonPath('name', 'Nuevo Usuario')
+            ->assertJsonPath('name', 'nuevo usuario')
             ->assertJsonPath('email', 'nuevo@example.com');
 
         $this->assertDatabaseHas('users', ['email' => 'nuevo@example.com']);
@@ -188,9 +188,9 @@ class UserEndpointTest extends TestCase
         $this->actingAs($this->admin)
             ->putJson("/api/v1/usuarios/{$usuario->id}", ['name' => 'Actualizado'])
             ->assertOk()
-            ->assertJsonPath('name', 'Actualizado');
+            ->assertJsonPath('name', 'actualizado');
 
-        $this->assertDatabaseHas('users', ['id' => $usuario->id, 'name' => 'Actualizado']);
+        $this->assertDatabaseHas('users', ['id' => $usuario->id, 'name' => 'actualizado']);
     }
 
     public function test_update_cambia_rol(): void

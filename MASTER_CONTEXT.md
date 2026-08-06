@@ -306,7 +306,7 @@ pendiente ──[tomar]──→ asignada ──[pagar]──→ pagada
 | `comision` | directa desde `monto_usd_equivalente` |
 | Netas | `bruta − comisiones` (CalculadorComisionesService) |
 
-- `genera_ganancia = true` para: `venta_usd`, `compra_usd`, `intermediada`, `comision`
+- `genera_ganancia = true` para: `compra_usd`, `intermediada`, `comision`; `venta_usd` y el resto = `false` (decisión c69687c: las ventas nunca generan ganancia)
 - `tasa_mercado_snapshot` se actualiza al **cerrar** la operación (no al crear solicitud)
 - Preview: `GET /operaciones/{id}/ganancia-preview?tasa_mercado=X`
 

@@ -53,6 +53,28 @@ class AuthTest extends TestCase
             ->assertJson(['message' => 'Credenciales incorrectas.']);
     }
 
+    public function test_login_por_username_devuelve_token()
+    {
+        $response = $this->postJson('/api/v1/auth/login', [
+            'login' => $this->user->name,
+            'password' => $this->password,
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJsonStructure(['token', 'user' => ['id', 'name', 'email', 'roles']]);
+    }
+
+    public function test_login_por_email_con_campo_login_devuelve_token()
+    {
+        $response = $this->postJson('/api/v1/auth/login', [
+            'login' => 'test@example.com',
+            'password' => $this->password,
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJsonStructure(['token', 'user' => ['id', 'name', 'email', 'roles']]);
+    }
+
     public function test_login_fallido_sin_email()
     {
         $response = $this->postJson('/api/v1/auth/login', [

@@ -24,8 +24,11 @@ class AuthController extends Controller
      */
     public function login(LoginRequest $request): JsonResponse
     {
+        // ── Resolver identificador: email o username (campo `name`) ──
+        $login = $request->filled('login') ? $request->login : $request->email;
+
         // ── Verificar bloqueo por intentos fallidos ──────────────────
-        $recentAttempts = LoginAttempt::where('email', $request->email)
+        $recentAttempts = LoginAttempt::where('email', $login)
             ->where('attempted_at', '>', now()->subMinutes(15))
             ->where('successful', false)
             ->count();
@@ -37,12 +40,16 @@ class AuthController extends Controller
         }
 
         // ── Intentar autenticación ──────────────────────────────────
-        $credentials = $request->only('email', 'password');
+        $campoIdentificador = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'name';
+        $credentials = [
+            $campoIdentificador => $login,
+            'password'          => $request->password,
+        ];
         $authenticated = Auth::attempt($credentials);
 
         // ── Registrar intento ───────────────────────────────────────
         LoginAttempt::create([
-            'email'       => $request->email,
+            'email'       => $login,
             'ip_address'  => $request->ip(),
             'attempted_at'=> now(),
             'successful'  => $authenticated,

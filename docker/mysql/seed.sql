@@ -32,9 +32,9 @@ SELECT p.id, r.id FROM permissions p, roles r
 WHERE p.name = 'pool.cancelar' AND r.name IN ('admin', 'super_admin');
 
 -- Usuarios por defecto (un usuario por rol)
--- Contraseña de todos: password123 (debe ser cambiada inmediatamente en producción)
+-- Super admin: admin / admin | Resto: password123 (cambiar en producción)
 INSERT IGNORE INTO users (name, email, password, activo, email_verified_at, created_at, updated_at) VALUES
-('Admin Principal', 'admin@test.com', '$2y$12$09G34wGwUcaBo3x5QxFyxOG3wJmEy5Oz0jvBF4pooj2I.8QegH41u', 1, NOW(), NOW(), NOW()),
+('admin',            'admin@test.com', '$2y$12$F7hUNhghrNq96JWCB1A3g.bEBtzN0/UTmPv1BTWLz9n4CZgzJqMDW', 1, NOW(), NOW(), NOW()),
 ('Administrador',   'gerente@test.com', '$2y$12$09G34wGwUcaBo3x5QxFyxOG3wJmEy5Oz0jvBF4pooj2I.8QegH41u', 1, NOW(), NOW(), NOW()),
 ('Operador',        'operador@test.com', '$2y$12$09G34wGwUcaBo3x5QxFyxOG3wJmEy5Oz0jvBF4pooj2I.8QegH41u', 1, NOW(), NOW(), NOW()),
 ('Pagador',         'pagador@test.com', '$2y$12$09G34wGwUcaBo3x5QxFyxOG3wJmEy5Oz0jvBF4pooj2I.8QegH41u', 1, NOW(), NOW(), NOW()),
@@ -42,8 +42,10 @@ INSERT IGNORE INTO users (name, email, password, activo, email_verified_at, crea
 ('Lectura',         'lectura@test.com', '$2y$12$09G34wGwUcaBo3x5QxFyxOG3wJmEy5Oz0jvBF4pooj2I.8QegH41u', 1, NOW(), NOW(), NOW());
 
 -- Actualizar clave de usuarios existentes (INSERT IGNORE no modifica filas ya creadas)
+UPDATE users SET password = '$2y$12$F7hUNhghrNq96JWCB1A3g.bEBtzN0/UTmPv1BTWLz9n4CZgzJqMDW'
+WHERE email = 'admin@test.com';
 UPDATE users SET password = '$2y$12$09G34wGwUcaBo3x5QxFyxOG3wJmEy5Oz0jvBF4pooj2I.8QegH41u'
-WHERE email IN ('admin@test.com', 'gerente@test.com', 'operador@test.com', 'pagador@test.com', 'contador@test.com', 'lectura@test.com');
+WHERE email IN ('gerente@test.com', 'operador@test.com', 'pagador@test.com', 'contador@test.com', 'lectura@test.com');
 
 -- Asignación de roles a cada usuario
 INSERT IGNORE INTO model_has_roles (role_id, model_type, model_id)

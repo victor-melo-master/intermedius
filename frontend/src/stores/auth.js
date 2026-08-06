@@ -80,16 +80,16 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   /**
-   * Inicia sesión con email y contraseña.
-   * @param {string} email - Correo electrónico del usuario
+   * Inicia sesión con email/username y contraseña.
+   * @param {string} login - Correo electrónico o nombre de usuario
    * @param {string} password - Contraseña
    * @returns {Promise<boolean>} true si el login fue exitoso, false en caso contrario
    */
-  async function login(email, password) {
+  async function login(login, password) {
     loading.value = true
     error.value = ''
     try {
-      const { data } = await api.post('/auth/login', { email, password })
+      const { data } = await api.post('/auth/login', { login, password })
       token.value = data.token || data.data?.token || data
 localStorage.setItem('token', token.value)
       user.value = data.user
