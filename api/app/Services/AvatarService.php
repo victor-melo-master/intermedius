@@ -21,13 +21,14 @@ class AvatarService
      * Formatos aceptados: jpeg, png, gif, webp, bmp (rasterizables con GD).
      *
      * @param UploadedFile $archivo Imagen recibida del formulario
-     * @param int $usuarioId ID del usuario dueño del avatar
+     * @param string $carpeta Carpeta dentro de avatars/ (ej: 'usuarios' o 'clientes')
+     * @param int $entidadId ID de la entidad dueña del avatar
      * @param string|null $rutaPrevia Ruta anterior para borrarla al reemplazar
      * @return string Ruta s3 del avatar (ej: avatars/usuarios/5/avatar_123.webp)
      *
      * @throws RuntimeException Si la imagen no puede leerse o convertirse
      */
-    public function guardar(UploadedFile $archivo, int $usuarioId, ?string $rutaPrevia = null): string
+    public function guardar(UploadedFile $archivo, string $carpeta, int $entidadId, ?string $rutaPrevia = null): string
     {
         $contenido = $archivo->get();
         $imagen = @imagecreatefromstring($contenido);
@@ -59,7 +60,7 @@ class AvatarService
             Storage::disk('s3')->delete($rutaPrevia);
         }
 
-        $ruta = "avatars/usuarios/{$usuarioId}/avatar_" . time() . '.webp';
+        $ruta = "avatars/{$carpeta}/{$entidadId}/avatar_" . time() . '.webp';
         Storage::disk('s3')->put($ruta, $buffer, ['ContentType' => 'image/webp']);
 
         return $ruta;

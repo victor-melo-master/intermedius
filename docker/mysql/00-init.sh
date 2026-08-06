@@ -109,6 +109,7 @@ CREATE TABLE IF NOT EXISTS `clientes` (
   `documento` varchar(255) DEFAULT NULL,
   `telefono` varchar(255) DEFAULT NULL,
   `email` varchar(255) DEFAULT NULL,
+  `avatar_path` varchar(255) DEFAULT NULL,
   `notas` text DEFAULT NULL,
   `datos_bancarios` json DEFAULT NULL,
   `saldo_cache_usd` decimal(20,2) NOT NULL DEFAULT 0.00,

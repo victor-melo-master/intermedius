@@ -403,6 +403,7 @@ class UserController extends Controller
 
         $ruta = app(AvatarService::class)->guardar(
             $request->file('avatar'),
+            'usuarios',
             $usuario->id,
             $usuario->avatar_path
         );

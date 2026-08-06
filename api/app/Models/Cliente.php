@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string|null $documento
  * @property string|null $telefono
  * @property string|null $email
+ * @property string|null $avatar_path
  * @property string|null $notas
  * @property string|null $saldo_cache_usd
  * @property \Illuminate\Support\Carbon|null $saldo_cache_at
@@ -38,6 +39,7 @@ class Cliente extends Model
         'documento',
         'telefono',
         'email',
+        'avatar_path',
         'notas',
         'datos_bancarios',
         'saldo_cache_usd',

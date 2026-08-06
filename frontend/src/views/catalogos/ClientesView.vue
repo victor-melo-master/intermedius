@@ -29,7 +29,10 @@
     </template>
     <div v-else class="space-y-2">
       <div v-for="c in clientes.list" :key="c.id" @click="openDetail(c)" class="bg-surface border border-edge rounded-xl p-4 flex items-center gap-3 cursor-pointer hover:shadow-md transition" :class="c.deleted_at ? 'opacity-70 border-danger-edge' : ''">
-        <div class="w-10 h-10 rounded-full bg-gold-soft flex items-center justify-center text-gold-dark font-bold text-sm">{{ c.nombre.charAt(0).toUpperCase() }}</div>
+        <div class="w-10 h-10 rounded-full bg-gold-soft flex items-center justify-center text-gold-dark font-bold text-sm overflow-hidden">
+          <img v-if="avatarUrl(c)" :src="avatarUrl(c)" alt="" class="w-full h-full object-cover" />
+          <template v-else>{{ c.nombre.charAt(0).toUpperCase() }}</template>
+        </div>
         <div class="flex-1 min-w-0">
           <p class="font-semibold text-sm truncate">{{ c.nombre }}</p>
           <p v-if="c.alias" class="text-sm text-ink-muted truncate">{{ c.alias }}</p>
@@ -74,6 +77,24 @@
             <button v-if="detailCliente?.deleted_at && (auth.canConfig)" @click="restaurarCliente(detailCliente)" class="text-xs bg-success hover:bg-success-strong text-white dark:text-navy px-2 py-1 rounded-lg inline-flex items-center gap-1"><Iconoir name="arrow-uturn-left" class="w-3 h-3" /> Recuperar</button>
             <button @click="showDetail = false" class="text-ink-muted hover:text-ink-muted"><Iconoir name="x-mark" class="w-5 h-5" /></button>
           </div>
+        </div>
+
+        <div class="flex flex-col items-center mb-6">
+          <div class="relative">
+            <div class="w-20 h-20 rounded-full bg-gold-soft flex items-center justify-center text-gold-dark font-bold text-2xl overflow-hidden border-2 border-edge-strong">
+              <img v-if="clienteAvatarUrl" :src="clienteAvatarUrl" alt="" class="w-full h-full object-cover" />
+              <template v-else>{{ (detailCliente?.nombre || '?').charAt(0).toUpperCase() }}</template>
+            </div>
+            <label v-if="auth.canWrite && !detailCliente?.deleted_at" class="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-gold text-navy flex items-center justify-center cursor-pointer hover:bg-gold-dark shadow transition" title="Cambiar foto">
+              <Iconoir name="camera" class="w-4 h-4" />
+              <input type="file" accept="image/jpeg,image/png,image/gif,image/webp,image/bmp" class="hidden" @change="onClienteAvatarSelected" :disabled="subiendoAvatar" />
+            </label>
+          </div>
+          <button v-if="auth.canWrite && detailCliente?.avatar_path && !detailCliente?.deleted_at" @click="quitarAvatar" :disabled="subiendoAvatar" class="mt-2 text-xs text-danger hover:text-danger-strong inline-flex items-center gap-1 disabled:opacity-50">
+            <Iconoir name="trash" class="w-3 h-3" /> Quitar foto
+          </button>
+          <p v-if="subiendoAvatar" class="mt-2 text-xs text-ink-muted">Subiendo foto...</p>
+          <p v-if="avatarError" class="mt-2 text-xs text-danger text-center">{{ avatarError }}</p>
         </div>
 
         <div class="space-y-3 mb-8">
@@ -358,6 +379,86 @@ const detailCliente = ref(null)
 const clienteCuentas = ref([])
 /** Indica carga de cuentas del cliente */
 const loadingCuentas = ref(false)
+
+// Avatar del cliente
+/** Indica si se está subiendo/quitanendo la foto */
+const subiendoAvatar = ref(false)
+/** Error de validación de la foto del cliente */
+const avatarError = ref('')
+/** Tipos de imagen aceptados para el avatar (se convierten a WebP en el backend) */
+const avatarTiposAceptados = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp']
+
+/**
+ * URL autenticada del avatar del cliente (imagen WebP servida por la API).
+ * @param {Object} c - Cliente con { id, avatar_path }
+ * @returns {string|null}
+ */
+function avatarUrl(c) {
+  if (!c?.avatar_path) return null
+  const token = localStorage.getItem('token')
+  return `${import.meta.env.VITE_API_URL}/clientes/${c.id}/avatar?token=${token}`
+}
+
+/** URL del avatar del cliente visible en el detalle */
+const clienteAvatarUrl = computed(() => avatarUrl(detailCliente.value))
+
+/**
+ * Maneja la selección de una foto de cliente: valida tipo y tamaño y sube automáticamente.
+ * @param {Event} evt - Evento change del input file
+ */
+async function onClienteAvatarSelected(evt) {
+  const file = evt.target.files?.[0]
+  avatarError.value = ''
+  evt.target.value = ''
+  if (!file || !detailCliente.value) return
+  if (!avatarTiposAceptados.includes(file.type)) {
+    avatarError.value = 'Formato no permitido. Usa JPG, PNG, GIF, WebP o BMP.'
+    return
+  }
+  if (file.size > 2 * 1024 * 1024) {
+    avatarError.value = 'La imagen supera los 2MB. Elige una más pequeña.'
+    return
+  }
+
+  subiendoAvatar.value = true
+  try {
+    const formData = new FormData()
+    formData.append('avatar', file)
+    const { data } = await api.put(`/clientes/${detailCliente.value.id}`, formData)
+    const avatarPath = data?.avatar_path || data?.data?.avatar_path
+    if (avatarPath) {
+      detailCliente.value.avatar_path = avatarPath
+      actualizarClienteEnLista(detailCliente.value.id, { avatar_path: avatarPath })
+    }
+  } catch (err) {
+    avatarError.value = parseError(err)
+  } finally {
+    subiendoAvatar.value = false
+  }
+}
+
+/** Actualiza un cliente dentro de la lista actual (sin recargar). */
+function actualizarClienteEnLista(id, patch) {
+  const idx = clientes.list.findIndex(c => c.id === id)
+  if (idx !== -1) Object.assign(clientes.list[idx], patch)
+}
+
+/** Elimina la foto del cliente actual. */
+async function quitarAvatar() {
+  if (!detailCliente.value) return
+  if (!confirm(`¿Quitar la foto de "${detailCliente.value.nombre}"?`)) return
+  avatarError.value = ''
+  subiendoAvatar.value = true
+  try {
+    const { data } = await api.delete(`/clientes/${detailCliente.value.id}/avatar`)
+    detailCliente.value.avatar_path = null
+    actualizarClienteEnLista(detailCliente.value.id, { avatar_path: null })
+  } catch (err) {
+    avatarError.value = parseError(err)
+  } finally {
+    subiendoAvatar.value = false
+  }
+}
 
 /** Controla visibilidad del modal de crear cuenta para cliente */
 const showCuentaForm = ref(false)

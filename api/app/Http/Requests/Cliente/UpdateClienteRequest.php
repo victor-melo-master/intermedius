@@ -28,6 +28,7 @@ class UpdateClienteRequest extends FormRequest
             'documento' => ['nullable', 'string', 'max:50'],
             'telefono'  => ['nullable', 'string', 'max:30'],
             'email'     => ['nullable', 'email', 'max:255'],
+            'avatar'          => ['nullable', 'image', 'mimes:jpeg,png,gif,webp,bmp', 'max:2048'],
             'notas'           => ['nullable', 'string'],
             'datos_bancarios' => ['nullable', 'array'],
             'activo'          => ['boolean'],

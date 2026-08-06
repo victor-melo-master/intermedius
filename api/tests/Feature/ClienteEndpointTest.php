@@ -9,6 +9,8 @@ use App\Models\TipoOperacion;
 use App\Models\User;
 use Database\Seeders\CatalogosBaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class ClienteEndpointTest extends TestCase
@@ -306,5 +308,87 @@ class ClienteEndpointTest extends TestCase
         // Route model binding no encuentra soft-deleted por defecto → 404
         // (bug conocido: falta ->withTrashed() en el binding)
         $response->assertNotFound();
+    }
+
+    // ── Avatar ─────────────────────────────────────────────────────────────────
+
+    public function test_update_avatar_convierte_a_webp_512_cuadrado(): void
+    {
+        Storage::fake('s3');
+        $cliente = Cliente::factory()->create();
+
+        $imagen = UploadedFile::fake()->image('foto.png', 100, 200);
+
+        $this->actingAs($this->admin)
+            ->withHeaders(['Accept' => 'application/json'])
+            ->put("/api/v1/clientes/{$cliente->id}", ['avatar' => $imagen])
+            ->assertOk()
+            ->assertJsonPath('avatar_path', fn ($v) => is_string($v) && str_ends_with($v, '.webp'));
+
+        $cliente->refresh();
+        $this->assertNotNull($cliente->avatar_path);
+
+        $archivo = Storage::disk('s3')->get($cliente->avatar_path);
+        $this->assertNotFalse($archivo, 'El avatar no se guardó en el disco.');
+        $gd = @imagecreatefromstring($archivo);
+        $this->assertNotFalse($gd, 'El archivo guardado no es una imagen decodificable.');
+        $this->assertSame(512, imagesx($gd), 'El avatar no tiene 512px de ancho.');
+        $this->assertSame(512, imagesy($gd), 'El avatar no tiene 512px de alto.');
+        $this->assertNotSame('image/png', (new \finfo(FILEINFO_MIME_TYPE))->buffer($archivo));
+    }
+
+    public function test_update_avatar_rechaza_archivo_no_imagen(): void
+    {
+        $cliente = Cliente::factory()->create();
+        $archivo = UploadedFile::fake()->create('falso.txt', 10, 'text/plain');
+
+        $this->actingAs($this->admin)
+            ->withHeaders(['Accept' => 'application/json'])
+            ->put("/api/v1/clientes/{$cliente->id}", ['avatar' => $archivo])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['avatar']);
+    }
+
+    public function test_avatar_endpoint_requiere_token_y_sirve_webp(): void
+    {
+        Storage::fake('s3');
+        $cliente = Cliente::factory()->create();
+        $imagen = UploadedFile::fake()->image('foto.png', 100, 200);
+        $this->actingAs($this->admin)
+            ->withHeaders(['Accept' => 'application/json'])
+            ->put("/api/v1/clientes/{$cliente->id}", ['avatar' => $imagen])
+            ->assertOk();
+
+        $this->getJson("/api/v1/clientes/{$cliente->id}/avatar")->assertUnauthorized();
+
+        $token = $this->admin->createToken('test')->plainTextToken;
+        $this->get("/api/v1/clientes/{$cliente->id}/avatar?token={$token}")
+            ->assertOk()
+            ->assertHeader('Content-Type', 'image/webp');
+    }
+
+    public function test_destruir_avatar_elimina_archivo_y_referencia(): void
+    {
+        Storage::fake('s3');
+        $cliente = Cliente::factory()->create();
+        $imagen = UploadedFile::fake()->image('foto.png', 100, 200);
+        $this->actingAs($this->admin)
+            ->withHeaders(['Accept' => 'application/json'])
+            ->put("/api/v1/clientes/{$cliente->id}", ['avatar' => $imagen])
+            ->assertOk();
+
+        $cliente->refresh();
+        $rutaPrevia = $cliente->avatar_path;
+        $this->assertNotNull($rutaPrevia);
+        $this->assertTrue(Storage::disk('s3')->exists($rutaPrevia));
+
+        $this->actingAs($this->admin)
+            ->deleteJson("/api/v1/clientes/{$cliente->id}/avatar")
+            ->assertOk()
+            ->assertJsonPath('avatar_path', null);
+
+        $cliente->refresh();
+        $this->assertNull($cliente->avatar_path);
+        $this->assertFalse(Storage::disk('s3')->exists($rutaPrevia));
     }
 }

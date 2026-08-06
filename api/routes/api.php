@@ -53,6 +53,8 @@ Route::prefix('v1')->group(function () {
     Route::get('documentos/{documento}/download', [DocumentoController::class, 'download']);
     Route::get('usuarios/{usuario}/avatar', [UserController::class, 'avatar'])
         ->middleware('throttle:120,1');
+    Route::get('clientes/{cliente}/avatar', [ClienteController::class, 'avatar'])
+        ->middleware('throttle:120,1');
 
     // ─────────────────────────────────────────────────────────────────
     // Rutas protegidas con Sanctum
@@ -87,6 +89,7 @@ Route::prefix('v1')->group(function () {
             Route::get('cuentas/{cuenta}/saldo-disponible', [CuentaController::class, 'saldoDisponible']);
             Route::get('cuentas/{cuenta}/flujos', [CuentaController::class, 'flujos']);
             Route::apiResource('clientes',         ClienteController::class);
+            Route::delete('clientes/{cliente}/avatar', [ClienteController::class, 'destruirAvatar']);
             Route::get('clientes/{cliente}/cuentas', [ClienteController::class, 'cuentas']);
             Route::get('clientes/{cliente}/operaciones', [ClienteController::class, 'operaciones']);
             Route::post('clientes/{cliente}/operaciones/exportar', [ClienteController::class, 'exportarOperaciones']);

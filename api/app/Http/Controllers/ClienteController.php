@@ -6,8 +6,11 @@ use App\Http\Requests\Cliente\StoreClienteRequest;
 use App\Http\Requests\Cliente\UpdateClienteRequest;
 use App\Models\Cliente;
 use App\Models\Operacion;
+use App\Services\AvatarService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Laravel\Sanctum\PersonalAccessToken;
 
 /**
  * Controlador de clientes.
@@ -91,7 +94,64 @@ class ClienteController extends Controller
      */
     public function update(UpdateClienteRequest $request, Cliente $cliente): JsonResponse
     {
-        $cliente->update($request->validated());
+        $datos = $request->validated();
+        unset($datos['avatar']);
+
+        $cliente->update($datos);
+
+        if ($request->hasFile('avatar')) {
+            $ruta = app(AvatarService::class)->guardar(
+                $request->file('avatar'),
+                'clientes',
+                $cliente->id,
+                $cliente->avatar_path
+            );
+            $cliente->update(['avatar_path' => $ruta]);
+        }
+
+        return response()->json($cliente->fresh());
+    }
+
+    /**
+     * Sirve el avatar del cliente (webp), autenticado por token en query param.
+     *
+     * @param Request $request Debe incluir ?token=<sanctum token>
+     * @param Cliente $cliente Cliente dueño del avatar
+     * @return \Illuminate\Http\Response
+     */
+    public function avatar(Request $request, Cliente $cliente)
+    {
+        $token = $request->query('token');
+        if (!$token || !PersonalAccessToken::findToken($token)) {
+            abort(401);
+        }
+
+        if (!$cliente->avatar_path || !Storage::disk('s3')->exists($cliente->avatar_path)) {
+            abort(404, 'El cliente no tiene avatar.');
+        }
+
+        $archivo = Storage::disk('s3')->get($cliente->avatar_path);
+
+        return response($archivo, 200)
+            ->header('Content-Type', 'image/webp')
+            ->header('Cache-Control', 'public, max-age=31536000, immutable');
+    }
+
+    /**
+     * Elimina el avatar de un cliente (archivo en s3 y referencia en BD).
+     *
+     * @param Request $request
+     * @param Cliente $cliente
+     * @return JsonResponse
+     */
+    public function destruirAvatar(Request $request, Cliente $cliente): JsonResponse
+    {
+        $this->authorize('update', $cliente);
+
+        if ($cliente->avatar_path) {
+            Storage::disk('s3')->delete($cliente->avatar_path);
+            $cliente->update(['avatar_path' => null]);
+        }
 
         return response()->json($cliente->fresh());
     }
