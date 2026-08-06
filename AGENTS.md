@@ -92,6 +92,25 @@ Sistema de opciones clave→valor persistidas en la tabla `ajustes` para configu
 - Requisitos de contraseña en vivo (`passwordRequisitos`) alineados con la regla del backend (min 8, mixta, número, símbolo).
 - `name`/`email` se normalizan a minúsculas: mutators en `User` + migración `2026_08_05_000001_normalize_user_name_email_lowercase`.
 
+### Perfil de Usuario Autogestionado
+
+**Rama:** `feat/perfil-usuario`
+
+Vista donde cualquier usuario autenticado modifica su correo, teléfono, foto de perfil y contraseña. El rol/tipo de usuario es solo lectura.
+
+**Backend:**
+- `users.telefono` (string, nullable) — teléfono de contacto; migración `2026_08_06_000001_add_telefono_to_users_table`. Sin migración en seeds (solo DDL).
+- `UserController::perfil()` — `GET perfil` (autenticado) → `formatUser($request->user())`.
+- `UserController::perfilUpdate()` — `PATCH perfil` (autenticado): valida `email` (unique, ignora al propio), `telefono` (nullable), `avatar` (imagen→webp) y `password` (`confirmed` + `reglaPassword()`). Cambiar correo o contraseña **exige `password_actual`** (`Hash::check`); si el correo cambia, `email_verified_at` se pone en `null` y se reenvía `VerifyEmailNotification` (respeta `envio_emails`). El `rol` no se acepta ni se toca.
+- Rutas en `routes/api.php`: `GET/PATCH api/v1/perfil` (auth:sanctum, sin role).
+- `AuthController::usuarioConRol()` ahora incluye `telefono` y `avatar_path` (login y `me`).
+- Tests en `UserEndpointTest` (sección perfil): teléfono sin password, email exige password, password actual incorrecta, cambio de password, email único, rol inmutable.
+
+**Frontend:**
+- `PerfilView.vue` (`/perfil`, cualquier rol) — tarjetas: Datos de perfil (avatar con preview/validación tipo y 2MB, nombre readonly, correo, teléfono), Tipo de usuario (badges readonly), Cambiar contraseña (requisitos en vivo + mostrar/ocultar).
+- Header (`AppShell.vue`): avatar + enlace al perfil (`avatarUrl()` con `?token=`).
+- `auth.actualizarUsuario(u)` en `stores/auth.js` para refrescar el store tras guardar.
+
 ## Rendimiento (diagnóstico Jul 2026)
 
 ### 🔴 Críticos (arreglar ya)

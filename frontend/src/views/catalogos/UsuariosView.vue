@@ -79,10 +79,10 @@
         <div v-if="!isSuperAdmin(u)" class="flex items-center gap-2">
           <!-- Toggle activo -->
           <button type="button" @click.stop="handleToggle(u)" :title="u.activo ? 'Desactivar' : 'Activar'"
-            class="relative w-10 h-5 rounded-full transition-colors"
+            class="relative w-11 h-6 rounded-full transition-colors shrink-0"
             :class="u.activo ? 'bg-success' : 'bg-surface-muted'">
-            <span class="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform"
-              :class="u.activo ? 'translate-x-5' : 'translate-x-0.5'"></span>
+            <span class="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform"
+              :class="u.activo ? 'translate-x-5' : 'translate-x-0'"></span>
           </button>
           <button type="button" @click.stop="openDetalle(u)" title="Ver detalle"
             class="text-xs text-ink-muted hover:text-heading font-medium px-2 py-1 border border-edge rounded-lg hover:bg-surface-soft flex items-center gap-1">

@@ -63,6 +63,11 @@ Route::prefix('v1')->group(function () {
             ->middleware('throttle:10,1');
         Route::get('auth/me',     [AuthController::class, 'me']);
 
+        // ── Perfil del usuario autenticado ──────────────────────────
+        Route::get('perfil', [UserController::class, 'perfil']);
+        Route::patch('perfil', [UserController::class, 'perfilUpdate'])
+            ->middleware('throttle:30,1');
+
         // Documentos del cliente
         Route::get('clientes/{cliente}/documentos', [DocumentoController::class, 'index']);
         Route::post('clientes/{cliente}/documentos', [DocumentoController::class, 'store']);

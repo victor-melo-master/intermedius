@@ -22,6 +22,8 @@ const routes = [
       { path: '', redirect: '/dashboard' },
       /** Panel principal con resumen de datos. */
       { path: 'dashboard', name: 'Dashboard', component: () => import('../views/dashboard/DashboardView.vue') },
+      /** Perfil del usuario autenticado (correo, teléfono, avatar y contraseña). */
+      { path: 'perfil', name: 'Perfil', component: () => import('../views/perfil/PerfilView.vue') },
       /** Listado de operaciones registradas. */
       { path: 'operaciones', name: 'Operaciones', component: () => import('../views/operaciones/OperacionesView.vue') },
       /** Formulario de nueva compra de divisa (flujo progresivo). */

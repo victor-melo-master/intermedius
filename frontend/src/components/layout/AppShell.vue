@@ -18,6 +18,15 @@
             <Iconoir :name="theme.isDark ? 'sun' : 'moon'" class="w-5 h-5" />
           </button>
           <span class="text-sm text-ink-soft hidden sm:block">{{ auth.user?.name }}</span>
+          <router-link to="/perfil" title="Mi perfil"
+            class="flex items-center gap-2 px-1.5 py-1 rounded-lg hover:bg-surface-muted transition">
+            <img v-if="avatarUrl(auth.user)" :src="avatarUrl(auth.user)" :alt="`Avatar de ${auth.user?.name}`"
+              class="w-8 h-8 rounded-full object-cover border border-edge" />
+            <span v-else
+              class="w-8 h-8 rounded-full bg-gold-soft flex items-center justify-center text-gold-dark font-bold text-sm">
+              {{ (auth.user?.name || '?').charAt(0).toUpperCase() }}
+            </span>
+          </router-link>
           <button @click="logout" class="text-sm text-danger hover:text-danger-strong px-3 py-1.5 rounded-lg hover:bg-danger-soft transition">
             Salir
           </button>
@@ -100,6 +109,17 @@ const auth = useAuthStore()
 const theme = useThemeStore()
 useInactivityTimer()
 
+/**
+ * URL autenticada del avatar de un usuario (imagen WebP servida por la API).
+ * @param {Object|null} u - Usuario con { id, avatar_path }
+ * @returns {string|null}
+ */
+function avatarUrl(u) {
+  if (!u?.avatar_path) return null
+  const token = localStorage.getItem('token')
+  return `${import.meta.env.VITE_API_URL}/usuarios/${u.id}/avatar?token=${token}`
+}
+
 /** @type {import('vue').Ref<boolean>} - Controla la apertura del drawer móvil */
 const drawer = ref(false)
 
@@ -143,6 +163,8 @@ const nav = computed(() => {
     items.push({ path: '/tasas', label: 'Tasas', icon: 'arrow-trending-up' })
     items.push({ path: '/usuarios', label: 'Usuarios', icon: 'key' })
   }
+
+  items.push({ path: '/perfil', label: 'Mi perfil', icon: 'identification' })
 
   return items
 })

@@ -205,6 +205,8 @@ class AuthController extends Controller
             'email'         => $usuario->email,
             'roles'         => $usuario->getRoleNames(),
             'titular_id'    => $usuario->titular_id,
+            'avatar_path'   => $usuario->avatar_path,
+            'telefono'      => $usuario->telefono,
             'last_login_at' => $usuario->last_login_at,
         ];
     }

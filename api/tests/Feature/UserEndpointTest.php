@@ -339,4 +339,146 @@ class UserEndpointTest extends TestCase
         $this->deleteJson("/api/v1/usuarios/{$usuario->id}")
             ->assertUnauthorized();
     }
+
+    // ── perfil (usuario autenticado) ─────────────────────────────────
+
+    public function test_perfil_devuelve_datos_del_usuario_autenticado(): void
+    {
+        $usuario = User::factory()->create([
+            'telefono' => '+58 412 123 4567',
+            'email_verified_at' => now(),
+        ]);
+
+        $this->actingAs($usuario)
+            ->getJson('/api/v1/perfil')
+            ->assertOk()
+            ->assertJsonPath('id', $usuario->id)
+            ->assertJsonPath('email', $usuario->email)
+            ->assertJsonPath('telefono', '+58 412 123 4567')
+            ->assertJsonPath('roles', []);
+    }
+
+    public function test_perfil_requiere_autenticacion(): void
+    {
+        $this->getJson('/api/v1/perfil')->assertUnauthorized();
+    }
+
+    public function test_perfil_update_cambia_telefono_sin_password(): void
+    {
+        $usuario = User::factory()->create();
+
+        $this->actingAs($usuario)
+            ->patchJson('/api/v1/perfil', ['telefono' => '+58 414 555 8899'])
+            ->assertOk()
+            ->assertJsonPath('telefono', '+58 414 555 8899');
+
+        $this->assertDatabaseHas('users', ['id' => $usuario->id, 'telefono' => '+58 414 555 8899']);
+    }
+
+    public function test_perfil_update_cambia_email_exige_password_actual(): void
+    {
+        $usuario = User::factory()->create(['email' => 'viejo@example.com']);
+
+        $this->actingAs($usuario)
+            ->patchJson('/api/v1/perfil', ['email' => 'nuevo@example.com'])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['password_actual']);
+    }
+
+    public function test_perfil_update_cambia_email_con_password_actual_correcta(): void
+    {
+        Notification::fake();
+        $password = 'Str0ng!Pass1';
+        $usuario = User::factory()->create([
+            'email'             => 'viejo@example.com',
+            'password'          => $password,
+            'email_verified_at' => now(),
+        ]);
+
+        $this->actingAs($usuario)
+            ->patchJson('/api/v1/perfil', [
+                'email'           => 'nuevo@example.com',
+                'password_actual' => $password,
+            ])
+            ->assertOk()
+            ->assertJsonPath('email', 'nuevo@example.com');
+
+        $this->assertDatabaseHas('users', ['id' => $usuario->id, 'email' => 'nuevo@example.com']);
+        $this->assertNull($usuario->fresh()->email_verified_at, 'El correo nuevo debe quedar sin verificar.');
+        Notification::assertSentTo($usuario, VerifyEmailNotification::class);
+    }
+
+    public function test_perfil_update_rechaza_password_actual_incorrecta(): void
+    {
+        $usuario = User::factory()->create(['email' => 'viejo@example.com']);
+
+        $this->actingAs($usuario)
+            ->patchJson('/api/v1/perfil', [
+                'email'           => 'nuevo@example.com',
+                'password_actual' => 'Incorrecta!1',
+            ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['password_actual']);
+
+        $this->assertDatabaseHas('users', ['id' => $usuario->id, 'email' => 'viejo@example.com']);
+    }
+
+    public function test_perfil_update_cambia_password_con_password_actual(): void
+    {
+        $password = 'Str0ng!Pass1';
+        $usuario = User::factory()->create(['password' => $password]);
+
+        $this->actingAs($usuario)
+            ->patchJson('/api/v1/perfil', [
+                'password_actual'         => $password,
+                'password'                => 'NuevaStr0ng!2',
+                'password_confirmation'   => 'NuevaStr0ng!2',
+            ])
+            ->assertOk();
+
+        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('NuevaStr0ng!2', $usuario->fresh()->password));
+    }
+
+    public function test_perfil_update_exige_password_actual_para_cambiar_password(): void
+    {
+        $usuario = User::factory()->create();
+
+        $this->actingAs($usuario)
+            ->patchJson('/api/v1/perfil', [
+                'password'              => 'NuevaStr0ng!2',
+                'password_confirmation' => 'NuevaStr0ng!2',
+            ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['password_actual']);
+    }
+
+    public function test_perfil_update_valida_email_unico(): void
+    {
+        User::factory()->create(['email' => 'ocupado@example.com']);
+        $usuario = User::factory()->create();
+
+        $this->actingAs($usuario)
+            ->patchJson('/api/v1/perfil', [
+                'email'           => 'ocupado@example.com',
+                'password_actual' => 'Str0ng!Pass1',
+            ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['email']);
+    }
+
+    public function test_perfil_update_no_modifica_el_rol(): void
+    {
+        $usuario = User::factory()->create();
+        $usuario->assignRole('operador');
+
+        $this->actingAs($usuario)
+            ->patchJson('/api/v1/perfil', [
+                'rol' => 'admin',
+            ])
+            ->assertOk();
+
+        $usuario->refresh();
+        $this->assertTrue($usuario->hasRole('operador'));
+        $this->assertFalse($usuario->hasRole('admin'));
+    }
 }

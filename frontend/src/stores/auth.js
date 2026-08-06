@@ -114,5 +114,14 @@ localStorage.setItem('token', token.value)
     localStorage.removeItem('token')
   }
 
-  return { user, token, loading, error, initialized, isAuthenticated, isAdmin, isSuperAdmin, isPagador, isOperador, isContador, isLectura, hasRole, hasAnyRole, canWrite, canPool, canReports, canConfig, init, login, logout }
+  /**
+   * Reemplaza los datos del usuario autenticado (tras actualizar el perfil).
+   * @param {Object} u - Usuario actualizado (formato del backend)
+   * @returns {void}
+   */
+  const actualizarUsuario = (u) => {
+    user.value = u
+  }
+
+  return { user, token, loading, error, initialized, isAuthenticated, isAdmin, isSuperAdmin, isPagador, isOperador, isContador, isLectura, hasRole, hasAnyRole, canWrite, canPool, canReports, canConfig, init, login, logout, actualizarUsuario }
 })

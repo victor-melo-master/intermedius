@@ -297,9 +297,95 @@ class UserController extends Controller
             'titular_id'    => $u->titular_id,
             'titular'       => $u->titular ? ['id' => $u->titular->id, 'alias' => $u->titular->alias, 'nombre' => $u->titular->nombre] : null,
             'avatar_path'   => $u->avatar_path,
+            'telefono'      => $u->telefono,
             'last_login_at' => $u->last_login_at,
             'created_at'    => $u->created_at,
         ];
+    }
+
+    /**
+     * Devuelve el perfil del usuario autenticado.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function perfil(Request $request): JsonResponse
+    {
+        return response()->json($this->formatUser($request->user()->load('titular')));
+    }
+
+    /**
+     * Actualiza el perfil del usuario autenticado.
+     * Permite cambiar correo, teléfono, avatar y contraseña.
+     * El rol nunca se modifica desde este endpoint.
+     *
+     * Cambiar el correo o la contraseña exige la contraseña actual.
+     * Un correo nuevo queda sin verificar y se envía el enlace de verificación.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function perfilUpdate(Request $request): JsonResponse
+    {
+        /** @var User $usuario */
+        $usuario = $request->user();
+
+        $validated = $request->validate([
+            'email'    => ['sometimes', 'required', 'email', Rule::unique('users', 'email')->ignore($usuario->id)],
+            'telefono' => ['nullable', 'string', 'max:30'],
+            'avatar'   => ['nullable', 'image', 'mimes:jpeg,png,gif,webp,bmp', 'max:2048'],
+            'password' => ['nullable', 'string', 'confirmed', $this->reglaPassword()],
+        ], $this->mensajesValidacion());
+
+        $cambioEmail = $request->filled('email')
+            && strtolower(trim((string) $request->input('email'))) !== strtolower((string) $usuario->email);
+        $cambiaPassword = $request->filled('password');
+
+        // Cambiar correo o contraseña exige la contraseña actual correcta.
+        if ($cambioEmail || $cambiaPassword) {
+            $passwordActual = (string) $request->input('password_actual', '');
+
+            if (! $passwordActual) {
+                return response()->json([
+                    'message' => 'Debes ingresar tu contraseña actual para cambiar el correo o la contraseña.',
+                    'errors'  => ['password_actual' => ['La contraseña actual es obligatoria.']],
+                ], 422);
+            }
+
+            if (! Hash::check($passwordActual, $usuario->password)) {
+                return response()->json([
+                    'message' => 'La contraseña actual no es correcta.',
+                    'errors'  => ['password_actual' => ['La contraseña actual no es correcta.']],
+                ], 422);
+            }
+        }
+
+        $datos = collect($validated)->except(['password', 'avatar'])->toArray();
+        $datos['telefono'] = $request->filled('telefono') ? $validated['telefono'] : null;
+
+        if ($cambiaPassword) {
+            $datos['password'] = Hash::make($validated['password']);
+        }
+
+        $usuario->update($datos);
+        $this->procesarAvatar($request, $usuario);
+
+        // Un correo nuevo debe volver a verificarse antes del próximo inicio de sesión.
+        if ($cambioEmail) {
+            $usuario->forceFill(['email_verified_at' => null])->save();
+
+            if (Ajuste::activo('envio_emails', true)) {
+                $usuario->notify(new VerifyEmailNotification());
+            }
+        }
+
+        $respuesta = $this->formatUser($usuario->fresh('titular'));
+
+        if ($cambiaPassword) {
+            $this->agregarAdvertenciasPassword($respuesta, $validated['password']);
+        }
+
+        return response()->json($respuesta);
     }
 
     /**
