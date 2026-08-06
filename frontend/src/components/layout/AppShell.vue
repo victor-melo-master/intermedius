@@ -37,14 +37,14 @@
 
     <div class="flex flex-1 w-full">
       <!-- Sidebar desktop -->
-      <aside class="hidden lg:flex flex-col w-56 shrink-0 border-r border-edge bg-navy h-[calc(100vh-3.5rem)] sticky top-14">
+      <aside class="hidden lg:flex flex-col w-56 shrink-0 border-r border-white/10 bg-navy dark:bg-surface-muted h-[calc(100vh-3.5rem)] sticky top-14">
         <div class="px-4 pt-4 pb-2">
           <img :src="logoNegativo" alt="Intermedius" class="h-7 w-auto" />
         </div>
         <nav class="p-3 space-y-1">
           <router-link v-for="item in nav" :key="item.path" :to="item.path"
             class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-base font-medium transition active:scale-[0.98]"
-            :class="$route.path.startsWith(item.path) ? 'bg-gold-soft text-gold' : 'text-slate-400 hover:bg-white/10 hover:text-white'">
+            :class="$route.path.startsWith(item.path) ? 'bg-[rgba(212,175,55,0.14)] text-gold' : 'text-slate-400 hover:bg-white/10 hover:text-white'">
                 <Iconoir :name="item.icon" :class="$route.path.startsWith(item.path) ? 'text-gold' : 'text-slate-400'" />
             {{ item.label }}
           </router-link>
@@ -55,7 +55,7 @@
       <Transition name="drawer">
         <div v-if="drawer" class="fixed inset-0 z-40 lg:hidden" @click="drawer = false">
           <div class="absolute inset-0 bg-black/40"></div>
-          <aside class="absolute left-0 top-0 bottom-0 w-64 bg-navy p-4" @click.stop>
+          <aside class="absolute left-0 top-0 bottom-0 w-64 bg-navy dark:bg-surface-muted p-4" @click.stop>
             <div class="flex items-center justify-between mb-6">
               <img :src="logoNegativo" alt="Intermedius" class="h-7 w-auto" />
               <button @click="drawer = false" class="p-1 hover:bg-white/10 rounded"><Iconoir name="x-mark" class="text-slate-400" /></button>
@@ -63,7 +63,7 @@
             <nav class="space-y-1">
               <router-link v-for="item in nav" :key="item.path" :to="item.path" @click="drawer = false"
                 class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-base font-medium transition active:scale-[0.98]"
-                :class="$route.path.startsWith(item.path) ? 'bg-gold-soft text-gold' : 'text-slate-400 hover:bg-white/10 hover:text-white'">
+                :class="$route.path.startsWith(item.path) ? 'bg-[rgba(212,175,55,0.14)] text-gold' : 'text-slate-400 hover:bg-white/10 hover:text-white'">
             <Iconoir :name="item.icon" :class="$route.path.startsWith(item.path) ? 'text-gold' : 'text-slate-400'" />
                 {{ item.label }}
               </router-link>

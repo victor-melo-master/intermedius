@@ -56,8 +56,9 @@
         class="bg-surface border border-edge rounded-xl p-4 flex items-center gap-3 cursor-pointer hover:border-gold hover:shadow-sm transition"
         :class="{ 'opacity-60': !u.activo }" @click="openDetalle(u)">
         <div class="shrink-0">
-          <img v-if="avatarUrl(u)" :src="avatarUrl(u)" alt="Avatar de {{ u.name }}"
-            class="w-10 h-10 rounded-full object-cover border border-edge" />
+          <img v-if="avatarUrl(u)" :src="avatarUrl(u)" :alt="`Avatar de ${u.name}`"
+            class="w-10 h-10 rounded-full object-cover border border-edge cursor-pointer"
+            title="Ampliar foto" @click.stop="zoomAvatar(avatarUrl(u))" />
           <div v-else class="w-10 h-10 rounded-full bg-gold-soft flex items-center justify-center text-gold-dark font-bold text-sm">
             {{ u.name?.charAt(0).toUpperCase() }}
           </div>
@@ -102,7 +103,8 @@
         <div class="flex items-center gap-4">
           <div class="relative shrink-0">
             <div v-if="avatarPreview || avatarUrl(usuarioEnEdicion)"
-              class="w-16 h-16 rounded-full overflow-hidden border border-edge">
+              class="w-16 h-16 rounded-full overflow-hidden border border-edge cursor-pointer"
+              title="Ampliar foto" @click="zoomAvatar(avatarPreview || avatarUrl(usuarioEnEdicion))">
               <img v-if="avatarPreview" :src="avatarPreview" alt="Vista previa del avatar"
                 class="w-full h-full object-cover" />
               <img v-else :src="avatarUrl(usuarioEnEdicion)" alt="Avatar del usuario"
@@ -264,8 +266,9 @@
     <AppFormModal :model-value="mostrarDetalle" title="Detalle del usuario" @close="mostrarDetalle = false">
       <template #header>
         <div class="flex items-center gap-3">
-          <img v-if="avatarUrl(usuarioDetalle)" :src="avatarUrl(usuarioDetalle)" alt="Avatar de {{ usuarioDetalle?.name }}"
-            class="w-10 h-10 rounded-full object-cover border border-edge" />
+          <img v-if="avatarUrl(usuarioDetalle)" :src="avatarUrl(usuarioDetalle)" :alt="`Avatar de ${usuarioDetalle?.name}`"
+            class="w-10 h-10 rounded-full object-cover border border-edge cursor-pointer"
+            title="Ampliar foto" @click.stop="zoomAvatar(avatarUrl(usuarioDetalle))" />
           <div v-else class="w-10 h-10 rounded-full bg-gold-soft flex items-center justify-center text-gold-dark font-bold">
             {{ usuarioDetalle?.name?.charAt(0).toUpperCase() }}
           </div>
@@ -365,6 +368,17 @@
         </div>
       </template>
     </AppFormModal>
+
+    <!-- Lightbox: foto de perfil ampliada -->
+    <div v-if="avatarZoom" class="fixed inset-0 z-[80] bg-black/70 flex items-center justify-center p-4"
+      @click.self="avatarZoom = null">
+      <button type="button" @click="avatarZoom = null" aria-label="Cerrar"
+        class="absolute top-4 right-4 p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition">
+        <Iconoir name="x-mark" class="w-6 h-6" />
+      </button>
+      <img :src="avatarZoom" alt="Foto de perfil ampliada"
+        class="max-h-[80vh] max-w-full rounded-2xl border border-white/20 shadow-2xl object-contain" />
+    </div>
   </div>
 </template>
 
@@ -693,6 +707,16 @@ const sesiones = ref([])
 const sesionesLoading = ref(false)
 /** Error al cargar sesiones */
 const sesionesError = ref('')
+/** URL de la foto de perfil ampliada en el lightbox (null = cerrado) */
+const avatarZoom = ref(null)
+
+/**
+ * Abre el lightbox con la foto de perfil ampliada.
+ * @param {string|null} url - URL del avatar a ampliar
+ */
+function zoomAvatar(url) {
+  if (url) avatarZoom.value = url
+}
 
 /**
  * Abre el modal con el detalle del usuario y su historial de sesiones.
