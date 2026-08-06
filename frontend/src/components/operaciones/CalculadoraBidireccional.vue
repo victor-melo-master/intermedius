@@ -71,7 +71,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import Iconoir from '../common/Iconoir.vue'
 
 const props = defineProps({
@@ -90,6 +90,16 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:monto', 'update:bolivares', 'update:tasa'])
+
+// Orden de edición: índice 0 = más reciente. Los dos primeros son los
+// campos "conocidos"; el último (índice 2) es el que se recalcula.
+const editOrder = ref(['monto', 'tasa', 'bolivares'])
+
+function marcarEditado(campo) {
+  const idx = editOrder.value.indexOf(campo)
+  if (idx !== -1) editOrder.value.splice(idx, 1)
+  editOrder.value.unshift(campo)
+}
 
 const fuenteLabel = computed(() => {
   const map = { USD: 'BCV', EUR: 'BCV', USDT: 'Binance', COP: 'BCV' }
@@ -139,53 +149,47 @@ function limpiarTasa() {
   emit('update:bolivares', '')
 }
 
-function calcularDesdeMonto(rawMonto) {
-  const m = parse(rawMonto)
-  const t = parse(props.tasa)
-  if (m > 0 && t > 0) {
-    emit('update:bolivares', round2(m * t))
+/**
+ * Handler único: emite el campo editado, lo marca como el más reciente
+ * y recalcula el tercer campo a partir de los dos más recientemente
+ * tocados (sin pisar el que el usuario acaba de escribir).
+ */
+function handleInput(campo, rawValue) {
+  emit(`update:${campo}`, rawValue)
+  marcarEditado(campo)
+
+  const valores = {
+    monto: campo === 'monto' ? parse(rawValue) : parse(props.monto),
+    tasa: campo === 'tasa' ? parse(rawValue) : parse(props.tasa),
+    bolivares: campo === 'bolivares' ? parse(rawValue) : parse(props.bolivares),
   }
-}
 
-function calcularDesdeTasa(rawTasa) {
-  const t = parse(rawTasa)
-  const m = parse(props.monto)
-  const b = parse(props.bolivares)
-  if (m > 0 && t > 0) {
-    emit('update:bolivares', round2(m * t))
-  } else if (b > 0 && t > 0) {
-    emit('update:monto', round2(b / t))
-  }
-}
+  const target = editOrder.value[2]
 
-function calcularDesdeBolivares(rawBolivares) {
-  const b = parse(rawBolivares)
-  const m = parse(props.monto)
-  const t = parse(props.tasa)
-
-  emit('update:bolivares', rawBolivares)
-
-  if (b > 0 && m > 0) {
-    emit('update:tasa', round2(b / m))
-  } else if (b > 0 && t > 0) {
-    emit('update:monto', round2(b / t))
+  if (target === 'bolivares') {
+    if (valores.monto > 0 && valores.tasa > 0) {
+      emit('update:bolivares', round2(valores.monto * valores.tasa))
+    }
+  } else if (target === 'tasa') {
+    if (valores.monto > 0 && valores.bolivares > 0) {
+      emit('update:tasa', round2(valores.bolivares / valores.monto))
+    }
+  } else if (target === 'monto') {
+    if (valores.tasa > 0 && valores.bolivares > 0) {
+      emit('update:monto', round2(valores.bolivares / valores.tasa))
+    }
   }
 }
 
 function onMontoInput(e) {
-  const val = String(e.target.value).replace(/,/g, '')
-  emit('update:monto', val)
-  calcularDesdeMonto(val)
+  handleInput('monto', String(e.target.value).replace(/,/g, ''))
 }
 
 function onTasaInput(e) {
-  const val = String(e.target.value).replace(/,/g, '')
-  emit('update:tasa', val)
-  calcularDesdeTasa(val)
+  handleInput('tasa', String(e.target.value).replace(/,/g, ''))
 }
 
 function onBolivaresInput(e) {
-  const val = String(e.target.value).replace(/,/g, '')
-  calcularDesdeBolivares(val)
+  handleInput('bolivares', String(e.target.value).replace(/,/g, ''))
 }
 </script>
