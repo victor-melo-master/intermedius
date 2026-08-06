@@ -71,22 +71,25 @@
               </div>
 
               <div v-if="restanteDivisa > 0 || movDivisaEditandoIdx !== null" class="space-y-3 pt-3 border-t border-edge">
-                <div class="grid grid-cols-2 gap-3">
-                  <select v-model="txDivisa.metodo_pago" required
-                    class="px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white dark:bg-surface-muted focus:ring-2 focus:ring-gold outline-none">
-                    <option value="">Método</option>
-                    <option value="efectivo">Efectivo</option>
-                    <option value="transferencia">Transferencia</option>
-                    <option value="zelle">Zelle</option>
-                    <option value="binance">Binance</option>
-                    <option value="otro">Otro</option>
-                  </select>
-                  <div class="relative">
-                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted text-sm">{{ moneda }}</span>
-                    <input :value="fmt(txDivisa.monto)" @input="onMontoDivisaInput($event)"
-                      type="text" inputmode="decimal" :placeholder="fmt(restanteDivisa)"
-                      class="w-full pl-10 pr-3 py-2 border rounded-lg text-sm focus:ring-2 outline-none"
-                      :class="parseFloat(txDivisa.monto) > restanteDivisa + 0.01 ? 'border-danger-edge focus:ring-danger' : 'border-edge-strong focus:ring-gold'" />
+                <div class="space-y-1.5">
+                  <label class="block text-xs font-semibold text-ink-muted uppercase tracking-wide">Monto a recibir (restante: {{ fmt(restanteDivisa) }} {{ moneda }})</label>
+                  <div class="grid grid-cols-2 gap-3">
+                    <select v-model="txDivisa.metodo_pago" required
+                      class="px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white dark:bg-surface-muted focus:ring-2 focus:ring-gold outline-none">
+                      <option value="">Método</option>
+                      <option value="efectivo">Efectivo</option>
+                      <option value="transferencia">Transferencia</option>
+                      <option value="zelle">Zelle</option>
+                      <option value="binance">Binance</option>
+                      <option value="otro">Otro</option>
+                    </select>
+                    <div class="relative">
+                      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted text-sm">{{ moneda }}</span>
+                      <input :value="fmt(txDivisa.monto)" @input="onMontoDivisaInput($event)"
+                        type="text" inputmode="decimal" :placeholder="fmt(restanteDivisa)"
+                        class="w-full pl-10 pr-3 py-2 border rounded-lg text-sm focus:ring-2 outline-none"
+                        :class="parseFloat(txDivisa.monto) > restanteDivisa + 0.01 ? 'border-danger-edge focus:ring-danger' : 'border-edge-strong focus:ring-gold'" />
+                    </div>
                   </div>
                 </div>
                 <p v-if="parseFloat(txDivisa.monto) > restanteDivisa + 0.01" class="text-xs text-danger">
@@ -568,9 +571,8 @@ watch(moneda, () => {
 })
 
 watch(restanteDivisa, (val) => {
-  if (val > 0 && movDivisaEditandoIdx.value === null && !txDivisa.monto) {
-    txDivisa.monto = val
-  }
+  if (movDivisaEditandoIdx.value !== null) return
+  txDivisa.monto = val > 0 ? val : ''
 }, { immediate: true })
 
 onMounted(async () => {
