@@ -154,6 +154,10 @@ pendiente ──[tomar]──→ asignada ──[pagar]──→ pagada
                               └──[soltar]──→ pendiente
 ```
 
+> `completada` es el estado terminal de las operaciones cerradas (flujo
+> multi-paso) y de las ventas directas: quedan fuera del pool.
+
+
 ---
 
 ## 7. API ENDPOINTS (prefix `/api/v1`)

@@ -386,7 +386,7 @@ CREATE TABLE IF NOT EXISTS `operaciones` (
   `estatus` enum('verificado','en_revision','sin_verificar','en_verificacion') NOT NULL DEFAULT 'sin_verificar',
   `monto_solicitado` decimal(20,2) DEFAULT NULL,
   `estado` varchar(50) NOT NULL DEFAULT 'en_espera',
-  `estado_pool` enum('pendiente','asignada','pagada','cancelada') NOT NULL DEFAULT 'pendiente',
+  `estado_pool` enum('pendiente','asignada','pagada','cancelada','completada') NOT NULL DEFAULT 'pendiente',
   `pagador_id` bigint(20) unsigned DEFAULT NULL,
   `asignada_at` timestamp NULL DEFAULT NULL,
   `pagada_at` timestamp NULL DEFAULT NULL,
