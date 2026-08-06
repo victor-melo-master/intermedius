@@ -109,7 +109,7 @@ const baseNav = [
   { path: '/operaciones', label: 'Operaciones', icon: 'document-text' },
 
   { path: '/clientes', label: 'Clientes', icon: 'users' },
-  { path: '/cuentas', label: 'Cuentas', icon: 'building-library' },
+  { path: '/cuentas', label: 'Cuentas', icon: 'credit-card' },
   { path: '/bancos', label: 'Bancos', icon: 'building-library' },
 ]
 
@@ -136,11 +136,11 @@ const nav = computed(() => {
 
   if (auth.canReports) {
     items.push({ path: '/reportes', label: 'Reportes', icon: 'arrow-trending-down' })
-    items.push({ path: '/comisiones', label: 'Comisiones', icon: 'currency-dollar' })
+    items.push({ path: '/comisiones', label: 'Comisiones', icon: 'receipt-percent' })
   }
 
   if (auth.canConfig) {
-    items.push({ path: '/tasas', label: 'Tasas', icon: 'currency-dollar' })
+    items.push({ path: '/tasas', label: 'Tasas', icon: 'arrow-trending-up' })
     items.push({ path: '/usuarios', label: 'Usuarios', icon: 'key' })
   }
 
