@@ -70,82 +70,99 @@
     <!-- Modal detalle del cliente -->
     <div v-if="showDetail" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center" @click.self="showDetail = false">
       <div class="absolute inset-0 bg-black/40"></div>
-      <div class="bg-surface rounded-t-2xl sm:rounded-2xl w-full max-w-md p-6 relative z-10 max-h-[90vh] overflow-y-auto flex flex-col">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="font-bold text-lg">{{ detailCliente?.nombre }}</h3>
-          <div class="flex gap-2">
+      <div class="bg-surface rounded-t-2xl sm:rounded-2xl w-full max-w-2xl p-6 relative z-10 max-h-[90vh] overflow-y-auto flex flex-col">
+        <div class="flex items-start justify-between gap-3 mb-5">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="relative shrink-0">
+              <div class="w-12 h-12 rounded-full bg-gold-soft flex items-center justify-center text-gold-dark font-bold text-lg overflow-hidden border-2 border-edge-strong">
+                <img v-if="clienteAvatarUrl" :src="clienteAvatarUrl" alt="" class="w-full h-full object-cover" />
+                <template v-else>{{ (detailCliente?.nombre || '?').charAt(0).toUpperCase() }}</template>
+              </div>
+              <label v-if="auth.canWrite && !detailCliente?.deleted_at" class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-gold text-navy flex items-center justify-center cursor-pointer hover:bg-gold-dark shadow transition" title="Cambiar foto">
+                <Iconoir name="camera" class="w-3 h-3" />
+                <input type="file" accept="image/jpeg,image/png,image/gif,image/webp,image/bmp" class="hidden" @change="onClienteAvatarSelected" :disabled="subiendoAvatar" />
+              </label>
+            </div>
+            <div class="min-w-0">
+              <h3 class="font-bold text-lg truncate">{{ detailCliente?.nombre }}</h3>
+              <p class="text-sm text-ink-muted truncate">{{ (detailCliente?.alias || detailCliente?.telefono || 'Cliente') }}</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <span v-if="!detailCliente?.deleted_at" class="text-sm font-semibold px-2.5 py-1 rounded-lg bg-surface-soft border border-edge-strong" :class="clienteSaldo >= 0 ? 'text-success' : 'text-danger'">${{ formatMoney(detailCliente?.saldo_cache_usd) }}</span>
             <button v-if="detailCliente?.deleted_at && (auth.canConfig)" @click="restaurarCliente(detailCliente)" class="text-xs bg-success hover:bg-success-strong text-white dark:text-navy px-2 py-1 rounded-lg inline-flex items-center gap-1"><Iconoir name="arrow-uturn-left" class="w-3 h-3" /> Recuperar</button>
             <button @click="showDetail = false" class="text-ink-muted hover:text-ink-muted"><Iconoir name="x-mark" class="w-5 h-5" /></button>
           </div>
         </div>
 
-        <div class="flex flex-col items-center mb-6">
-          <div class="relative">
-            <div class="w-20 h-20 rounded-full bg-gold-soft flex items-center justify-center text-gold-dark font-bold text-2xl overflow-hidden border-2 border-edge-strong">
-              <img v-if="clienteAvatarUrl" :src="clienteAvatarUrl" alt="" class="w-full h-full object-cover" />
-              <template v-else>{{ (detailCliente?.nombre || '?').charAt(0).toUpperCase() }}</template>
-            </div>
-            <label v-if="auth.canWrite && !detailCliente?.deleted_at" class="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-gold text-navy flex items-center justify-center cursor-pointer hover:bg-gold-dark shadow transition" title="Cambiar foto">
-              <Iconoir name="camera" class="w-4 h-4" />
-              <input type="file" accept="image/jpeg,image/png,image/gif,image/webp,image/bmp" class="hidden" @change="onClienteAvatarSelected" :disabled="subiendoAvatar" />
-            </label>
+        <p v-if="subiendoAvatar" class="mb-2 text-xs text-ink-muted">Subiendo foto...</p>
+        <p v-if="avatarError" class="mb-2 text-xs text-danger">{{ avatarError }}</p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
+          <div class="bg-surface-soft border border-edge rounded-lg p-3">
+            <p class="text-xs text-ink-muted mb-0.5">Alias</p>
+            <p class="text-sm font-medium text-ink truncate">{{ detailCliente?.alias || '—' }}</p>
           </div>
-          <button v-if="auth.canWrite && detailCliente?.avatar_path && !detailCliente?.deleted_at" @click="quitarAvatar" :disabled="subiendoAvatar" class="mt-2 text-xs text-danger hover:text-danger-strong inline-flex items-center gap-1 disabled:opacity-50">
-            <Iconoir name="trash" class="w-3 h-3" /> Quitar foto
-          </button>
-          <p v-if="subiendoAvatar" class="mt-2 text-xs text-ink-muted">Subiendo foto...</p>
-          <p v-if="avatarError" class="mt-2 text-xs text-danger text-center">{{ avatarError }}</p>
+          <div class="bg-surface-soft border border-edge rounded-lg p-3">
+            <p class="text-xs text-ink-muted mb-0.5">Teléfono</p>
+            <p class="text-sm font-medium text-ink truncate">{{ detailCliente?.telefono || '—' }}</p>
+          </div>
+          <div class="bg-surface-soft border border-edge rounded-lg p-3 sm:col-span-2">
+            <p class="text-xs text-ink-muted mb-0.5">Email</p>
+            <p class="text-sm font-medium text-ink truncate">{{ detailCliente?.email || '—' }}</p>
+          </div>
+          <div v-if="detailCliente?.notas" class="bg-surface-soft border border-edge rounded-lg p-3 sm:col-span-2">
+            <p class="text-xs text-ink-muted mb-0.5">Notas</p>
+            <p class="text-sm font-medium text-ink whitespace-pre-wrap">{{ detailCliente.notas }}</p>
+          </div>
         </div>
 
-        <div class="space-y-3 mb-8">
-          <p v-if="detailCliente?.alias" class="text-sm text-ink-muted"><span class="font-medium text-ink">Alias:</span> {{ detailCliente.alias }}</p>
-          <p v-if="detailCliente?.telefono" class="text-sm text-ink-muted"><span class="font-medium text-ink">Teléfono:</span> {{ detailCliente.telefono }}</p>
-          <p v-if="detailCliente?.email" class="text-sm text-ink-muted"><span class="font-medium text-ink">Email:</span> {{ detailCliente.email }}</p>
-          <p v-if="detailCliente?.notas" class="text-sm text-ink-muted"><span class="font-medium text-ink">Notas:</span> {{ detailCliente.notas }}</p>
-          <p class="text-sm text-ink-muted"><span class="font-medium text-ink">Saldo:</span> <span :class="(detailCliente?.saldo_cache_usd || 0) >= 0 ? 'text-success' : 'text-danger'">${{ formatMoney(detailCliente?.saldo_cache_usd) }}</span></p>
+        <div class="flex flex-wrap items-center gap-2 border-t-2 border-edge-strong pt-4 mb-2">
+          <button v-if="!detailCliente?.deleted_at && (auth.canWrite)" @click="openEdit(detailCliente)" class="text-xs bg-gold text-navy px-2 py-1 rounded-lg hover:bg-gold-dark inline-flex items-center gap-1"><Iconoir name="pencil-square" class="w-3 h-3" /> Editar</button>
+          <button v-if="auth.canWrite && detailCliente?.avatar_path && !detailCliente?.deleted_at" @click="quitarAvatar" :disabled="subiendoAvatar" class="text-xs text-ink-muted hover:text-danger-strong inline-flex items-center gap-1 disabled:opacity-50">
+            <Iconoir name="trash" class="w-3 h-3" /> Quitar foto
+          </button>
           <button v-if="!detailCliente?.deleted_at && (auth.canWrite)" @click="eliminarCliente(detailCliente)" class="text-xs bg-danger text-white dark:text-navy px-2 py-1 rounded-lg hover:bg-danger-strong inline-flex items-center gap-1"><Iconoir name="trash" class="w-3 h-3" /> Eliminar cliente</button>
         </div>
 
         <!-- Cuentas bancarias -->
-        <div class="border-t-2 border-edge-strong pt-6 pb-2">
-          <div class="flex items-center justify-between mb-4">
-            <h4 class="font-semibold text-heading text-base">Cuentas bancarias</h4>
+        <AccordionSection title="Cuentas bancarias" :count="clienteCuentas.length" :default-open="false" :key="'cuentas-' + detailKey">
+          <template #header-actions>
             <button v-if="auth.canWrite" @click="openCuentaForm" class="text-xs bg-gold text-navy px-2 py-1 rounded-lg hover:bg-gold-dark">+ Agregar cuenta</button>
-          </div>
+          </template>
 
           <AppLoadingSpinner v-if="loadingCuentas" />
           <template v-else-if="clienteCuentas.length === 0">
-            <div class="text-center py-16">
-              <Iconoir name="building-library" class="w-12 h-12 mx-auto mb-4 text-ink-muted" />
+            <div class="text-center py-8">
+              <Iconoir name="building-library" class="w-10 h-10 mx-auto mb-3 text-ink-muted" />
               <p class="text-ink-muted">No hay cuentas registradas.</p>
             </div>
           </template>
-          <div v-else class="space-y-3">
+          <div v-else class="space-y-3 pb-4">
             <div v-for="cu in clienteCuentas" :key="cu.id" class="bg-surface-soft border border-edge rounded-lg p-3">
               <p class="font-medium text-sm">{{ cu.alias }}</p>
               <p class="text-sm text-ink-muted">{{ cu.banco?.nombre }} — {{ cu.moneda?.codigo }}</p>
               <p v-if="cu.numero_cuenta" class="text-sm text-ink-muted">{{ cu.numero_cuenta }}</p>
             </div>
           </div>
-        </div>
+        </AccordionSection>
 
         <!-- Documentos -->
-        <div class="border-t-2 border-edge-strong pt-6 pb-2 mt-4">
-          <div class="flex items-center justify-between mb-4">
-            <h4 class="font-semibold text-heading text-base">Documentos</h4>
+        <AccordionSection title="Documentos" :count="documentosCargados ? documentos.length : null" :default-open="false" :key="'documentos-' + detailKey" @toggle-open="onDocumentosToggle">
+          <template #header-actions>
             <label class="text-xs bg-gold text-navy px-2 py-1 rounded-lg hover:bg-gold-dark cursor-pointer">
               + Subir documento
               <input type="file" accept="image/*,.pdf" class="hidden" @change="subirDocumento" />
             </label>
-          </div>
+          </template>
           <AppLoadingSpinner v-if="loadingDocumentos" />
           <template v-else-if="documentos.length === 0">
-            <div class="text-center py-16">
-              <Iconoir name="document-text" class="w-12 h-12 mx-auto mb-4 text-ink-muted" />
+            <div class="text-center py-8">
+              <Iconoir name="document-text" class="w-10 h-10 mx-auto mb-3 text-ink-muted" />
               <p class="text-ink-muted">No hay documentos.</p>
             </div>
           </template>
-          <div v-else class="space-y-3">
+          <div v-else class="space-y-3 pb-4">
             <div v-for="doc in documentos" :key="doc.id" class="bg-surface-soft border border-edge rounded-lg p-3 flex items-center justify-between">
               <div class="flex items-center gap-2 cursor-pointer" @click="abrirDocumento(doc)">
                 <span class="text-lg inline-flex items-center">
@@ -164,19 +181,18 @@
               </div>
             </div>
           </div>
-        </div>
+        </AccordionSection>
 
         <!-- Historial de transacciones -->
-        <div class="border-t-2 border-edge-strong pt-6 pb-2 mt-4">
-          <div class="flex items-center justify-between mb-4">
-            <h4 class="font-semibold text-heading text-base">Historial de transacciones</h4>
+        <AccordionSection title="Historial de transacciones" :default-open="false" :key="'historial-' + detailKey" @toggle-open="onHistorialToggle">
+          <template #header-actions>
             <button @click="exportarPDF" :disabled="exportando" class="text-xs bg-danger text-white dark:text-navy px-2 py-1 rounded-lg hover:bg-danger-strong inline-flex items-center gap-1">
               <Iconoir v-if="!exportando" name="document-text" class="w-4 h-4" />
               {{ exportando ? 'Generando...' : 'PDF' }}
             </button>
-          </div>
+          </template>
 
-          <div class="grid grid-cols-2 gap-2 mb-3">
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
             <div>
               <label class="text-sm text-ink-muted">Desde</label>
               <input v-model="historialFiltros.fecha_desde" type="date" class="w-full px-2 py-1 text-xs border border-edge-strong rounded" />
@@ -185,21 +201,21 @@
               <label class="text-sm text-ink-muted">Hasta</label>
               <input v-model="historialFiltros.fecha_hasta" type="date" class="w-full px-2 py-1 text-xs border border-edge-strong rounded" />
             </div>
-          </div>
-          <div class="mb-3">
-            <label class="text-sm text-ink-muted">Tipo</label>
-            <select v-model="historialFiltros.tipo_codigo" class="w-full px-2 py-1 text-xs border border-edge-strong rounded">
-              <option value="">Todos</option>
-              <option value="compra_usd">Compra USD</option>
-              <option value="venta_usd">Venta USD</option>
-              <option value="intermediada">Intermediada</option>
-            </select>
+            <div class="col-span-2 sm:col-span-1">
+              <label class="text-sm text-ink-muted">Tipo</label>
+              <select v-model="historialFiltros.tipo_codigo" class="w-full px-2 py-1 text-xs border border-edge-strong rounded">
+                <option value="">Todos</option>
+                <option value="compra_usd">Compra USD</option>
+                <option value="venta_usd">Venta USD</option>
+                <option value="intermediada">Intermediada</option>
+              </select>
+            </div>
           </div>
           <button @click="cargarHistorial(1)" :disabled="loadingHistorial" class="w-full text-xs bg-gold text-navy py-1.5 rounded hover:bg-gold-dark mb-3">
             {{ loadingHistorial ? 'Cargando...' : 'Buscar' }}
           </button>
 
-          <div v-if="historial.length > 0" class="overflow-x-auto">
+          <div v-if="historial.length > 0" class="overflow-x-auto pb-4">
             <table class="w-full text-xs">
               <thead>
                 <tr class="text-left text-ink-muted border-b">
@@ -229,7 +245,7 @@
             </div>
           </div>
           <div v-else-if="!loadingHistorial && historialCargado" class="text-sm text-ink-muted py-2">Sin operaciones.</div>
-        </div>
+        </AccordionSection>
       </div>
     </div>
 
@@ -327,7 +343,7 @@
  * Incluye detalle con cuentas bancarias asociadas, historial de transacciones
  * con filtros por fecha/tipo, paginación, exportación a PDF, y gestión de documentos (subir, listar, eliminar, previsualizar).
  */
-import { ref, reactive, computed, watch, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useClientesStore } from '../../stores/clientes.js'
 import { useAuthStore } from '../../stores/auth.js'
 import { useBancosStore } from '../../stores/bancos.js'
@@ -340,6 +356,7 @@ import AppLoadingSpinner from '../../components/common/AppLoadingSpinner.vue'
 import AppErrorState from '../../components/common/AppErrorState.vue'
 import AppEmptyState from '../../components/common/AppEmptyState.vue'
 import AppFormModal from '@/components/common/AppFormModal.vue'
+import AccordionSection from '@/components/common/AccordionSection.vue'
 import Iconoir from '../../components/common/Iconoir.vue'
 
 /** Store de clientes */
@@ -375,10 +392,15 @@ const form = reactive({ nombre: '', alias: '', telefono: '', email: '', notas: '
 const showDetail = ref(false)
 /** Cliente actualmente visible en el detalle */
 const detailCliente = ref(null)
+/** Clave que cambia en cada apertura del detalle para reiniciar los acordeones */
+const detailKey = ref(0)
 /** Cuentas bancarias del cliente mostrado */
 const clienteCuentas = ref([])
 /** Indica carga de cuentas del cliente */
 const loadingCuentas = ref(false)
+
+/** Saldo del cliente en USD (numérico) */
+const clienteSaldo = computed(() => parseFloat(detailCliente.value?.saldo_cache_usd || 0))
 
 // Avatar del cliente
 /** Indica si se está subiendo/quitanendo la foto */
@@ -493,6 +515,7 @@ const historialFiltros = reactive({
 // Documentos
 const documentos = ref([])
 const loadingDocumentos = ref(false)
+const documentosCargados = ref(false)
 const showDocumentoModal = ref(false)
 const documentoPreview = ref(null)
 // Agrega estas dos líneas junto a las otras variables de documentos
@@ -594,7 +617,13 @@ async function submit() {
  * @param {Object} c - Objeto del cliente
  */
 async function openDetail(c) {
+  detailKey.value += 1
   detailCliente.value = c
+  historial.value = []
+  historialPaginacion.value = {}
+  historialCargado.value = false
+  documentos.value = []
+  documentosCargados.value = false
   showDetail.value = true
   loadingCuentas.value = true
   try {
@@ -605,6 +634,16 @@ async function openDetail(c) {
   } finally {
     loadingCuentas.value = false
   }
+}
+
+/** Carga los documentos la primera vez que se expande la sección. */
+function onDocumentosToggle(open) {
+  if (open && !documentosCargados.value) cargarDocumentos()
+}
+
+/** Carga el historial la primera vez que se expande la sección. */
+function onHistorialToggle(open) {
+  if (open && !historialCargado.value) cargarHistorial()
 }
 
 /** Abre el formulario para agregar una cuenta al cliente actual */
@@ -761,8 +800,10 @@ async function cargarDocumentos() {
   try {
     const { data } = await api.get(`/clientes/${detailCliente.value.id}/documentos`)
     documentos.value = Array.isArray(data) ? data : (data.data || [])
+    documentosCargados.value = true
   } catch {
     documentos.value = []
+    documentosCargados.value = true
   } finally {
     loadingDocumentos.value = false
   }
@@ -807,14 +848,6 @@ async function eliminarDocumento(doc) {
 function esImagen(doc) {
   return doc?.mime_type?.startsWith('image/')
 }
-
-/** Cuando se abre el detalle, carga automáticamente el historial y los documentos */
-watch(showDetail, (val) => {
-  if (val && detailCliente.value) {
-    cargarDocumentos()
-    cargarHistorial()
-  }
-})
 
 /**
  * Elimina (soft-delete) un cliente.

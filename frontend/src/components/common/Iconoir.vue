@@ -49,6 +49,7 @@ import HeroiconsClock from '~icons/heroicons/clock'
 import HeroiconsSun from '~icons/heroicons/sun'
 import HeroiconsMoon from '~icons/heroicons/moon'
 import HeroiconsCamera from '~icons/heroicons/camera'
+import HeroiconsChevronDown from '~icons/heroicons/chevron-down'
 
 const map = {
   'chart-bar': HeroiconsChartBar,
@@ -97,6 +98,7 @@ const map = {
   'sun': HeroiconsSun,
   'moon': HeroiconsMoon,
   'camera': HeroiconsCamera,
+  'chevron-down': HeroiconsChevronDown,
 }
 
 const props = defineProps({
