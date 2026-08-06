@@ -3,34 +3,34 @@
     <button
       v-if="operacion.estado === 'en_espera'"
       @click="$emit('tomar')"
-      class="px-3 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded"
+      class="px-3 py-1 text-xs bg-gold hover:bg-gold-dark text-navy rounded"
     >
       Tomar
     </button>
     <button
       v-if="operacion.estado === 'en_proceso' && puedeSoltar"
       @click="handleSoltar"
-      class="px-3 py-1 text-xs bg-yellow-600 hover:bg-yellow-700 text-white rounded"
+      class="px-3 py-1 text-xs bg-warning hover:bg-warning-strong text-white dark:text-navy rounded"
     >
       Soltar
     </button>
     <button
       v-if="operacion.estado === 'en_proceso' && puedePagar"
       @click="handlePagar"
-      class="px-3 py-1 text-xs bg-green-600 hover:bg-green-700 text-white rounded"
+      class="px-3 py-1 text-xs bg-success hover:bg-success-strong text-white dark:text-navy rounded"
     >
       Pagar
     </button>
     <button
       v-if="puedeCancelar"
       @click="handleCancelar"
-      class="px-3 py-1 text-xs bg-red-600 hover:bg-red-700 text-white rounded"
+      class="px-3 py-1 text-xs bg-danger hover:bg-danger-strong text-white dark:text-navy rounded"
     >
       Cancelar
     </button>
     <router-link
       :to="`/operaciones/${operacion.id}`"
-      class="px-3 py-1 text-xs bg-gray-200 hover:bg-gray-300 rounded"
+      class="px-3 py-1 text-xs bg-surface-muted hover:bg-surface-muted rounded"
     >
       Ver
     </router-link>

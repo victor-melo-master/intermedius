@@ -6,34 +6,34 @@
     <AppErrorState v-else-if="bancos.error" :message="bancos.error" @retry="bancos.fetchAll()" />
     <template v-else-if="bancos.list.length === 0">
       <div class="text-center py-16">
-        <Iconoir name="building-library" class="w-12 h-12 mx-auto mb-4 text-gray-300" />
-        <p class="text-gray-500">No hay bancos registrados</p>
+        <Iconoir name="building-library" class="w-12 h-12 mx-auto mb-4 text-ink-faint" />
+        <p class="text-ink-soft">No hay bancos registrados</p>
       </div>
     </template>
 
     <div v-else class="space-y-2">
-      <div v-for="b in bancos.list" :key="b.id" class="bg-white border border-gray-200 rounded-xl p-4 flex items-center gap-3">
-        <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-700 font-bold text-sm">
+      <div v-for="b in bancos.list" :key="b.id" class="bg-white border border-edge rounded-xl p-4 flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-gold-soft flex items-center justify-center text-gold-dark font-bold text-sm">
           {{ b.codigo?.charAt(0) || b.nombre?.charAt(0) || 'B' }}
         </div>
         <div class="flex-1 min-w-0">
           <p class="font-semibold text-sm truncate">{{ b.nombre }}</p>
-          <p class="text-xs text-gray-500">{{ b.codigo }}</p>
-          <p v-if="b.pais" class="text-xs text-gray-400">País: {{ b.pais }}</p>
+          <p class="text-xs text-ink-soft">{{ b.codigo }}</p>
+          <p v-if="b.pais" class="text-xs text-ink-faint">País: {{ b.pais }}</p>
         </div>
         <div class="text-right">
-          <span v-if="b.activo" class="text-[10px] bg-green-50 text-green-600 px-2 py-0.5 rounded-full">Activo</span>
-          <span v-else class="text-[10px] bg-red-50 text-red-600 px-2 py-0.5 rounded-full">Inactivo</span>
+          <span v-if="b.activo" class="text-[10px] bg-success-soft text-success px-2 py-0.5 rounded-full">Activo</span>
+          <span v-else class="text-[10px] bg-danger-soft text-danger px-2 py-0.5 rounded-full">Inactivo</span>
         </div>
-        <button v-if="auth.canWrite" @click="editBanco(b)" class="text-xs text-blue-600 hover:text-blue-800 font-medium px-2 py-1 border border-blue-200 rounded-lg hover:bg-blue-50">Editar</button>
+        <button v-if="auth.canWrite" @click="editBanco(b)" class="text-xs text-gold-dark hover:text-gold-dark font-medium px-2 py-1 border border-gold/40 rounded-lg hover:bg-gold-soft">Editar</button>
       </div>
     </div>
 
     <AppFormModal v-model="showForm" :title="editing ? 'Editar banco' : 'Nuevo banco'" @close="closeForm">
       <form @submit.prevent="submit" class="space-y-3">
-        <input v-model="form.nombre" required placeholder="Nombre del banco * (ej: Banesco)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-        <input v-model="form.codigo" required placeholder="Código * (ej: BANESCO)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-        <select v-model="form.pais" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+        <input v-model="form.nombre" required placeholder="Nombre del banco * (ej: Banesco)" class="w-full px-3 py-2 border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none" />
+        <input v-model="form.codigo" required placeholder="Código * (ej: BANESCO)" class="w-full px-3 py-2 border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none" />
+        <select v-model="form.pais" class="w-full px-3 py-2 border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none">
           <option value="VE">Venezuela</option>
           <option value="US">Estados Unidos</option>
           <option value="PA">Panamá</option>
@@ -63,14 +63,14 @@
           <option value="CN">China</option>
           <option value="JP">Japón</option>
         </select>
-        <label class="flex items-center gap-2 text-sm text-gray-600">
-          <input v-model="form.activo" type="checkbox" class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+        <label class="flex items-center gap-2 text-sm text-ink-muted">
+          <input v-model="form.activo" type="checkbox" class="w-4 h-4 rounded border-edge-strong text-gold-dark focus:ring-gold" />
           Activo
         </label>
         <AppErrorState v-if="formError" :message="formError" :retry="false" />
       </form>
       <template #footer>
-        <button @click="submit" :disabled="saving" class="w-full bg-blue-600 text-white font-semibold py-2.5 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition flex items-center justify-center gap-2">
+        <button @click="submit" :disabled="saving" class="w-full bg-gold text-navy font-semibold py-2.5 rounded-lg hover:bg-gold-dark disabled:opacity-50 transition flex items-center justify-center gap-2">
           <span v-if="saving" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
           {{ saving ? 'Guardando...' : (editing ? 'Guardar cambios' : 'Crear banco') }}
         </button>

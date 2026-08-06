@@ -1,32 +1,32 @@
 <template>
   <div class="max-w-2xl mx-auto space-y-4">
     <div class="flex items-center justify-between gap-3">
-      <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
-        <Iconoir name="banknotes" class="w-6 h-6 text-green-500" /> Pool de pagos
+      <h2 class="text-xl font-bold text-heading flex items-center gap-2">
+        <Iconoir name="banknotes" class="w-6 h-6 text-success" /> Pool de pagos
       </h2>
       <button v-if="tab === 'pool'" @click="refrescarPool" :disabled="store.loadingPool"
-        class="px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm hover:bg-gray-50 flex items-center gap-1 active:scale-95 transition">
+        class="px-3 py-2 bg-white border border-edge-strong rounded-lg text-sm hover:bg-surface-soft flex items-center gap-1 active:scale-95 transition">
         <Iconoir name="arrow-path" class="w-4 h-4" :class="store.loadingPool ? 'animate-spin' : ''" /> Refrescar
       </button>
     </div>
 
     <!-- Tabs -->
-    <div class="flex bg-gray-100 rounded-xl p-1">
+    <div class="flex bg-surface-muted rounded-xl p-1">
       <button @click="tab = 'pool'"
         class="flex-1 py-2.5 text-sm font-semibold rounded-lg transition active:scale-[0.98]"
-        :class="tab === 'pool' ? 'bg-white text-blue-700 shadow' : 'text-gray-500'">
+        :class="tab === 'pool' ? 'bg-white text-gold-dark shadow' : 'text-ink-soft'">
         Pool <span v-if="store.pool.length" class="ml-1 text-xs">({{ store.pool.length }})</span>
       </button>
       <button @click="tab = 'mias'"
         class="flex-1 py-2.5 text-sm font-semibold rounded-lg transition active:scale-[0.98]"
-        :class="tab === 'mias' ? 'bg-white text-blue-700 shadow' : 'text-gray-500'">
+        :class="tab === 'mias' ? 'bg-white text-gold-dark shadow' : 'text-ink-soft'">
         Mis órdenes <span v-if="store.misOrdenes.length" class="ml-1 text-xs">({{ store.misOrdenes.length }})</span>
       </button>
     </div>
 
     <!-- Toast -->
     <transition name="fade">
-      <div v-if="toast.msg" :class="toast.error ? 'bg-red-50 text-red-700 border-red-200' : 'bg-green-50 text-green-700 border-green-200'"
+      <div v-if="toast.msg" :class="toast.error ? 'bg-danger-soft text-danger-strong border-danger-edge' : 'bg-success-soft text-success-strong border-success-edge'"
         class="border rounded-xl px-4 py-3 text-sm font-medium">
         {{ toast.msg }}
       </div>
@@ -35,44 +35,44 @@
     <!-- ═══════════ PESTAÑA POOL ═══════════ -->
     <div v-if="tab === 'pool'">
       <div v-if="store.loadingPool && !store.pool.length" class="text-center py-12">
-        <div class="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+        <div class="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin mx-auto"></div>
       </div>
       <div v-else-if="store.pool.length === 0" class="text-center py-16">
-        <Iconoir name="envelope-open" class="w-12 h-12 mx-auto mb-4 text-gray-300" />
-        <p class="text-gray-500">No hay órdenes pendientes</p>
-        <p class="text-sm text-gray-400 mt-1">Las nuevas órdenes aparecerán aquí automáticamente</p>
+        <Iconoir name="envelope-open" class="w-12 h-12 mx-auto mb-4 text-ink-faint" />
+        <p class="text-ink-soft">No hay órdenes pendientes</p>
+        <p class="text-sm text-ink-faint mt-1">Las nuevas órdenes aparecerán aquí automáticamente</p>
       </div>
       <div v-else class="space-y-3">
         <div v-for="op in store.pool" :key="op.id"
-          class="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+          class="bg-white border border-edge rounded-2xl p-4 shadow-sm">
           <div class="flex items-center justify-between gap-2 mb-3">
             <div class="flex items-center gap-2">
               <span class="text-xs font-bold px-2.5 py-1 rounded-full" :class="tipoBadge(op).class">{{ tipoBadge(op).label }}</span>
               <span v-if="op.estado && op.estado !== 'en_espera'" class="text-[10px] font-medium px-2 py-0.5 rounded-full" :class="estadoBadgePool(op).clase">{{ estadoBadgePool(op).label }}</span>
             </div>
-            <span class="text-xs text-gray-400">{{ formatHora(op.created_at) }}</span>
+            <span class="text-xs text-ink-faint">{{ formatHora(op.created_at) }}</span>
           </div>
 
-          <p v-if="op.cliente?.nombre" class="text-sm text-gray-500 mb-2">
-            Cliente: <span class="font-medium text-gray-700">{{ op.cliente.nombre }}</span>
+          <p v-if="op.cliente?.nombre" class="text-sm text-ink-soft mb-2">
+            Cliente: <span class="font-medium text-ink">{{ op.cliente.nombre }}</span>
           </p>
 
           <!-- Monto destacado -->
-          <div class="bg-blue-50 rounded-xl px-4 py-3 mb-3">
-            <p class="text-xs text-blue-600 font-medium">Monto a pagar</p>
-            <p class="text-2xl font-bold text-blue-800">{{ formatMoney(monto(op)) }} {{ monedaLabel(op) }}</p>
+          <div class="bg-gold-soft rounded-xl px-4 py-3 mb-3">
+            <p class="text-xs text-gold-dark font-medium">Monto a pagar</p>
+            <p class="text-2xl font-bold text-gold-dark">{{ formatMoney(monto(op)) }} {{ monedaLabel(op) }}</p>
           </div>
 
           <!-- Cuenta destino -->
           <div class="space-y-1 text-sm mb-4">
-            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide">Cuenta destino</p>
-            <p class="text-gray-700"><span class="text-gray-400">Banco:</span> {{ banco(op) || '—' }}</p>
-            <p class="text-gray-700"><span class="text-gray-400">Cuenta:</span> {{ numeroCuenta(op) || '—' }}</p>
-            <p class="text-gray-700"><span class="text-gray-400">Titular:</span> {{ titular(op) || '—' }}</p>
+            <p class="text-xs font-semibold text-ink-faint uppercase tracking-wide">Cuenta destino</p>
+            <p class="text-ink"><span class="text-ink-faint">Banco:</span> {{ banco(op) || '—' }}</p>
+            <p class="text-ink"><span class="text-ink-faint">Cuenta:</span> {{ numeroCuenta(op) || '—' }}</p>
+            <p class="text-ink"><span class="text-ink-faint">Titular:</span> {{ titular(op) || '—' }}</p>
           </div>
 
           <button @click="tomar(op)" :disabled="acting === op.id"
-            class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-semibold py-3 rounded-xl transition active:scale-[0.98] flex items-center justify-center gap-2">
+            class="w-full bg-gold hover:bg-gold-dark disabled:opacity-50 text-navy font-semibold py-3 rounded-xl transition active:scale-[0.98] flex items-center justify-center gap-2">
             <span v-if="acting === op.id" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
             {{ acting === op.id ? 'Tomando...' : 'Tomar orden' }}
           </button>
@@ -83,41 +83,41 @@
     <!-- ═══════════ PESTAÑA MIS ÓRDENES ═══════════ -->
     <div v-else>
       <div v-if="store.loadingMias && !store.misOrdenes.length" class="text-center py-12">
-        <div class="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+        <div class="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin mx-auto"></div>
       </div>
       <div v-else-if="store.misOrdenes.length === 0" class="text-center py-16">
-        <Iconoir name="queue-list" class="w-12 h-12 mx-auto mb-4 text-gray-300" />
-        <p class="text-gray-500">No tienes órdenes asignadas</p>
-        <p class="text-sm text-gray-400 mt-1">Toma una orden del pool para empezar</p>
+        <Iconoir name="queue-list" class="w-12 h-12 mx-auto mb-4 text-ink-faint" />
+        <p class="text-ink-soft">No tienes órdenes asignadas</p>
+        <p class="text-sm text-ink-faint mt-1">Toma una orden del pool para empezar</p>
       </div>
       <div v-else class="space-y-3">
         <div v-for="op in store.misOrdenes" :key="op.id"
-          class="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+          class="bg-white border border-edge rounded-2xl p-4 shadow-sm">
           <div class="flex items-center justify-between gap-2 mb-3">
             <span class="text-xs font-bold px-2.5 py-1 rounded-full" :class="tipoBadge(op).class">{{ tipoBadge(op).label }}</span>
-            <span class="text-xs text-gray-400">Tomada {{ formatHora(op.asignada_at) }}</span>
+            <span class="text-xs text-ink-faint">Tomada {{ formatHora(op.asignada_at) }}</span>
           </div>
 
-          <p v-if="op.cliente?.nombre" class="text-sm text-gray-500 mb-2">
-            Cliente: <span class="font-medium text-gray-700">{{ op.cliente.nombre }}</span>
+          <p v-if="op.cliente?.nombre" class="text-sm text-ink-soft mb-2">
+            Cliente: <span class="font-medium text-ink">{{ op.cliente.nombre }}</span>
           </p>
 
-          <div class="bg-blue-50 rounded-xl px-4 py-3 mb-3">
-            <p class="text-xs text-blue-600 font-medium">Monto a pagar</p>
-            <p class="text-2xl font-bold text-blue-800">{{ formatMoney(monto(op)) }} {{ monedaLabel(op) }}</p>
+          <div class="bg-gold-soft rounded-xl px-4 py-3 mb-3">
+            <p class="text-xs text-gold-dark font-medium">Monto a pagar</p>
+            <p class="text-2xl font-bold text-gold-dark">{{ formatMoney(monto(op)) }} {{ monedaLabel(op) }}</p>
           </div>
 
           <div class="space-y-1 text-sm mb-4">
-            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide">Datos de pago</p>
-            <p class="text-gray-700"><span class="text-gray-400">Banco:</span> {{ banco(op) || '—' }}</p>
-            <p class="text-gray-700"><span class="text-gray-400">Cuenta:</span> {{ numeroCuenta(op) || '—' }}</p>
-            <p class="text-gray-700"><span class="text-gray-400">Titular:</span> {{ titular(op) || '—' }}</p>
+            <p class="text-xs font-semibold text-ink-faint uppercase tracking-wide">Datos de pago</p>
+            <p class="text-ink"><span class="text-ink-faint">Banco:</span> {{ banco(op) || '—' }}</p>
+            <p class="text-ink"><span class="text-ink-faint">Cuenta:</span> {{ numeroCuenta(op) || '—' }}</p>
+            <p class="text-ink"><span class="text-ink-faint">Titular:</span> {{ titular(op) || '—' }}</p>
           </div>
 
           <!-- Copiar datos -->
           <button @click="copiar(op)"
             class="w-full mb-2 border-2 font-semibold py-3 rounded-xl transition active:scale-[0.98] flex items-center justify-center gap-2"
-            :class="copiedId === op.id ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'">
+            :class="copiedId === op.id ? 'border-success bg-success-soft text-success-strong' : 'border-edge-strong bg-white text-ink hover:bg-surface-soft'">
             <Iconoir v-if="copiedId === op.id" name="check" class="w-5 h-5" />
             <Iconoir v-else name="clipboard" class="w-5 h-5" />
             {{ copiedId === op.id ? '¡Copiado!' : 'Copiar datos' }}
@@ -125,11 +125,11 @@
 
           <div class="grid grid-cols-2 gap-2">
             <button @click="soltar(op)" :disabled="acting === op.id"
-              class="border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-50 text-gray-700 font-semibold py-3 rounded-xl transition active:scale-[0.98]">
+              class="border border-edge-strong bg-white hover:bg-surface-soft disabled:opacity-50 text-ink font-semibold py-3 rounded-xl transition active:scale-[0.98]">
               Soltar
             </button>
             <button @click="pagar(op)" :disabled="acting === op.id"
-              class="bg-green-600 hover:bg-green-700 disabled:bg-green-300 text-white font-semibold py-3 rounded-xl transition active:scale-[0.98] flex items-center justify-center gap-2">
+              class="bg-success hover:bg-success-strong disabled:opacity-50 text-white dark:text-navy font-semibold py-3 rounded-xl transition active:scale-[0.98] flex items-center justify-center gap-2">
               <span v-if="acting === op.id" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
               {{ acting === op.id ? '...' : 'Pagada' }}
             </button>
@@ -255,11 +255,11 @@ function monedaLabel(op) {
 function tipoBadge(op) {
   const codigo = op.tipo_operacion?.codigo
   const map = {
-    compra_usd: { label: 'Compra', class: 'bg-blue-100 text-blue-700' },
-    venta_usd:  { label: 'Venta', class: 'bg-green-100 text-green-700' },
-    cambio:     { label: 'Cambio', class: 'bg-orange-100 text-orange-700' },
+    compra_usd: { label: 'Compra', class: 'bg-info-soft text-info-strong' },
+    venta_usd:  { label: 'Venta', class: 'bg-success-soft text-success-strong' },
+    cambio:     { label: 'Cambio', class: 'bg-warning-soft text-warning-strong' },
   }
-  return map[codigo] || { label: op.tipo_operacion?.nombre || 'Operación', class: 'bg-gray-100 text-gray-600' }
+  return map[codigo] || { label: op.tipo_operacion?.nombre || 'Operación', class: 'bg-surface-muted text-ink-muted' }
 }
 
 /**
@@ -269,12 +269,12 @@ function tipoBadge(op) {
  */
 function estadoBadgePool(op) {
   const map = {
-    solicitud:   { label: 'Solicitud',   clase: 'bg-yellow-100 text-yellow-700' },
-    en_progreso: { label: 'En Progreso', clase: 'bg-blue-100 text-blue-700' },
-    cerrada:     { label: 'Cerrada',     clase: 'bg-green-100 text-green-700' },
-    cancelada:   { label: 'Cancelada',   clase: 'bg-red-100 text-red-700' },
+    solicitud:   { label: 'Solicitud',   clase: 'bg-warning-soft text-warning-strong' },
+    en_progreso: { label: 'En Progreso', clase: 'bg-info-soft text-info-strong' },
+    cerrada:     { label: 'Cerrada',     clase: 'bg-success-soft text-success-strong' },
+    cancelada:   { label: 'Cancelada',   clase: 'bg-danger-soft text-danger-strong' },
   }
-  return map[op.estado] || { label: op.estado, clase: 'bg-gray-100 text-gray-600' }
+  return map[op.estado] || { label: op.estado, clase: 'bg-surface-muted text-ink-muted' }
 }
 
 /**

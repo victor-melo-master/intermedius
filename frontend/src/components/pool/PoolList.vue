@@ -1,26 +1,26 @@
 <template>
   <div class="bg-white rounded-lg shadow overflow-hidden">
-    <table class="min-w-full divide-y divide-gray-200">
-      <thead class="bg-gray-50">
+    <table class="min-w-full divide-y divide-edge">
+      <thead class="bg-surface-soft">
         <tr>
-          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">#</th>
-          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cliente</th>
-          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Monto</th>
-          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estado</th>
-          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tiempo en espera</th>
-          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Transacciones</th>
-          <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Acciones</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-ink-soft uppercase">#</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-ink-soft uppercase">Cliente</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-ink-soft uppercase">Monto</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-ink-soft uppercase">Estado</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-ink-soft uppercase">Tiempo en espera</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-ink-soft uppercase">Transacciones</th>
+          <th class="px-4 py-3 text-left text-xs font-medium text-ink-soft uppercase">Acciones</th>
         </tr>
       </thead>
-      <tbody class="divide-y divide-gray-200">
+      <tbody class="divide-y divide-edge">
         <tr
           v-for="op in operaciones"
           :key="op.id"
           :class="{
-            'bg-yellow-50': op.estado === 'en_espera',
-            'bg-blue-50': op.estado === 'en_proceso',
-            'bg-green-50': op.estado === 'concluida',
-            'bg-red-50': op.estado === 'cancelada',
+            'bg-warning-soft': op.estado === 'en_espera',
+            'bg-info-soft': op.estado === 'en_proceso',
+            'bg-success-soft': op.estado === 'concluida',
+            'bg-danger-soft': op.estado === 'cancelada',
           }"
         >
           <td class="px-4 py-3 text-sm">{{ op.id }}</td>
@@ -38,10 +38,10 @@
               :estado="op.estado"
               :operacion-id="op.id"
             />
-            <span v-else class="text-gray-400">—</span>
+            <span v-else class="text-ink-faint">—</span>
           </td>
           <td class="px-4 py-3 text-sm">
-            <span class="text-xs bg-gray-100 px-2 py-1 rounded">
+            <span class="text-xs bg-surface-muted px-2 py-1 rounded">
               {{ op.transacciones?.length || 0 }} transacciones
             </span>
           </td>
@@ -58,7 +58,7 @@
       </tbody>
     </table>
 
-    <div v-if="operaciones.length === 0" class="text-center py-12 text-gray-500">
+    <div v-if="operaciones.length === 0" class="text-center py-12 text-ink-soft">
       <p>No hay operaciones en el pool.</p>
     </div>
   </div>
@@ -92,11 +92,11 @@ const estadoLabel = (estado) => {
 
 const estadoBadge = (estado) => {
   const map = {
-    en_espera: 'bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs',
-    en_proceso: 'bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs',
-    concluida: 'bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs',
-    cancelada: 'bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs',
+    en_espera: 'bg-warning-soft text-warning-strong px-2 py-1 rounded-full text-xs',
+    en_proceso: 'bg-info-soft text-info-strong px-2 py-1 rounded-full text-xs',
+    concluida: 'bg-success-soft text-success-strong px-2 py-1 rounded-full text-xs',
+    cancelada: 'bg-danger-soft text-danger-strong px-2 py-1 rounded-full text-xs',
   }
-  return map[estado] || 'bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs'
+  return map[estado] || 'bg-surface-muted text-heading px-2 py-1 rounded-full text-xs'
 }
 </script>

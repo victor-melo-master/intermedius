@@ -1,16 +1,16 @@
 <template>
-  <div class="bg-white border border-gray-200 rounded-xl p-5 space-y-4">
+  <div class="bg-white border border-edge rounded-xl p-5 space-y-4">
     <div class="flex items-center justify-between">
-      <h3 class="font-semibold text-gray-700">Transacciones</h3>
-      <button type="button" @click="$emit('agregar')" class="text-sm text-blue-600 hover:text-blue-700 font-medium">
+      <h3 class="font-semibold text-ink">Transacciones</h3>
+      <button type="button" @click="$emit('agregar')" class="text-sm text-gold-dark hover:text-gold-dark font-medium">
         + Agregar fila
       </button>
     </div>
 
     <AppLoadingSpinner v-if="loading" />
 
-    <div v-else-if="cuentas.length === 0" class="bg-amber-50 border border-amber-200 text-amber-700 text-sm p-4 rounded-lg">
-      <Iconoir name="exclamation-triangle" class="w-4 h-4 inline text-amber-500" /> No hay cuentas configuradas.
+    <div v-else-if="cuentas.length === 0" class="bg-warning-soft border border-warning-edge text-warning-strong text-sm p-4 rounded-lg">
+      <Iconoir name="exclamation-triangle" class="w-4 h-4 inline text-warning" /> No hay cuentas configuradas.
     </div>
 
     <template v-else>
@@ -45,7 +45,7 @@
       <button
         type="button"
         @click="$emit('distribuir')"
-        class="text-xs px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg transition font-medium"
+        class="text-xs px-3 py-1.5 bg-surface-muted hover:bg-surface-muted text-ink-muted rounded-lg transition font-medium"
         :disabled="!montoUSD && !montoVES"
       >
         Distribuir montos
@@ -53,17 +53,17 @@
       <button
         type="button"
         @click="$emit('limpiar')"
-        class="text-xs px-3 py-1.5 bg-gray-100 hover:bg-red-100 text-gray-500 hover:text-red-600 rounded-lg transition font-medium"
+        class="text-xs px-3 py-1.5 bg-surface-muted hover:bg-danger-soft text-ink-soft hover:text-danger rounded-lg transition font-medium"
       >
         Limpiar filas
       </button>
     </div>
 
-    <div v-if="resumen.length" class="text-xs text-gray-500 space-y-0.5 pt-1 border-t border-gray-100">
-      <p v-for="r in resumen" :key="r.label" :class="r.ok ? 'text-gray-500' : 'text-red-500 font-medium'">
+    <div v-if="resumen.length" class="text-xs text-ink-soft space-y-0.5 pt-1 border-t border-edge">
+      <p v-for="r in resumen" :key="r.label" :class="r.ok ? 'text-ink-soft' : 'text-danger font-medium'">
         {{ r.label }}: {{ r.total }} / {{ r.esperado }}
-        <Iconoir v-if="r.ok" name="check" class="w-3.5 h-3.5 inline text-green-500" />
-        <span v-else><Iconoir name="exclamation-triangle" class="w-3.5 h-3.5 inline text-red-500" /> Diferencia: {{ r.diferencia }}</span>
+        <Iconoir v-if="r.ok" name="check" class="w-3.5 h-3.5 inline text-success" />
+        <span v-else><Iconoir name="exclamation-triangle" class="w-3.5 h-3.5 inline text-danger" /> Diferencia: {{ r.diferencia }}</span>
       </p>
     </div>
   </div>

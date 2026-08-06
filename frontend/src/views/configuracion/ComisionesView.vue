@@ -6,30 +6,30 @@
     <AppErrorState v-else-if="error" :message="error" @retry="fetchComisiones" />
     <template v-else-if="comisiones.length === 0">
       <div class="text-center py-16">
-        <Iconoir name="currency-dollar" class="w-12 h-12 mx-auto mb-4 text-gray-300" />
-        <p class="text-gray-500">No hay comisiones registradas</p>
+        <Iconoir name="currency-dollar" class="w-12 h-12 mx-auto mb-4 text-ink-faint" />
+        <p class="text-ink-soft">No hay comisiones registradas</p>
       </div>
     </template>
     <div v-else class="space-y-2">
-      <div v-for="c in comisiones" :key="c.id" class="bg-white border border-gray-200 rounded-xl p-4 flex items-center gap-3">
-        <div class="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center text-amber-700 font-bold text-sm">%</div>
+      <div v-for="c in comisiones" :key="c.id" class="bg-white border border-edge rounded-xl p-4 flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-warning-soft flex items-center justify-center text-warning-strong font-bold text-sm">%</div>
         <div class="flex-1 min-w-0">
           <p class="font-semibold text-sm truncate">{{ c.nombre_metodo }}</p>
-          <p class="text-xs text-gray-500">{{ c.descripcion }}</p>
-          <p class="text-xs text-gray-400">
+          <p class="text-xs text-ink-soft">{{ c.descripcion }}</p>
+          <p class="text-xs text-ink-faint">
             {{ c.tipo_calculo === 'porcentaje' ? c.valor + '%' : 'Bs. ' + c.valor }}
             · {{ c.moneda?.codigo || '—' }}
             <span v-if="c.cuenta">· {{ c.cuenta.alias }}</span>
           </p>
         </div>
         <div class="text-right shrink-0">
-          <span v-if="c.activa" class="text-[10px] bg-green-50 text-green-600 px-2 py-0.5 rounded-full">Activa</span>
-          <span v-else class="text-[10px] bg-red-50 text-red-600 px-2 py-0.5 rounded-full">Inactiva</span>
-          <p class="text-[10px] text-gray-400 mt-0.5">Desde: {{ c.vigente_desde }}</p>
+          <span v-if="c.activa" class="text-[10px] bg-success-soft text-success px-2 py-0.5 rounded-full">Activa</span>
+          <span v-else class="text-[10px] bg-danger-soft text-danger px-2 py-0.5 rounded-full">Inactiva</span>
+          <p class="text-[10px] text-ink-faint mt-0.5">Desde: {{ c.vigente_desde }}</p>
         </div>
         <div class="flex gap-1">
-          <button @click="editComision(c)" class="text-xs text-blue-600 hover:text-blue-800 font-medium px-2 py-1 border border-blue-200 rounded-lg hover:bg-blue-50">Editar</button>
-          <button v-if="c.activa" @click="deactivateComision(c)" :disabled="savingId === c.id" class="text-xs text-red-600 hover:text-red-800 font-medium px-2 py-1 border border-red-200 rounded-lg hover:bg-red-50">
+          <button @click="editComision(c)" class="text-xs text-gold-dark hover:text-gold-dark font-medium px-2 py-1 border border-gold/40 rounded-lg hover:bg-gold-soft">Editar</button>
+          <button v-if="c.activa" @click="deactivateComision(c)" :disabled="savingId === c.id" class="text-xs text-danger hover:text-danger-strong font-medium px-2 py-1 border border-danger-edge rounded-lg hover:bg-danger-soft">
             {{ savingId === c.id ? '...' : 'Desactivar' }}
           </button>
         </div>
@@ -38,54 +38,54 @@
 
     <AppFormModal v-model="showForm" :title="editingId ? 'Editar comisión' : 'Nueva comisión'" @close="closeForm">
       <form @submit.prevent="submit" class="space-y-3">
-        <input v-model="form.nombre_metodo" required placeholder="Nombre del método *" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-        <input v-model="form.descripcion" required placeholder="Descripción *" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+        <input v-model="form.nombre_metodo" required placeholder="Nombre del método *" class="w-full px-3 py-2 border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none" />
+        <input v-model="form.descripcion" required placeholder="Descripción *" class="w-full px-3 py-2 border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none" />
 
         <div>
-          <label class="text-sm text-gray-600 mb-1 block">Tipo de cálculo</label>
-          <select v-model="form.tipo_calculo" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+          <label class="text-sm text-ink-muted mb-1 block">Tipo de cálculo</label>
+          <select v-model="form.tipo_calculo" required class="w-full px-3 py-2 border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none">
             <option value="porcentaje">Porcentaje</option>
             <option value="monto_fijo">Monto fijo</option>
           </select>
         </div>
 
-        <input v-model="form.valor" type="number" step="0.01" required :placeholder="form.tipo_calculo === 'porcentaje' ? 'Ej: 0.3' : 'Ej: 5.00'" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+        <input v-model="form.valor" type="number" step="0.01" required :placeholder="form.tipo_calculo === 'porcentaje' ? 'Ej: 0.3' : 'Ej: 5.00'" class="w-full px-3 py-2 border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none" />
 
         <div>
-          <label class="text-sm text-gray-600 mb-1 block">Moneda</label>
-          <select v-model="form.moneda_id" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+          <label class="text-sm text-ink-muted mb-1 block">Moneda</label>
+          <select v-model="form.moneda_id" required class="w-full px-3 py-2 border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none">
             <option value="">Seleccionar moneda</option>
             <option v-for="m in monedas" :key="m.id" :value="m.id">{{ m.codigo }} — {{ m.nombre }}</option>
           </select>
         </div>
 
         <div>
-          <label class="text-sm text-gray-600 mb-1 block">Cuenta (opcional)</label>
-          <select v-model="form.cuenta_id" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+          <label class="text-sm text-ink-muted mb-1 block">Cuenta (opcional)</label>
+          <select v-model="form.cuenta_id" class="w-full px-3 py-2 border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none">
             <option value="">Todas las cuentas</option>
             <option v-for="c in cuentas" :key="c.id" :value="c.id">{{ c.alias }} ({{ c.moneda?.codigo }})</option>
           </select>
         </div>
 
         <div>
-          <label class="text-sm text-gray-600 mb-1 block">Vigente desde</label>
-          <input v-model="form.vigente_desde" type="date" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+          <label class="text-sm text-ink-muted mb-1 block">Vigente desde</label>
+          <input v-model="form.vigente_desde" type="date" required class="w-full px-3 py-2 border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none" />
         </div>
 
         <div>
-          <label class="text-sm text-gray-600 mb-1 block">Vigente hasta (opcional)</label>
-          <input v-model="form.vigente_hasta" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+          <label class="text-sm text-ink-muted mb-1 block">Vigente hasta (opcional)</label>
+          <input v-model="form.vigente_hasta" type="date" class="w-full px-3 py-2 border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none" />
         </div>
 
-        <label class="flex items-center gap-2 text-sm text-gray-600">
-          <input v-model="form.activa" type="checkbox" class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+        <label class="flex items-center gap-2 text-sm text-ink-muted">
+          <input v-model="form.activa" type="checkbox" class="w-4 h-4 rounded border-edge-strong text-gold-dark focus:ring-gold" />
           Activa
         </label>
 
         <AppErrorState v-if="formError" :message="formError" :retry="false" />
       </form>
       <template #footer>
-        <button @click="submit" :disabled="saving" class="w-full bg-blue-600 text-white font-semibold py-2.5 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition flex items-center justify-center gap-2">
+        <button @click="submit" :disabled="saving" class="w-full bg-gold text-navy font-semibold py-2.5 rounded-lg hover:bg-gold-dark disabled:opacity-50 transition flex items-center justify-center gap-2">
           <span v-if="saving" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
           {{ saving ? 'Guardando...' : (editingId ? 'Guardar cambios' : 'Crear comisión') }}
         </button>

@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-red-50 text-red-600 p-4 rounded-xl text-sm">
+  <div class="bg-danger-soft text-danger p-4 rounded-xl text-sm">
     {{ message }}
     <button v-if="retry" @click="$emit('retry')" class="underline ml-2">Reintentar</button>
   </div>

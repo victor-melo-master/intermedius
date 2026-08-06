@@ -4,43 +4,43 @@
 
     <!-- ── Alertas ─────────────────────────────────────────────────────── -->
     <div v-if="alertas.operaciones_sin_tasa_referencia_hoy || alertas.pares_sin_tasa_vigente?.length" class="flex flex-wrap gap-2">
-      <span v-if="alertas.operaciones_sin_tasa_referencia_hoy" class="bg-red-50 text-red-700 border border-red-200 px-3 py-1 rounded-full text-xs font-medium inline-flex items-center gap-1">
-        <Iconoir name="exclamation-triangle" class="w-4 h-4 text-amber-500" /> {{ alertas.operaciones_sin_tasa_referencia_hoy }} op. sin tasa de referencia hoy
+      <span v-if="alertas.operaciones_sin_tasa_referencia_hoy" class="bg-danger-soft text-danger-strong border border-danger-edge px-3 py-1 rounded-full text-xs font-medium inline-flex items-center gap-1">
+        <Iconoir name="exclamation-triangle" class="w-4 h-4 text-warning" /> {{ alertas.operaciones_sin_tasa_referencia_hoy }} op. sin tasa de referencia hoy
       </span>
-      <span v-if="alertas.pares_sin_tasa_vigente?.length" class="bg-amber-50 text-amber-700 border border-amber-200 px-3 py-1 rounded-full text-xs font-medium inline-flex items-center gap-1">
-        <Iconoir name="clipboard" class="w-4 h-4 text-amber-500" /> Falta publicar tasa: {{ alertas.pares_sin_tasa_vigente.join(', ') }}
+      <span v-if="alertas.pares_sin_tasa_vigente?.length" class="bg-warning-soft text-warning-strong border border-warning-edge px-3 py-1 rounded-full text-xs font-medium inline-flex items-center gap-1">
+        <Iconoir name="clipboard" class="w-4 h-4 text-warning" /> Falta publicar tasa: {{ alertas.pares_sin_tasa_vigente.join(', ') }}
       </span>
     </div>
 
     <!-- Encabezado -->
     <div class="flex items-start justify-between">
       <div>
-        <h2 class="text-xl font-bold text-gray-800">Resumen operativo</h2>
-        <p class="text-sm text-gray-500">Hola, {{ auth.user?.name }} · {{ hoy }}</p>
+        <h2 class="text-xl font-bold text-heading">Resumen operativo</h2>
+        <p class="text-sm text-ink-soft">Hola, {{ auth.user?.name }} · {{ hoy }}</p>
       </div>
-      <router-link to="/bancos" class="flex items-center gap-2 bg-white border border-gray-200 hover:border-blue-300 text-gray-700 hover:text-blue-700 text-sm font-medium px-4 py-2 rounded-xl shadow-sm transition">
-        <Iconoir name="building-library" class="w-5 h-5 text-gray-500" />
+      <router-link to="/bancos" class="flex items-center gap-2 bg-white border border-edge hover:border-gold text-ink hover:text-gold-dark text-sm font-medium px-4 py-2 rounded-xl shadow-sm transition">
+        <Iconoir name="building-library" class="w-5 h-5 text-ink-soft" />
         Gestionar bancos
       </router-link>
     </div>
 
     <!-- ── Filtros ──────────────────────────────────────────────────────── -->
-    <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+    <div class="bg-white border border-edge rounded-xl p-4 shadow-sm">
       <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 items-end">
         <div>
-          <label class="block text-[11px] text-gray-500 mb-1">Desde</label>
+          <label class="block text-[11px] text-ink-soft mb-1">Desde</label>
           <input v-model="filtros.fecha_desde" type="date"
-            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+            class="w-full px-3 py-2 text-sm border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none" />
         </div>
         <div>
-          <label class="block text-[11px] text-gray-500 mb-1">Hasta</label>
+          <label class="block text-[11px] text-ink-soft mb-1">Hasta</label>
           <input v-model="filtros.fecha_hasta" type="date"
-            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+            class="w-full px-3 py-2 text-sm border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none" />
         </div>
         <div>
-          <label class="block text-[11px] text-gray-500 mb-1">Moneda</label>
+          <label class="block text-[11px] text-ink-soft mb-1">Moneda</label>
           <select v-model="filtros.moneda"
-            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+            class="w-full px-3 py-2 text-sm border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none">
             <option value="">Todas</option>
             <option value="USD">USD</option>
             <option value="USDT">USDT</option>
@@ -49,15 +49,15 @@
           </select>
         </div>
         <div>
-          <label class="block text-[11px] text-gray-500 mb-1">Operador</label>
+          <label class="block text-[11px] text-ink-soft mb-1">Operador</label>
           <select v-model="filtros.operador_id"
-            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+            class="w-full px-3 py-2 text-sm border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none">
             <option value="">Todos</option>
             <option v-for="o in operadores" :key="o.id" :value="o.id">{{ o.name }}</option>
           </select>
         </div>
         <button @click="aplicarFiltros" :disabled="loadingResumen"
-          class="bg-blue-600 text-white text-sm font-semibold py-2 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition active:scale-[0.98] col-span-2 lg:col-span-1">
+          class="bg-gold text-navy text-sm font-semibold py-2 rounded-lg hover:bg-gold-dark disabled:opacity-50 transition active:scale-[0.98] col-span-2 lg:col-span-1">
           Aplicar filtros
         </button>
       </div>
@@ -66,89 +66,89 @@
     <!-- ── Loading (skeleton) ───────────────────────────────────────────── -->
     <div v-if="loadingResumen" class="space-y-4">
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div v-for="n in 4" :key="n" class="bg-white border border-gray-200 rounded-xl p-4 h-28 animate-pulse">
-          <div class="h-3 w-20 bg-gray-200 rounded mb-3"></div>
-          <div class="h-6 w-16 bg-gray-200 rounded"></div>
+        <div v-for="n in 4" :key="n" class="bg-white border border-edge rounded-xl p-4 h-28 animate-pulse">
+          <div class="h-3 w-20 bg-surface-muted rounded mb-3"></div>
+          <div class="h-6 w-16 bg-surface-muted rounded"></div>
         </div>
       </div>
-      <div class="bg-white border border-gray-200 rounded-xl p-4 h-32 animate-pulse"></div>
+      <div class="bg-white border border-edge rounded-xl p-4 h-32 animate-pulse"></div>
     </div>
 
     <!-- ── Sin operaciones ──────────────────────────────────────────────── -->
     <div v-else-if="resumen && resumen.operaciones && resumen.operaciones.total === 0"
-      class="bg-white border border-gray-200 rounded-xl p-10 text-center">
-      <Iconoir name="chart-bar" class="w-10 h-10 mx-auto mb-3 text-gray-300" />
-      <p class="text-gray-500">Sin operaciones para este período</p>
+      class="bg-white border border-edge rounded-xl p-10 text-center">
+      <Iconoir name="chart-bar" class="w-10 h-10 mx-auto mb-3 text-ink-faint" />
+      <p class="text-ink-soft">Sin operaciones para este período</p>
     </div>
 
     <!-- ── Resumen ──────────────────────────────────────────────────────── -->
     <template v-else-if="resumen && resumen.operaciones">
       <!-- Tarjetas -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
-          <p class="text-xs text-gray-500">Total operaciones</p>
-          <p class="text-3xl font-bold text-gray-800 mt-1">{{ resumen.operaciones.total ?? 0 }}</p>
+        <div class="bg-white border border-edge rounded-xl p-4 shadow-sm">
+          <p class="text-xs text-ink-soft">Total operaciones</p>
+          <p class="text-3xl font-bold text-heading mt-1">{{ resumen.operaciones.total ?? 0 }}</p>
         </div>
-        <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm space-y-1">
-          <p class="text-xs text-gray-500 mb-1">Desglose</p>
-          <p class="text-sm flex justify-between"><span class="text-gray-500">Compras</span><span class="font-semibold text-teal-600">{{ resumen.operaciones.compras ?? 0 }}</span></p>
-          <p class="text-sm flex justify-between"><span class="text-gray-500">Ventas</span><span class="font-semibold text-blue-600">{{ resumen.operaciones.ventas ?? 0 }}</span></p>
-          <p class="text-sm flex justify-between"><span class="text-gray-500">Intermediadas</span><span class="font-semibold text-purple-600">{{ resumen.operaciones.intermediadas ?? 0 }}</span></p>
+        <div class="bg-white border border-edge rounded-xl p-4 shadow-sm space-y-1">
+          <p class="text-xs text-ink-soft mb-1">Desglose</p>
+          <p class="text-sm flex justify-between"><span class="text-ink-soft">Compras</span><span class="font-semibold text-teal">{{ resumen.operaciones.compras ?? 0 }}</span></p>
+          <p class="text-sm flex justify-between"><span class="text-ink-soft">Ventas</span><span class="font-semibold text-gold-dark">{{ resumen.operaciones.ventas ?? 0 }}</span></p>
+          <p class="text-sm flex justify-between"><span class="text-ink-soft">Intermediadas</span><span class="font-semibold text-violet">{{ resumen.operaciones.intermediadas ?? 0 }}</span></p>
         </div>
-        <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
-          <p class="text-xs text-gray-500">Ganancia bruta</p>
-          <p class="text-xl font-bold text-green-600">{{ formatUsd(resumen.ganancias?.bruta_usd) }}</p>
-          <p class="text-xs text-gray-500 mt-2">Ganancia neta</p>
-          <p class="text-lg font-bold text-green-700">{{ formatUsd(resumen.ganancias?.neta_usd) }}</p>
+        <div class="bg-white border border-edge rounded-xl p-4 shadow-sm">
+          <p class="text-xs text-ink-soft">Ganancia bruta</p>
+          <p class="text-xl font-bold text-success">{{ formatUsd(resumen.ganancias?.bruta_usd) }}</p>
+          <p class="text-xs text-ink-soft mt-2">Ganancia neta</p>
+          <p class="text-lg font-bold text-success-strong">{{ formatUsd(resumen.ganancias?.neta_usd) }}</p>
         </div>
-        <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
-          <p class="text-xs text-gray-500">Efectivo pendiente</p>
-          <p class="text-3xl font-bold text-amber-600 mt-1">{{ resumen.efectivo_pendiente?.count ?? 0 }}</p>
-          <p class="text-sm font-semibold text-amber-700 mt-1">{{ formatUsd(resumen.efectivo_pendiente?.monto_usd) }}</p>
+        <div class="bg-white border border-edge rounded-xl p-4 shadow-sm">
+          <p class="text-xs text-ink-soft">Efectivo pendiente</p>
+          <p class="text-3xl font-bold text-warning mt-1">{{ resumen.efectivo_pendiente?.count ?? 0 }}</p>
+          <p class="text-sm font-semibold text-warning-strong mt-1">{{ formatUsd(resumen.efectivo_pendiente?.monto_usd) }}</p>
         </div>
       </div>
 
       <!-- Tablas -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <!-- Volúmenes por moneda -->
-        <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
-          <h3 class="font-semibold text-gray-700 text-sm mb-3">Volúmenes por moneda</h3>
-          <div v-if="!resumen.volumenes || resumen.volumenes.length === 0" class="text-xs text-gray-400 py-2">Sin volúmenes</div>
+        <div class="bg-white border border-edge rounded-xl p-4 shadow-sm">
+          <h3 class="font-semibold text-ink text-sm mb-3">Volúmenes por moneda</h3>
+          <div v-if="!resumen.volumenes || resumen.volumenes.length === 0" class="text-xs text-ink-faint py-2">Sin volúmenes</div>
           <table v-else class="w-full text-sm">
             <thead>
-              <tr class="text-left text-xs text-gray-400 border-b border-gray-100">
+              <tr class="text-left text-xs text-ink-faint border-b border-edge">
                 <th class="py-2 font-medium">Moneda</th>
                 <th class="py-2 font-medium text-right">Comprado</th>
                 <th class="py-2 font-medium text-right">Vendido</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="v in resumen.volumenes" :key="v.moneda" class="border-b border-gray-50 last:border-0">
-                <td class="py-2 font-semibold text-gray-700">{{ v.moneda }}</td>
-                <td class="py-2 text-right text-teal-600">{{ formatUsd(v.comprado) }}</td>
-                <td class="py-2 text-right text-blue-600">{{ formatUsd(v.vendido) }}</td>
+              <tr v-for="v in resumen.volumenes" :key="v.moneda" class="border-b border-edge last:border-0">
+                <td class="py-2 font-semibold text-ink">{{ v.moneda }}</td>
+                <td class="py-2 text-right text-teal">{{ formatUsd(v.comprado) }}</td>
+                <td class="py-2 text-right text-gold-dark">{{ formatUsd(v.vendido) }}</td>
               </tr>
             </tbody>
           </table>
         </div>
 
         <!-- Actividad por operador -->
-        <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
-          <h3 class="font-semibold text-gray-700 text-sm mb-3">Actividad por operador</h3>
-          <div v-if="!resumen.por_operador || resumen.por_operador.length === 0" class="text-xs text-gray-400 py-2">Sin actividad</div>
+        <div class="bg-white border border-edge rounded-xl p-4 shadow-sm">
+          <h3 class="font-semibold text-ink text-sm mb-3">Actividad por operador</h3>
+          <div v-if="!resumen.por_operador || resumen.por_operador.length === 0" class="text-xs text-ink-faint py-2">Sin actividad</div>
           <table v-else class="w-full text-sm">
             <thead>
-              <tr class="text-left text-xs text-gray-400 border-b border-gray-100">
+              <tr class="text-left text-xs text-ink-faint border-b border-edge">
                 <th class="py-2 font-medium">Operador</th>
                 <th class="py-2 font-medium text-right">Operaciones</th>
                 <th class="py-2 font-medium text-right">Volumen USD</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="o in resumen.por_operador" :key="o.operador" class="border-b border-gray-50 last:border-0">
-                <td class="py-2 font-semibold text-gray-700">{{ o.operador }}</td>
-                <td class="py-2 text-right text-gray-600">{{ o.total_operaciones ?? 0 }}</td>
-                <td class="py-2 text-right font-semibold text-gray-800">{{ formatUsd(o.volumen_usd) }}</td>
+              <tr v-for="o in resumen.por_operador" :key="o.operador" class="border-b border-edge last:border-0">
+                <td class="py-2 font-semibold text-ink">{{ o.operador }}</td>
+                <td class="py-2 text-right text-ink-muted">{{ o.total_operaciones ?? 0 }}</td>
+                <td class="py-2 text-right font-semibold text-heading">{{ formatUsd(o.volumen_usd) }}</td>
               </tr>
             </tbody>
           </table>
@@ -156,7 +156,7 @@
       </div>
     </template>
 
-    <div v-else-if="resumenError" class="bg-red-50 text-red-600 p-4 rounded-xl text-sm">
+    <div v-else-if="resumenError" class="bg-danger-soft text-danger p-4 rounded-xl text-sm">
       {{ resumenError }}
       <button @click="fetchResumen" class="underline ml-2">Reintentar</button>
     </div>

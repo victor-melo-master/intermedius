@@ -1,31 +1,31 @@
 <template>
   <div class="max-w-4xl mx-auto space-y-4">
     <div class="flex items-center gap-3">
-      <button @click="$router.back()" class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition"><Iconoir name="arrow-left" class="w-4 h-4" /> Volver</button>
-      <h2 class="text-xl font-bold text-gray-800">Gestionar operación #{{ store.detail?.id }}</h2>
+      <button @click="$router.back()" class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-ink-muted hover:bg-surface-muted rounded-lg transition"><Iconoir name="arrow-left" class="w-4 h-4" /> Volver</button>
+      <h2 class="text-xl font-bold text-heading">Gestionar operación #{{ store.detail?.id }}</h2>
     </div>
 
     <AppLoadingSpinner v-if="store.loading" />
     <AppErrorState v-else-if="store.error" :message="store.error" @retry="cargarOperacion" />
     <template v-else-if="store.detail">
       <!-- ════════ RESUMEN MONTO ════════ -->
-      <div class="bg-white border border-gray-200 rounded-xl p-5">
+      <div class="bg-white border border-edge rounded-xl p-5">
         <div class="grid grid-cols-3 gap-4 text-center">
           <div>
-            <p class="text-xs text-gray-400 mb-1">Monto divisa</p>
-            <p class="text-xl font-bold text-gray-800">
+            <p class="text-xs text-ink-faint mb-1">Monto divisa</p>
+            <p class="text-xl font-bold text-heading">
               {{ formatMoney(montoDivisa) }} {{ monedaDivisa }}
             </p>
           </div>
           <div>
-            <p class="text-xs text-gray-400 mb-1">Tasa</p>
-            <p class="text-xl font-bold text-blue-600">
+            <p class="text-xs text-ink-faint mb-1">Tasa</p>
+            <p class="text-xl font-bold text-gold-dark">
               {{ formatRate(store.detail.tasa_aplicada) }}
             </p>
           </div>
           <div>
-            <p class="text-xs text-gray-400 mb-1">Bolívares</p>
-            <p class="text-xl font-bold text-green-600">
+            <p class="text-xs text-ink-faint mb-1">Bolívares</p>
+            <p class="text-xl font-bold text-success">
               {{ formatVes(montoBolivares) }}
             </p>
           </div>
@@ -33,49 +33,49 @@
       </div>
 
       <!-- ════════ CABECERA ════════ -->
-      <div class="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
+      <div class="bg-white border border-edge rounded-xl p-5 space-y-3">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
-            <span class="text-sm text-gray-500">#{{ store.detail.id }}</span>
+            <span class="text-sm text-ink-soft">#{{ store.detail.id }}</span>
             <span class="px-3 py-1 rounded-full text-xs font-bold" :class="badgeEstado.clase">{{ badgeEstado.label }}</span>
           </div>
-          <span class="text-sm text-gray-400">{{ formatDate(store.detail.fecha) }}</span>
+          <span class="text-sm text-ink-faint">{{ formatDate(store.detail.fecha) }}</span>
         </div>
         <p class="font-semibold text-lg">{{ nombreOperacion }}</p>
-        <p v-if="store.detail.cliente?.nombre" class="text-sm text-gray-500">Cliente: {{ store.detail.cliente.nombre }}</p>
-        <p v-if="store.detail.referencia" class="text-sm text-gray-500">Ref: {{ store.detail.referencia }}</p>
-        <p v-if="store.detail.descripcion" class="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">{{ store.detail.descripcion }}</p>
+        <p v-if="store.detail.cliente?.nombre" class="text-sm text-ink-soft">Cliente: {{ store.detail.cliente.nombre }}</p>
+        <p v-if="store.detail.referencia" class="text-sm text-ink-soft">Ref: {{ store.detail.referencia }}</p>
+        <p v-if="store.detail.descripcion" class="text-sm text-ink-muted bg-surface-soft p-3 rounded-lg">{{ store.detail.descripcion }}</p>
       </div>
 
       <!-- ════════ FLUJO PROGRESS ════════ -->
-      <div class="bg-white border border-gray-200 rounded-xl p-5">
+      <div class="bg-white border border-edge rounded-xl p-5">
         <FlujoProgress :estado="store.detail.estado" :revertida="store.detail.estado === 'revertida'" />
       </div>
 
       <!-- ════════ GANANCIA ESTIMADA ════════ -->
-      <div v-if="gananciaPreview && store.detail.estado === 'en_progreso'" class="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
-        <h3 class="font-semibold text-gray-700">Ganancia estimada</h3>
+      <div v-if="gananciaPreview && store.detail.estado === 'en_progreso'" class="bg-white border border-edge rounded-xl p-5 space-y-3">
+        <h3 class="font-semibold text-ink">Ganancia estimada</h3>
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <p class="text-xs text-gray-400">Bruta</p>
-            <p class="text-lg font-bold" :class="gananciaPreview.bruta_usd >= 0 ? 'text-green-600' : 'text-red-600'">
+            <p class="text-xs text-ink-faint">Bruta</p>
+            <p class="text-lg font-bold" :class="gananciaPreview.bruta_usd >= 0 ? 'text-success' : 'text-danger'">
               {{ formatMoney(gananciaPreview.bruta_usd) }} USD
             </p>
-            <p class="text-sm text-gray-500">Bs. {{ formatMoney(gananciaPreview.bruta_ves) }}</p>
+            <p class="text-sm text-ink-soft">Bs. {{ formatMoney(gananciaPreview.bruta_ves) }}</p>
           </div>
           <div>
-            <p class="text-xs text-gray-400">Neta</p>
-            <p class="text-lg font-bold" :class="gananciaPreview.neta_usd >= 0 ? 'text-green-600' : 'text-red-600'">
+            <p class="text-xs text-ink-faint">Neta</p>
+            <p class="text-lg font-bold" :class="gananciaPreview.neta_usd >= 0 ? 'text-success' : 'text-danger'">
               {{ formatMoney(gananciaPreview.neta_usd) }} USD
             </p>
-            <p class="text-sm text-gray-500">Bs. {{ formatMoney(gananciaPreview.neta_ves) }}</p>
+            <p class="text-sm text-ink-soft">Bs. {{ formatMoney(gananciaPreview.neta_ves) }}</p>
           </div>
         </div>
       </div>
 
       <!-- ════════ MOVIMIENTOS ════════ -->
-      <div class="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
-        <h3 class="font-semibold text-gray-700">Movimientos</h3>
+      <div class="bg-white border border-edge rounded-xl p-5 space-y-3">
+        <h3 class="font-semibold text-ink">Movimientos</h3>
         <MovimientoList
           :transacciones="store.detail.transacciones || []"
           :operacion-id="store.detail.id"
@@ -88,37 +88,37 @@
       <div class="space-y-2">
         <button v-if="store.detail.estado === 'solicitud'"
           @click="iniciarOperacion" :disabled="acting"
-          class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-semibold py-3 rounded-xl transition active:scale-[0.98] flex items-center justify-center gap-2">
+          class="w-full bg-gold hover:bg-gold-dark disabled:opacity-50 text-navy font-semibold py-3 rounded-xl transition active:scale-[0.98] flex items-center justify-center gap-2">
           <span v-if="acting" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
           <Iconoir v-if="!acting" name="rocket-launch" class="w-5 h-5" />
           {{ acting ? 'Iniciando...' : 'Iniciar operación' }}
         </button>
 
         <template v-if="store.detail.estado === 'en_progreso'">
-          <div v-if="operacionBalanceada" class="bg-green-50 border border-green-200 rounded-xl px-4 py-3">
-            <p class="text-green-700 text-sm font-medium text-center"><Iconoir name="check" class="w-4 h-4 text-green-500" /> Movimientos balanceados</p>
+          <div v-if="operacionBalanceada" class="bg-success-soft border border-success-edge rounded-xl px-4 py-3">
+            <p class="text-success-strong text-sm font-medium text-center"><Iconoir name="check" class="w-4 h-4 text-success" /> Movimientos balanceados</p>
           </div>
           <button v-else
             @click="mostrarAgregarTx = true"
-            class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-3 rounded-xl transition active:scale-[0.98] flex items-center justify-center gap-2">
+            class="w-full bg-gold hover:bg-gold-dark text-navy font-semibold py-3 rounded-xl transition active:scale-[0.98] flex items-center justify-center gap-2">
             + Agregar movimiento
           </button>
 
           <button
             @click="mostrarCerrar = true" :disabled="acting || !operacionBalanceada"
-class="w-full bg-green-600 hover:bg-green-700 disabled:bg-green-300 text-white font-semibold py-3 rounded-xl transition active:scale-[0.98] flex items-center justify-center gap-2">
+class="w-full bg-success hover:bg-success-strong disabled:opacity-50 text-white dark:text-navy font-semibold py-3 rounded-xl transition active:scale-[0.98] flex items-center justify-center gap-2">
           <span v-if="acting" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
           <Iconoir v-if="!acting" name="lock-closed" class="w-5 h-5" />
           {{ acting ? 'Cerrando...' : 'Cerrar operación' }}
           </button>
-          <p v-if="!operacionBalanceada" class="text-xs text-gray-400 text-center">
+          <p v-if="!operacionBalanceada" class="text-xs text-ink-faint text-center">
             Confirma todos los movimientos para cerrar la operación
           </p>
         </template>
 
         <button v-if="store.detail.estado !== 'cerrada' && store.detail.estado !== 'cancelada'"
           @click="mostrarCancelar = true"
-          class="w-full bg-red-50 hover:bg-red-100 text-red-600 font-semibold py-3 rounded-xl transition active:scale-[0.98]">
+          class="w-full bg-danger-soft hover:bg-danger-soft text-danger font-semibold py-3 rounded-xl transition active:scale-[0.98]">
           Cancelar operación
         </button>
       </div>
@@ -147,22 +147,22 @@ class="w-full bg-green-600 hover:bg-green-700 disabled:bg-green-300 text-white f
     <Teleport to="body">
       <AppFormModal v-model="mostrarCerrar" title="Cerrar operación">
         <form @submit.prevent="cerrarOperacion" class="space-y-4">
-          <p class="text-sm text-gray-500">Confirma el cierre de esta operación. Se generarán los movimientos contables.</p>
+          <p class="text-sm text-ink-soft">Confirma el cierre de esta operación. Se generarán los movimientos contables.</p>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Tasa de mercado ({{ fuenteTasaLabel }}) *</label>
+            <label class="block text-sm font-medium text-ink mb-1">Tasa de mercado ({{ fuenteTasaLabel }}) *</label>
             <input v-model.number="tasaMercadoCierre" type="number" step="0.01" min="0" required
               placeholder="Ej: 64.00"
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 outline-none" />
-            <p class="text-xs text-gray-400 mt-1">Tasa de referencia para el cálculo de ganancia</p>
+              class="w-full px-4 py-2.5 border border-edge-strong rounded-xl focus:ring-2 focus:ring-success outline-none" />
+            <p class="text-xs text-ink-faint mt-1">Tasa de referencia para el cálculo de ganancia</p>
           </div>
-          <div v-if="tasaMercadoCierre" class="bg-gray-50 rounded-xl p-3 text-sm text-gray-600">
-            <p>Ganancia estimada:             <span class="font-semibold" :class="gananciaPreview?.bruta_usd >= 0 ? 'text-green-600' : 'text-red-600'">$ {{ formatRate(gananciaPreview?.bruta_usd || 0) }} USD</span></p>
+          <div v-if="tasaMercadoCierre" class="bg-surface-soft rounded-xl p-3 text-sm text-ink-muted">
+            <p>Ganancia estimada:             <span class="font-semibold" :class="gananciaPreview?.bruta_usd >= 0 ? 'text-success' : 'text-danger'">$ {{ formatRate(gananciaPreview?.bruta_usd || 0) }} USD</span></p>
           </div>
           <div class="flex gap-3">
             <button type="button" @click="mostrarCerrar = false"
-              class="flex-1 py-2.5 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition active:scale-[0.98]">Volver</button>
+              class="flex-1 py-2.5 text-sm text-ink-muted bg-surface-muted hover:bg-surface-muted rounded-xl transition active:scale-[0.98]">Volver</button>
             <button type="submit" :disabled="acting || !tasaMercadoCierre"
-              class="flex-1 py-2.5 bg-green-600 text-white text-sm font-medium rounded-xl hover:bg-green-700 disabled:bg-green-300 transition active:scale-[0.98] flex items-center justify-center gap-2">
+              class="flex-1 py-2.5 bg-success text-white dark:text-navy text-sm font-medium rounded-xl hover:bg-success-strong disabled:opacity-50 transition active:scale-[0.98] flex items-center justify-center gap-2">
               <span v-if="acting" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
               {{ acting ? 'Cerrando...' : 'Cerrar operación' }}
             </button>
@@ -175,15 +175,15 @@ class="w-full bg-green-600 hover:bg-green-700 disabled:bg-green-300 text-white f
     <Teleport to="body">
       <AppFormModal v-model="mostrarCancelar" title="Cancelar operación">
         <form @submit.prevent="cancelarOperacion" class="space-y-4">
-          <p class="text-sm text-gray-500">¿Estás seguro de cancelar esta operación?</p>
+          <p class="text-sm text-ink-soft">¿Estás seguro de cancelar esta operación?</p>
           <textarea v-model="motivoCancelacion" rows="3" required
             placeholder="Motivo de la cancelación..."
-            class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 outline-none resize-none"></textarea>
+            class="w-full px-4 py-2.5 border border-edge-strong rounded-xl focus:ring-2 focus:ring-danger outline-none resize-none"></textarea>
           <div class="flex gap-3">
             <button type="button" @click="mostrarCancelar = false"
-              class="flex-1 py-2.5 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition active:scale-[0.98]">Volver</button>
+              class="flex-1 py-2.5 text-sm text-ink-muted bg-surface-muted hover:bg-surface-muted rounded-xl transition active:scale-[0.98]">Volver</button>
             <button type="submit" :disabled="!motivoCancelacion.trim() || acting"
-              class="flex-1 py-2.5 bg-red-600 text-white text-sm font-medium rounded-xl hover:bg-red-700 disabled:bg-red-300 transition active:scale-[0.98] flex items-center justify-center gap-2">
+              class="flex-1 py-2.5 bg-danger text-white dark:text-navy text-sm font-medium rounded-xl hover:bg-danger-strong disabled:opacity-50 transition active:scale-[0.98] flex items-center justify-center gap-2">
               <span v-if="acting" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
               {{ acting ? 'Cancelando...' : 'Cancelar operación' }}
             </button>
@@ -278,12 +278,12 @@ const nombreOperacion = computed(() => {
 
 const badgeEstado = computed(() => {
   const map = {
-    solicitud:   { label: 'Solicitud',   clase: 'bg-yellow-100 text-yellow-700' },
-    en_progreso: { label: 'En Progreso', clase: 'bg-blue-100 text-blue-700' },
-    cerrada:     { label: 'Cerrada',     clase: 'bg-green-100 text-green-700' },
-    cancelada:   { label: 'Cancelada',   clase: 'bg-red-100 text-red-700' },
+    solicitud:   { label: 'Solicitud',   clase: 'bg-warning-soft text-warning-strong' },
+    en_progreso: { label: 'En Progreso', clase: 'bg-info-soft text-info-strong' },
+    cerrada:     { label: 'Cerrada',     clase: 'bg-success-soft text-success-strong' },
+    cancelada:   { label: 'Cancelada',   clase: 'bg-danger-soft text-danger-strong' },
   }
-  return map[store.detail?.estado] || { label: store.detail?.estado || '—', clase: 'bg-gray-100 text-gray-600' }
+  return map[store.detail?.estado] || { label: store.detail?.estado || '—', clase: 'bg-surface-muted text-ink-muted' }
 })
 
 const montoDivisa = computed(() => {

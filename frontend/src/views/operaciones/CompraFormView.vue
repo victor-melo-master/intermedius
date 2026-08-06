@@ -1,20 +1,20 @@
 <template>
   <div class="max-w-7xl mx-auto pb-6">
     <div class="flex items-center gap-3 mb-4">
-      <button @click="$router.back()" class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition"><Iconoir name="arrow-left" class="w-4 h-4" /> Volver</button>
-      <h2 class="text-xl font-bold text-gray-800">Nueva compra</h2>
+      <button @click="$router.back()" class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-ink-muted hover:bg-surface-muted rounded-lg transition"><Iconoir name="arrow-left" class="w-4 h-4" /> Volver</button>
+      <h2 class="text-xl font-bold text-heading">Nueva compra</h2>
     </div>
 
     <form @submit.prevent="registrarCompra">
-      <div class="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
+      <div class="bg-white dark:bg-surface-alt rounded-xl border border-edge divide-y divide-edge">
         <!-- Moneda -->
         <div class="p-4 space-y-3">
-          <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider">Moneda a recibir</label>
+          <label class="block text-xs font-semibold text-ink-soft uppercase tracking-wider">Moneda a recibir</label>
           <div class="grid grid-cols-4 gap-2">
             <button type="button" v-for="m in monedasDisponibles" :key="m.codigo" @click="moneda = m.codigo"
               class="py-2.5 rounded-lg text-sm font-medium transition active:scale-[0.98] border-2"
-              :class="moneda === m.codigo ? monedaColor(m.color) : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300'">
-              <Iconoir :name="m.icono" class="w-5 h-5 mx-auto" :class="iconoColor[m.color] || 'text-gray-500'" />
+              :class="moneda === m.codigo ? monedaColor(m.color) : 'bg-white border-edge text-ink-soft hover:border-edge-strong'">
+              <Iconoir :name="m.icono" class="w-5 h-5 mx-auto" :class="iconoColor[m.color] || 'text-ink-soft'" />
               <span class="text-xs">{{ m.codigo }}</span>
             </button>
           </div>
@@ -22,7 +22,7 @@
 
         <!-- Cliente -->
         <div v-if="moneda" class="p-4">
-          <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Cliente</label>
+          <label class="block text-xs font-semibold text-ink-soft uppercase tracking-wider mb-2">Cliente</label>
           <ClienteSelector v-model="cliente" flat />
         </div>
 
@@ -45,35 +45,35 @@
 
         <!-- Movimientos -->
         <div v-if="moneda && cliente?.id && montoDivisaNum > 0 && montoVesNum > 0" class="p-0">
-          <div :class="['grid', mostrarVes ? 'lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x' : 'grid-cols-1', 'divide-gray-100']">
+          <div :class="['grid', mostrarVes ? 'lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x' : 'grid-cols-1', 'divide-edge']">
 
             <!-- Columna: Recepción de divisa -->
             <div class="p-5 space-y-4">
               <div class="flex items-center justify-between">
-                <h3 class="text-base font-semibold text-gray-700">Recepción de {{ moneda }}</h3>
-                <span class="text-sm font-medium" :class="restanteDivisa === 0 ? 'text-green-600' : 'text-amber-600'">
+                <h3 class="text-base font-semibold text-ink">Recepción de {{ moneda }}</h3>
+                <span class="text-sm font-medium" :class="restanteDivisa === 0 ? 'text-success' : 'text-warning'">
                   {{ fmt(restanteDivisa) }} {{ moneda }} restante
                 </span>
               </div>
 
               <div v-if="movsDivisa.length" class="space-y-1.5">
                 <div v-for="(tx, i) in movsDivisa" :key="i"
-                  class="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg px-3 py-2 text-sm">
-                  <span class="text-green-700 truncate">
-                    <Iconoir name="check" class="w-4 h-4 text-green-500 inline" />
+                  class="flex items-center justify-between bg-success-soft border border-success-edge rounded-lg px-3 py-2 text-sm">
+                  <span class="text-success-strong truncate">
+                    <Iconoir name="check" class="w-4 h-4 text-success inline" />
                     {{ fmt(tx.monto) }} {{ moneda }} · {{ tx.metodo_pago }}
                   </span>
                   <div class="flex gap-2 ml-1 shrink-0">
-                    <button type="button" @click="editarMovDivisa(i)" class="text-blue-600 hover:text-blue-800">Editar</button>
-                    <button type="button" @click="eliminarMovDivisa(i)" class="text-red-500 hover:text-red-700"><Iconoir name="x-mark" class="w-4 h-4" /></button>
+                    <button type="button" @click="editarMovDivisa(i)" class="text-gold-dark hover:text-gold-dark">Editar</button>
+                    <button type="button" @click="eliminarMovDivisa(i)" class="text-danger hover:text-danger-strong"><Iconoir name="x-mark" class="w-4 h-4" /></button>
                   </div>
                 </div>
               </div>
 
-              <div v-if="restanteDivisa > 0 || movDivisaEditandoIdx !== null" class="space-y-3 pt-3 border-t border-gray-100">
+              <div v-if="restanteDivisa > 0 || movDivisaEditandoIdx !== null" class="space-y-3 pt-3 border-t border-edge">
                 <div class="grid grid-cols-2 gap-3">
                   <select v-model="txDivisa.metodo_pago" required
-                    class="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+                    class="px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white focus:ring-2 focus:ring-gold outline-none">
                     <option value="">Método</option>
                     <option value="efectivo">Efectivo</option>
                     <option value="transferencia">Transferencia</option>
@@ -82,84 +82,84 @@
                     <option value="otro">Otro</option>
                   </select>
                   <div class="relative">
-                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">{{ moneda }}</span>
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint text-sm">{{ moneda }}</span>
                     <input :value="fmt(txDivisa.monto)" @input="onMontoDivisaInput($event)"
                       type="text" inputmode="decimal" :placeholder="fmt(restanteDivisa)"
                       class="w-full pl-10 pr-3 py-2 border rounded-lg text-sm focus:ring-2 outline-none"
-                      :class="parseFloat(txDivisa.monto) > restanteDivisa + 0.01 ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'" />
+                      :class="parseFloat(txDivisa.monto) > restanteDivisa + 0.01 ? 'border-danger-edge focus:ring-danger' : 'border-edge-strong focus:ring-gold'" />
                   </div>
                 </div>
-                <p v-if="parseFloat(txDivisa.monto) > restanteDivisa + 0.01" class="text-xs text-red-500">
+                <p v-if="parseFloat(txDivisa.monto) > restanteDivisa + 0.01" class="text-xs text-danger">
                   Excede el restante ({{ fmt(restanteDivisa) }} {{ moneda }})
                 </p>
                 <div v-if="txDivisa.metodo_pago && txDivisa.metodo_pago !== 'efectivo'">
                   <input v-model="txDivisa.comprobante" placeholder="N° de referencia..."
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+                    class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none" />
                 </div>
                 <button type="button" @click="confirmarMovDivisa" :disabled="!txDivisaValido"
-                  class="w-full py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white text-sm font-semibold rounded-lg transition active:scale-[0.98]">
+                  class="w-full py-2 bg-gold hover:bg-gold-dark disabled:opacity-50 text-navy text-sm font-semibold rounded-lg transition active:scale-[0.98]">
                   {{ movDivisaEditandoIdx !== null ? 'Actualizar' : 'Confirmar recepción' }}
                 </button>
               </div>
               <div v-else class="text-center py-2">
-                <span class="text-sm text-green-600 font-medium">✅ Completado</span>
+                <span class="text-sm text-success font-medium">✅ Completado</span>
               </div>
             </div>
 
             <!-- Columna: Pago en Bs -->
             <div v-if="mostrarVes" class="p-5 space-y-4">
               <div class="flex items-center justify-between">
-                <h3 class="text-base font-semibold text-gray-700">Pago al cliente en Bs</h3>
-                <span class="text-sm font-medium" :class="restanteVes === 0 ? 'text-green-600' : 'text-amber-600'">
+                <h3 class="text-base font-semibold text-ink">Pago al cliente en Bs</h3>
+                <span class="text-sm font-medium" :class="restanteVes === 0 ? 'text-success' : 'text-warning'">
                   Bs. {{ fmt(restanteVes) }} restante
                 </span>
               </div>
 
               <div v-if="movsVes.length" class="space-y-1.5">
                 <div v-for="(tx, i) in movsVes" :key="i"
-                  class="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg px-3 py-2 text-sm">
-                  <span class="text-green-700 truncate">
-                    <Iconoir name="check" class="w-4 h-4 text-green-500 inline" />
+                  class="flex items-center justify-between bg-success-soft border border-success-edge rounded-lg px-3 py-2 text-sm">
+                  <span class="text-success-strong truncate">
+                    <Iconoir name="check" class="w-4 h-4 text-success inline" />
                     Bs. {{ fmt(tx.monto) }} · {{ tx.metodo_pago }}
                   </span>
                   <div class="flex gap-2 ml-1 shrink-0">
-                    <button type="button" @click="editarMovVes(i)" class="text-blue-600 hover:text-blue-800">Editar</button>
-                    <button type="button" @click="eliminarMovVes(i)" class="text-red-500 hover:text-red-700"><Iconoir name="x-mark" class="w-4 h-4" /></button>
+                    <button type="button" @click="editarMovVes(i)" class="text-gold-dark hover:text-gold-dark">Editar</button>
+                    <button type="button" @click="eliminarMovVes(i)" class="text-danger hover:text-danger-strong"><Iconoir name="x-mark" class="w-4 h-4" /></button>
                   </div>
                 </div>
               </div>
 
-              <div v-if="restanteVes > 0 || movVesEditandoIdx !== null" class="space-y-3 pt-3 border-t border-gray-100">
+              <div v-if="restanteVes > 0 || movVesEditandoIdx !== null" class="space-y-3 pt-3 border-t border-edge">
                 <div class="grid grid-cols-2 gap-3">
                   <select v-model="txVes.metodo_pago" required
-                    class="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+                    class="px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white focus:ring-2 focus:ring-gold outline-none">
                     <option value="">Método</option>
                     <option value="efectivo">Efectivo</option>
                     <option value="pagomovil">Pago móvil</option>
                     <option value="transferencia">Transferencia</option>
                   </select>
                   <div class="relative">
-                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">Bs.</span>
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint text-sm">Bs.</span>
                     <input :value="fmt(txVes.monto)" @input="onMontoVesInput($event)"
                       type="text" inputmode="decimal" :placeholder="fmt(restanteVes)"
                       class="w-full pl-9 pr-3 py-2 border rounded-lg text-sm focus:ring-2 outline-none"
-                      :class="parseFloat(txVes.monto) > restanteVes + 0.01 ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'" />
+                      :class="parseFloat(txVes.monto) > restanteVes + 0.01 ? 'border-danger-edge focus:ring-danger' : 'border-edge-strong focus:ring-gold'" />
                   </div>
                 </div>
-                <p v-if="parseFloat(txVes.monto) > restanteVes + 0.01" class="text-xs text-red-500">
+                <p v-if="parseFloat(txVes.monto) > restanteVes + 0.01" class="text-xs text-danger">
                   Excede el restante (Bs. {{ fmt(restanteVes) }})
                 </p>
                 <div v-if="txVes.metodo_pago && txVes.metodo_pago !== 'efectivo'">
                   <input v-model="txVes.comprobante" placeholder="N° de referencia..."
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+                    class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none" />
                 </div>
                 <button type="button" @click="confirmarMovVes" :disabled="!txVesValido"
-                  class="w-full py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white text-sm font-semibold rounded-lg transition active:scale-[0.98]">
+                  class="w-full py-2 bg-gold hover:bg-gold-dark disabled:opacity-50 text-navy text-sm font-semibold rounded-lg transition active:scale-[0.98]">
                   {{ movVesEditandoIdx !== null ? 'Actualizar' : 'Confirmar pago' }}
                 </button>
               </div>
               <div v-else class="text-center py-2">
-                <span class="text-sm text-green-600 font-medium">✅ Completado</span>
+                <span class="text-sm text-success font-medium">✅ Completado</span>
               </div>
             </div>
 
@@ -170,23 +170,23 @@
         <div v-if="moneda && cliente?.id && montoDivisaNum > 0 && montoVesNum > 0" class="p-5">
           <div class="flex items-center justify-between gap-4">
             <div class="flex items-center gap-4 text-sm">
-              <div class="text-gray-500">
-                <span class="text-gray-400">Recibir:</span>
-                <span class="font-semibold text-gray-800 ml-1">{{ fmt(montoDivisaNum) }} {{ moneda }}</span>
+              <div class="text-ink-soft">
+                <span class="text-ink-faint">Recibir:</span>
+                <span class="font-semibold text-heading ml-1">{{ fmt(montoDivisaNum) }} {{ moneda }}</span>
               </div>
-              <div class="text-gray-500">
-                <span class="text-gray-400">Pagar:</span>
-                <span class="font-semibold text-gray-800 ml-1">Bs. {{ fmt(montoVesNum) }}</span>
+              <div class="text-ink-soft">
+                <span class="text-ink-faint">Pagar:</span>
+                <span class="font-semibold text-heading ml-1">Bs. {{ fmt(montoVesNum) }}</span>
               </div>
-              <div class="text-gray-500">
-                <span class="text-gray-400">Tasa:</span>
-                <span class="font-semibold text-gray-800 ml-1">{{ tasa || '—' }}</span>
+              <div class="text-ink-soft">
+                <span class="text-ink-faint">Tasa:</span>
+                <span class="font-semibold text-heading ml-1">{{ tasa || '—' }}</span>
               </div>
             </div>
-            <div v-if="sumaValida" class="text-sm text-green-600 font-medium flex items-center gap-1">
+            <div v-if="sumaValida" class="text-sm text-success font-medium flex items-center gap-1">
               <Iconoir name="check" class="w-4 h-4" /> Balanceado
             </div>
-            <div v-else class="text-sm text-amber-600 font-medium">
+            <div v-else class="text-sm text-warning font-medium">
               ⚠ Pendiente
             </div>
           </div>
@@ -194,7 +194,7 @@
           <AppErrorState v-if="error" :message="error" :retry="false" />
 
           <button type="submit" :disabled="enviando || !sumaValida"
-            class="w-full mt-3 bg-green-600 hover:bg-green-700 disabled:bg-green-300 text-white font-semibold py-2.5 rounded-xl transition active:scale-[0.98] flex items-center justify-center gap-2 text-sm">
+            class="w-full mt-3 bg-success hover:bg-success-strong disabled:opacity-50 text-white dark:text-navy font-semibold py-2.5 rounded-xl transition active:scale-[0.98] flex items-center justify-center gap-2 text-sm">
             <span v-if="enviando" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
             {{ enviando ? 'Creando solicitud...' : 'Crear solicitud de compra' }}
           </button>
@@ -258,10 +258,10 @@ const monedasDisponibles = [
 ]
 
 function monedaColor(c) {
-  const map = { green: 'bg-green-50 border-green-500 text-green-700', blue: 'bg-blue-50 border-blue-500 text-blue-700', purple: 'bg-purple-50 border-purple-500 text-purple-700', amber: 'bg-amber-50 border-amber-500 text-amber-700' }
-  return map[c] || 'bg-blue-50 border-blue-500 text-blue-700'
+  const map = { green: 'bg-success-soft border-success text-success-strong', blue: 'bg-info-soft border-info text-info-strong', purple: 'bg-violet-soft border-violet text-violet-strong', amber: 'bg-warning-soft border-warning text-warning-strong' }
+  return map[c] || 'bg-info-soft border-info text-info-strong'
 }
-const iconoColor = { green: 'text-green-500', blue: 'text-blue-500', purple: 'text-purple-500', amber: 'text-amber-500' }
+const iconoColor = { green: 'text-success', blue: 'text-gold-dark', purple: 'text-violet', amber: 'text-warning' }
 
 const montoVesNum = computed(() => parseFloat(montoVes.value) || 0)
 const montoDivisaNum = computed(() => parseFloat(montoDivisa.value) || 0)

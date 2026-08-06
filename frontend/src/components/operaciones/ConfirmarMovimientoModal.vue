@@ -4,42 +4,42 @@
       <div v-if="visible" class="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div class="fixed inset-0 bg-black/40" @click="$emit('cancel')"></div>
         <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4">
-        <h3 class="text-lg font-bold text-gray-800">Confirmar movimiento</h3>
+        <h3 class="text-lg font-bold text-heading">Confirmar movimiento</h3>
 
         <div class="space-y-2 text-sm">
           <div class="flex justify-between">
-            <span class="text-gray-500">Origen</span>
-            <span class="font-medium text-gray-700">{{ transaccion?.cuenta_origen?.alias || '—' }}</span>
+            <span class="text-ink-soft">Origen</span>
+            <span class="font-medium text-ink">{{ transaccion?.cuenta_origen?.alias || '—' }}</span>
           </div>
           <div class="flex justify-between">
-            <span class="text-gray-500">Destino</span>
-            <span class="font-medium text-gray-700">{{ transaccion?.cuenta_destino?.alias || '—' }}</span>
+            <span class="text-ink-soft">Destino</span>
+            <span class="font-medium text-ink">{{ transaccion?.cuenta_destino?.alias || '—' }}</span>
           </div>
           <div class="flex justify-between">
-            <span class="text-gray-500">Monto</span>
-            <span class="font-semibold text-gray-800">{{ Number(transaccion?.monto || 0).toFixed(2) }} {{ transaccion?.moneda?.codigo || '' }}</span>
+            <span class="text-ink-soft">Monto</span>
+            <span class="font-semibold text-heading">{{ Number(transaccion?.monto || 0).toFixed(2) }} {{ transaccion?.moneda?.codigo || '' }}</span>
           </div>
           <div class="flex justify-between">
-            <span class="text-gray-500">Método de pago</span>
-            <span class="text-gray-700">{{ transaccion?.metodo_pago || '—' }}</span>
+            <span class="text-ink-soft">Método de pago</span>
+            <span class="text-ink">{{ transaccion?.metodo_pago || '—' }}</span>
           </div>
         </div>
 
         <div v-if="transaccion?.metodo_pago && transaccion?.metodo_pago !== 'efectivo'" class="space-y-2">
-          <label class="block text-sm text-gray-600 font-medium">Comprobante <span class="text-red-400">*</span></label>
+          <label class="block text-sm text-ink-muted font-medium">Comprobante <span class="text-danger">*</span></label>
           <input v-model="comprobante" required placeholder="N° de referencia, voucher..."
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+            class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none" />
         </div>
 
-        <div v-if="error" class="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{{ error }}</div>
+        <div v-if="error" class="text-sm text-danger bg-danger-soft rounded-lg px-3 py-2">{{ error }}</div>
 
         <div class="flex gap-3 pt-2">
           <button @click="$emit('cancel')"
-            class="flex-1 py-2.5 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition active:scale-[0.98]">
+            class="flex-1 py-2.5 text-sm text-ink-muted bg-surface-muted hover:bg-surface-muted rounded-xl transition active:scale-[0.98]">
             Cancelar
           </button>
           <button @click="confirmar" :disabled="confirmando || !comprobanteValido"
-            class="flex-1 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-xl hover:bg-blue-700 disabled:bg-blue-300 transition active:scale-[0.98] flex items-center justify-center gap-2">
+            class="flex-1 py-2.5 bg-gold text-navy text-sm font-medium rounded-xl hover:bg-gold-dark disabled:opacity-50 transition active:scale-[0.98] flex items-center justify-center gap-2">
             <span v-if="confirmando" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
             {{ confirmando ? 'Confirmando...' : 'Confirmar movimiento' }}
           </button>

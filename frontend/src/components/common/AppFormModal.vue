@@ -19,16 +19,16 @@
           role="dialog"
           aria-modal="true"
         >
-          <div v-if="$slots.header || title" class="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
+          <div v-if="$slots.header || title" class="flex items-center justify-between px-6 py-4 border-b border-edge shrink-0">
             <div v-if="$slots.header">
               <slot name="header" />
             </div>
-            <h2 v-else-if="title" class="text-lg font-semibold text-gray-800">
+            <h2 v-else-if="title" class="text-lg font-semibold text-heading">
               {{ title }}
             </h2>
             <button
               @click="close"
-              class="p-1.5 hover:bg-gray-100 rounded-lg text-gray-400 hover:text-gray-600 transition"
+              class="p-1.5 hover:bg-surface-muted rounded-lg text-ink-faint hover:text-ink-muted transition"
               aria-label="Cerrar"
             >
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -41,7 +41,7 @@
             <slot />
           </div>
 
-          <div v-if="$slots.footer" class="px-6 py-4 border-t border-gray-100 shrink-0 flex justify-end gap-2">
+          <div v-if="$slots.footer" class="px-6 py-4 border-t border-edge shrink-0 flex justify-end gap-2">
             <slot name="footer" />
           </div>
         </div>

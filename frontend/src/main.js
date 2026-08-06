@@ -8,11 +8,17 @@ import { createPinia } from 'pinia'
 import { setupErrorHandler } from './errorHandler.js'
 import App from './App.vue'
 import router from './router'
+import { useThemeStore } from './stores/theme.js'
 import './index.css'
 
+const pinia = createPinia()
+
 const app = createApp(App)
-app.use(createPinia())
+app.use(pinia)
 app.use(router)
+
+useThemeStore(pinia).init()
+
 app.mount('#app')
 
 setupErrorHandler(app)

@@ -1,12 +1,12 @@
 <template>
   <div class="space-y-4">
     <div v-if="toast.msg"
-      class="fixed top-4 right-4 z-[70] max-w-sm bg-amber-50 border border-amber-300 text-amber-800 text-sm px-4 py-3 rounded-xl shadow-lg">
+      class="fixed top-4 right-4 z-[70] max-w-sm bg-warning-soft border border-warning-edge text-warning-strong text-sm px-4 py-3 rounded-xl shadow-lg">
       {{ toast.msg }}
     </div>
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-      <h2 class="text-xl font-bold text-gray-800">Usuarios</h2>
-      <button @click="openForm()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-1">
+      <h2 class="text-xl font-bold text-heading">Usuarios</h2>
+      <button @click="openForm()" class="px-4 py-2 bg-gold text-navy rounded-lg text-sm font-medium hover:bg-gold-dark flex items-center gap-1">
         <span>+</span> Nuevo usuario
       </button>
     </div>
@@ -16,17 +16,17 @@
       <div class="flex flex-col sm:flex-row sm:items-center gap-3">
         <div class="relative flex-1">
           <input v-model="search" @input="onSearch" placeholder="Buscar por nombre o correo..."
-            class="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
-          <Iconoir name="magnifying-glass" class="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
+            class="w-full pl-10 pr-4 py-2 bg-white border border-edge-strong rounded-xl focus:ring-2 focus:ring-gold outline-none text-sm" />
+          <Iconoir name="magnifying-glass" class="absolute left-3 top-2.5 w-5 h-5 text-ink-faint" />
           <button v-if="search" @click="search = ''; cargarUsuarios()"
-            class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600" title="Limpiar búsqueda">
+            class="absolute inset-y-0 right-0 flex items-center pr-3 text-ink-faint hover:text-ink-muted" title="Limpiar búsqueda">
             <Iconoir name="x-mark" class="w-5 h-5" />
           </button>
         </div>
         <div class="flex gap-2 overflow-x-auto pb-1">
           <button v-for="estado in estadoOpciones" :key="estado.value" @click="cambiarEstado(estado.value)"
             class="px-3 py-1.5 rounded-full text-xs font-medium border whitespace-nowrap transition-colors"
-            :class="estadoFiltro === estado.value ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'">
+            :class="estadoFiltro === estado.value ? 'bg-gold text-navy border-gold' : 'bg-white text-ink-muted border-edge-strong hover:bg-surface-soft'">
             {{ estado.label }}
           </button>
         </div>
@@ -34,31 +34,31 @@
       <div class="flex gap-2 overflow-x-auto pb-1">
         <button v-for="rol in rolOpciones" :key="rol.value" @click="cambiarRol(rol.value)"
           class="px-3 py-1.5 rounded-full text-xs font-medium border whitespace-nowrap transition-colors"
-          :class="rolFiltro === rol.value ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'">
+          :class="rolFiltro === rol.value ? 'bg-gold text-navy border-gold' : 'bg-white text-ink-muted border-edge-strong hover:bg-surface-soft'">
           {{ rol.label }}
         </button>
       </div>
     </div>
 
     <div v-if="usuarios.loading" class="text-center py-12">
-      <div class="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+      <div class="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin mx-auto"></div>
     </div>
-    <div v-else-if="usuarios.error" class="bg-red-50 text-red-600 p-4 rounded-xl">
+    <div v-else-if="usuarios.error" class="bg-danger-soft text-danger p-4 rounded-xl">
       {{ usuarios.error }}
       <button @click="usuarios.fetchAll()" class="underline ml-2">Reintentar</button>
     </div>
     <div v-else-if="usuarios.list.length === 0" class="text-center py-16">
-      <Iconoir name="users" class="w-12 h-12 mx-auto mb-4 text-gray-300" />
-      <p class="text-gray-500">No hay usuarios registrados</p>
+      <Iconoir name="users" class="w-12 h-12 mx-auto mb-4 text-ink-faint" />
+      <p class="text-ink-soft">No hay usuarios registrados</p>
     </div>
     <div v-else class="space-y-2">
       <div v-for="u in usuarios.list" :key="u.id"
-        class="bg-white border border-gray-200 rounded-xl p-4 flex items-center gap-3 cursor-pointer hover:border-blue-300 hover:shadow-sm transition"
+        class="bg-white border border-edge rounded-xl p-4 flex items-center gap-3 cursor-pointer hover:border-gold hover:shadow-sm transition"
         :class="{ 'opacity-60': !u.activo }" @click="openDetalle(u)">
         <div class="shrink-0">
           <img v-if="avatarUrl(u)" :src="avatarUrl(u)" alt="Avatar de {{ u.name }}"
-            class="w-10 h-10 rounded-full object-cover border border-gray-200" />
-          <div v-else class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-700 font-bold text-sm">
+            class="w-10 h-10 rounded-full object-cover border border-edge" />
+          <div v-else class="w-10 h-10 rounded-full bg-gold-soft flex items-center justify-center text-gold-dark font-bold text-sm">
             {{ u.name?.charAt(0).toUpperCase() }}
           </div>
         </div>
@@ -72,24 +72,24 @@
               {{ roleLabel(rol) }}
             </span>
           </div>
-          <p class="text-xs text-gray-500">{{ u.email }}</p>
-          <p v-if="u.titular" class="text-xs text-gray-400">Titular: {{ u.titular.alias }}</p>
-          <p v-if="u.last_login_at" class="text-xs text-gray-400">Último acceso: {{ formatDate(u.last_login_at) }}</p>
+          <p class="text-xs text-ink-soft">{{ u.email }}</p>
+          <p v-if="u.titular" class="text-xs text-ink-faint">Titular: {{ u.titular.alias }}</p>
+          <p v-if="u.last_login_at" class="text-xs text-ink-faint">Último acceso: {{ formatDate(u.last_login_at) }}</p>
         </div>
         <div v-if="!isSuperAdmin(u)" class="flex items-center gap-2">
           <!-- Toggle activo -->
           <button type="button" @click.stop="handleToggle(u)" :title="u.activo ? 'Desactivar' : 'Activar'"
             class="relative w-10 h-5 rounded-full transition-colors"
-            :class="u.activo ? 'bg-green-500' : 'bg-gray-300'">
+            :class="u.activo ? 'bg-success' : 'bg-surface-muted'">
             <span class="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform"
               :class="u.activo ? 'translate-x-5' : 'translate-x-0.5'"></span>
           </button>
           <button type="button" @click.stop="openDetalle(u)" title="Ver detalle"
-            class="text-xs text-slate-600 hover:text-slate-900 font-medium px-2 py-1 border border-slate-200 rounded-lg hover:bg-slate-50 flex items-center gap-1">
+            class="text-xs text-ink-muted hover:text-heading font-medium px-2 py-1 border border-edge rounded-lg hover:bg-surface-soft flex items-center gap-1">
             <Iconoir name="eye" class="w-3.5 h-3.5" />
             Detalle
           </button>
-          <button type="button" @click.stop="openForm(u)" class="text-xs text-blue-600 hover:text-blue-800 font-medium px-2 py-1 border border-blue-200 rounded-lg hover:bg-blue-50">
+          <button type="button" @click.stop="openForm(u)" class="text-xs text-gold-dark hover:text-gold-dark font-medium px-2 py-1 border border-gold/40 rounded-lg hover:bg-gold-soft">
             Editar
           </button>
         </div>
@@ -102,62 +102,62 @@
         <div class="flex items-center gap-4">
           <div class="relative shrink-0">
             <div v-if="avatarPreview || avatarUrl(usuarioEnEdicion)"
-              class="w-16 h-16 rounded-full overflow-hidden border border-gray-200">
+              class="w-16 h-16 rounded-full overflow-hidden border border-edge">
               <img v-if="avatarPreview" :src="avatarPreview" alt="Vista previa del avatar"
                 class="w-full h-full object-cover" />
               <img v-else :src="avatarUrl(usuarioEnEdicion)" alt="Avatar del usuario"
                 class="w-full h-full object-cover" />
             </div>
             <div v-else
-              class="w-16 h-16 rounded-full bg-blue-600 text-white flex items-center justify-center text-2xl font-semibold">
+              class="w-16 h-16 rounded-full bg-gold text-navy flex items-center justify-center text-2xl font-semibold">
               {{ (form.name || '?').charAt(0).toUpperCase() }}
             </div>
           </div>
           <div class="flex-1">
-            <label class="text-sm text-gray-600 mb-1 block">Foto de perfil</label>
+            <label class="text-sm text-ink-muted mb-1 block">Foto de perfil</label>
             <input ref="avatarInput" type="file" accept="image/jpeg,image/png,image/gif,image/webp,image/bmp"
               @change="onAvatarSelected"
-              class="block w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700 file:font-semibold hover:file:bg-blue-100 cursor-pointer" />
+              class="block w-full text-sm text-ink-soft file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-gold-soft file:text-gold-dark file:font-semibold hover:file:bg-gold/20 cursor-pointer" />
             <div class="flex items-center gap-3 mt-1">
-              <p class="text-xs text-gray-400">JPG, PNG, GIF, WebP o BMP · máx 2MB</p>
+              <p class="text-xs text-ink-faint">JPG, PNG, GIF, WebP o BMP · máx 2MB</p>
               <button v-if="avatarPreview || avatarFile" type="button" @click="limpiarAvatar"
-                class="text-xs font-medium text-red-600 hover:text-red-800 underline">
+                class="text-xs font-medium text-danger hover:text-danger-strong underline">
                 Quitar selección
               </button>
             </div>
-            <p v-if="avatarError" class="text-xs text-red-600 mt-1">{{ avatarError }}</p>
+            <p v-if="avatarError" class="text-xs text-danger mt-1">{{ avatarError }}</p>
           </div>
         </div>
 
         <!-- Nombre -->
         <div>
-          <label class="text-sm text-gray-600 mb-1 block">Nuevo nombre de usuario *</label>
+          <label class="text-sm text-ink-muted mb-1 block">Nuevo nombre de usuario *</label>
           <input v-model="form.name" required placeholder="Nombre completo"
             @input="nameError = ''; nameOk = ''"
             @blur="validarDisponible('name')"
             :class="inputClass(!!nameError)"
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-          <p v-if="nameOk" class="text-xs text-green-600 mt-1">{{ nameOk }}</p>
-          <p v-if="nameError" class="text-xs text-red-600 mt-1">{{ nameError }}</p>
+            class="w-full px-3 py-2 border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none" />
+          <p v-if="nameOk" class="text-xs text-success mt-1">{{ nameOk }}</p>
+          <p v-if="nameError" class="text-xs text-danger mt-1">{{ nameError }}</p>
         </div>
 
         <!-- Email -->
         <div>
-          <label class="text-sm text-gray-600 mb-1 block">Nuevo correo de usuario *</label>
+          <label class="text-sm text-ink-muted mb-1 block">Nuevo correo de usuario *</label>
           <input v-model="form.email" type="email" required placeholder="correo@ejemplo.com"
             @input="emailError = ''; emailOk = ''"
             @blur="validarDisponible('email')"
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-          <p v-if="emailOk" class="text-xs text-green-600 mt-1">{{ emailOk }}</p>
-          <p v-if="emailError" class="text-xs text-red-600 mt-1">{{ emailError }}</p>
+            class="w-full px-3 py-2 border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none" />
+          <p v-if="emailOk" class="text-xs text-success mt-1">{{ emailOk }}</p>
+          <p v-if="emailError" class="text-xs text-danger mt-1">{{ emailError }}</p>
         </div>
 
         <!-- Password -->
         <div>
           <div class="flex items-center justify-between mb-1">
-            <label class="text-sm text-gray-600 block">{{ editing ? 'Nueva contraseña de usuario (opcional)' : 'Nueva contraseña de usuario *' }}</label>
+            <label class="text-sm text-ink-muted block">{{ editing ? 'Nueva contraseña de usuario (opcional)' : 'Nueva contraseña de usuario *' }}</label>
             <button type="button" @click="generarPassword"
-              class="text-xs font-medium text-blue-600 hover:text-blue-800 underline">
+              class="text-xs font-medium text-gold-dark hover:text-gold-dark underline">
               Generar contraseña segura
             </button>
           </div>
@@ -165,19 +165,19 @@
             <input v-model="form.password" :type="mostrarPassword ? 'text' : 'password'"
               placeholder="Mínimo 8 caracteres, con mayúsculas, números y símbolos"
               :required="!editing"
-              class="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+              class="w-full px-3 py-2 pr-10 border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none" />
             <button type="button" @click="mostrarPassword = !mostrarPassword"
               :title="mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
-              class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+              class="absolute inset-y-0 right-0 flex items-center pr-3 text-ink-faint hover:text-ink-muted"
               :aria-label="mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'">
               <Iconoir :name="mostrarPassword ? 'eye-slash' : 'eye'" class="w-5 h-5" />
             </button>
           </div>
-          <p v-if="editing" class="text-xs text-gray-400 mt-1">Dejar en blanco para mantener la contraseña actual.</p>
+          <p v-if="editing" class="text-xs text-ink-faint mt-1">Dejar en blanco para mantener la contraseña actual.</p>
           <ul v-if="!editing || form.password" class="mt-2 space-y-1">
             <li v-for="req in passwordRequisitos" :key="req.label"
               class="flex items-center gap-1.5 text-xs"
-              :class="req.cumplido ? 'text-green-600' : 'text-gray-400'">
+              :class="req.cumplido ? 'text-success' : 'text-ink-faint'">
               <span class="w-3.5 text-center">{{ req.cumplido ? '✓' : '•' }}</span>
               {{ req.label }}
             </li>
@@ -186,24 +186,24 @@
 
         <!-- Rol -->
         <div ref="rolDropdownRef" class="relative">
-          <label class="text-sm text-gray-600 mb-1 block">Rol *</label>
+          <label class="text-sm text-ink-muted mb-1 block">Rol *</label>
           <button type="button" @click="rolDropdownOpen = !rolDropdownOpen"
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none flex items-center justify-between gap-2 text-left text-sm">
+            class="w-full px-3 py-2 border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none flex items-center justify-between gap-2 text-left text-sm">
             <span v-if="form.rol" class="inline-flex items-center gap-2">
               <Iconoir :name="roleIcon(form.rol)" class="w-4 h-4" />
               {{ roleLabel(form.rol) }}
             </span>
-            <span v-else class="text-gray-400">Seleccionar rol</span>
-            <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <span v-else class="text-ink-faint">Seleccionar rol</span>
+            <svg class="w-4 h-4 text-ink-faint shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
             </svg>
           </button>
           <div v-if="rolDropdownOpen"
-            class="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-lg max-h-56 overflow-y-auto">
+            class="absolute z-10 mt-1 w-full bg-white border border-edge rounded-xl shadow-lg max-h-56 overflow-y-auto">
             <button v-for="op in rolOptions" :key="op.value" type="button"
               @click="selectRol(op.value)"
-              class="w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-blue-50"
-              :class="form.rol === op.value ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'">
+              class="w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-gold-soft"
+              :class="form.rol === op.value ? 'bg-gold-soft text-gold-dark font-medium' : 'text-ink'">
               <Iconoir :name="roleIcon(op.value)" class="w-4 h-4" />
               {{ op.label }}
             </button>
@@ -212,48 +212,48 @@
 
         <!-- Titular (opcional) -->
         <div ref="titularDropdownRef" class="relative">
-          <label class="text-sm text-gray-600 mb-1 block">Titular asociado (opcional)</label>
+          <label class="text-sm text-ink-muted mb-1 block">Titular asociado (opcional)</label>
           <button type="button" @click="titularDropdownOpen = !titularDropdownOpen"
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none flex items-center justify-between gap-2 text-left text-sm">
+            class="w-full px-3 py-2 border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none flex items-center justify-between gap-2 text-left text-sm">
             <span v-if="form.titular_id" class="inline-flex items-center gap-2">
-              <Iconoir name="identification" class="w-4 h-4 text-gray-400" />
+              <Iconoir name="identification" class="w-4 h-4 text-ink-faint" />
               {{ titularLabel(form.titular_id) }}
             </span>
-            <span v-else class="inline-flex items-center gap-2 text-gray-400">
+            <span v-else class="inline-flex items-center gap-2 text-ink-faint">
               <Iconoir name="identification" class="w-4 h-4" />
               Sin titular
             </span>
-            <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4 text-ink-faint shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
             </svg>
           </button>
           <div v-if="titularDropdownOpen"
-            class="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-lg max-h-56 overflow-y-auto">
+            class="absolute z-10 mt-1 w-full bg-white border border-edge rounded-xl shadow-lg max-h-56 overflow-y-auto">
             <button type="button" @click="selectTitular(null)"
-              class="w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-blue-50 text-gray-700"
-              :class="!form.titular_id ? 'bg-blue-50 text-blue-700 font-medium' : ''">
+              class="w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-gold-soft text-ink"
+              :class="!form.titular_id ? 'bg-gold-soft text-gold-dark font-medium' : ''">
               Sin titular
             </button>
             <button v-for="t in titulares" :key="t.id" type="button"
               @click="selectTitular(t.id)"
-              class="w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-blue-50"
-              :class="form.titular_id === t.id ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'">
+              class="w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-gold-soft"
+              :class="form.titular_id === t.id ? 'bg-gold-soft text-gold-dark font-medium' : 'text-ink'">
               {{ t.alias }} — {{ t.nombre }}
             </button>
           </div>
         </div>
 
         <!-- Activo -->
-        <label class="flex items-center gap-2 text-sm text-gray-600">
-          <input v-model="form.activo" type="checkbox" class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+        <label class="flex items-center gap-2 text-sm text-ink-muted">
+          <input v-model="form.activo" type="checkbox" class="w-4 h-4 rounded border-edge-strong text-gold-dark focus:ring-gold" />
           Activo
         </label>
 
-        <div v-if="formError" class="bg-red-50 text-red-600 text-sm p-3 rounded-lg whitespace-pre-line">{{ formError }}</div>
+        <div v-if="formError" class="bg-danger-soft text-danger text-sm p-3 rounded-lg whitespace-pre-line">{{ formError }}</div>
       </form>
       <template #footer>
         <button @click="submit" :disabled="!formValido || saving"
-          class="w-full bg-blue-600 text-white font-semibold py-2.5 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed transition flex items-center justify-center gap-2">
+          class="w-full bg-gold text-navy font-semibold py-2.5 rounded-lg hover:bg-gold-dark disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center gap-2">
           <span v-if="saving" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
           {{ saving ? 'Guardando...' : (editing ? 'Guardar cambios' : 'Crear usuario') }}
         </button>
@@ -265,13 +265,13 @@
       <template #header>
         <div class="flex items-center gap-3">
           <img v-if="avatarUrl(usuarioDetalle)" :src="avatarUrl(usuarioDetalle)" alt="Avatar de {{ usuarioDetalle?.name }}"
-            class="w-10 h-10 rounded-full object-cover border border-gray-200" />
-          <div v-else class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-700 font-bold">
+            class="w-10 h-10 rounded-full object-cover border border-edge" />
+          <div v-else class="w-10 h-10 rounded-full bg-gold-soft flex items-center justify-center text-gold-dark font-bold">
             {{ usuarioDetalle?.name?.charAt(0).toUpperCase() }}
           </div>
           <div>
             <div class="flex items-center gap-2 flex-wrap">
-              <h3 class="text-lg font-bold text-gray-800">{{ usuarioDetalle?.name }}</h3>
+              <h3 class="text-lg font-bold text-heading">{{ usuarioDetalle?.name }}</h3>
               <span v-for="rol in usuarioDetalle?.roles ?? []" :key="rol"
                 class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full"
                 :class="roleBadgeClass(rol)">
@@ -279,52 +279,52 @@
                 {{ roleLabel(rol) }}
               </span>
             </div>
-            <p class="text-xs text-gray-500">{{ usuarioDetalle?.email }}</p>
+            <p class="text-xs text-ink-soft">{{ usuarioDetalle?.email }}</p>
           </div>
         </div>
       </template>
 
       <div v-if="usuarioDetalle" class="grid grid-cols-2 gap-3 mb-5">
-        <div class="bg-gray-50 rounded-lg p-3">
-          <p class="text-[10px] uppercase tracking-wide text-gray-400 font-semibold mb-1">Estado</p>
-          <p class="text-sm font-medium" :class="usuarioDetalle.activo ? 'text-green-600' : 'text-gray-500'">
+        <div class="bg-surface-soft rounded-lg p-3">
+          <p class="text-[10px] uppercase tracking-wide text-ink-faint font-semibold mb-1">Estado</p>
+          <p class="text-sm font-medium" :class="usuarioDetalle.activo ? 'text-success' : 'text-ink-soft'">
             {{ usuarioDetalle.activo ? 'Activo' : 'Inactivo' }}
           </p>
         </div>
-        <div class="bg-gray-50 rounded-lg p-3">
-          <p class="text-[10px] uppercase tracking-wide text-gray-400 font-semibold mb-1">Titular</p>
-          <p class="text-sm font-medium text-gray-700">
+        <div class="bg-surface-soft rounded-lg p-3">
+          <p class="text-[10px] uppercase tracking-wide text-ink-faint font-semibold mb-1">Titular</p>
+          <p class="text-sm font-medium text-ink">
             {{ usuarioDetalle.titular ? `${usuarioDetalle.titular.alias} — ${usuarioDetalle.titular.nombre}` : 'Sin titular' }}
           </p>
         </div>
-        <div class="bg-gray-50 rounded-lg p-3">
-          <p class="text-[10px] uppercase tracking-wide text-gray-400 font-semibold mb-1">Último acceso</p>
-          <p class="text-sm font-medium text-gray-700">{{ usuarioDetalle.last_login_at ? formatDateTime(usuarioDetalle.last_login_at) : 'Nunca' }}</p>
+        <div class="bg-surface-soft rounded-lg p-3">
+          <p class="text-[10px] uppercase tracking-wide text-ink-faint font-semibold mb-1">Último acceso</p>
+          <p class="text-sm font-medium text-ink">{{ usuarioDetalle.last_login_at ? formatDateTime(usuarioDetalle.last_login_at) : 'Nunca' }}</p>
         </div>
-        <div class="bg-gray-50 rounded-lg p-3">
-          <p class="text-[10px] uppercase tracking-wide text-gray-400 font-semibold mb-1">Creado el</p>
-          <p class="text-sm font-medium text-gray-700">{{ formatDateTime(usuarioDetalle.created_at) }}</p>
+        <div class="bg-surface-soft rounded-lg p-3">
+          <p class="text-[10px] uppercase tracking-wide text-ink-faint font-semibold mb-1">Creado el</p>
+          <p class="text-sm font-medium text-ink">{{ formatDateTime(usuarioDetalle.created_at) }}</p>
         </div>
       </div>
 
       <div class="flex items-center gap-2 mb-2">
-        <Iconoir name="clock" class="w-4 h-4 text-gray-500" />
-        <h4 class="text-sm font-bold text-gray-700">Historial de sesiones</h4>
+        <Iconoir name="clock" class="w-4 h-4 text-ink-soft" />
+        <h4 class="text-sm font-bold text-ink">Historial de sesiones</h4>
       </div>
 
       <div v-if="sesionesLoading" class="text-center py-10">
-        <div class="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+        <div class="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin mx-auto"></div>
       </div>
-      <div v-else-if="sesionesError" class="bg-red-50 text-red-600 p-4 rounded-xl text-sm">
+      <div v-else-if="sesionesError" class="bg-danger-soft text-danger p-4 rounded-xl text-sm">
         {{ sesionesError }}
       </div>
       <div v-else-if="sesiones.length === 0" class="text-center py-10">
-        <p class="text-gray-500 text-sm">No hay sesiones registradas para este usuario.</p>
+        <p class="text-ink-soft text-sm">No hay sesiones registradas para este usuario.</p>
       </div>
       <div v-else class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead>
-            <tr class="text-left text-xs uppercase text-gray-400 border-b border-gray-200">
+            <tr class="text-left text-xs uppercase text-ink-faint border-b border-edge">
               <th class="py-2 pr-3 font-semibold">Inicio</th>
               <th class="py-2 pr-3 font-semibold">IP</th>
               <th class="py-2 pr-3 font-semibold">Dispositivo</th>
@@ -333,13 +333,13 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="s in sesiones" :key="s.id" class="border-b border-gray-100 last:border-0">
-              <td class="py-2.5 pr-3 whitespace-nowrap text-gray-700">{{ formatDateTime(s.login_at) }}</td>
-              <td class="py-2.5 pr-3 whitespace-nowrap text-gray-600">{{ s.ip_address || '—' }}</td>
-              <td class="py-2.5 pr-3 text-gray-600">
+            <tr v-for="s in sesiones" :key="s.id" class="border-b border-edge last:border-0">
+              <td class="py-2.5 pr-3 whitespace-nowrap text-ink">{{ formatDateTime(s.login_at) }}</td>
+              <td class="py-2.5 pr-3 whitespace-nowrap text-ink-muted">{{ s.ip_address || '—' }}</td>
+              <td class="py-2.5 pr-3 text-ink-muted">
                 {{ dispositivo(s) }}
               </td>
-              <td class="py-2.5 pr-3 whitespace-nowrap text-gray-600">
+              <td class="py-2.5 pr-3 whitespace-nowrap text-ink-muted">
                 {{ duracion(s) }}
               </td>
               <td class="py-2.5">
@@ -355,11 +355,11 @@
       <template #footer>
         <div class="flex gap-2">
           <button v-if="auth.isAdmin && !isSuperAdmin(usuarioDetalle)" @click="editarDesdeDetalle"
-            class="flex-1 bg-blue-600 text-white font-semibold py-2.5 rounded-lg hover:bg-blue-700 transition">
+            class="flex-1 bg-gold text-navy font-semibold py-2.5 rounded-lg hover:bg-gold-dark transition">
             Editar usuario
           </button>
           <button @click="mostrarDetalle = false"
-            class="flex-1 bg-gray-200 text-gray-700 font-semibold py-2.5 rounded-lg hover:bg-gray-300 transition">
+            class="flex-1 bg-surface-muted text-ink font-semibold py-2.5 rounded-lg hover:bg-surface-muted transition">
             Cerrar
           </button>
         </div>
@@ -534,7 +534,7 @@ function limpiarAvatar() {
  * @param {boolean} hasError
  * @returns {string}
  */
-const inputClass = (hasError) => (hasError ? 'border-red-400' : '')
+const inputClass = (hasError) => (hasError ? 'border-danger' : '')
 
 /** Datos del formulario */
 const form = reactive({
@@ -584,12 +584,12 @@ const passwordRequisitos = computed(() => {
  * @returns {string}
  */
 const roleBadgeClass = (rol) => ({
-  'super_admin': 'bg-red-100 text-red-700',
-  'admin':       'bg-orange-100 text-orange-700',
-  'operador':    'bg-blue-100 text-blue-700',
-  'contador':    'bg-green-100 text-green-700',
-  'lectura':     'bg-gray-100 text-gray-600',
-}[rol] || 'bg-gray-100 text-gray-600')
+  'super_admin': 'bg-danger-soft text-danger-strong',
+  'admin':       'bg-warning-soft text-warning-strong',
+  'operador':    'bg-info-soft text-info-strong',
+  'contador':    'bg-success-soft text-success-strong',
+  'lectura':     'bg-surface-muted text-ink-muted',
+}[rol] || 'bg-surface-muted text-ink-muted')
 
 /**
  * Devuelve el nombre del icono correspondiente al rol.
@@ -758,9 +758,9 @@ function duracion(s) {
  * @returns {{texto: string, clase: string}}
  */
 function cierreBadge(s) {
-  if (s.tipo_cierre === 'manual') return { texto: 'Manual', clase: 'bg-green-100 text-green-700' }
-  if (s.tipo_cierre === 'expirada') return { texto: 'Expirada', clase: 'bg-amber-100 text-amber-700' }
-  return { texto: 'Vigente', clase: 'bg-blue-100 text-blue-700' }
+  if (s.tipo_cierre === 'manual') return { texto: 'Manual', clase: 'bg-success-soft text-success-strong' }
+  if (s.tipo_cierre === 'expirada') return { texto: 'Expirada', clase: 'bg-warning-soft text-warning-strong' }
+  return { texto: 'Vigente', clase: 'bg-info-soft text-info-strong' }
 }
 
 /** Controla apertura del dropdown de rol */

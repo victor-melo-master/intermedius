@@ -2,110 +2,110 @@
   <form @submit.prevent="guardar" class="space-y-4">
     <!-- Moneda primero para forzar dirección -->
     <div>
-      <label class="block text-xs text-gray-500 mb-1">Moneda</label>
+      <label class="block text-xs text-ink-soft mb-1">Moneda</label>
       <select v-model="form.moneda_id" required
-        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+        class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white focus:ring-2 focus:ring-gold outline-none">
         <option value="">Seleccionar</option>
         <option v-for="m in monedasFiltradas" :key="m.id" :value="m.id">{{ m.codigo }} — {{ m.nombre }}</option>
       </select>
-      <p v-if="monedasFiltradas.length === 1" class="text-xs text-gray-400 mt-1">Moneda fijada por la operación</p>
+      <p v-if="monedasFiltradas.length === 1" class="text-xs text-ink-faint mt-1">Moneda fijada por la operación</p>
     </div>
 
-    <div v-if="!form.moneda_id" class="bg-amber-50 border border-amber-200 text-amber-700 text-sm p-3 rounded-lg">
+    <div v-if="!form.moneda_id" class="bg-warning-soft border border-warning-edge text-warning-strong text-sm p-3 rounded-lg">
       Selecciona la moneda primero para ver las cuentas disponibles.
     </div>
 
     <template v-else>
       <div class="grid grid-cols-2 gap-3">
         <div>
-          <label class="block text-xs text-gray-500 mb-1">
+          <label class="block text-xs text-ink-soft mb-1">
             Cuenta origen
-            <span class="text-gray-400">({{ labelOrigen }})</span>
+            <span class="text-ink-faint">({{ labelOrigen }})</span>
           </label>
           <select v-model="form.cuenta_origen_id" required
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+            class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white focus:ring-2 focus:ring-gold outline-none">
             <option value="">Seleccionar</option>
             <option v-for="c in cuentasOrigen" :key="c.id" :value="c.id">
               {{ labelCuenta(c) }}
             </option>
           </select>
-          <p v-if="!cuentasOrigen.length" class="text-xs text-red-500 mt-1">No hay cuentas disponibles</p>
+          <p v-if="!cuentasOrigen.length" class="text-xs text-danger mt-1">No hay cuentas disponibles</p>
           <p v-else-if="cuentaOrigenObj && saldoOrigen !== null" class="text-xs mt-1"
-            :class="saldoOrigen < 0 ? 'text-red-500' : 'text-gray-400'">
+            :class="saldoOrigen < 0 ? 'text-danger' : 'text-ink-faint'">
             Saldo: {{ monedaSel?.simbolo || '' }}{{ formatMoney(saldoOrigen) }}
           </p>
         </div>
         <div>
-          <label class="block text-xs text-gray-500 mb-1">
+          <label class="block text-xs text-ink-soft mb-1">
             Cuenta destino
-            <span class="text-gray-400">({{ labelDestino }})</span>
+            <span class="text-ink-faint">({{ labelDestino }})</span>
           </label>
           <select v-model="form.cuenta_destino_id" required
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+            class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white focus:ring-2 focus:ring-gold outline-none">
             <option value="">Seleccionar</option>
             <option v-for="c in cuentasDestino" :key="c.id" :value="c.id">
               {{ labelCuenta(c) }}
             </option>
           </select>
-          <p v-if="!cuentasDestino.length" class="text-xs text-red-500 mt-1">No hay cuentas disponibles</p>
+          <p v-if="!cuentasDestino.length" class="text-xs text-danger mt-1">No hay cuentas disponibles</p>
           <p v-else-if="cuentaDestinoObj && saldoDestino !== null" class="text-xs mt-1"
-            :class="saldoDestino < 0 ? 'text-red-500' : 'text-gray-400'">
+            :class="saldoDestino < 0 ? 'text-danger' : 'text-ink-faint'">
             Saldo: {{ monedaSel?.simbolo || '' }}{{ formatMoney(saldoDestino) }}
           </p>
         </div>
       </div>
 
-      <div class="bg-blue-50 border border-blue-200 text-blue-700 text-sm p-3 rounded-lg flex items-start gap-2">
+      <div class="bg-gold-soft border border-gold/40 text-gold-dark text-sm p-3 rounded-lg flex items-start gap-2">
         <span class="mt-0.5">ℹ️</span>
         <span>{{ textoFlujo }}</span>
       </div>
     </template>
 
     <div>
-      <label class="block text-xs text-gray-500 mb-1">Monto</label>
+      <label class="block text-xs text-ink-soft mb-1">Monto</label>
       <input v-model="form.monto" type="number" step="0.01" min="0" required placeholder="0.00"
         class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 outline-none"
-        :class="excedeLimite ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'" />
+        :class="excedeLimite ? 'border-danger focus:ring-danger' : 'border-edge-strong focus:ring-gold'" />
       <p v-if="disponible !== null && form.moneda_id" class="text-xs mt-1"
-        :class="excedeLimite ? 'text-red-500 font-medium' : 'text-gray-400'">
+        :class="excedeLimite ? 'text-danger font-medium' : 'text-ink-faint'">
         {{ excedeLimite ? 'Excede el límite. ' : '' }}Disponible: {{ monedaSel?.simbolo || '' }}{{ formatMoney(disponible) }} de {{ monedaSel?.simbolo || '' }}{{ formatMoney(limiteMoneda) }}
       </p>
-      <p v-if="saldoOrigen !== null && cuentaOrigenObj && !(props.esCompra && esDivisa) && !cuentaOrigenObj.titular_id && parseFloat(form.monto) > saldoOrigen" class="text-xs text-red-500 font-medium">
-        <Iconoir name="exclamation-triangle" class="w-3.5 h-3.5 inline text-red-500" /> El monto excede el saldo disponible en la cuenta origen ({{ monedaSel?.simbolo || '' }}{{ formatMoney(saldoOrigen) }})
+      <p v-if="saldoOrigen !== null && cuentaOrigenObj && !(props.esCompra && esDivisa) && !cuentaOrigenObj.titular_id && parseFloat(form.monto) > saldoOrigen" class="text-xs text-danger font-medium">
+        <Iconoir name="exclamation-triangle" class="w-3.5 h-3.5 inline text-danger" /> El monto excede el saldo disponible en la cuenta origen ({{ monedaSel?.simbolo || '' }}{{ formatMoney(saldoOrigen) }})
       </p>
     </div>
 
     <div>
-      <label class="block text-xs text-gray-500 mb-1">Tasa aplicada</label>
+      <label class="block text-xs text-ink-soft mb-1">Tasa aplicada</label>
       <input v-model="form.tasa_aplicada" type="number" step="0.01" min="0" required
-        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+        class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none" />
     </div>
 
     <div>
-      <label class="block text-xs text-gray-500 mb-1">Método de pago <span class="text-red-400">*</span></label>
+      <label class="block text-xs text-ink-soft mb-1">Método de pago <span class="text-danger">*</span></label>
       <select v-model="form.metodo_pago" required
-        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+        class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white focus:ring-2 focus:ring-gold outline-none">
         <option value="">Seleccionar</option>
         <option v-for="op in opcionesMetodoPago" :key="op.value" :value="op.value">{{ op.label }}</option>
       </select>
     </div>
 
     <div v-if="form.metodo_pago && form.metodo_pago !== 'efectivo'">
-      <label class="block text-xs text-gray-500 mb-1">Comprobante <span class="text-red-400">*</span></label>
+      <label class="block text-xs text-ink-soft mb-1">Comprobante <span class="text-danger">*</span></label>
       <input v-model="form.comprobante" required
         placeholder="N° de referencia, voucher, hash..."
-        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+        class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none" />
     </div>
 
-    <div v-if="error" class="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{{ error }}</div>
+    <div v-if="error" class="text-sm text-danger bg-danger-soft rounded-lg px-3 py-2">{{ error }}</div>
 
     <div class="flex gap-3 pt-2">
       <button type="button" @click="$emit('cancel')"
-        class="flex-1 py-2.5 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition">
+        class="flex-1 py-2.5 text-sm text-ink-muted bg-surface-muted hover:bg-surface-muted rounded-xl transition">
         Cancelar
       </button>
       <button type="submit" :disabled="saving || !valido"
-        class="flex-1 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-xl hover:bg-blue-700 disabled:bg-blue-300 transition flex items-center justify-center gap-2">
+        class="flex-1 py-2.5 bg-gold text-navy text-sm font-medium rounded-xl hover:bg-gold-dark disabled:opacity-50 transition flex items-center justify-center gap-2">
         <span v-if="saving" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
         {{ saving ? 'Guardando...' : 'Guardar movimiento' }}
       </button>

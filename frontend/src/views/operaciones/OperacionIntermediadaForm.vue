@@ -1,87 +1,87 @@
 <template>
   <div class="max-w-2xl mx-auto space-y-4 pb-10">
     <div class="flex items-center gap-3 mb-2">
-      <button @click="$router.back()" class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition"><Iconoir name="arrow-left" class="w-4 h-4" /> Volver</button>
-      <h2 class="text-xl font-bold text-gray-800">Nueva Intermediada</h2>
+      <button @click="$router.back()" class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-ink-muted hover:bg-surface-muted rounded-lg transition"><Iconoir name="arrow-left" class="w-4 h-4" /> Volver</button>
+      <h2 class="text-xl font-bold text-heading">Nueva Intermediada</h2>
     </div>
 
-    <div v-if="successRef" class="bg-green-50 border border-green-200 rounded-2xl p-6 text-center space-y-4">
-      <Iconoir name="check" class="w-12 h-12 text-green-600" />
-      <p class="text-green-700 font-semibold">Operación registrada {{ successRef }}</p>
-      <button @click="$router.push('/operaciones')" class="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm">Ver operaciones</button>
+    <div v-if="successRef" class="bg-success-soft border border-success-edge rounded-2xl p-6 text-center space-y-4">
+      <Iconoir name="check" class="w-12 h-12 text-success" />
+      <p class="text-success-strong font-semibold">Operación registrada {{ successRef }}</p>
+      <button @click="$router.push('/operaciones')" class="px-4 py-2 bg-gold text-navy rounded-xl text-sm">Ver operaciones</button>
     </div>
 
     <form v-else @submit.prevent="submit" class="space-y-4">
       <!-- Cliente Emisor (vende) -->
-      <div class="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
-        <h3 class="font-semibold text-gray-700">Cliente Emisor (vende {{ moneda }})</h3>
+      <div class="bg-white border border-edge rounded-xl p-5 space-y-3">
+        <h3 class="font-semibold text-ink">Cliente Emisor (vende {{ moneda }})</h3>
         <ClienteSelector v-model="clienteEmisor" />
       </div>
 
       <!-- Cuentas Emisor -->
-      <div class="bg-white border border-gray-200 rounded-xl p-5 space-y-4">
-        <h3 class="font-semibold text-gray-700">Cuentas Emisor</h3>
+      <div class="bg-white border border-edge rounded-xl p-5 space-y-4">
+        <h3 class="font-semibold text-ink">Cuentas Emisor</h3>
         <CuentaSelector v-model="cuentaEmisorDivisa" :label="'Cuenta ' + moneda + ' del emisor (recibe divisa)'" :placeholder="'Seleccionar cuenta ' + moneda" :cuentas="cuentasDivisa" :empty-message="'No hay cuentas en ' + moneda" :cuenta-label="cuentaLabel" :bancos="bancos" />
         <CuentaSelector v-model="cuentaEmisorVes" label="Cuenta VES del emisor (paga al cliente)" placeholder="Seleccionar cuenta VES" :cuentas="cuentasVes" empty-message="No hay cuentas en VES" :cuenta-label="cuentaLabel" :bancos="bancos" />
       </div>
 
       <!-- Cliente Receptor (compra) -->
-      <div class="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
-        <h3 class="font-semibold text-gray-700">Cliente Receptor (compra {{ moneda }})</h3>
+      <div class="bg-white border border-edge rounded-xl p-5 space-y-3">
+        <h3 class="font-semibold text-ink">Cliente Receptor (compra {{ moneda }})</h3>
         <ClienteSelector v-model="clienteReceptor" />
       </div>
 
       <!-- Cuentas Receptor -->
-      <div class="bg-white border border-gray-200 rounded-xl p-5 space-y-4">
-        <h3 class="font-semibold text-gray-700">Cuentas Receptor</h3>
+      <div class="bg-white border border-edge rounded-xl p-5 space-y-4">
+        <h3 class="font-semibold text-ink">Cuentas Receptor</h3>
         <CuentaSelector v-model="cuentaReceptorDivisa" :label="'Cuenta ' + moneda + ' del receptor (entrega divisa)'" :placeholder="'Seleccionar cuenta ' + moneda" :cuentas="cuentasDivisa" :empty-message="'No hay cuentas en ' + moneda" :cuenta-label="cuentaLabel" :bancos="bancos" />
         <CuentaSelector v-model="cuentaReceptorVes" label="Cuenta VES del receptor (recibe del cliente)" placeholder="Seleccionar cuenta VES" :cuentas="cuentasVes" empty-message="No hay cuentas en VES" :cuenta-label="cuentaLabel" :bancos="bancos" />
       </div>
 
       <!-- Monto -->
-      <div class="bg-white border border-gray-200 rounded-xl p-5 space-y-4">
-        <h3 class="font-semibold text-gray-700">Monto</h3>
+      <div class="bg-white border border-edge rounded-xl p-5 space-y-4">
+        <h3 class="font-semibold text-ink">Monto</h3>
         <div>
-          <label class="block text-sm text-gray-600 mb-1">Monto {{ moneda }} *</label>
+          <label class="block text-sm text-ink-muted mb-1">Monto {{ moneda }} *</label>
           <input v-model="form.monto" type="number" step="0.01" required placeholder="100.00"
-            class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" />
+            class="w-full px-4 py-2.5 border border-edge-strong rounded-xl focus:ring-2 focus:ring-gold outline-none" />
         </div>
       </div>
 
       <!-- Tasas -->
-      <div class="bg-white border border-gray-200 rounded-xl p-5 space-y-4">
-        <h3 class="font-semibold text-gray-700">Tasas</h3>
+      <div class="bg-white border border-edge rounded-xl p-5 space-y-4">
+        <h3 class="font-semibold text-ink">Tasas</h3>
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="block text-sm text-gray-600 mb-1">Tasa de compra (al emisor) *</label>
+            <label class="block text-sm text-ink-muted mb-1">Tasa de compra (al emisor) *</label>
             <input v-model="form.tasa_compra" type="number" step="0.01" required placeholder="36.00"
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" />
+              class="w-full px-4 py-2.5 border border-edge-strong rounded-xl focus:ring-2 focus:ring-gold outline-none" />
           </div>
           <div>
-            <label class="block text-sm text-gray-600 mb-1">Tasa de venta (al receptor) *</label>
+            <label class="block text-sm text-ink-muted mb-1">Tasa de venta (al receptor) *</label>
             <input v-model="form.tasa_venta" type="number" step="0.01" required placeholder="37.00"
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" />
+              class="w-full px-4 py-2.5 border border-edge-strong rounded-xl focus:ring-2 focus:ring-gold outline-none" />
           </div>
         </div>
-        <div v-if="tasaVenta <= tasaCompra" class="bg-amber-50 border border-amber-200 text-amber-700 text-sm p-3 rounded-lg">
-          <Iconoir name="exclamation-triangle" class="w-4 h-4 inline text-amber-500" /> La tasa de venta debe ser mayor que la de compra.
+        <div v-if="tasaVenta <= tasaCompra" class="bg-warning-soft border border-warning-edge text-warning-strong text-sm p-3 rounded-lg">
+          <Iconoir name="exclamation-triangle" class="w-4 h-4 inline text-warning" /> La tasa de venta debe ser mayor que la de compra.
         </div>
-        <div class="bg-green-50 border border-green-200 text-green-700 text-sm p-3 rounded-lg">
-          <Iconoir name="currency-dollar" class="w-4 h-4 inline text-green-600" /> Ganancia estimada: {{ gananciaEstimada }} Bs ({{ moneda }} {{ form.monto }} × {{ spread }})
+        <div class="bg-success-soft border border-success-edge text-success-strong text-sm p-3 rounded-lg">
+          <Iconoir name="currency-dollar" class="w-4 h-4 inline text-success" /> Ganancia estimada: {{ gananciaEstimada }} Bs ({{ moneda }} {{ form.monto }} × {{ spread }})
         </div>
       </div>
 
       <!-- Descripción -->
-      <div class="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
-        <label class="block text-sm text-gray-600 mb-1">Descripción</label>
+      <div class="bg-white border border-edge rounded-xl p-5 space-y-3">
+        <label class="block text-sm text-ink-muted mb-1">Descripción</label>
         <textarea v-model="form.descripcion" rows="2" placeholder="Notas opcionales"
-          class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none resize-none"></textarea>
+          class="w-full px-4 py-2.5 border border-edge-strong rounded-xl focus:ring-2 focus:ring-gold outline-none resize-none"></textarea>
       </div>
 
       <AppErrorState v-if="error" :message="error" :retry="false" />
 
       <button type="submit" :disabled="saving || !formularioValido"
-        class="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-purple-300 text-white font-semibold py-3 rounded-xl transition active:scale-[0.98]">
+        class="w-full bg-gold hover:bg-gold-dark disabled:opacity-50 text-navy font-semibold py-3 rounded-xl transition active:scale-[0.98]">
         {{ saving ? 'Registrando...' : 'Registrar intermediada' }}
       </button>
     </form>

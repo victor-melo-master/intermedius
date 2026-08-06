@@ -8,40 +8,40 @@
 
     <div class="relative">
       <input v-model="search" @input="debounceSearch" placeholder="Buscar por nombre o alias..."
-        class="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" />
-      <Iconoir name="magnifying-glass" class="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
-      <button v-if="search" @click="search = ''; clientes.fetchAll()" class="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"><Iconoir name="x-mark" class="w-5 h-5" /></button>
+        class="w-full pl-10 pr-4 py-2.5 bg-white border border-edge-strong rounded-xl focus:ring-2 focus:ring-gold outline-none" />
+      <Iconoir name="magnifying-glass" class="absolute left-3 top-2.5 w-5 h-5 text-ink-faint" />
+      <button v-if="search" @click="search = ''; clientes.fetchAll()" class="absolute right-3 top-2.5 text-ink-faint hover:text-ink-muted"><Iconoir name="x-mark" class="w-5 h-5" /></button>
     </div>
 
     <AppLoadingSpinner v-if="clientes.loading" />
     <div class="flex gap-2" v-if="auth.canConfig">
-      <button @click="mostrarPapelera = false; cargarLista()" class="text-sm px-3 py-1.5 rounded-lg transition active:scale-[0.98]" :class="mostrarPapelera ? 'bg-gray-100 text-gray-600' : 'bg-blue-600 text-white'">Activos</button>
-      <button @click="mostrarPapelera = true; cargarLista()" class="text-sm px-3 py-1.5 rounded-lg transition active:scale-[0.98] inline-flex items-center gap-1" :class="mostrarPapelera ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-600'"><Iconoir name="trash" class="w-4 h-4" /> Papelera</button>
+      <button @click="mostrarPapelera = false; cargarLista()" class="text-sm px-3 py-1.5 rounded-lg transition active:scale-[0.98]" :class="mostrarPapelera ? 'bg-surface-muted text-ink-muted' : 'bg-gold text-navy'">Activos</button>
+      <button @click="mostrarPapelera = true; cargarLista()" class="text-sm px-3 py-1.5 rounded-lg transition active:scale-[0.98] inline-flex items-center gap-1" :class="mostrarPapelera ? 'bg-danger text-white dark:text-navy' : 'bg-surface-muted text-ink-muted'"><Iconoir name="trash" class="w-4 h-4" /> Papelera</button>
     </div>
 
     <AppLoadingSpinner v-if="clientes.loading" />
     <AppErrorState v-else-if="clientes.error" :message="clientes.error" @retry="cargarLista()" />
     <template v-else-if="clientes.list.length === 0">
       <div class="text-center py-16">
-        <Iconoir name="users" class="w-12 h-12 mx-auto mb-4 text-gray-300" />
-        <p class="text-gray-500">{{ search ? 'Sin resultados' : (mostrarPapelera ? 'No hay clientes eliminados' : 'No hay clientes') }}</p>
+        <Iconoir name="users" class="w-12 h-12 mx-auto mb-4 text-ink-faint" />
+        <p class="text-ink-soft">{{ search ? 'Sin resultados' : (mostrarPapelera ? 'No hay clientes eliminados' : 'No hay clientes') }}</p>
       </div>
     </template>
     <div v-else class="space-y-2">
-      <div v-for="c in clientes.list" :key="c.id" @click="openDetail(c)" class="bg-white border border-gray-200 rounded-xl p-4 flex items-center gap-3 cursor-pointer hover:shadow-md transition" :class="c.deleted_at ? 'opacity-70 border-red-200' : ''">
-        <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-700 font-bold text-sm">{{ c.nombre.charAt(0).toUpperCase() }}</div>
+      <div v-for="c in clientes.list" :key="c.id" @click="openDetail(c)" class="bg-white border border-edge rounded-xl p-4 flex items-center gap-3 cursor-pointer hover:shadow-md transition" :class="c.deleted_at ? 'opacity-70 border-danger-edge' : ''">
+        <div class="w-10 h-10 rounded-full bg-gold-soft flex items-center justify-center text-gold-dark font-bold text-sm">{{ c.nombre.charAt(0).toUpperCase() }}</div>
         <div class="flex-1 min-w-0">
           <p class="font-semibold text-sm truncate">{{ c.nombre }}</p>
-          <p v-if="c.alias" class="text-xs text-gray-500 truncate">{{ c.alias }}</p>
-          <p v-if="c.telefono" class="text-xs text-gray-400">{{ c.telefono }}</p>
+          <p v-if="c.alias" class="text-xs text-ink-soft truncate">{{ c.alias }}</p>
+          <p v-if="c.telefono" class="text-xs text-ink-faint">{{ c.telefono }}</p>
         </div>
         <div class="text-right shrink-0">
-          <p class="text-sm font-bold" :class="(c.saldo_cache_usd || 0) >= 0 ? 'text-green-600' : 'text-red-600'">${{ formatMoney(c.saldo_cache_usd) }}</p>
-          <span v-if="c.deleted_at" class="text-[10px] bg-red-50 text-red-600 px-2 py-0.5 rounded-full">Eliminado</span>
-          <span v-else-if="!c.activo" class="text-[10px] bg-red-50 text-red-600 px-2 py-0.5 rounded-full">Inactivo</span>
+          <p class="text-sm font-bold" :class="(c.saldo_cache_usd || 0) >= 0 ? 'text-success' : 'text-danger'">${{ formatMoney(c.saldo_cache_usd) }}</p>
+          <span v-if="c.deleted_at" class="text-[10px] bg-danger-soft text-danger px-2 py-0.5 rounded-full">Eliminado</span>
+          <span v-else-if="!c.activo" class="text-[10px] bg-danger-soft text-danger px-2 py-0.5 rounded-full">Inactivo</span>
           <div class="mt-1 flex gap-2 justify-end">
-            <button v-if="c.deleted_at && (auth.canConfig)" @click.stop="restaurarCliente(c)" class="text-xs text-green-600 hover:text-green-800 underline inline-flex items-center gap-1"><Iconoir name="arrow-uturn-left" class="w-3 h-3" /> Recuperar</button>
-            <button v-else-if="auth.canWrite" @click.stop="openEdit(c)" class="text-xs text-blue-600 hover:text-blue-800 underline inline-flex items-center gap-1"><Iconoir name="pencil-square" class="w-3 h-3" /> Editar</button>
+            <button v-if="c.deleted_at && (auth.canConfig)" @click.stop="restaurarCliente(c)" class="text-xs text-success hover:text-success-strong underline inline-flex items-center gap-1"><Iconoir name="arrow-uturn-left" class="w-3 h-3" /> Recuperar</button>
+            <button v-else-if="auth.canWrite" @click.stop="openEdit(c)" class="text-xs text-gold-dark hover:text-gold-dark underline inline-flex items-center gap-1"><Iconoir name="pencil-square" class="w-3 h-3" /> Editar</button>
           </div>
         </div>
       </div>
@@ -49,15 +49,15 @@
 
     <AppFormModal v-model="showForm" :title="editingId ? 'Editar cliente' : 'Nuevo cliente'">
       <form @submit.prevent="submit" class="space-y-3">
-        <input v-model="form.nombre" required placeholder="Nombre *" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-        <input v-model="form.alias" placeholder="Alias" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-        <input v-model="form.telefono" placeholder="Teléfono" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-        <input v-model="form.email" type="email" placeholder="Email" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-        <textarea v-model="form.notas" rows="2" placeholder="Notas" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none"></textarea>
+        <input v-model="form.nombre" required placeholder="Nombre *" class="w-full px-3 py-2 border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none" />
+        <input v-model="form.alias" placeholder="Alias" class="w-full px-3 py-2 border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none" />
+        <input v-model="form.telefono" placeholder="Teléfono" class="w-full px-3 py-2 border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none" />
+        <input v-model="form.email" type="email" placeholder="Email" class="w-full px-3 py-2 border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none" />
+        <textarea v-model="form.notas" rows="2" placeholder="Notas" class="w-full px-3 py-2 border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none resize-none"></textarea>
         <AppErrorState v-if="formError" :message="formError" :retry="false" />
       </form>
       <template #footer>
-        <button @click="submit" :disabled="saving" class="w-full bg-blue-600 text-white font-semibold py-2.5 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition active:scale-[0.98] flex items-center justify-center gap-2">
+        <button @click="submit" :disabled="saving" class="w-full bg-gold text-navy font-semibold py-2.5 rounded-lg hover:bg-gold-dark disabled:opacity-50 transition active:scale-[0.98] flex items-center justify-center gap-2">
           <span v-if="saving" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
           {{ saving ? 'Guardando...' : (editingId ? 'Guardar cambios' : 'Crear cliente') }}
         </button>
@@ -71,48 +71,48 @@
         <div class="flex items-center justify-between mb-4">
           <h3 class="font-bold text-lg">{{ detailCliente?.nombre }}</h3>
           <div class="flex gap-2">
-            <button v-if="detailCliente?.deleted_at && (auth.canConfig)" @click="restaurarCliente(detailCliente)" class="text-xs bg-green-600 text-white px-2 py-1 rounded-lg hover:bg-green-700 inline-flex items-center gap-1"><Iconoir name="arrow-uturn-left" class="w-3 h-3" /> Recuperar</button>
-            <button @click="showDetail = false" class="text-gray-400 hover:text-gray-600"><Iconoir name="x-mark" class="w-5 h-5" /></button>
+            <button v-if="detailCliente?.deleted_at && (auth.canConfig)" @click="restaurarCliente(detailCliente)" class="text-xs bg-success hover:bg-success-strong text-white dark:text-navy px-2 py-1 rounded-lg inline-flex items-center gap-1"><Iconoir name="arrow-uturn-left" class="w-3 h-3" /> Recuperar</button>
+            <button @click="showDetail = false" class="text-ink-faint hover:text-ink-muted"><Iconoir name="x-mark" class="w-5 h-5" /></button>
           </div>
         </div>
 
         <div class="space-y-3 mb-8">
-          <p v-if="detailCliente?.alias" class="text-sm text-gray-500"><span class="font-medium text-gray-700">Alias:</span> {{ detailCliente.alias }}</p>
-          <p v-if="detailCliente?.telefono" class="text-sm text-gray-500"><span class="font-medium text-gray-700">Teléfono:</span> {{ detailCliente.telefono }}</p>
-          <p v-if="detailCliente?.email" class="text-sm text-gray-500"><span class="font-medium text-gray-700">Email:</span> {{ detailCliente.email }}</p>
-          <p v-if="detailCliente?.notas" class="text-sm text-gray-500"><span class="font-medium text-gray-700">Notas:</span> {{ detailCliente.notas }}</p>
-          <p class="text-sm text-gray-500"><span class="font-medium text-gray-700">Saldo:</span> <span :class="(detailCliente?.saldo_cache_usd || 0) >= 0 ? 'text-green-600' : 'text-red-600'">${{ formatMoney(detailCliente?.saldo_cache_usd) }}</span></p>
-          <button v-if="!detailCliente?.deleted_at && (auth.canWrite)" @click="eliminarCliente(detailCliente)" class="text-xs bg-red-600 text-white px-2 py-1 rounded-lg hover:bg-red-700 inline-flex items-center gap-1"><Iconoir name="trash" class="w-3 h-3" /> Eliminar cliente</button>
+          <p v-if="detailCliente?.alias" class="text-sm text-ink-soft"><span class="font-medium text-ink">Alias:</span> {{ detailCliente.alias }}</p>
+          <p v-if="detailCliente?.telefono" class="text-sm text-ink-soft"><span class="font-medium text-ink">Teléfono:</span> {{ detailCliente.telefono }}</p>
+          <p v-if="detailCliente?.email" class="text-sm text-ink-soft"><span class="font-medium text-ink">Email:</span> {{ detailCliente.email }}</p>
+          <p v-if="detailCliente?.notas" class="text-sm text-ink-soft"><span class="font-medium text-ink">Notas:</span> {{ detailCliente.notas }}</p>
+          <p class="text-sm text-ink-soft"><span class="font-medium text-ink">Saldo:</span> <span :class="(detailCliente?.saldo_cache_usd || 0) >= 0 ? 'text-success' : 'text-danger'">${{ formatMoney(detailCliente?.saldo_cache_usd) }}</span></p>
+          <button v-if="!detailCliente?.deleted_at && (auth.canWrite)" @click="eliminarCliente(detailCliente)" class="text-xs bg-danger text-white dark:text-navy px-2 py-1 rounded-lg hover:bg-danger-strong inline-flex items-center gap-1"><Iconoir name="trash" class="w-3 h-3" /> Eliminar cliente</button>
         </div>
 
         <!-- Cuentas bancarias -->
-        <div class="border-t-2 border-gray-300 pt-6 pb-2">
+        <div class="border-t-2 border-edge-strong pt-6 pb-2">
           <div class="flex items-center justify-between mb-4">
-            <h4 class="font-semibold text-gray-800 text-base">Cuentas bancarias</h4>
-            <button v-if="auth.canWrite" @click="openCuentaForm" class="text-xs bg-blue-600 text-white px-2 py-1 rounded-lg hover:bg-blue-700">+ Agregar cuenta</button>
+            <h4 class="font-semibold text-heading text-base">Cuentas bancarias</h4>
+            <button v-if="auth.canWrite" @click="openCuentaForm" class="text-xs bg-gold text-navy px-2 py-1 rounded-lg hover:bg-gold-dark">+ Agregar cuenta</button>
           </div>
 
           <AppLoadingSpinner v-if="loadingCuentas" />
           <template v-else-if="clienteCuentas.length === 0">
             <div class="text-center py-16">
-              <Iconoir name="building-library" class="w-12 h-12 mx-auto mb-4 text-gray-300" />
-              <p class="text-gray-500">No hay cuentas registradas.</p>
+              <Iconoir name="building-library" class="w-12 h-12 mx-auto mb-4 text-ink-faint" />
+              <p class="text-ink-soft">No hay cuentas registradas.</p>
             </div>
           </template>
           <div v-else class="space-y-3">
-            <div v-for="cu in clienteCuentas" :key="cu.id" class="bg-gray-50 border border-gray-200 rounded-lg p-3">
+            <div v-for="cu in clienteCuentas" :key="cu.id" class="bg-surface-soft border border-edge rounded-lg p-3">
               <p class="font-medium text-sm">{{ cu.alias }}</p>
-              <p class="text-xs text-gray-500">{{ cu.banco?.nombre }} — {{ cu.moneda?.codigo }}</p>
-              <p v-if="cu.numero_cuenta" class="text-xs text-gray-400">{{ cu.numero_cuenta }}</p>
+              <p class="text-xs text-ink-soft">{{ cu.banco?.nombre }} — {{ cu.moneda?.codigo }}</p>
+              <p v-if="cu.numero_cuenta" class="text-xs text-ink-faint">{{ cu.numero_cuenta }}</p>
             </div>
           </div>
         </div>
 
         <!-- Documentos -->
-        <div class="border-t-2 border-gray-300 pt-6 pb-2 mt-4">
+        <div class="border-t-2 border-edge-strong pt-6 pb-2 mt-4">
           <div class="flex items-center justify-between mb-4">
-            <h4 class="font-semibold text-gray-800 text-base">Documentos</h4>
-            <label class="text-xs bg-blue-600 text-white px-2 py-1 rounded-lg hover:bg-blue-700 cursor-pointer">
+            <h4 class="font-semibold text-heading text-base">Documentos</h4>
+            <label class="text-xs bg-gold text-navy px-2 py-1 rounded-lg hover:bg-gold-dark cursor-pointer">
               + Subir documento
               <input type="file" accept="image/*,.pdf" class="hidden" @change="subirDocumento" />
             </label>
@@ -120,12 +120,12 @@
           <AppLoadingSpinner v-if="loadingDocumentos" />
           <template v-else-if="documentos.length === 0">
             <div class="text-center py-16">
-              <Iconoir name="document-text" class="w-12 h-12 mx-auto mb-4 text-gray-300" />
-              <p class="text-gray-500">No hay documentos.</p>
+              <Iconoir name="document-text" class="w-12 h-12 mx-auto mb-4 text-ink-faint" />
+              <p class="text-ink-soft">No hay documentos.</p>
             </div>
           </template>
           <div v-else class="space-y-3">
-            <div v-for="doc in documentos" :key="doc.id" class="bg-gray-50 border border-gray-200 rounded-lg p-3 flex items-center justify-between">
+            <div v-for="doc in documentos" :key="doc.id" class="bg-surface-soft border border-edge rounded-lg p-3 flex items-center justify-between">
               <div class="flex items-center gap-2 cursor-pointer" @click="abrirDocumento(doc)">
                 <span class="text-lg inline-flex items-center">
                   <Iconoir v-if="doc.tipo === 'cedula'" name="identification" class="w-5 h-5" />
@@ -133,23 +133,23 @@
                   <Iconoir v-else name="document-text" class="w-5 h-5" />
                 </span>
                 <div>
-                  <p class="font-medium text-sm truncate max-w-[200px] hover:text-blue-600 underline">{{ doc.nombre_archivo }}</p>
-                  <p class="text-xs text-gray-400">{{ formatTamano(doc.tamano) }} · {{ doc.tipo }}</p>
+                  <p class="font-medium text-sm truncate max-w-[200px] hover:text-gold-dark underline">{{ doc.nombre_archivo }}</p>
+                  <p class="text-xs text-ink-faint">{{ formatTamano(doc.tamano) }} · {{ doc.tipo }}</p>
                 </div>
               </div>
               <div class="flex flex-col items-end gap-1">
-                <a :href="documentoDownloadUrlById(doc)" class="text-xs text-blue-600 hover:text-blue-800">⬇ Descargar</a>
-                <button @click="eliminarDocumento(doc)" class="text-xs text-red-600 hover:text-red-800 inline-flex items-center gap-1"><Iconoir name="trash" class="w-3 h-3" /> Eliminar</button>
+                <a :href="documentoDownloadUrlById(doc)" class="text-xs text-gold-dark hover:text-gold-dark">⬇ Descargar</a>
+                <button @click="eliminarDocumento(doc)" class="text-xs text-danger hover:text-danger-strong inline-flex items-center gap-1"><Iconoir name="trash" class="w-3 h-3" /> Eliminar</button>
               </div>
             </div>
           </div>
         </div>
 
         <!-- Historial de transacciones -->
-        <div class="border-t-2 border-gray-300 pt-6 pb-2 mt-4">
+        <div class="border-t-2 border-edge-strong pt-6 pb-2 mt-4">
           <div class="flex items-center justify-between mb-4">
-            <h4 class="font-semibold text-gray-800 text-base">Historial de transacciones</h4>
-            <button @click="exportarPDF" :disabled="exportando" class="text-xs bg-red-600 text-white px-2 py-1 rounded-lg hover:bg-red-700 inline-flex items-center gap-1">
+            <h4 class="font-semibold text-heading text-base">Historial de transacciones</h4>
+            <button @click="exportarPDF" :disabled="exportando" class="text-xs bg-danger text-white dark:text-navy px-2 py-1 rounded-lg hover:bg-danger-strong inline-flex items-center gap-1">
               <Iconoir v-if="!exportando" name="document-text" class="w-4 h-4" />
               {{ exportando ? 'Generando...' : 'PDF' }}
             </button>
@@ -157,31 +157,31 @@
 
           <div class="grid grid-cols-2 gap-2 mb-3">
             <div>
-              <label class="text-[10px] text-gray-400">Desde</label>
-              <input v-model="historialFiltros.fecha_desde" type="date" class="w-full px-2 py-1 text-xs border border-gray-300 rounded" />
+              <label class="text-[10px] text-ink-faint">Desde</label>
+              <input v-model="historialFiltros.fecha_desde" type="date" class="w-full px-2 py-1 text-xs border border-edge-strong rounded" />
             </div>
             <div>
-              <label class="text-[10px] text-gray-400">Hasta</label>
-              <input v-model="historialFiltros.fecha_hasta" type="date" class="w-full px-2 py-1 text-xs border border-gray-300 rounded" />
+              <label class="text-[10px] text-ink-faint">Hasta</label>
+              <input v-model="historialFiltros.fecha_hasta" type="date" class="w-full px-2 py-1 text-xs border border-edge-strong rounded" />
             </div>
           </div>
           <div class="mb-3">
-            <label class="text-[10px] text-gray-400">Tipo</label>
-            <select v-model="historialFiltros.tipo_codigo" class="w-full px-2 py-1 text-xs border border-gray-300 rounded">
+            <label class="text-[10px] text-ink-faint">Tipo</label>
+            <select v-model="historialFiltros.tipo_codigo" class="w-full px-2 py-1 text-xs border border-edge-strong rounded">
               <option value="">Todos</option>
               <option value="compra_usd">Compra USD</option>
               <option value="venta_usd">Venta USD</option>
               <option value="intermediada">Intermediada</option>
             </select>
           </div>
-          <button @click="cargarHistorial(1)" :disabled="loadingHistorial" class="w-full text-xs bg-blue-600 text-white py-1.5 rounded hover:bg-blue-700 mb-3">
+          <button @click="cargarHistorial(1)" :disabled="loadingHistorial" class="w-full text-xs bg-gold text-navy py-1.5 rounded hover:bg-gold-dark mb-3">
             {{ loadingHistorial ? 'Cargando...' : 'Buscar' }}
           </button>
 
           <div v-if="historial.length > 0" class="overflow-x-auto">
             <table class="w-full text-xs">
               <thead>
-                <tr class="text-left text-gray-400 border-b">
+                <tr class="text-left text-ink-faint border-b">
                   <th class="py-1">ID</th>
                   <th class="py-1">Fecha</th>
                   <th class="py-1">Tipo</th>
@@ -191,7 +191,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="op in historial" :key="op.id" class="border-b border-gray-50">
+                <tr v-for="op in historial" :key="op.id" class="border-b border-edge">
                   <td class="py-1">#{{ op.id }}</td>
                   <td class="py-1">{{ formatFecha(op.fecha) }}</td>
                   <td class="py-1">{{ op.tipo_operacion?.nombre || '—' }}</td>
@@ -202,12 +202,12 @@
               </tbody>
             </table>
             <div v-if="historialPaginacion.last_page > 1" class="flex justify-between items-center mt-2 text-xs">
-              <button @click="cargarHistorial(historialPaginacion.current_page - 1)" :disabled="!historialPaginacion.prev_page_url" class="text-blue-600 disabled:text-gray-300">&lt; Anterior</button>
-              <span class="text-gray-500">Pág {{ historialPaginacion.current_page }} / {{ historialPaginacion.last_page }}</span>
-              <button @click="cargarHistorial(historialPaginacion.current_page + 1)" :disabled="!historialPaginacion.next_page_url" class="text-blue-600 disabled:text-gray-300">Siguiente &gt;</button>
+              <button @click="cargarHistorial(historialPaginacion.current_page - 1)" :disabled="!historialPaginacion.prev_page_url" class="text-gold-dark disabled:text-ink-faint">&lt; Anterior</button>
+              <span class="text-ink-soft">Pág {{ historialPaginacion.current_page }} / {{ historialPaginacion.last_page }}</span>
+              <button @click="cargarHistorial(historialPaginacion.current_page + 1)" :disabled="!historialPaginacion.next_page_url" class="text-gold-dark disabled:text-ink-faint">Siguiente &gt;</button>
             </div>
           </div>
-          <div v-else-if="!loadingHistorial && historialCargado" class="text-xs text-gray-400 py-2">Sin operaciones.</div>
+          <div v-else-if="!loadingHistorial && historialCargado" class="text-xs text-ink-faint py-2">Sin operaciones.</div>
         </div>
       </div>
     </div>
@@ -215,8 +215,8 @@
     <AppFormModal v-model="showCuentaForm" :title="'Agregar cuenta para ' + (detailCliente?.nombre || '')">
       <form @submit.prevent="submitCuenta" class="space-y-3">
         <div>
-          <label class="text-sm text-gray-600 mb-1 block">Tipo de cuenta *</label>
-          <select v-model="cuentaForm.tipo" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+          <label class="text-sm text-ink-muted mb-1 block">Tipo de cuenta *</label>
+          <select v-model="cuentaForm.tipo" required class="w-full px-3 py-2 border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none">
             <option value="">Seleccionar tipo</option>
             <option value="banco">Banco</option>
             <option value="plataforma">Plataforma</option>
@@ -229,33 +229,33 @@
         </div>
 
         <div v-if="cuentaForm.tipo !== 'efectivo'">
-          <label class="text-sm text-gray-600 mb-1 block">Banco</label>
-          <select v-model="cuentaForm.banco_id" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+          <label class="text-sm text-ink-muted mb-1 block">Banco</label>
+          <select v-model="cuentaForm.banco_id" required class="w-full px-3 py-2 border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none">
             <option value="">Seleccionar banco</option>
             <option v-for="b in bancos.list" :key="b.id" :value="b.id">{{ b.nombre }} ({{ b.codigo }})</option>
           </select>
         </div>
 
         <div>
-          <label class="text-sm text-gray-600 mb-1 block">Moneda</label>
-          <select v-model="cuentaForm.moneda_id" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+          <label class="text-sm text-ink-muted mb-1 block">Moneda</label>
+          <select v-model="cuentaForm.moneda_id" required class="w-full px-3 py-2 border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none">
             <option value="">Seleccionar moneda</option>
             <option v-for="m in tasas.monedas" :key="m.id" :value="m.id">{{ m.codigo }} — {{ m.nombre }}</option>
           </select>
         </div>
 
-        <input v-model="cuentaForm.alias" required placeholder="Alias * (ej: Banesco USD)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+        <input v-model="cuentaForm.alias" required placeholder="Alias * (ej: Banesco USD)" class="w-full px-3 py-2 border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none" />
 
-        <input v-if="cuentaForm.tipo !== 'efectivo'" v-model="cuentaForm.numero_cuenta" placeholder="Número de cuenta (opcional)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-        <textarea v-model="cuentaForm.notas" rows="2" placeholder="Notas (opcional)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none"></textarea>
-        <label class="flex items-center gap-2 text-sm text-gray-600">
-          <input v-model="cuentaForm.activa" type="checkbox" class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+        <input v-if="cuentaForm.tipo !== 'efectivo'" v-model="cuentaForm.numero_cuenta" placeholder="Número de cuenta (opcional)" class="w-full px-3 py-2 border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none" />
+        <textarea v-model="cuentaForm.notas" rows="2" placeholder="Notas (opcional)" class="w-full px-3 py-2 border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none resize-none"></textarea>
+        <label class="flex items-center gap-2 text-sm text-ink-muted">
+          <input v-model="cuentaForm.activa" type="checkbox" class="w-4 h-4 rounded border-edge-strong text-gold-dark focus:ring-gold" />
           Activa
         </label>
         <AppErrorState v-if="cuentaFormError" :message="cuentaFormError" :retry="false" />
       </form>
       <template #footer>
-        <button @click="submitCuenta" :disabled="savingCuenta" class="w-full bg-blue-600 text-white font-semibold py-2.5 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition active:scale-[0.98] flex items-center justify-center gap-2">
+        <button @click="submitCuenta" :disabled="savingCuenta" class="w-full bg-gold text-navy font-semibold py-2.5 rounded-lg hover:bg-gold-dark disabled:opacity-50 transition active:scale-[0.98] flex items-center justify-center gap-2">
           <span v-if="savingCuenta" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
           {{ savingCuenta ? 'Guardando...' : 'Crear cuenta' }}
         </button>
@@ -269,13 +269,13 @@
   <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 relative z-10">
     <div class="flex items-center justify-between mb-4">
       <h3 class="font-bold text-lg">{{ documentoPreview?.nombre_archivo }}</h3>
-      <button @click="showDocumentoModal = false" class="text-gray-400 hover:text-gray-600"><Iconoir name="x-mark" class="w-5 h-5" /></button>
+      <button @click="showDocumentoModal = false" class="text-ink-faint hover:text-ink-muted"><Iconoir name="x-mark" class="w-5 h-5" /></button>
     </div>
     <div class="flex flex-col items-center justify-center">
       <!-- Spinner mientras carga la URL -->
       <div v-if="loadingPreviewUrl" class="text-center py-8">
-        <div class="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
-        <p class="text-gray-500 text-sm mt-2">Cargando previsualización...</p>
+        <div class="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin mx-auto"></div>
+        <p class="text-ink-soft text-sm mt-2">Cargando previsualización...</p>
       </div>
       <!-- Imagen -->
       <img v-else-if="esImagen(documentoPreview) && documentoPreviewUrl"
@@ -284,13 +284,13 @@
            class="max-w-full max-h-[70vh] rounded-lg shadow-md" />
       <!-- No imagen -->
       <div v-else-if="!loadingPreviewUrl" class="text-center py-8">
-        <Iconoir name="document-text" class="w-12 h-12 mx-auto mb-4 text-gray-300" />
-        <p class="text-gray-500">No se puede previsualizar este tipo de archivo.</p>
+        <Iconoir name="document-text" class="w-12 h-12 mx-auto mb-4 text-ink-faint" />
+        <p class="text-ink-soft">No se puede previsualizar este tipo de archivo.</p>
       </div>
       <!-- Botón de descarga -->
       <a v-if="documentoDownloadUrl"
          :href="documentoDownloadUrl"
-         class="mt-4 inline-block px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">
+         class="mt-4 inline-block px-4 py-2 bg-gold text-navy rounded-lg text-sm hover:bg-gold-dark">
         Descargar archivo
       </a>
     </div>

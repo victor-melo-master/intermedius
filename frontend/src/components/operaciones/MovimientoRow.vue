@@ -1,21 +1,21 @@
 <template>
-  <div class="border border-gray-200 rounded-xl p-4 space-y-3">
+  <div class="border border-edge rounded-xl p-4 space-y-3">
     <div class="flex items-center justify-between">
-      <span class="text-sm font-medium text-gray-500">Movimiento {{ index + 1 }}</span>
+      <span class="text-sm font-medium text-ink-soft">Movimiento {{ index + 1 }}</span>
       <button
         type="button"
         @click="$emit('remove')"
-        class="text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg p-1.5 text-sm transition"
-      ><Iconoir name="x-mark" class="w-3.5 h-3.5 text-red-500" /> Eliminar</button>
+        class="text-ink-faint hover:text-danger hover:bg-danger-soft rounded-lg p-1.5 text-sm transition"
+      ><Iconoir name="x-mark" class="w-3.5 h-3.5 text-danger" /> Eliminar</button>
     </div>
 
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
       <div>
-        <label class="block text-xs text-gray-500 mb-1">Moneda</label>
+        <label class="block text-xs text-ink-soft mb-1">Moneda</label>
         <select
           :value="monedaId"
           @change="$emit('update:monedaId', $event.target.value)"
-          class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+          class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none bg-white"
         >
           <option value="">Seleccionar</option>
           <option v-for="m in monedas" :key="m.id" :value="m.id">{{ m.codigo }} — {{ m.nombre }}</option>
@@ -23,14 +23,14 @@
       </div>
 
       <div>
-        <label class="block text-xs text-gray-500 mb-1">
-          <span class="inline-block w-2 h-2 bg-orange-400 rounded-full mr-1"></span>
+        <label class="block text-xs text-ink-soft mb-1">
+          <span class="inline-block w-2 h-2 bg-warning rounded-full mr-1"></span>
           Salida (entrega)
         </label>
         <select
           :value="cuentaOrigenId"
           @change="$emit('update:cuentaOrigenId', $event.target.value)"
-          class="w-full px-3 py-2 border border-orange-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-400 outline-none bg-white"
+          class="w-full px-3 py-2 border border-warning-edge rounded-lg text-sm focus:ring-2 focus:ring-warning outline-none bg-white"
         >
           <option value="">Seleccionar</option>
           <option v-for="c in cuentasOrigen" :key="c.id" :value="c.id">
@@ -40,14 +40,14 @@
       </div>
 
       <div>
-        <label class="block text-xs text-gray-500 mb-1">
-          <span class="inline-block w-2 h-2 bg-emerald-400 rounded-full mr-1"></span>
+        <label class="block text-xs text-ink-soft mb-1">
+          <span class="inline-block w-2 h-2 bg-success rounded-full mr-1"></span>
           Entrada (recibe)
         </label>
         <select
           :value="cuentaDestinoId"
           @change="$emit('update:cuentaDestinoId', $event.target.value)"
-          class="w-full px-3 py-2 border border-emerald-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-400 outline-none bg-white"
+          class="w-full px-3 py-2 border border-success-edge rounded-lg text-sm focus:ring-2 focus:ring-success outline-none bg-white"
         >
           <option value="">Seleccionar</option>
           <option v-for="c in cuentasDestino" :key="c.id" :value="c.id">
@@ -57,23 +57,23 @@
       </div>
 
       <div>
-        <label class="block text-xs text-gray-500 mb-1">Monto</label>
+        <label class="block text-xs text-ink-soft mb-1">Monto</label>
         <input
           :value="monto"
           @input="$emit('update:monto', $event.target.value)"
           type="number" step="0.01" min="0" placeholder="0.00"
-          class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+          class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none"
         />
       </div>
     </div>
 
-    <p v-if="advertenciaSaldo" class="text-xs text-red-500">
-      <Iconoir name="exclamation-triangle" class="w-3.5 h-3.5 inline text-amber-500" /> El monto supera el saldo disponible en la cuenta de salida.
+    <p v-if="advertenciaSaldo" class="text-xs text-danger">
+      <Iconoir name="exclamation-triangle" class="w-3.5 h-3.5 inline text-warning" /> El monto supera el saldo disponible en la cuenta de salida.
     </p>
 
-    <div class="border-t border-gray-100 pt-2">
+    <div class="border-t border-edge pt-2">
       <button type="button" @click="comisionAbierta = !comisionAbierta"
-        class="text-xs text-gray-400 hover:text-gray-600 transition flex items-center gap-1">
+        class="text-xs text-ink-faint hover:text-ink-muted transition flex items-center gap-1">
         <span class="text-[10px]" :class="comisionAbierta ? 'rotate-90' : ''">▶</span>
         {{ comisionTipo !== 'sin_comision' && parseFloat(comisionMonto) > 0 ? 'Comisión activa' : 'Comisión' }}
       </button>
@@ -82,7 +82,7 @@
           <select
             :value="comisionTipo"
             @change="$emit('update:comisionTipo', $event.target.value)"
-            class="text-xs px-2 py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+            class="text-xs px-2 py-1 border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none bg-white"
           >
             <option value="sin_comision">Sin comisión</option>
             <option value="manual">Manual</option>
@@ -95,11 +95,11 @@
             :value="comisionMonto"
             @input="$emit('update:comisionMonto', $event.target.value)"
             type="number" step="0.01" min="0" placeholder="0.00"
-            class="w-24 text-xs px-2 py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+            class="w-24 text-xs px-2 py-1 border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none"
           />
-          <span v-if="comisionTipo === 'mismo_banco'" class="text-xs text-gray-400">Sin costo</span>
-          <span v-if="comisionTipo === 'sin_comision'" class="text-xs text-gray-400">Sin comisión</span>
-          <span v-if="['pago_movil', 'otros_bancos'].includes(comisionTipo) && monto" class="text-xs text-gray-400">
+          <span v-if="comisionTipo === 'mismo_banco'" class="text-xs text-ink-faint">Sin costo</span>
+          <span v-if="comisionTipo === 'sin_comision'" class="text-xs text-ink-faint">Sin comisión</span>
+          <span v-if="['pago_movil', 'otros_bancos'].includes(comisionTipo) && monto" class="text-xs text-ink-faint">
             (sugerido: {{ sugeridoComision }})
           </span>
         </div>

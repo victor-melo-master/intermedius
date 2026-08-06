@@ -1,16 +1,16 @@
 <template>
-  <div :class="flat ? '' : 'bg-white border border-gray-200 rounded-xl p-5 space-y-3'">
-    <h3 v-if="!flat" class="font-semibold text-gray-700">Cliente</h3>
+  <div :class="flat ? '' : 'bg-white border border-edge rounded-xl p-5 space-y-3'">
+    <h3 v-if="!flat" class="font-semibold text-ink">Cliente</h3>
 
     <!-- Cliente seleccionado -->
-    <div v-if="selectedCliente" class="flex items-center justify-between bg-blue-50 rounded-lg px-3 py-2">
+    <div v-if="selectedCliente" class="flex items-center justify-between bg-gold-soft rounded-lg px-3 py-2">
       <div>
-        <span class="text-sm text-blue-700 font-medium">{{ selectedCliente.nombre }}</span>
-        <span v-if="selectedCliente.alias" class="text-xs text-blue-500 ml-2">· {{ selectedCliente.alias }}</span>
+        <span class="text-sm text-gold-dark font-medium">{{ selectedCliente.nombre }}</span>
+        <span v-if="selectedCliente.alias" class="text-xs text-gold-dark ml-2">· {{ selectedCliente.alias }}</span>
       </div>
       <div class="flex items-center gap-2">
-        <button v-if="!clienteTieneCuentas" type="button" @click="openAddCuentaModal" class="text-xs bg-green-600 text-white px-2 py-1 rounded-lg hover:bg-green-700">+ Cuenta</button>
-        <button type="button" @click="clearSelection" class="text-xs text-blue-500 hover:text-blue-700">Cambiar</button>
+        <button v-if="!clienteTieneCuentas" type="button" @click="openAddCuentaModal" class="text-xs bg-success hover:bg-success-strong text-white dark:text-navy px-2 py-1 rounded-lg">+ Cuenta</button>
+        <button type="button" @click="clearSelection" class="text-xs text-gold-dark hover:text-gold-dark">Cambiar</button>
       </div>
     </div>
 
@@ -23,30 +23,30 @@
         @keydown="onKeyDown"
         type="text"
         placeholder="Buscar cliente por nombre..."
-        class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+        class="w-full px-4 py-2.5 border border-edge-strong rounded-xl focus:ring-2 focus:ring-gold outline-none"
       />
       <div
         v-if="search && (results.length || !searching)"
-        class="absolute z-20 left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-56 overflow-y-auto"
+        class="absolute z-20 left-0 right-0 mt-1 bg-white border border-edge rounded-xl shadow-lg max-h-56 overflow-y-auto"
       >
         <button
           v-for="(c, i) in results"
           :key="c.id"
           type="button"
           @click="selectCliente(c)"
-          class="w-full text-left px-4 py-2.5 text-sm border-b border-gray-100 last:border-0"
-          :class="i === activeIndex ? 'bg-blue-50 text-blue-700' : 'hover:bg-gray-50'"
+          class="w-full text-left px-4 py-2.5 text-sm border-b border-edge last:border-0"
+          :class="i === activeIndex ? 'bg-gold-soft text-gold-dark' : 'hover:bg-surface-soft'"
         >
           <div class="font-medium">{{ c.nombre }}</div>
-          <div v-if="c.alias || c.documento" class="text-xs text-gray-400">
+          <div v-if="c.alias || c.documento" class="text-xs text-ink-faint">
             {{ [c.alias, c.documento].filter(Boolean).join(' · ') }}
           </div>
         </button>
         <button
           type="button"
           @click="openCreateModal"
-          class="w-full text-left px-4 py-2.5 text-sm text-blue-600 font-medium hover:bg-blue-50 flex items-center gap-1"
-          :class="activeIndex === results.length ? 'bg-blue-50' : ''"
+          class="w-full text-left px-4 py-2.5 text-sm text-gold-dark font-medium hover:bg-gold-soft flex items-center gap-1"
+          :class="activeIndex === results.length ? 'bg-gold-soft' : ''"
         >
           <span>+</span> Crear nuevo cliente "{{ search }}"
         </button>
@@ -58,65 +58,65 @@
       <AppFormModal v-model="showModal" title="Nuevo cliente">
         <form @submit.prevent="createCliente" class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-600 mb-1">Nombre *</label>
+            <label class="block text-sm font-medium text-ink-muted mb-1">Nombre *</label>
             <input v-model="newCliente.nombre" type="text" required
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" />
+              class="w-full px-4 py-2.5 border border-edge-strong rounded-xl focus:ring-2 focus:ring-gold outline-none" />
           </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-sm font-medium text-gray-600 mb-1">Alias</label>
+              <label class="block text-sm font-medium text-ink-muted mb-1">Alias</label>
               <input v-model="newCliente.alias" type="text"
-                class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" />
+                class="w-full px-4 py-2.5 border border-edge-strong rounded-xl focus:ring-2 focus:ring-gold outline-none" />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-600 mb-1">Documento</label>
+              <label class="block text-sm font-medium text-ink-muted mb-1">Documento</label>
               <input v-model="newCliente.documento" type="text" placeholder="Cédula / RIF"
-                class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" />
+                class="w-full px-4 py-2.5 border border-edge-strong rounded-xl focus:ring-2 focus:ring-gold outline-none" />
             </div>
           </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-sm font-medium text-gray-600 mb-1">Teléfono</label>
+              <label class="block text-sm font-medium text-ink-muted mb-1">Teléfono</label>
               <input v-model="newCliente.telefono" type="text"
-                class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" />
+                class="w-full px-4 py-2.5 border border-edge-strong rounded-xl focus:ring-2 focus:ring-gold outline-none" />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-600 mb-1">Email</label>
+              <label class="block text-sm font-medium text-ink-muted mb-1">Email</label>
               <input v-model="newCliente.email" type="email"
-                class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" />
+                class="w-full px-4 py-2.5 border border-edge-strong rounded-xl focus:ring-2 focus:ring-gold outline-none" />
             </div>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-600 mb-1">Notas</label>
+            <label class="block text-sm font-medium text-ink-muted mb-1">Notas</label>
             <textarea v-model="newCliente.notas" rows="2"
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none resize-none"></textarea>
+              class="w-full px-4 py-2.5 border border-edge-strong rounded-xl focus:ring-2 focus:ring-gold outline-none resize-none"></textarea>
           </div>
 
           <!-- Cuentas del cliente -->
-          <div class="border-t border-gray-200 pt-4">
+          <div class="border-t border-edge pt-4">
             <div class="flex items-center justify-between mb-3">
-              <h4 class="font-semibold text-gray-700 text-sm">Cuentas bancarias</h4>
-              <button type="button" @click="addCuenta" class="text-xs bg-blue-600 text-white px-2 py-1 rounded-lg hover:bg-blue-700">+ Agregar cuenta</button>
+              <h4 class="font-semibold text-ink text-sm">Cuentas bancarias</h4>
+              <button type="button" @click="addCuenta" class="text-xs bg-gold text-navy px-2 py-1 rounded-lg hover:bg-gold-dark">+ Agregar cuenta</button>
             </div>
 
-            <div v-if="newCliente.cuentas.length === 0" class="text-xs text-gray-400 py-2">Sin cuentas. Agregá al menos una.</div>
+            <div v-if="newCliente.cuentas.length === 0" class="text-xs text-ink-faint py-2">Sin cuentas. Agregá al menos una.</div>
 
-            <div v-for="(cuenta, i) in newCliente.cuentas" :key="i" class="bg-gray-50 border border-gray-200 rounded-lg p-3 space-y-2 mb-2">
+            <div v-for="(cuenta, i) in newCliente.cuentas" :key="i" class="bg-surface-soft border border-edge rounded-lg p-3 space-y-2 mb-2">
               <div class="flex items-center justify-between">
-                <span class="text-xs font-medium text-gray-500">Cuenta #{{ i + 1 }}</span>
-                <button type="button" @click="removeCuenta(i)" class="text-xs text-red-500 hover:text-red-700">Eliminar</button>
+                <span class="text-xs font-medium text-ink-soft">Cuenta #{{ i + 1 }}</span>
+                <button type="button" @click="removeCuenta(i)" class="text-xs text-danger hover:text-danger-strong">Eliminar</button>
               </div>
               <div class="grid grid-cols-2 gap-2">
                 <div>
-                  <label class="text-[11px] text-gray-500">Banco</label>
-                  <select v-model="cuenta.banco_id" required class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                  <label class="text-[11px] text-ink-soft">Banco</label>
+                  <select v-model="cuenta.banco_id" required class="w-full px-2 py-1.5 text-sm border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none">
                     <option value="">Seleccionar</option>
                     <option v-for="b in bancos" :key="b.id" :value="b.id">{{ b.nombre }}</option>
                   </select>
                 </div>
                 <div>
-                  <label class="text-[11px] text-gray-500">Moneda</label>
-                  <select v-model="cuenta.moneda_id" required class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                  <label class="text-[11px] text-ink-soft">Moneda</label>
+                  <select v-model="cuenta.moneda_id" required class="w-full px-2 py-1.5 text-sm border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none">
                     <option value="">Seleccionar</option>
                     <option v-for="m in monedas" :key="m.id" :value="m.id">{{ m.codigo }}</option>
                   </select>
@@ -124,12 +124,12 @@
               </div>
               <div class="grid grid-cols-2 gap-2">
                 <div>
-                  <label class="text-[11px] text-gray-500">Alias *</label>
-                  <input v-model="cuenta.alias" type="text" required class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+                  <label class="text-[11px] text-ink-soft">Alias *</label>
+                  <input v-model="cuenta.alias" type="text" required class="w-full px-2 py-1.5 text-sm border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none" />
                 </div>
                 <div>
-                  <label class="text-[11px] text-gray-500">Tipo</label>
-                  <select v-model="cuenta.tipo" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                  <label class="text-[11px] text-ink-soft">Tipo</label>
+                  <select v-model="cuenta.tipo" class="w-full px-2 py-1.5 text-sm border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none">
                     <option value="banco">Banco</option>
                     <option value="zelle">Zelle</option>
                     <option value="wallet">Wallet</option>
@@ -139,8 +139,8 @@
                 </div>
               </div>
               <div>
-                <label class="text-[11px] text-gray-500">Número de cuenta</label>
-                <input v-model="cuenta.numero_cuenta" type="text" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+                <label class="text-[11px] text-ink-soft">Número de cuenta</label>
+                <input v-model="cuenta.numero_cuenta" type="text" class="w-full px-2 py-1.5 text-sm border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none" />
               </div>
             </div>
           </div>
@@ -150,11 +150,11 @@
         <template #footer>
           <div class="flex gap-3">
             <button type="button" @click="closeModal"
-              class="flex-1 py-2.5 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition">
+              class="flex-1 py-2.5 text-sm text-ink-muted bg-surface-muted hover:bg-surface-muted rounded-xl transition">
               Cancelar
             </button>
             <button @click="createCliente" :disabled="creating"
-              class="flex-1 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-xl hover:bg-blue-700 transition flex items-center justify-center gap-2">
+              class="flex-1 py-2.5 bg-gold text-navy text-sm font-medium rounded-xl hover:bg-gold-dark transition flex items-center justify-center gap-2">
               <span v-if="creating" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
               {{ creating ? 'Creando...' : 'Crear cliente' }}
             </button>
@@ -168,26 +168,26 @@
       <AppFormModal v-model="showCuentaModal" :title="'Agregar cuenta para ' + (selectedCliente?.nombre || '')">
         <form @submit.prevent="addCuentaToCliente" class="space-y-3">
           <div>
-            <label class="block text-sm font-medium text-gray-600 mb-1">Banco</label>
-            <select v-model="nuevaCuenta.banco_id" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+            <label class="block text-sm font-medium text-ink-muted mb-1">Banco</label>
+            <select v-model="nuevaCuenta.banco_id" required class="w-full px-3 py-2 border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none">
               <option value="">Seleccionar</option>
               <option v-for="b in bancos" :key="b.id" :value="b.id">{{ b.nombre }}</option>
             </select>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-600 mb-1">Moneda</label>
-            <select v-model="nuevaCuenta.moneda_id" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+            <label class="block text-sm font-medium text-ink-muted mb-1">Moneda</label>
+            <select v-model="nuevaCuenta.moneda_id" required class="w-full px-3 py-2 border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none">
               <option value="">Seleccionar</option>
               <option v-for="m in monedas" :key="m.id" :value="m.id">{{ m.codigo }}</option>
             </select>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-600 mb-1">Alias *</label>
-            <input v-model="nuevaCuenta.alias" type="text" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+            <label class="block text-sm font-medium text-ink-muted mb-1">Alias *</label>
+            <input v-model="nuevaCuenta.alias" type="text" required class="w-full px-3 py-2 border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-600 mb-1">Tipo</label>
-            <select v-model="nuevaCuenta.tipo" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+            <label class="block text-sm font-medium text-ink-muted mb-1">Tipo</label>
+            <select v-model="nuevaCuenta.tipo" class="w-full px-3 py-2 border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none">
               <option value="banco">Banco</option>
               <option value="zelle">Zelle</option>
               <option value="wallet">Wallet</option>
@@ -196,13 +196,13 @@
             </select>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-600 mb-1">Número de cuenta</label>
-            <input v-model="nuevaCuenta.numero_cuenta" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+            <label class="block text-sm font-medium text-ink-muted mb-1">Número de cuenta</label>
+            <input v-model="nuevaCuenta.numero_cuenta" type="text" class="w-full px-3 py-2 border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none" />
           </div>
           <AppErrorState v-if="cuentaError" :message="cuentaError" :retry="false" />
         </form>
         <template #footer>
-          <button @click="addCuentaToCliente" :disabled="savingCuenta" class="w-full bg-blue-600 text-white font-semibold py-2.5 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition">
+          <button @click="addCuentaToCliente" :disabled="savingCuenta" class="w-full bg-gold text-navy font-semibold py-2.5 rounded-lg hover:bg-gold-dark disabled:opacity-50 transition">
             {{ savingCuenta ? 'Guardando...' : 'Agregar cuenta' }}
           </button>
         </template>

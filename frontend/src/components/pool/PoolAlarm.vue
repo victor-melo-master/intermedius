@@ -8,12 +8,12 @@
         <div class="absolute inset-0 bg-black/40"></div>
         <div class="relative bg-white rounded-2xl shadow-xl max-w-md w-full p-6 mx-4">
         <div class="flex items-center gap-4 mb-4">
-          <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-            <Iconoir name="bell" class="w-6 h-6 text-red-500" />
+          <div class="w-12 h-12 bg-danger-soft rounded-full flex items-center justify-center">
+            <Iconoir name="bell" class="w-6 h-6 text-danger" />
           </div>
           <div>
-            <h3 class="text-lg font-bold text-red-600">¡SLA Excedido!</h3>
-            <p class="text-sm text-gray-600">
+            <h3 class="text-lg font-bold text-danger">¡SLA Excedido!</h3>
+            <p class="text-sm text-ink-muted">
               Operación #{{ alarmData?.operacion_id }} lleva
               <strong>{{ alarmData?.minutos_espera }} minutos</strong> en espera.
             </p>
@@ -22,13 +22,13 @@
         <div class="flex justify-end gap-2">
           <button
             @click="dismissAlarm"
-            class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded"
+            class="px-4 py-2 bg-surface-muted hover:bg-surface-muted rounded"
           >
             Cerrar
           </button>
           <button
             @click="dismissAlarm"
-            class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded"
+            class="px-4 py-2 bg-danger hover:bg-danger-strong text-white dark:text-navy rounded"
           >
             Tomar operación
           </button>

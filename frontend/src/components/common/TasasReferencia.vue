@@ -1,32 +1,32 @@
 <template>
   <div class="rounded-lg px-3 py-2 text-xs space-y-1"
-    :class="refStale ? 'bg-orange-50 text-orange-700 border border-orange-200' : 'bg-gray-100 text-gray-500'">
+    :class="refStale ? 'bg-warning-soft text-warning-strong border border-warning-edge' : 'bg-surface-muted text-ink-soft'">
     <template v-if="hayReferencia">
       <div class="flex flex-wrap items-center gap-x-4 gap-y-1">
         <span v-if="refTasas?.bcv" class="font-semibold">BCV USD: {{ formatVes(refTasas.bcv.tasa) }}</span>
         <span v-if="refTasas?.bcv_eur" class="font-semibold">BCV EUR: {{ formatVes(refTasas.bcv_eur.tasa) }}</span>
         <span v-if="refTasas?.binance_p2p" class="font-semibold">Binance USDT: {{ formatVes(refTasas.binance_p2p.tasa) }}</span>
         <span class="opacity-70">
-          <template v-if="refStale"><Iconoir name="exclamation-triangle" class="w-3 h-3 inline text-amber-500" /> Datos desactualizados</template>
+          <template v-if="refStale"><Iconoir name="exclamation-triangle" class="w-3 h-3 inline text-warning" /> Datos desactualizados</template>
           <template v-else>(actualizado {{ refRelativo }})</template>
         </span>
       </div>
       <div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1">
         <template v-if="spreadBcvBinanceNeto !== null">
           <span>BCV USD vs USDT:</span>
-          <span class="font-semibold" :class="spreadBcvBinanceNeto >= 0 ? 'text-green-600' : 'text-red-500'">
+          <span class="font-semibold" :class="spreadBcvBinanceNeto >= 0 ? 'text-success' : 'text-danger'">
             {{ formatVes(Math.abs(spreadBcvBinanceNeto)) }} ({{ spreadBcvBinancePorc?.toFixed(1) }}%)
           </span>
         </template>
         <template v-if="spreadBcvEurBinanceNeto !== null">
           <span>BCV EUR vs USDT:</span>
-          <span class="font-semibold" :class="spreadBcvEurBinanceNeto >= 0 ? 'text-green-600' : 'text-red-500'">
+          <span class="font-semibold" :class="spreadBcvEurBinanceNeto >= 0 ? 'text-success' : 'text-danger'">
             {{ formatVes(Math.abs(spreadBcvEurBinanceNeto)) }} ({{ spreadBcvEurBinancePorc?.toFixed(1) }}%)
           </span>
         </template>
         <template v-if="spreadBcvUsdEurNeto !== null">
           <span>BCV USD vs BCV EUR:</span>
-          <span class="font-semibold" :class="spreadBcvUsdEurNeto >= 0 ? 'text-green-600' : 'text-red-500'">
+          <span class="font-semibold" :class="spreadBcvUsdEurNeto >= 0 ? 'text-success' : 'text-danger'">
             {{ formatVes(Math.abs(spreadBcvUsdEurNeto)) }} ({{ spreadBcvUsdEurPorc?.toFixed(1) }}%)
           </span>
         </template>

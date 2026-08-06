@@ -1,30 +1,30 @@
 <template>
   <div class="max-w-2xl mx-auto space-y-6 pb-10">
     <div class="flex items-center gap-3 mb-2">
-      <button @click="$router.back()" class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition"><Iconoir name="arrow-left" class="w-4 h-4" /> Volver</button>
-      <h2 class="text-xl font-bold text-gray-800">Seleccionar moneda</h2>
+      <button @click="$router.back()" class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-ink-muted hover:bg-surface-muted rounded-lg transition"><Iconoir name="arrow-left" class="w-4 h-4" /> Volver</button>
+      <h2 class="text-xl font-bold text-heading">Seleccionar moneda</h2>
     </div>
 
-    <p class="text-sm text-gray-500">Elige la moneda de la operación:</p>
+    <p class="text-sm text-ink-soft">Elige la moneda de la operación:</p>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <button v-for="m in monedas" :key="m.codigo" @click="seleccionar(m.codigo)"
-        class="bg-white border-2 border-gray-200 rounded-2xl p-6 text-left hover:border-blue-500 hover:shadow-md transition active:scale-[0.98]">
+        class="bg-white border-2 border-edge rounded-2xl p-6 text-left hover:border-info hover:shadow-md transition active:scale-[0.98]">
         <div class="flex items-center gap-3 mb-2">
           <span class="text-3xl">{{ m.icono }}</span>
-          <span class="text-2xl font-bold text-gray-800">{{ m.codigo }}</span>
+          <span class="text-2xl font-bold text-heading">{{ m.codigo }}</span>
         </div>
-        <p class="text-sm text-gray-500">{{ m.nombre }}</p>
+        <p class="text-sm text-ink-soft">{{ m.nombre }}</p>
       </button>
 
       <!-- Botón Intermediada -->
       <router-link to="/operaciones/intermediada/nueva"
-        class="bg-white border-2 border-purple-300 rounded-2xl p-6 text-left hover:border-purple-500 hover:shadow-md transition active:scale-[0.98] bg-purple-50">
+        class="bg-white border-2 border-violet-edge rounded-2xl p-6 text-left hover:border-violet hover:shadow-md transition active:scale-[0.98] bg-violet-soft">
         <div class="flex items-center gap-3 mb-2">
           <Iconoir name="link" class="w-8 h-8" />
-          <span class="text-2xl font-bold text-purple-700">Intermediada</span>
+          <span class="text-2xl font-bold text-violet-strong">Intermediada</span>
         </div>
-        <p class="text-sm text-purple-600">Conectar comprador y vendedor</p>
+        <p class="text-sm text-violet">Conectar comprador y vendedor</p>
       </router-link>
     </div>
   </div>

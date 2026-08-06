@@ -70,7 +70,7 @@ describe('AppFormModal', () => {
     mount(AppFormModal, {
       props: { modelValue: true },
     })
-    const headers = document.querySelectorAll('.border-b.border-gray-100')
+    const headers = document.querySelectorAll('.border-b.border-edge')
     expect(headers.length).toBe(0)
   })
 
@@ -78,7 +78,7 @@ describe('AppFormModal', () => {
     mount(AppFormModal, {
       props: { modelValue: true },
     })
-    const footers = document.querySelectorAll('.border-t.border-gray-100')
+    const footers = document.querySelectorAll('.border-t.border-edge')
     expect(footers.length).toBe(0)
   })
 })

@@ -3,18 +3,18 @@
     <span
       class="font-mono text-sm"
       :class="{
-        'text-red-600 font-bold': timeInMinutes >= 5 && estado === 'en_espera',
-        'text-yellow-600': timeInMinutes >= 4 && timeInMinutes < 5,
-        'text-green-600': timeInMinutes < 4,
+        'text-danger font-bold': timeInMinutes >= 5 && estado === 'en_espera',
+        'text-warning': timeInMinutes >= 4 && timeInMinutes < 5,
+        'text-success': timeInMinutes < 4,
       }"
     >
       {{ formatTime(elapsedSeconds) }}
     </span>
     <span
       v-if="timeInMinutes >= 5 && estado === 'en_espera'"
-      class="animate-pulse text-red-600 text-xs font-bold"
+      class="animate-pulse text-danger text-xs font-bold"
     >
-      <Iconoir name="exclamation-triangle" class="w-3.5 h-3.5 inline text-amber-500" /> SLA
+      <Iconoir name="exclamation-triangle" class="w-3.5 h-3.5 inline text-warning" /> SLA
     </span>
   </div>
 </template>

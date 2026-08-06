@@ -1,24 +1,24 @@
 <template>
   <div class="space-y-4">
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-      <h2 class="text-xl font-bold text-gray-800">Tasas del día</h2>
+      <h2 class="text-xl font-bold text-heading">Tasas del día</h2>
       <div class="flex gap-2">
-        <button @click="tasas.fetchVigentes()" class="px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm hover:bg-gray-50 inline-flex items-center gap-1"><Iconoir name="arrow-path" class="w-4 h-4" /> Actualizar</button>
-        <button v-if="auth.isAdmin" @click="openNew" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">+ Publicar tasa</button>
+        <button @click="tasas.fetchVigentes()" class="px-3 py-2 bg-white border border-edge-strong rounded-lg text-sm hover:bg-surface-soft inline-flex items-center gap-1"><Iconoir name="arrow-path" class="w-4 h-4" /> Actualizar</button>
+        <button v-if="auth.isAdmin" @click="openNew" class="px-4 py-2 bg-gold text-navy rounded-lg text-sm font-medium hover:bg-gold-dark">+ Publicar tasa</button>
       </div>
     </div>
 
     <div v-if="tasas.loading" class="text-center py-12">
-      <div class="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+      <div class="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin mx-auto"></div>
     </div>
-    <div v-else-if="tasas.error" class="bg-red-50 text-red-600 p-4 rounded-xl">
+    <div v-else-if="tasas.error" class="bg-danger-soft text-danger p-4 rounded-xl">
       {{ tasas.error }}
       <button @click="tasas.fetchVigentes()" class="underline ml-2">Reintentar</button>
     </div>
     <template v-else>
       <!-- Alerta sin tasas hoy -->
-      <div v-if="!hayTasasHoy" class="bg-amber-50 border border-amber-200 text-amber-700 p-4 rounded-xl text-sm flex items-center gap-1">
-        <Iconoir name="exclamation-triangle" class="w-4 h-4 shrink-0 text-amber-500" /> No hay tasas publicadas para hoy
+      <div v-if="!hayTasasHoy" class="bg-warning-soft border border-warning-edge text-warning-strong p-4 rounded-xl text-sm flex items-center gap-1">
+        <Iconoir name="exclamation-triangle" class="w-4 h-4 shrink-0 text-warning" /> No hay tasas publicadas para hoy
         <span v-if="auth.isAdmin"> — usa <strong>+ Publicar tasa</strong> para crearlas.</span>
       </div>
 
@@ -26,28 +26,28 @@
       <div v-for="grupo in grupos" :key="grupo.baseId" class="space-y-2">
         <div class="flex items-center gap-2">
           <span class="text-lg">{{ iconoMoneda(grupo.baseCodigo) }}</span>
-          <h3 class="font-semibold text-gray-700">{{ grupo.baseCodigo }}</h3>
-          <span class="text-xs text-gray-400">{{ grupo.items.length }} {{ grupo.items.length === 1 ? 'par' : 'pares' }}</span>
+          <h3 class="font-semibold text-ink">{{ grupo.baseCodigo }}</h3>
+          <span class="text-xs text-ink-faint">{{ grupo.items.length }} {{ grupo.items.length === 1 ? 'par' : 'pares' }}</span>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div v-for="t in grupo.items" :key="t.id" class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+          <div v-for="t in grupo.items" :key="t.id" class="bg-white border border-edge rounded-xl p-4 shadow-sm">
             <div class="flex items-center justify-between mb-3">
-              <span class="bg-blue-50 text-blue-700 text-xs font-bold px-3 py-1 rounded-full">{{ t.par }}</span>
-              <button v-if="auth.isAdmin" @click="openEdit(t)" class="text-sm text-gray-400 hover:text-blue-600 inline-flex items-center gap-1" title="Editar"><Iconoir name="pencil-square" class="w-4 h-4" /> Editar</button>
+              <span class="bg-info-soft text-info-strong text-xs font-bold px-3 py-1 rounded-full">{{ t.par }}</span>
+              <button v-if="auth.isAdmin" @click="openEdit(t)" class="text-sm text-ink-faint hover:text-gold-dark inline-flex items-center gap-1" title="Editar"><Iconoir name="pencil-square" class="w-4 h-4" /> Editar</button>
             </div>
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <p class="text-xs text-gray-500 mb-0.5">Compra sugerida</p>
-                <p class="text-xl font-bold text-teal-600">{{ formatRate(t.tasa_compra) }}</p>
-                <p v-if="t.tasa_compra_minima" class="text-[11px] text-gray-400 mt-0.5">Mín: {{ formatRate(t.tasa_compra_minima) }}</p>
+                <p class="text-xs text-ink-soft mb-0.5">Compra sugerida</p>
+                <p class="text-xl font-bold text-teal">{{ formatRate(t.tasa_compra) }}</p>
+                <p v-if="t.tasa_compra_minima" class="text-[11px] text-ink-faint mt-0.5">Mín: {{ formatRate(t.tasa_compra_minima) }}</p>
               </div>
               <div>
-                <p class="text-xs text-gray-500 mb-0.5">Venta sugerida</p>
-                <p class="text-xl font-bold text-blue-600">{{ formatRate(t.tasa_venta) }}</p>
-                <p v-if="t.tasa_venta_minima" class="text-[11px] text-gray-400 mt-0.5">Mín: {{ formatRate(t.tasa_venta_minima) }}</p>
+                <p class="text-xs text-ink-soft mb-0.5">Venta sugerida</p>
+                <p class="text-xl font-bold text-gold-dark">{{ formatRate(t.tasa_venta) }}</p>
+                <p v-if="t.tasa_venta_minima" class="text-[11px] text-ink-faint mt-0.5">Mín: {{ formatRate(t.tasa_venta_minima) }}</p>
               </div>
             </div>
-            <p class="text-[11px] text-gray-400 mt-3 pt-2 border-t border-gray-100">{{ publicada(t.vigente_desde) }}</p>
+            <p class="text-[11px] text-ink-faint mt-3 pt-2 border-t border-edge">{{ publicada(t.vigente_desde) }}</p>
           </div>
         </div>
       </div>
@@ -55,56 +55,56 @@
 
     <AppFormModal v-model="showForm" :title="isEdit ? 'Editar tasa' : 'Publicar tasa del día'">
       <!-- Paso 1: moneda base -->
-      <p class="text-sm font-medium text-gray-600 mb-2">1. Moneda base</p>
+      <p class="text-sm font-medium text-ink-muted mb-2">1. Moneda base</p>
       <div class="grid grid-cols-4 gap-2 mb-5">
         <button v-for="m in baseOptions" :key="m.id" type="button" @click="selectBase(m.id)"
           class="py-3 rounded-xl border-2 text-center transition"
-          :class="selectedBaseId === m.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'">
+          :class="selectedBaseId === m.id ? 'border-info bg-info-soft' : 'border-edge hover:border-edge-strong'">
           <span class="block text-xl">{{ iconoMoneda(m.codigo) }}</span>
-          <span class="block text-xs font-semibold mt-0.5" :class="selectedBaseId === m.id ? 'text-blue-700' : 'text-gray-600'">{{ m.codigo }}</span>
+          <span class="block text-xs font-semibold mt-0.5" :class="selectedBaseId === m.id ? 'text-info-strong' : 'text-ink-muted'">{{ m.codigo }}</span>
         </button>
       </div>
 
       <!-- Paso 2: pares -->
       <template v-if="selectedBaseId">
-        <p class="text-sm font-medium text-gray-600 mb-2">2. Configurar pares</p>
+        <p class="text-sm font-medium text-ink-muted mb-2">2. Configurar pares</p>
         <div class="space-y-3">
-          <div v-for="ref in referenceMonedas" :key="ref.id" class="border border-gray-200 rounded-xl p-3"
-            :class="pairs[ref.id]?.active ? 'bg-white' : 'bg-gray-50'">
+          <div v-for="ref in referenceMonedas" :key="ref.id" class="border border-edge rounded-xl p-3"
+            :class="pairs[ref.id]?.active ? 'bg-white' : 'bg-surface-soft'">
             <label class="flex items-center justify-between cursor-pointer">
-              <span class="font-semibold text-sm text-gray-700">{{ baseCodigo }} / {{ ref.codigo }}</span>
-              <input type="checkbox" v-model="pairs[ref.id].active" class="accent-blue-600 w-5 h-5" />
+              <span class="font-semibold text-sm text-ink">{{ baseCodigo }} / {{ ref.codigo }}</span>
+              <input type="checkbox" v-model="pairs[ref.id].active" class="accent-gold w-5 h-5" />
             </label>
             <div v-if="pairs[ref.id]?.active" class="grid grid-cols-2 gap-2 mt-3">
               <div>
-                <label class="block text-[11px] text-gray-500 mb-1">Tasa compra *</label>
+                <label class="block text-[11px] text-ink-soft mb-1">Tasa compra *</label>
                 <input v-model="pairs[ref.id].tasa_compra" type="number" step="0.01" inputmode="decimal" placeholder="0.00"
-                  class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+                  class="w-full px-3 py-2 text-sm border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none" />
               </div>
               <div>
-                <label class="block text-[11px] text-gray-500 mb-1">Mín. compra</label>
+                <label class="block text-[11px] text-ink-soft mb-1">Mín. compra</label>
                 <input v-model="pairs[ref.id].tasa_compra_minima" type="number" step="0.01" inputmode="decimal" placeholder="opcional"
-                  class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+                  class="w-full px-3 py-2 text-sm border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none" />
               </div>
               <div>
-                <label class="block text-[11px] text-gray-500 mb-1">Tasa venta *</label>
+                <label class="block text-[11px] text-ink-soft mb-1">Tasa venta *</label>
                 <input v-model="pairs[ref.id].tasa_venta" type="number" step="0.01" inputmode="decimal" placeholder="0.00"
-                  class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+                  class="w-full px-3 py-2 text-sm border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none" />
               </div>
               <div>
-                <label class="block text-[11px] text-gray-500 mb-1">Mín. venta</label>
+                <label class="block text-[11px] text-ink-soft mb-1">Mín. venta</label>
                 <input v-model="pairs[ref.id].tasa_venta_minima" type="number" step="0.01" inputmode="decimal" placeholder="opcional"
-                  class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+                  class="w-full px-3 py-2 text-sm border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none" />
               </div>
             </div>
           </div>
         </div>
       </template>
 
-      <div v-if="formError" class="bg-red-50 text-red-600 text-sm p-3 rounded-lg mt-4 whitespace-pre-line">{{ formError }}</div>
+      <div v-if="formError" class="bg-danger-soft text-danger text-sm p-3 rounded-lg mt-4 whitespace-pre-line">{{ formError }}</div>
 
       <button type="button" @click="submit" :disabled="saving || !puedeGuardar"
-        class="w-full mt-5 bg-blue-600 text-white font-semibold py-2.5 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition active:scale-[0.98] flex items-center justify-center gap-2">
+        class="w-full mt-5 bg-gold text-navy font-semibold py-2.5 rounded-lg hover:bg-gold-dark disabled:opacity-50 transition active:scale-[0.98] flex items-center justify-center gap-2">
         <span v-if="saving" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
         {{ saving ? 'Guardando...' : (isEdit ? 'Actualizar' : 'Publicar') }}
       </button>
