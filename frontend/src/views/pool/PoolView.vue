@@ -14,12 +14,12 @@
     <div class="flex bg-surface-muted rounded-xl p-1">
       <button @click="tab = 'pool'"
         class="flex-1 py-2.5 text-sm font-semibold rounded-lg transition active:scale-[0.98]"
-        :class="tab === 'pool' ? 'bg-white dark:bg-surface-muted text-gold-dark shadow' : 'text-ink-soft'">
+        :class="tab === 'pool' ? 'bg-white dark:bg-surface-muted text-gold-dark shadow' : 'text-ink-muted'">
         Pool <span v-if="store.pool.length" class="ml-1 text-xs">({{ store.pool.length }})</span>
       </button>
       <button @click="tab = 'mias'"
         class="flex-1 py-2.5 text-sm font-semibold rounded-lg transition active:scale-[0.98]"
-        :class="tab === 'mias' ? 'bg-white dark:bg-surface-muted text-gold-dark shadow' : 'text-ink-soft'">
+        :class="tab === 'mias' ? 'bg-white dark:bg-surface-muted text-gold-dark shadow' : 'text-ink-muted'">
         Mis órdenes <span v-if="store.misOrdenes.length" class="ml-1 text-xs">({{ store.misOrdenes.length }})</span>
       </button>
     </div>
@@ -38,9 +38,9 @@
         <div class="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin mx-auto"></div>
       </div>
       <div v-else-if="store.pool.length === 0" class="text-center py-16">
-        <Iconoir name="envelope-open" class="w-12 h-12 mx-auto mb-4 text-ink-faint" />
-        <p class="text-ink-soft">No hay órdenes pendientes</p>
-        <p class="text-sm text-ink-faint mt-1">Las nuevas órdenes aparecerán aquí automáticamente</p>
+        <Iconoir name="envelope-open" class="w-12 h-12 mx-auto mb-4 text-ink-muted" />
+        <p class="text-ink-muted">No hay órdenes pendientes</p>
+        <p class="text-sm text-ink-muted mt-1">Las nuevas órdenes aparecerán aquí automáticamente</p>
       </div>
       <div v-else class="space-y-3">
         <div v-for="op in store.pool" :key="op.id"
@@ -50,10 +50,10 @@
               <span class="text-xs font-bold px-2.5 py-1 rounded-full" :class="tipoBadge(op).class">{{ tipoBadge(op).label }}</span>
               <span v-if="op.estado && op.estado !== 'en_espera'" class="text-[10px] font-medium px-2 py-0.5 rounded-full" :class="estadoBadgePool(op).clase">{{ estadoBadgePool(op).label }}</span>
             </div>
-            <span class="text-xs text-ink-faint">{{ formatHora(op.created_at) }}</span>
+            <span class="text-sm text-ink-muted">{{ formatHora(op.created_at) }}</span>
           </div>
 
-          <p v-if="op.cliente?.nombre" class="text-sm text-ink-soft mb-2">
+          <p v-if="op.cliente?.nombre" class="text-sm text-ink-muted mb-2">
             Cliente: <span class="font-medium text-ink">{{ op.cliente.nombre }}</span>
           </p>
 
@@ -65,10 +65,10 @@
 
           <!-- Cuenta destino -->
           <div class="space-y-1 text-sm mb-4">
-            <p class="text-xs font-semibold text-ink-faint uppercase tracking-wide">Cuenta destino</p>
-            <p class="text-ink"><span class="text-ink-faint">Banco:</span> {{ banco(op) || '—' }}</p>
-            <p class="text-ink"><span class="text-ink-faint">Cuenta:</span> {{ numeroCuenta(op) || '—' }}</p>
-            <p class="text-ink"><span class="text-ink-faint">Titular:</span> {{ titular(op) || '—' }}</p>
+            <p class="text-sm font-semibold text-ink-muted uppercase tracking-wide">Cuenta destino</p>
+            <p class="text-ink"><span class="text-ink-muted">Banco:</span> {{ banco(op) || '—' }}</p>
+            <p class="text-ink"><span class="text-ink-muted">Cuenta:</span> {{ numeroCuenta(op) || '—' }}</p>
+            <p class="text-ink"><span class="text-ink-muted">Titular:</span> {{ titular(op) || '—' }}</p>
           </div>
 
           <button @click="tomar(op)" :disabled="acting === op.id"
@@ -86,19 +86,19 @@
         <div class="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin mx-auto"></div>
       </div>
       <div v-else-if="store.misOrdenes.length === 0" class="text-center py-16">
-        <Iconoir name="queue-list" class="w-12 h-12 mx-auto mb-4 text-ink-faint" />
-        <p class="text-ink-soft">No tienes órdenes asignadas</p>
-        <p class="text-sm text-ink-faint mt-1">Toma una orden del pool para empezar</p>
+        <Iconoir name="queue-list" class="w-12 h-12 mx-auto mb-4 text-ink-muted" />
+        <p class="text-ink-muted">No tienes órdenes asignadas</p>
+        <p class="text-sm text-ink-muted mt-1">Toma una orden del pool para empezar</p>
       </div>
       <div v-else class="space-y-3">
         <div v-for="op in store.misOrdenes" :key="op.id"
           class="bg-surface border border-edge rounded-2xl p-4 shadow-sm">
           <div class="flex items-center justify-between gap-2 mb-3">
             <span class="text-xs font-bold px-2.5 py-1 rounded-full" :class="tipoBadge(op).class">{{ tipoBadge(op).label }}</span>
-            <span class="text-xs text-ink-faint">Tomada {{ formatHora(op.asignada_at) }}</span>
+            <span class="text-sm text-ink-muted">Tomada {{ formatHora(op.asignada_at) }}</span>
           </div>
 
-          <p v-if="op.cliente?.nombre" class="text-sm text-ink-soft mb-2">
+          <p v-if="op.cliente?.nombre" class="text-sm text-ink-muted mb-2">
             Cliente: <span class="font-medium text-ink">{{ op.cliente.nombre }}</span>
           </p>
 
@@ -108,10 +108,10 @@
           </div>
 
           <div class="space-y-1 text-sm mb-4">
-            <p class="text-xs font-semibold text-ink-faint uppercase tracking-wide">Datos de pago</p>
-            <p class="text-ink"><span class="text-ink-faint">Banco:</span> {{ banco(op) || '—' }}</p>
-            <p class="text-ink"><span class="text-ink-faint">Cuenta:</span> {{ numeroCuenta(op) || '—' }}</p>
-            <p class="text-ink"><span class="text-ink-faint">Titular:</span> {{ titular(op) || '—' }}</p>
+            <p class="text-sm font-semibold text-ink-muted uppercase tracking-wide">Datos de pago</p>
+            <p class="text-ink"><span class="text-ink-muted">Banco:</span> {{ banco(op) || '—' }}</p>
+            <p class="text-ink"><span class="text-ink-muted">Cuenta:</span> {{ numeroCuenta(op) || '—' }}</p>
+            <p class="text-ink"><span class="text-ink-muted">Titular:</span> {{ titular(op) || '—' }}</p>
           </div>
 
           <!-- Copiar datos -->

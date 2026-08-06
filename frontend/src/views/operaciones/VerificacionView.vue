@@ -38,7 +38,7 @@
         <button @click="$router.back()" class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-ink-muted hover:bg-surface-muted rounded-lg transition"><Iconoir name="arrow-left" class="w-4 h-4" /> Volver</button>
         <div class="flex-1">
           <h2 class="text-xl font-bold text-heading">Verificación #{{ operacion.id }}</h2>
-          <p class="text-sm text-ink-soft">{{ tipoNombre }}</p>
+          <p class="text-sm text-ink-muted">{{ tipoNombre }}</p>
         </div>
         <span class="px-3 py-1 rounded-full text-xs font-bold bg-warning-soft text-warning-strong">En verificación</span>
       </div>
@@ -46,23 +46,23 @@
       <!-- Detalles de la operación -->
       <div class="bg-surface border border-edge rounded-xl p-4 space-y-2 text-sm">
         <div v-if="operacion.cliente" class="flex justify-between">
-          <span class="text-ink-faint">Cliente</span>
+          <span class="text-ink-muted">Cliente</span>
           <span class="text-ink font-medium">{{ operacion.cliente.nombre }}</span>
         </div>
         <div v-if="operacion.operador" class="flex justify-between">
-          <span class="text-ink-faint">Operador</span>
+          <span class="text-ink-muted">Operador</span>
           <span class="text-ink font-medium">{{ operacion.operador.name }}</span>
         </div>
         <div v-if="operacion.tasa_aplicada" class="flex justify-between">
-          <span class="text-ink-faint">Tasa aplicada</span>
+          <span class="text-ink-muted">Tasa aplicada</span>
           <span class="text-ink font-medium">{{ formatRate(operacion.tasa_aplicada) }}</span>
         </div>
         <div v-if="operacion.descripcion" class="flex justify-between">
-          <span class="text-ink-faint">Descripción</span>
+          <span class="text-ink-muted">Descripción</span>
           <span class="text-ink font-medium text-right max-w-[60%]">{{ operacion.descripcion }}</span>
         </div>
         <div class="flex justify-between">
-          <span class="text-ink-faint">Fecha</span>
+          <span class="text-ink-muted">Fecha</span>
           <span class="text-ink font-medium">{{ formatDate(operacion.fecha) }}</span>
         </div>
       </div>
@@ -71,7 +71,7 @@
       <div class="bg-surface border border-edge rounded-xl p-4">
         <div class="flex items-center justify-between mb-2">
           <span class="text-sm font-medium text-ink">Progreso de verificación</span>
-          <span class="text-sm text-ink-soft">{{ movimientosValidados }}/{{ totalMovimientos }}</span>
+          <span class="text-sm text-ink-muted">{{ movimientosValidados }}/{{ totalMovimientos }}</span>
         </div>
         <div class="w-full bg-surface-muted rounded-full h-2.5">
           <div class="bg-success h-2.5 rounded-full transition-all duration-300"
@@ -85,7 +85,7 @@
         <div class="grid grid-cols-2 gap-2">
           <div v-for="(saldo, cuentaId) in saldos" :key="cuentaId"
             class="bg-surface-soft rounded-lg p-3">
-            <p class="text-xs text-ink-soft">{{ saldo.alias }}</p>
+            <p class="text-sm text-ink-muted">{{ saldo.alias }}</p>
             <p class="text-sm font-bold text-heading">{{ formatMoney(saldo.saldo, saldo.moneda) }}</p>
           </div>
         </div>
@@ -95,7 +95,7 @@
       <div class="space-y-3">
         <h3 class="font-semibold text-ink">Movimientos</h3>
 
-        <div v-if="movimientos.length === 0" class="bg-surface border border-edge rounded-xl p-6 text-center text-ink-faint">
+        <div v-if="movimientos.length === 0" class="bg-surface border border-edge rounded-xl p-6 text-center text-ink-muted">
           No hay movimientos en esta operación
         </div>
 
@@ -113,7 +113,7 @@
                          'bg-warning-soft text-warning-strong'">
                 {{ mov.estado === 'validada' ? 'Validado' : mov.estado === 'rechazada' ? 'Rechazado' : 'Pendiente' }}
               </span>
-              <span v-if="mov.orden" class="text-xs text-ink-faint">#{{ mov.orden }}</span>
+              <span v-if="mov.orden" class="text-sm text-ink-muted">#{{ mov.orden }}</span>
             </div>
             <div v-if="mov.estado === 'pendiente'" class="flex gap-2">
               <button @click="validar(mov)"
@@ -130,22 +130,22 @@
           <!-- Detalles del movimiento -->
           <div class="grid grid-cols-2 gap-3 text-sm">
             <div>
-              <p class="text-xs text-ink-faint">Cuenta</p>
+              <p class="text-sm text-ink-muted">Cuenta</p>
               <p class="text-ink">{{ mov.cuenta?.alias || `Cuenta #${mov.cuenta_id}` }}</p>
-              <p v-if="mov.cuenta?.banco?.nombre" class="text-xs text-ink-faint">{{ mov.cuenta.banco.nombre }}</p>
+              <p v-if="mov.cuenta?.banco?.nombre" class="text-sm text-ink-muted">{{ mov.cuenta.banco.nombre }}</p>
             </div>
             <div>
-              <p class="text-xs text-ink-faint">Moneda</p>
+              <p class="text-sm text-ink-muted">Moneda</p>
               <p class="text-ink">{{ mov.moneda?.codigo }}</p>
             </div>
             <div>
-              <p class="text-xs text-ink-faint">Monto</p>
+              <p class="text-sm text-ink-muted">Monto</p>
               <p class="font-bold" :class="parseFloat(mov.monto) >= 0 ? 'text-success' : 'text-danger'">
                 {{ formatMoney(mov.monto, mov.moneda?.codigo) }}
               </p>
             </div>
             <div>
-              <p class="text-xs text-ink-faint">Equivalente USD</p>
+              <p class="text-sm text-ink-muted">Equivalente USD</p>
               <p class="text-ink">{{ formatMoney(mov.monto_usd_equivalente, 'USD') }}</p>
             </div>
           </div>
@@ -159,7 +159,7 @@
 
           <!-- Validado por -->
           <div v-if="mov.estado === 'validada' && mov.validada_por"
-            class="text-xs text-ink-faint">
+            class="text-sm text-ink-muted">
             Validado por {{ mov.validada_por.name }} el {{ formatDateTime(mov.validada_en) }}
           </div>
         </div>
@@ -171,7 +171,7 @@
           class="w-full py-3 rounded-xl font-semibold transition active:scale-[0.98] flex items-center justify-center gap-2"
           :class="todasValidados
             ? 'bg-success hover:bg-success-strong text-white dark:text-navy'
-            : 'bg-surface-muted text-ink-faint cursor-not-allowed'">
+            : 'bg-surface-muted text-ink-muted cursor-not-allowed'">
           <span v-if="cerrando" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
           {{ cerrando ? 'Cerrando...' : todasValidados ? 'Cerrar verificación' : 'Todos los movimientos deben estar validados' }}
         </button>

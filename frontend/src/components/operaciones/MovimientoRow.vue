@@ -1,17 +1,17 @@
 <template>
   <div class="border border-edge rounded-xl p-4 space-y-3">
     <div class="flex items-center justify-between">
-      <span class="text-sm font-medium text-ink-soft">Movimiento {{ index + 1 }}</span>
+      <span class="text-sm font-medium text-ink-muted">Movimiento {{ index + 1 }}</span>
       <button
         type="button"
         @click="$emit('remove')"
-        class="text-ink-faint hover:text-danger hover:bg-danger-soft rounded-lg p-1.5 text-sm transition"
+        class="text-ink-muted hover:text-danger hover:bg-danger-soft rounded-lg p-1.5 text-sm transition"
       ><Iconoir name="x-mark" class="w-3.5 h-3.5 text-danger" /> Eliminar</button>
     </div>
 
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
       <div>
-        <label class="block text-xs text-ink-soft mb-1">Moneda</label>
+        <label class="block text-sm text-ink-muted mb-1">Moneda</label>
         <select
           :value="monedaId"
           @change="$emit('update:monedaId', $event.target.value)"
@@ -23,7 +23,7 @@
       </div>
 
       <div>
-        <label class="block text-xs text-ink-soft mb-1">
+        <label class="block text-sm text-ink-muted mb-1">
           <span class="inline-block w-2 h-2 bg-warning rounded-full mr-1"></span>
           Salida (entrega)
         </label>
@@ -40,7 +40,7 @@
       </div>
 
       <div>
-        <label class="block text-xs text-ink-soft mb-1">
+        <label class="block text-sm text-ink-muted mb-1">
           <span class="inline-block w-2 h-2 bg-success rounded-full mr-1"></span>
           Entrada (recibe)
         </label>
@@ -57,7 +57,7 @@
       </div>
 
       <div>
-        <label class="block text-xs text-ink-soft mb-1">Monto</label>
+        <label class="block text-sm text-ink-muted mb-1">Monto</label>
         <input
           :value="monto"
           @input="$emit('update:monto', $event.target.value)"
@@ -73,8 +73,8 @@
 
     <div class="border-t border-edge pt-2">
       <button type="button" @click="comisionAbierta = !comisionAbierta"
-        class="text-xs text-ink-faint hover:text-ink-muted transition flex items-center gap-1">
-        <span class="text-[10px]" :class="comisionAbierta ? 'rotate-90' : ''">▶</span>
+        class="text-sm text-ink-muted hover:text-ink-muted transition flex items-center gap-1">
+        <span class="text-xs" :class="comisionAbierta ? 'rotate-90' : ''">▶</span>
         {{ comisionTipo !== 'sin_comision' && parseFloat(comisionMonto) > 0 ? 'Comisión activa' : 'Comisión' }}
       </button>
       <template v-if="comisionAbierta">
@@ -97,9 +97,9 @@
             type="number" step="0.01" min="0" placeholder="0.00"
             class="w-24 text-xs px-2 py-1 border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none"
           />
-          <span v-if="comisionTipo === 'mismo_banco'" class="text-xs text-ink-faint">Sin costo</span>
-          <span v-if="comisionTipo === 'sin_comision'" class="text-xs text-ink-faint">Sin comisión</span>
-          <span v-if="['pago_movil', 'otros_bancos'].includes(comisionTipo) && monto" class="text-xs text-ink-faint">
+          <span v-if="comisionTipo === 'mismo_banco'" class="text-sm text-ink-muted">Sin costo</span>
+          <span v-if="comisionTipo === 'sin_comision'" class="text-sm text-ink-muted">Sin comisión</span>
+          <span v-if="['pago_movil', 'otros_bancos'].includes(comisionTipo) && monto" class="text-sm text-ink-muted">
             (sugerido: {{ sugeridoComision }})
           </span>
         </div>

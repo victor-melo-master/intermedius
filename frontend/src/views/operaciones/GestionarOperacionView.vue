@@ -12,19 +12,19 @@
       <div class="bg-surface border border-edge rounded-xl p-5">
         <div class="grid grid-cols-3 gap-4 text-center">
           <div>
-            <p class="text-xs text-ink-faint mb-1">Monto divisa</p>
+            <p class="text-sm text-ink-muted mb-1">Monto divisa</p>
             <p class="text-xl font-bold text-heading">
               {{ formatMoney(montoDivisa) }} {{ monedaDivisa }}
             </p>
           </div>
           <div>
-            <p class="text-xs text-ink-faint mb-1">Tasa</p>
+            <p class="text-sm text-ink-muted mb-1">Tasa</p>
             <p class="text-xl font-bold text-gold-dark">
               {{ formatRate(store.detail.tasa_aplicada) }}
             </p>
           </div>
           <div>
-            <p class="text-xs text-ink-faint mb-1">Bolívares</p>
+            <p class="text-sm text-ink-muted mb-1">Bolívares</p>
             <p class="text-xl font-bold text-success">
               {{ formatVes(montoBolivares) }}
             </p>
@@ -36,14 +36,14 @@
       <div class="bg-surface border border-edge rounded-xl p-5 space-y-3">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
-            <span class="text-sm text-ink-soft">#{{ store.detail.id }}</span>
+            <span class="text-sm text-ink-muted">#{{ store.detail.id }}</span>
             <span class="px-3 py-1 rounded-full text-xs font-bold" :class="badgeEstado.clase">{{ badgeEstado.label }}</span>
           </div>
-          <span class="text-sm text-ink-faint">{{ formatDate(store.detail.fecha) }}</span>
+          <span class="text-sm text-ink-muted">{{ formatDate(store.detail.fecha) }}</span>
         </div>
         <p class="font-semibold text-lg">{{ nombreOperacion }}</p>
-        <p v-if="store.detail.cliente?.nombre" class="text-sm text-ink-soft">Cliente: {{ store.detail.cliente.nombre }}</p>
-        <p v-if="store.detail.referencia" class="text-sm text-ink-soft">Ref: {{ store.detail.referencia }}</p>
+        <p v-if="store.detail.cliente?.nombre" class="text-sm text-ink-muted">Cliente: {{ store.detail.cliente.nombre }}</p>
+        <p v-if="store.detail.referencia" class="text-sm text-ink-muted">Ref: {{ store.detail.referencia }}</p>
         <p v-if="store.detail.descripcion" class="text-sm text-ink-muted bg-surface-soft p-3 rounded-lg">{{ store.detail.descripcion }}</p>
       </div>
 
@@ -57,18 +57,18 @@
         <h3 class="font-semibold text-ink">Ganancia estimada</h3>
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <p class="text-xs text-ink-faint">Bruta</p>
+            <p class="text-sm text-ink-muted">Bruta</p>
             <p class="text-lg font-bold" :class="gananciaPreview.bruta_usd >= 0 ? 'text-success' : 'text-danger'">
               {{ formatMoney(gananciaPreview.bruta_usd) }} USD
             </p>
-            <p class="text-sm text-ink-soft">Bs. {{ formatMoney(gananciaPreview.bruta_ves) }}</p>
+            <p class="text-sm text-ink-muted">Bs. {{ formatMoney(gananciaPreview.bruta_ves) }}</p>
           </div>
           <div>
-            <p class="text-xs text-ink-faint">Neta</p>
+            <p class="text-sm text-ink-muted">Neta</p>
             <p class="text-lg font-bold" :class="gananciaPreview.neta_usd >= 0 ? 'text-success' : 'text-danger'">
               {{ formatMoney(gananciaPreview.neta_usd) }} USD
             </p>
-            <p class="text-sm text-ink-soft">Bs. {{ formatMoney(gananciaPreview.neta_ves) }}</p>
+            <p class="text-sm text-ink-muted">Bs. {{ formatMoney(gananciaPreview.neta_ves) }}</p>
           </div>
         </div>
       </div>
@@ -111,7 +111,7 @@ class="w-full bg-success hover:bg-success-strong disabled:opacity-50 text-white 
           <Iconoir v-if="!acting" name="lock-closed" class="w-5 h-5" />
           {{ acting ? 'Cerrando...' : 'Cerrar operación' }}
           </button>
-          <p v-if="!operacionBalanceada" class="text-xs text-ink-faint text-center">
+          <p v-if="!operacionBalanceada" class="text-sm text-ink-muted text-center">
             Confirma todos los movimientos para cerrar la operación
           </p>
         </template>
@@ -147,13 +147,13 @@ class="w-full bg-success hover:bg-success-strong disabled:opacity-50 text-white 
     <Teleport to="body">
       <AppFormModal v-model="mostrarCerrar" title="Cerrar operación">
         <form @submit.prevent="cerrarOperacion" class="space-y-4">
-          <p class="text-sm text-ink-soft">Confirma el cierre de esta operación. Se generarán los movimientos contables.</p>
+          <p class="text-sm text-ink-muted">Confirma el cierre de esta operación. Se generarán los movimientos contables.</p>
           <div>
             <label class="block text-sm font-medium text-ink mb-1">Tasa de mercado ({{ fuenteTasaLabel }}) *</label>
             <input v-model.number="tasaMercadoCierre" type="number" step="0.01" min="0" required
               placeholder="Ej: 64.00"
               class="w-full px-4 py-2.5 border border-edge-strong rounded-xl focus:ring-2 focus:ring-success outline-none" />
-            <p class="text-xs text-ink-faint mt-1">Tasa de referencia para el cálculo de ganancia</p>
+            <p class="text-sm text-ink-muted mt-1">Tasa de referencia para el cálculo de ganancia</p>
           </div>
           <div v-if="tasaMercadoCierre" class="bg-surface-soft rounded-xl p-3 text-sm text-ink-muted">
             <p>Ganancia estimada:             <span class="font-semibold" :class="gananciaPreview?.bruta_usd >= 0 ? 'text-success' : 'text-danger'">$ {{ formatRate(gananciaPreview?.bruta_usd || 0) }} USD</span></p>
@@ -175,7 +175,7 @@ class="w-full bg-success hover:bg-success-strong disabled:opacity-50 text-white 
     <Teleport to="body">
       <AppFormModal v-model="mostrarCancelar" title="Cancelar operación">
         <form @submit.prevent="cancelarOperacion" class="space-y-4">
-          <p class="text-sm text-ink-soft">¿Estás seguro de cancelar esta operación?</p>
+          <p class="text-sm text-ink-muted">¿Estás seguro de cancelar esta operación?</p>
           <textarea v-model="motivoCancelacion" rows="3" required
             placeholder="Motivo de la cancelación..."
             class="w-full px-4 py-2.5 border border-edge-strong rounded-xl focus:ring-2 focus:ring-danger outline-none resize-none"></textarea>

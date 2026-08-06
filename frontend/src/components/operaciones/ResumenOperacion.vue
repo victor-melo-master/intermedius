@@ -2,7 +2,7 @@
   <div class="bg-surface-soft border border-edge rounded-xl p-5 space-y-2 text-sm">
     <h3 class="font-semibold text-ink mb-2">Resumen</h3>
     <div v-for="item in items" :key="item.label" class="flex justify-between">
-      <span class="text-ink-soft">{{ item.label }}</span>
+      <span class="text-ink-muted">{{ item.label }}</span>
       <span class="font-medium">{{ item.value }}</span>
     </div>
   </div>

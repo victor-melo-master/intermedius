@@ -9,8 +9,8 @@
     <div class="relative">
       <input v-model="search" @input="debounceSearch" placeholder="Buscar por nombre o alias..."
         class="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-surface-muted border border-edge-strong rounded-xl focus:ring-2 focus:ring-gold outline-none" />
-      <Iconoir name="magnifying-glass" class="absolute left-3 top-2.5 w-5 h-5 text-ink-faint" />
-      <button v-if="search" @click="search = ''; clientes.fetchAll()" class="absolute right-3 top-2.5 text-ink-faint hover:text-ink-muted"><Iconoir name="x-mark" class="w-5 h-5" /></button>
+      <Iconoir name="magnifying-glass" class="absolute left-3 top-2.5 w-5 h-5 text-ink-muted" />
+      <button v-if="search" @click="search = ''; clientes.fetchAll()" class="absolute right-3 top-2.5 text-ink-muted hover:text-ink-muted"><Iconoir name="x-mark" class="w-5 h-5" /></button>
     </div>
 
     <AppLoadingSpinner v-if="clientes.loading" />
@@ -23,8 +23,8 @@
     <AppErrorState v-else-if="clientes.error" :message="clientes.error" @retry="cargarLista()" />
     <template v-else-if="clientes.list.length === 0">
       <div class="text-center py-16">
-        <Iconoir name="users" class="w-12 h-12 mx-auto mb-4 text-ink-faint" />
-        <p class="text-ink-soft">{{ search ? 'Sin resultados' : (mostrarPapelera ? 'No hay clientes eliminados' : 'No hay clientes') }}</p>
+        <Iconoir name="users" class="w-12 h-12 mx-auto mb-4 text-ink-muted" />
+        <p class="text-ink-muted">{{ search ? 'Sin resultados' : (mostrarPapelera ? 'No hay clientes eliminados' : 'No hay clientes') }}</p>
       </div>
     </template>
     <div v-else class="space-y-2">
@@ -32,8 +32,8 @@
         <div class="w-10 h-10 rounded-full bg-gold-soft flex items-center justify-center text-gold-dark font-bold text-sm">{{ c.nombre.charAt(0).toUpperCase() }}</div>
         <div class="flex-1 min-w-0">
           <p class="font-semibold text-sm truncate">{{ c.nombre }}</p>
-          <p v-if="c.alias" class="text-xs text-ink-soft truncate">{{ c.alias }}</p>
-          <p v-if="c.telefono" class="text-xs text-ink-faint">{{ c.telefono }}</p>
+          <p v-if="c.alias" class="text-sm text-ink-muted truncate">{{ c.alias }}</p>
+          <p v-if="c.telefono" class="text-sm text-ink-muted">{{ c.telefono }}</p>
         </div>
         <div class="text-right shrink-0">
           <p class="text-sm font-bold" :class="(c.saldo_cache_usd || 0) >= 0 ? 'text-success' : 'text-danger'">${{ formatMoney(c.saldo_cache_usd) }}</p>
@@ -72,16 +72,16 @@
           <h3 class="font-bold text-lg">{{ detailCliente?.nombre }}</h3>
           <div class="flex gap-2">
             <button v-if="detailCliente?.deleted_at && (auth.canConfig)" @click="restaurarCliente(detailCliente)" class="text-xs bg-success hover:bg-success-strong text-white dark:text-navy px-2 py-1 rounded-lg inline-flex items-center gap-1"><Iconoir name="arrow-uturn-left" class="w-3 h-3" /> Recuperar</button>
-            <button @click="showDetail = false" class="text-ink-faint hover:text-ink-muted"><Iconoir name="x-mark" class="w-5 h-5" /></button>
+            <button @click="showDetail = false" class="text-ink-muted hover:text-ink-muted"><Iconoir name="x-mark" class="w-5 h-5" /></button>
           </div>
         </div>
 
         <div class="space-y-3 mb-8">
-          <p v-if="detailCliente?.alias" class="text-sm text-ink-soft"><span class="font-medium text-ink">Alias:</span> {{ detailCliente.alias }}</p>
-          <p v-if="detailCliente?.telefono" class="text-sm text-ink-soft"><span class="font-medium text-ink">Teléfono:</span> {{ detailCliente.telefono }}</p>
-          <p v-if="detailCliente?.email" class="text-sm text-ink-soft"><span class="font-medium text-ink">Email:</span> {{ detailCliente.email }}</p>
-          <p v-if="detailCliente?.notas" class="text-sm text-ink-soft"><span class="font-medium text-ink">Notas:</span> {{ detailCliente.notas }}</p>
-          <p class="text-sm text-ink-soft"><span class="font-medium text-ink">Saldo:</span> <span :class="(detailCliente?.saldo_cache_usd || 0) >= 0 ? 'text-success' : 'text-danger'">${{ formatMoney(detailCliente?.saldo_cache_usd) }}</span></p>
+          <p v-if="detailCliente?.alias" class="text-sm text-ink-muted"><span class="font-medium text-ink">Alias:</span> {{ detailCliente.alias }}</p>
+          <p v-if="detailCliente?.telefono" class="text-sm text-ink-muted"><span class="font-medium text-ink">Teléfono:</span> {{ detailCliente.telefono }}</p>
+          <p v-if="detailCliente?.email" class="text-sm text-ink-muted"><span class="font-medium text-ink">Email:</span> {{ detailCliente.email }}</p>
+          <p v-if="detailCliente?.notas" class="text-sm text-ink-muted"><span class="font-medium text-ink">Notas:</span> {{ detailCliente.notas }}</p>
+          <p class="text-sm text-ink-muted"><span class="font-medium text-ink">Saldo:</span> <span :class="(detailCliente?.saldo_cache_usd || 0) >= 0 ? 'text-success' : 'text-danger'">${{ formatMoney(detailCliente?.saldo_cache_usd) }}</span></p>
           <button v-if="!detailCliente?.deleted_at && (auth.canWrite)" @click="eliminarCliente(detailCliente)" class="text-xs bg-danger text-white dark:text-navy px-2 py-1 rounded-lg hover:bg-danger-strong inline-flex items-center gap-1"><Iconoir name="trash" class="w-3 h-3" /> Eliminar cliente</button>
         </div>
 
@@ -95,15 +95,15 @@
           <AppLoadingSpinner v-if="loadingCuentas" />
           <template v-else-if="clienteCuentas.length === 0">
             <div class="text-center py-16">
-              <Iconoir name="building-library" class="w-12 h-12 mx-auto mb-4 text-ink-faint" />
-              <p class="text-ink-soft">No hay cuentas registradas.</p>
+              <Iconoir name="building-library" class="w-12 h-12 mx-auto mb-4 text-ink-muted" />
+              <p class="text-ink-muted">No hay cuentas registradas.</p>
             </div>
           </template>
           <div v-else class="space-y-3">
             <div v-for="cu in clienteCuentas" :key="cu.id" class="bg-surface-soft border border-edge rounded-lg p-3">
               <p class="font-medium text-sm">{{ cu.alias }}</p>
-              <p class="text-xs text-ink-soft">{{ cu.banco?.nombre }} — {{ cu.moneda?.codigo }}</p>
-              <p v-if="cu.numero_cuenta" class="text-xs text-ink-faint">{{ cu.numero_cuenta }}</p>
+              <p class="text-sm text-ink-muted">{{ cu.banco?.nombre }} — {{ cu.moneda?.codigo }}</p>
+              <p v-if="cu.numero_cuenta" class="text-sm text-ink-muted">{{ cu.numero_cuenta }}</p>
             </div>
           </div>
         </div>
@@ -120,8 +120,8 @@
           <AppLoadingSpinner v-if="loadingDocumentos" />
           <template v-else-if="documentos.length === 0">
             <div class="text-center py-16">
-              <Iconoir name="document-text" class="w-12 h-12 mx-auto mb-4 text-ink-faint" />
-              <p class="text-ink-soft">No hay documentos.</p>
+              <Iconoir name="document-text" class="w-12 h-12 mx-auto mb-4 text-ink-muted" />
+              <p class="text-ink-muted">No hay documentos.</p>
             </div>
           </template>
           <div v-else class="space-y-3">
@@ -134,7 +134,7 @@
                 </span>
                 <div>
                   <p class="font-medium text-sm truncate max-w-[200px] hover:text-gold-dark underline">{{ doc.nombre_archivo }}</p>
-                  <p class="text-xs text-ink-faint">{{ formatTamano(doc.tamano) }} · {{ doc.tipo }}</p>
+                  <p class="text-sm text-ink-muted">{{ formatTamano(doc.tamano) }} · {{ doc.tipo }}</p>
                 </div>
               </div>
               <div class="flex flex-col items-end gap-1">
@@ -157,16 +157,16 @@
 
           <div class="grid grid-cols-2 gap-2 mb-3">
             <div>
-              <label class="text-[10px] text-ink-faint">Desde</label>
+              <label class="text-sm text-ink-muted">Desde</label>
               <input v-model="historialFiltros.fecha_desde" type="date" class="w-full px-2 py-1 text-xs border border-edge-strong rounded" />
             </div>
             <div>
-              <label class="text-[10px] text-ink-faint">Hasta</label>
+              <label class="text-sm text-ink-muted">Hasta</label>
               <input v-model="historialFiltros.fecha_hasta" type="date" class="w-full px-2 py-1 text-xs border border-edge-strong rounded" />
             </div>
           </div>
           <div class="mb-3">
-            <label class="text-[10px] text-ink-faint">Tipo</label>
+            <label class="text-sm text-ink-muted">Tipo</label>
             <select v-model="historialFiltros.tipo_codigo" class="w-full px-2 py-1 text-xs border border-edge-strong rounded">
               <option value="">Todos</option>
               <option value="compra_usd">Compra USD</option>
@@ -181,7 +181,7 @@
           <div v-if="historial.length > 0" class="overflow-x-auto">
             <table class="w-full text-xs">
               <thead>
-                <tr class="text-left text-ink-faint border-b">
+                <tr class="text-left text-ink-muted border-b">
                   <th class="py-1">ID</th>
                   <th class="py-1">Fecha</th>
                   <th class="py-1">Tipo</th>
@@ -202,12 +202,12 @@
               </tbody>
             </table>
             <div v-if="historialPaginacion.last_page > 1" class="flex justify-between items-center mt-2 text-xs">
-              <button @click="cargarHistorial(historialPaginacion.current_page - 1)" :disabled="!historialPaginacion.prev_page_url" class="text-gold-dark disabled:text-ink-faint">&lt; Anterior</button>
-              <span class="text-ink-soft">Pág {{ historialPaginacion.current_page }} / {{ historialPaginacion.last_page }}</span>
-              <button @click="cargarHistorial(historialPaginacion.current_page + 1)" :disabled="!historialPaginacion.next_page_url" class="text-gold-dark disabled:text-ink-faint">Siguiente &gt;</button>
+              <button @click="cargarHistorial(historialPaginacion.current_page - 1)" :disabled="!historialPaginacion.prev_page_url" class="text-gold-dark disabled:text-ink-muted">&lt; Anterior</button>
+              <span class="text-ink-muted">Pág {{ historialPaginacion.current_page }} / {{ historialPaginacion.last_page }}</span>
+              <button @click="cargarHistorial(historialPaginacion.current_page + 1)" :disabled="!historialPaginacion.next_page_url" class="text-gold-dark disabled:text-ink-muted">Siguiente &gt;</button>
             </div>
           </div>
-          <div v-else-if="!loadingHistorial && historialCargado" class="text-xs text-ink-faint py-2">Sin operaciones.</div>
+          <div v-else-if="!loadingHistorial && historialCargado" class="text-sm text-ink-muted py-2">Sin operaciones.</div>
         </div>
       </div>
     </div>
@@ -269,13 +269,13 @@
   <div class="bg-surface rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 relative z-10">
     <div class="flex items-center justify-between mb-4">
       <h3 class="font-bold text-lg">{{ documentoPreview?.nombre_archivo }}</h3>
-      <button @click="showDocumentoModal = false" class="text-ink-faint hover:text-ink-muted"><Iconoir name="x-mark" class="w-5 h-5" /></button>
+      <button @click="showDocumentoModal = false" class="text-ink-muted hover:text-ink-muted"><Iconoir name="x-mark" class="w-5 h-5" /></button>
     </div>
     <div class="flex flex-col items-center justify-center">
       <!-- Spinner mientras carga la URL -->
       <div v-if="loadingPreviewUrl" class="text-center py-8">
         <div class="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin mx-auto"></div>
-        <p class="text-ink-soft text-sm mt-2">Cargando previsualización...</p>
+        <p class="text-ink-muted text-sm mt-2">Cargando previsualización...</p>
       </div>
       <!-- Imagen -->
       <img v-else-if="esImagen(documentoPreview) && documentoPreviewUrl"
@@ -284,8 +284,8 @@
            class="max-w-full max-h-[70vh] rounded-lg shadow-md" />
       <!-- No imagen -->
       <div v-else-if="!loadingPreviewUrl" class="text-center py-8">
-        <Iconoir name="document-text" class="w-12 h-12 mx-auto mb-4 text-ink-faint" />
-        <p class="text-ink-soft">No se puede previsualizar este tipo de archivo.</p>
+        <Iconoir name="document-text" class="w-12 h-12 mx-auto mb-4 text-ink-muted" />
+        <p class="text-ink-muted">No se puede previsualizar este tipo de archivo.</p>
       </div>
       <!-- Botón de descarga -->
       <a v-if="documentoDownloadUrl"

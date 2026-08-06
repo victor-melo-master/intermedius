@@ -9,12 +9,12 @@
       <div class="bg-white dark:bg-surface rounded-xl border border-edge divide-y divide-edge">
         <!-- Moneda -->
         <div class="p-4 space-y-3">
-          <label class="block text-xs font-semibold text-ink-soft uppercase tracking-wider">Moneda a vender</label>
+          <label class="block text-sm font-semibold text-ink-muted uppercase tracking-wider">Moneda a vender</label>
           <div class="grid grid-cols-4 gap-2">
             <button type="button" v-for="m in monedasDisponibles" :key="m.codigo" @click="moneda = m.codigo"
               class="py-2.5 rounded-lg text-sm font-medium transition active:scale-[0.98] border-2"
-              :class="moneda === m.codigo ? monedaColor(m.color) : 'bg-white dark:bg-surface-muted border-edge text-ink-soft hover:border-edge-strong'">
-              <Iconoir :name="m.icono" class="w-5 h-5 mx-auto" :class="iconoColor[m.color] || 'text-ink-soft'" />
+              :class="moneda === m.codigo ? monedaColor(m.color) : 'bg-white dark:bg-surface-muted border-edge text-ink-muted hover:border-edge-strong'">
+              <Iconoir :name="m.icono" class="w-5 h-5 mx-auto" :class="iconoColor[m.color] || 'text-ink-muted'" />
               <span class="text-xs">{{ m.codigo }}</span>
             </button>
           </div>
@@ -22,7 +22,7 @@
 
         <!-- Cliente -->
         <div v-if="moneda" class="p-4">
-          <label class="block text-xs font-semibold text-ink-soft uppercase tracking-wider mb-2">Cliente</label>
+          <label class="block text-sm font-semibold text-ink-muted uppercase tracking-wider mb-2">Cliente</label>
           <ClienteSelector v-model="cliente" flat />
         </div>
 
@@ -80,7 +80,7 @@
                     <option value="transferencia">Transferencia</option>
                   </select>
                   <div class="relative">
-                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint text-sm">Bs.</span>
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted text-sm">Bs.</span>
                     <input :value="fmt(txVes.monto)" @input="onMontoVesInput($event)"
                       type="text" inputmode="decimal" placeholder="0,00"
                       class="w-full pl-9 pr-3 py-2 border rounded-lg text-sm focus:ring-2 outline-none"
@@ -134,20 +134,20 @@
                   <option v-for="c in cuentasDivisaIntermedius" :key="c.id" :value="c.id">{{ labelCuenta(c) }}</option>
                 </select>
                 <select v-model="txDiv.cuenta_destino_id" required :disabled="!txDiv.cuenta_origen_id"
-                  class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white dark:bg-surface-muted focus:ring-2 focus:ring-gold outline-none disabled:bg-surface-muted disabled:text-ink-faint">
+                  class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white dark:bg-surface-muted focus:ring-2 focus:ring-gold outline-none disabled:bg-surface-muted disabled:text-ink-muted">
                   <option value="">{{ txDiv.cuenta_origen_id ? 'Cuenta destino (Cliente)' : 'Elegí origen primero' }}</option>
                   <option v-for="c in cuentasDivisaDestinoFiltradas" :key="c.id" :value="c.id">{{ labelCuenta(c) }}</option>
                 </select>
                 <div class="grid grid-cols-2 gap-3">
                   <div class="relative">
-                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint text-sm">{{ moneda }}</span>
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted text-sm">{{ moneda }}</span>
                     <input :value="fmt(txDiv.monto)" @input="onMontoDivInput($event)"
                       type="text" inputmode="decimal" :placeholder="fmt(restanteDivisa)"
                       class="w-full pl-10 pr-3 py-2 border rounded-lg text-sm focus:ring-2 outline-none"
                       :class="parseFloat(txDiv.monto) > restanteDivisa + 0.01 ? 'border-danger-edge focus:ring-danger' : 'border-edge-strong focus:ring-gold'" />
                   </div>
                   <select v-model="txDiv.metodo_pago" required :disabled="!txDiv.cuenta_origen_id"
-                    class="px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white dark:bg-surface-muted focus:ring-2 focus:ring-gold outline-none disabled:bg-surface-muted disabled:text-ink-faint">
+                    class="px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white dark:bg-surface-muted focus:ring-2 focus:ring-gold outline-none disabled:bg-surface-muted disabled:text-ink-muted">
                     <option value="">{{ txDiv.cuenta_origen_id ? 'Método' : '—' }}</option>
                     <option v-for="m in metodosDivDisponibles" :key="m.value" :value="m.value">{{ m.label }}</option>
                   </select>
@@ -176,16 +176,16 @@
         <div v-if="moneda && cliente?.id && montoDivisaNum > 0 && montoVesNum > 0" class="p-5">
           <div class="flex items-center justify-between gap-4">
             <div class="flex items-center gap-4 text-sm">
-              <div class="text-ink-soft">
-                <span class="text-ink-faint">Divisa:</span>
+              <div class="text-ink-muted">
+                <span class="text-ink-muted">Divisa:</span>
                 <span class="font-semibold text-heading ml-1">{{ fmt(montoDivisaNum) }} {{ moneda }}</span>
               </div>
-              <div class="text-ink-soft">
-                <span class="text-ink-faint">Bs:</span>
+              <div class="text-ink-muted">
+                <span class="text-ink-muted">Bs:</span>
                 <span class="font-semibold text-heading ml-1">Bs. {{ fmt(montoVesNum) }}</span>
               </div>
-              <div class="text-ink-soft">
-                <span class="text-ink-faint">Tasa:</span>
+              <div class="text-ink-muted">
+                <span class="text-ink-muted">Tasa:</span>
                 <span class="font-semibold text-heading ml-1">{{ tasa || '—' }}</span>
               </div>
             </div>

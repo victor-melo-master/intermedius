@@ -10,8 +10,8 @@
           <Iconoir v-else-if="paso.key === 'revertida'" name="arrow-uturn-left" class="w-4 h-4" />
           <span v-else>{{ i + 1 }}</span>
         </div>
-        <span class="text-[10px] mt-1 font-medium"
-          :class="estadoIndex >= i ? 'text-ink' : 'text-ink-faint'">
+        <span class="text-xs mt-1 font-medium"
+          :class="estadoIndex >= i ? 'text-ink' : 'text-ink-muted'">
           {{ paso.label }}
         </span>
       </div>
@@ -67,6 +67,6 @@ function estadoClase(key) {
   if (key === 'revertida') return 'bg-warning-soft0 text-white'
   if (estadoIndex.value > idx) return 'bg-success-soft0 text-white'
   if (estadoIndex.value === idx) return 'bg-gold text-navy ring-2 ring-gold-soft'
-  return 'bg-surface-muted text-ink-soft'
+  return 'bg-surface-muted text-ink-muted'
 }
 </script>

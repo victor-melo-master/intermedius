@@ -6,8 +6,8 @@
     <AppErrorState v-else-if="error" :message="error" @retry="fetchCuentas" />
     <template v-else-if="cuentas.length === 0">
       <div class="text-center py-16">
-        <Iconoir name="building-library" class="w-12 h-12 mx-auto mb-4 text-ink-faint" />
-        <p class="text-ink-soft">No hay cuentas registradas</p>
+        <Iconoir name="building-library" class="w-12 h-12 mx-auto mb-4 text-ink-muted" />
+        <p class="text-ink-muted">No hay cuentas registradas</p>
       </div>
     </template>
     <div v-else class="space-y-2">
@@ -15,10 +15,10 @@
         <div class="w-10 h-10 rounded-full bg-gold-soft flex items-center justify-center"><Iconoir name="building-library" class="w-5 h-5" /></div>
         <div class="flex-1 min-w-0">
           <p class="font-semibold text-sm truncate">{{ c.alias || `Cuenta #${c.id}` }}</p>
-          <p v-if="c.titular?.alias" class="text-xs text-ink-soft">{{ c.titular.alias }} — {{ c.titular.nombre }}</p>
-          <p v-else-if="c.cliente?.nombre" class="text-xs text-ink-soft">Cliente: {{ c.cliente.nombre }}</p>
-          <p v-if="c.banco?.nombre" class="text-xs text-ink-faint">{{ c.banco.nombre }} ({{ c.banco.codigo }})</p>
-          <p v-if="c.tipo" class="text-xs text-ink-faint capitalize">{{ c.tipo }}</p>
+          <p v-if="c.titular?.alias" class="text-sm text-ink-muted">{{ c.titular.alias }} — {{ c.titular.nombre }}</p>
+          <p v-else-if="c.cliente?.nombre" class="text-sm text-ink-muted">Cliente: {{ c.cliente.nombre }}</p>
+          <p v-if="c.banco?.nombre" class="text-sm text-ink-muted">{{ c.banco.nombre }} ({{ c.banco.codigo }})</p>
+          <p v-if="c.tipo" class="text-sm text-ink-muted capitalize">{{ c.tipo }}</p>
         </div>
         <div class="flex items-center gap-2">
           <span v-if="c.activa" class="text-[10px] bg-success-soft text-success px-2 py-0.5 rounded-full">Activa</span>

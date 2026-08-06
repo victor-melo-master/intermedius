@@ -16,10 +16,10 @@
     <div class="flex items-start justify-between">
       <div>
         <h2 class="text-xl font-bold text-heading">Resumen operativo</h2>
-        <p class="text-sm text-ink-soft">Hola, {{ auth.user?.name }} · {{ hoy }}</p>
+        <p class="text-sm text-ink-muted">Hola, {{ auth.user?.name }} · {{ hoy }}</p>
       </div>
       <router-link to="/bancos" class="flex items-center gap-2 bg-white dark:bg-surface-muted border border-edge hover:border-gold text-ink hover:text-gold-dark text-sm font-medium px-4 py-2 rounded-xl shadow-sm transition">
-        <Iconoir name="building-library" class="w-5 h-5 text-ink-soft" />
+        <Iconoir name="building-library" class="w-5 h-5 text-ink-muted" />
         Gestionar bancos
       </router-link>
     </div>
@@ -28,17 +28,17 @@
     <div class="bg-surface border border-edge rounded-xl p-4 shadow-sm">
       <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 items-end">
         <div>
-          <label class="block text-[11px] text-ink-soft mb-1">Desde</label>
+          <label class="block text-sm text-ink-muted mb-1">Desde</label>
           <input v-model="filtros.fecha_desde" type="date"
             class="w-full px-3 py-2 text-sm border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none" />
         </div>
         <div>
-          <label class="block text-[11px] text-ink-soft mb-1">Hasta</label>
+          <label class="block text-sm text-ink-muted mb-1">Hasta</label>
           <input v-model="filtros.fecha_hasta" type="date"
             class="w-full px-3 py-2 text-sm border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none" />
         </div>
         <div>
-          <label class="block text-[11px] text-ink-soft mb-1">Moneda</label>
+          <label class="block text-sm text-ink-muted mb-1">Moneda</label>
           <select v-model="filtros.moneda"
             class="w-full px-3 py-2 text-sm border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none">
             <option value="">Todas</option>
@@ -49,7 +49,7 @@
           </select>
         </div>
         <div>
-          <label class="block text-[11px] text-ink-soft mb-1">Operador</label>
+          <label class="block text-sm text-ink-muted mb-1">Operador</label>
           <select v-model="filtros.operador_id"
             class="w-full px-3 py-2 text-sm border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none">
             <option value="">Todos</option>
@@ -77,8 +77,8 @@
     <!-- ── Sin operaciones ──────────────────────────────────────────────── -->
     <div v-else-if="resumen && resumen.operaciones && resumen.operaciones.total === 0"
       class="bg-surface border border-edge rounded-xl p-10 text-center">
-      <Iconoir name="chart-bar" class="w-10 h-10 mx-auto mb-3 text-ink-faint" />
-      <p class="text-ink-soft">Sin operaciones para este período</p>
+      <Iconoir name="chart-bar" class="w-10 h-10 mx-auto mb-3 text-ink-muted" />
+      <p class="text-ink-muted">Sin operaciones para este período</p>
     </div>
 
     <!-- ── Resumen ──────────────────────────────────────────────────────── -->
@@ -86,23 +86,23 @@
       <!-- Tarjetas -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <div class="bg-surface border border-edge rounded-xl p-4 shadow-sm">
-          <p class="text-xs text-ink-soft">Total operaciones</p>
+          <p class="text-sm text-ink-muted">Total operaciones</p>
           <p class="text-3xl font-bold text-heading mt-1">{{ resumen.operaciones.total ?? 0 }}</p>
         </div>
         <div class="bg-surface border border-edge rounded-xl p-4 shadow-sm space-y-1">
-          <p class="text-xs text-ink-soft mb-1">Desglose</p>
-          <p class="text-sm flex justify-between"><span class="text-ink-soft">Compras</span><span class="font-semibold text-teal">{{ resumen.operaciones.compras ?? 0 }}</span></p>
-          <p class="text-sm flex justify-between"><span class="text-ink-soft">Ventas</span><span class="font-semibold text-gold-dark">{{ resumen.operaciones.ventas ?? 0 }}</span></p>
-          <p class="text-sm flex justify-between"><span class="text-ink-soft">Intermediadas</span><span class="font-semibold text-violet">{{ resumen.operaciones.intermediadas ?? 0 }}</span></p>
+          <p class="text-sm text-ink-muted mb-1">Desglose</p>
+          <p class="text-sm flex justify-between"><span class="text-ink-muted">Compras</span><span class="font-semibold text-teal">{{ resumen.operaciones.compras ?? 0 }}</span></p>
+          <p class="text-sm flex justify-between"><span class="text-ink-muted">Ventas</span><span class="font-semibold text-gold-dark">{{ resumen.operaciones.ventas ?? 0 }}</span></p>
+          <p class="text-sm flex justify-between"><span class="text-ink-muted">Intermediadas</span><span class="font-semibold text-violet">{{ resumen.operaciones.intermediadas ?? 0 }}</span></p>
         </div>
         <div class="bg-surface border border-edge rounded-xl p-4 shadow-sm">
-          <p class="text-xs text-ink-soft">Ganancia bruta</p>
+          <p class="text-sm text-ink-muted">Ganancia bruta</p>
           <p class="text-xl font-bold text-success">{{ formatUsd(resumen.ganancias?.bruta_usd) }}</p>
-          <p class="text-xs text-ink-soft mt-2">Ganancia neta</p>
+          <p class="text-sm text-ink-muted mt-2">Ganancia neta</p>
           <p class="text-lg font-bold text-success-strong">{{ formatUsd(resumen.ganancias?.neta_usd) }}</p>
         </div>
         <div class="bg-surface border border-edge rounded-xl p-4 shadow-sm">
-          <p class="text-xs text-ink-soft">Efectivo pendiente</p>
+          <p class="text-sm text-ink-muted">Efectivo pendiente</p>
           <p class="text-3xl font-bold text-warning mt-1">{{ resumen.efectivo_pendiente?.count ?? 0 }}</p>
           <p class="text-sm font-semibold text-warning-strong mt-1">{{ formatUsd(resumen.efectivo_pendiente?.monto_usd) }}</p>
         </div>
@@ -113,10 +113,10 @@
         <!-- Volúmenes por moneda -->
         <div class="bg-surface border border-edge rounded-xl p-4 shadow-sm">
           <h3 class="font-semibold text-ink text-sm mb-3">Volúmenes por moneda</h3>
-          <div v-if="!resumen.volumenes || resumen.volumenes.length === 0" class="text-xs text-ink-faint py-2">Sin volúmenes</div>
+          <div v-if="!resumen.volumenes || resumen.volumenes.length === 0" class="text-sm text-ink-muted py-2">Sin volúmenes</div>
           <table v-else class="w-full text-sm">
             <thead>
-              <tr class="text-left text-xs text-ink-faint border-b border-edge">
+              <tr class="text-left text-sm text-ink-muted border-b border-edge">
                 <th class="py-2 font-medium">Moneda</th>
                 <th class="py-2 font-medium text-right">Comprado</th>
                 <th class="py-2 font-medium text-right">Vendido</th>
@@ -135,10 +135,10 @@
         <!-- Actividad por operador -->
         <div class="bg-surface border border-edge rounded-xl p-4 shadow-sm">
           <h3 class="font-semibold text-ink text-sm mb-3">Actividad por operador</h3>
-          <div v-if="!resumen.por_operador || resumen.por_operador.length === 0" class="text-xs text-ink-faint py-2">Sin actividad</div>
+          <div v-if="!resumen.por_operador || resumen.por_operador.length === 0" class="text-sm text-ink-muted py-2">Sin actividad</div>
           <table v-else class="w-full text-sm">
             <thead>
-              <tr class="text-left text-xs text-ink-faint border-b border-edge">
+              <tr class="text-left text-sm text-ink-muted border-b border-edge">
                 <th class="py-2 font-medium">Operador</th>
                 <th class="py-2 font-medium text-right">Operaciones</th>
                 <th class="py-2 font-medium text-right">Volumen USD</th>

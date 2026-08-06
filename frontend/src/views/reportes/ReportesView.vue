@@ -6,11 +6,11 @@
       <h3 class="font-semibold text-ink">Comisiones por operador</h3>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-          <label class="block text-xs text-ink-soft mb-1">Desde</label>
+          <label class="block text-sm text-ink-muted mb-1">Desde</label>
           <input v-model="desde" type="date" class="w-full px-3 py-2 border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none" />
         </div>
         <div>
-          <label class="block text-xs text-ink-soft mb-1">Hasta</label>
+          <label class="block text-sm text-ink-muted mb-1">Hasta</label>
           <input v-model="hasta" type="date" class="w-full px-3 py-2 border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none" />
         </div>
       </div>
@@ -31,8 +31,8 @@
     <div v-if="error" class="bg-danger-soft text-danger p-4 rounded-xl">{{ error }}</div>
 
     <div v-if="loaded && data.length === 0" class="text-center py-12">
-      <Iconoir name="arrow-trending-down" class="w-12 h-12 mx-auto mb-4 text-ink-faint" />
-      <p class="text-ink-soft">Sin datos para el período seleccionado</p>
+      <Iconoir name="arrow-trending-down" class="w-12 h-12 mx-auto mb-4 text-ink-muted" />
+      <p class="text-ink-muted">Sin datos para el período seleccionado</p>
     </div>
 
     <div v-if="data.length" class="space-y-2">
@@ -42,7 +42,7 @@
         </div>
         <div class="flex-1">
           <p class="font-semibold text-sm">{{ item.operador || item.nombre || 'Operador' }}</p>
-          <p class="text-xs text-ink-soft">{{ item.cantidad_operaciones || item.total_operaciones || 0 }} operaciones</p>
+          <p class="text-sm text-ink-muted">{{ item.cantidad_operaciones || item.total_operaciones || 0 }} operaciones</p>
         </div>
         <p class="text-lg font-bold text-gold-dark">${{ formatMoney(item.total_comisiones || 0) }}</p>
       </div>

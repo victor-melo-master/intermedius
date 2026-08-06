@@ -15,8 +15,8 @@
       <button @click="titulares.fetchAll()" class="underline ml-2">Reintentar</button>
     </div>
     <div v-else-if="titulares.list.length === 0" class="text-center py-16">
-      <Iconoir name="users-solid" class="w-12 h-12 mx-auto mb-4 text-ink-faint" />
-      <p class="text-ink-soft">No hay titulares registrados</p>
+      <Iconoir name="users-solid" class="w-12 h-12 mx-auto mb-4 text-ink-muted" />
+      <p class="text-ink-muted">No hay titulares registrados</p>
     </div>
     <div v-else class="space-y-2">
       <div v-for="t in titulares.list" :key="t.id" class="bg-surface border border-edge rounded-xl p-4 flex items-center gap-3">
@@ -25,9 +25,9 @@
         </div>
         <div class="flex-1 min-w-0">
           <p class="font-semibold text-sm truncate">{{ t.alias }}</p>
-          <p class="text-xs text-ink-soft">{{ t.nombre }}</p>
-          <p v-if="t.telefono" class="text-xs text-ink-faint">{{ t.telefono }}</p>
-          <p v-if="t.email" class="text-xs text-ink-faint">{{ t.email }}</p>
+          <p class="text-sm text-ink-muted">{{ t.nombre }}</p>
+          <p v-if="t.telefono" class="text-sm text-ink-muted">{{ t.telefono }}</p>
+          <p v-if="t.email" class="text-sm text-ink-muted">{{ t.email }}</p>
         </div>
         <div class="text-right">
           <span v-if="t.activo" class="text-[10px] bg-success-soft text-success px-2 py-0.5 rounded-full">Activo</span>

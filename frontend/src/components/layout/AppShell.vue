@@ -18,7 +18,7 @@
             aria-label="Cambiar tema">
             <Iconoir :name="theme.isDark ? 'sun' : 'moon'" class="w-5 h-5" />
           </button>
-          <span class="text-sm text-ink-soft hidden sm:block">{{ auth.user?.name }}</span>
+          <span class="text-sm text-ink-muted hidden sm:block">{{ auth.user?.name }}</span>
           <router-link to="/perfil" title="Mi perfil"
             class="flex items-center gap-2 px-1.5 py-1 rounded-lg hover:bg-surface-muted transition">
             <img v-if="avatarUrl(auth.user)" :src="avatarUrl(auth.user)" :alt="`Avatar de ${auth.user?.name}`"
@@ -44,8 +44,8 @@
         <nav class="p-3 space-y-1">
           <router-link v-for="item in nav" :key="item.path" :to="item.path"
             class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition active:scale-[0.98]"
-            :class="$route.path.startsWith(item.path) ? 'bg-gold-soft text-gold' : 'text-ink-faint hover:bg-white/10 hover:text-white'">
-                <Iconoir :name="item.icon" :class="$route.path.startsWith(item.path) ? 'text-gold' : 'text-ink-faint'" />
+            :class="$route.path.startsWith(item.path) ? 'bg-gold-soft text-gold' : 'text-ink-muted hover:bg-white/10 hover:text-white'">
+                <Iconoir :name="item.icon" :class="$route.path.startsWith(item.path) ? 'text-gold' : 'text-ink-muted'" />
             {{ item.label }}
           </router-link>
         </nav>
@@ -58,13 +58,13 @@
           <aside class="absolute left-0 top-0 bottom-0 w-64 bg-navy p-4" @click.stop>
             <div class="flex items-center justify-between mb-6">
               <img :src="logoNegativo" alt="Intermedius" class="h-7 w-auto" />
-              <button @click="drawer = false" class="p-1 hover:bg-white/10 rounded"><Iconoir name="x-mark" class="text-ink-faint" /></button>
+              <button @click="drawer = false" class="p-1 hover:bg-white/10 rounded"><Iconoir name="x-mark" class="text-ink-muted" /></button>
             </div>
             <nav class="space-y-1">
               <router-link v-for="item in nav" :key="item.path" :to="item.path" @click="drawer = false"
                 class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition active:scale-[0.98]"
-                :class="$route.path.startsWith(item.path) ? 'bg-gold-soft text-gold' : 'text-ink-faint hover:bg-white/10 hover:text-white'">
-            <Iconoir :name="item.icon" :class="$route.path.startsWith(item.path) ? 'text-gold' : 'text-ink-faint'" />
+                :class="$route.path.startsWith(item.path) ? 'bg-gold-soft text-gold' : 'text-ink-muted hover:bg-white/10 hover:text-white'">
+            <Iconoir :name="item.icon" :class="$route.path.startsWith(item.path) ? 'text-gold' : 'text-ink-muted'" />
                 {{ item.label }}
               </router-link>
             </nav>

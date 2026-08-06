@@ -53,14 +53,14 @@
       <button
         type="button"
         @click="$emit('limpiar')"
-        class="text-xs px-3 py-1.5 bg-surface-muted hover:bg-danger-soft text-ink-soft hover:text-danger rounded-lg transition font-medium"
+        class="text-sm px-3 py-1.5 bg-surface-muted hover:bg-danger-soft text-ink-muted hover:text-danger rounded-lg transition font-medium"
       >
         Limpiar filas
       </button>
     </div>
 
-    <div v-if="resumen.length" class="text-xs text-ink-soft space-y-0.5 pt-1 border-t border-edge">
-      <p v-for="r in resumen" :key="r.label" :class="r.ok ? 'text-ink-soft' : 'text-danger font-medium'">
+    <div v-if="resumen.length" class="text-sm text-ink-muted space-y-0.5 pt-1 border-t border-edge">
+      <p v-for="r in resumen" :key="r.label" :class="r.ok ? 'text-ink-muted' : 'text-danger font-medium'">
         {{ r.label }}: {{ r.total }} / {{ r.esperado }}
         <Iconoir v-if="r.ok" name="check" class="w-3.5 h-3.5 inline text-success" />
         <span v-else><Iconoir name="exclamation-triangle" class="w-3.5 h-3.5 inline text-danger" /> Diferencia: {{ r.diferencia }}</span>

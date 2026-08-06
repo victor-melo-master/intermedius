@@ -5,7 +5,7 @@
       <h2 class="text-xl font-bold text-heading">Seleccionar moneda</h2>
     </div>
 
-    <p class="text-sm text-ink-soft">Elige la moneda de la operación:</p>
+    <p class="text-sm text-ink-muted">Elige la moneda de la operación:</p>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <button v-for="m in monedas" :key="m.codigo" @click="seleccionar(m.codigo)"
@@ -14,7 +14,7 @@
           <span class="text-3xl">{{ m.icono }}</span>
           <span class="text-2xl font-bold text-heading">{{ m.codigo }}</span>
         </div>
-        <p class="text-sm text-ink-soft">{{ m.nombre }}</p>
+        <p class="text-sm text-ink-muted">{{ m.nombre }}</p>
       </button>
 
       <!-- Botón Intermediada -->

@@ -1,43 +1,43 @@
 <template>
   <div>
     <div v-if="!transacciones.length" class="text-center py-8">
-      <p class="text-ink-faint text-sm">No hay movimientos registrados</p>
+      <p class="text-ink-muted text-sm">No hay movimientos registrados</p>
     </div>
     <div v-else class="space-y-2">
       <div v-for="tx in transacciones" :key="tx.id"
         class="border border-edge rounded-xl p-4 space-y-2"
         :class="{ 'opacity-60': ['revertida', 'cancelada', 'fallido'].includes(tx.estado) }">
         <div class="flex items-center justify-between">
-          <span class="text-xs text-ink-faint">#{{ tx.orden }}</span>
+          <span class="text-sm text-ink-muted">#{{ tx.orden }}</span>
           <span class="px-2 py-0.5 rounded-full text-[11px] font-medium" :class="estadoBadge(tx).clase">
             {{ estadoBadge(tx).label }}
           </span>
         </div>
         <div class="grid grid-cols-2 gap-3 text-sm">
           <div>
-            <p class="text-xs text-ink-faint">Origen</p>
+            <p class="text-sm text-ink-muted">Origen</p>
             <p class="font-medium text-ink">{{ tx.cuenta_origen?.alias || `Cuenta #${tx.cuenta_origen_id}` }}</p>
-            <p v-if="tx.cuenta_origen?.titular_id" class="text-[11px] text-ink-faint">
+            <p v-if="tx.cuenta_origen?.titular_id" class="text-sm text-ink-muted">
               Saldo: {{ formatearSaldo(tx.cuenta_origen) }}
             </p>
           </div>
           <div>
-            <p class="text-xs text-ink-faint">Destino</p>
+            <p class="text-sm text-ink-muted">Destino</p>
             <p class="font-medium text-ink">{{ tx.cuenta_destino?.alias || `Cuenta #${tx.cuenta_destino_id}` }}</p>
-            <p v-if="tx.cuenta_destino?.titular_id" class="text-[11px] text-ink-faint">
+            <p v-if="tx.cuenta_destino?.titular_id" class="text-sm text-ink-muted">
               Saldo: {{ formatearSaldo(tx.cuenta_destino) }}
             </p>
           </div>
           <div>
-            <p class="text-xs text-ink-faint">Monto</p>
+            <p class="text-sm text-ink-muted">Monto</p>
             <p class="font-semibold text-heading">{{ Number(tx.monto).toFixed(2) }} {{ tx.moneda?.codigo || '' }}</p>
           </div>
           <div>
-            <p class="text-xs text-ink-faint">Método de pago</p>
+            <p class="text-sm text-ink-muted">Método de pago</p>
             <p class="text-ink-muted">{{ tx.metodo_pago || '—' }}</p>
           </div>
         </div>
-        <div v-if="tx.comprobante" class="text-xs text-ink-soft bg-surface-soft rounded-lg px-3 py-1">
+        <div v-if="tx.comprobante" class="text-sm text-ink-muted bg-surface-soft rounded-lg px-3 py-1">
           Comprobante: {{ tx.comprobante }}
         </div>
         <div v-if="tx.motivo_rechazo" class="text-xs text-danger bg-danger-soft rounded-lg px-3 py-1">
@@ -92,17 +92,17 @@
       <AppFormModal v-model="mostrarEditando" title="Editar movimiento">
         <form @submit.prevent="guardarEdicion" class="space-y-4">
           <div>
-            <label class="block text-xs text-ink-soft mb-1">Monto</label>
+            <label class="block text-sm text-ink-muted mb-1">Monto</label>
             <input v-model="editForm.monto" type="number" step="0.01" min="0" required
               class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none" />
           </div>
           <div>
-            <label class="block text-xs text-ink-soft mb-1">Tasa aplicada</label>
+            <label class="block text-sm text-ink-muted mb-1">Tasa aplicada</label>
             <input v-model="editForm.tasa_aplicada" type="number" step="0.01" min="0"
               class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none" />
           </div>
           <div>
-            <label class="block text-xs text-ink-soft mb-1">Método de pago</label>
+            <label class="block text-sm text-ink-muted mb-1">Método de pago</label>
             <select v-model="editForm.metodo_pago" required
               class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white dark:bg-surface-muted focus:ring-2 focus:ring-gold outline-none">
               <option value="">Seleccionar</option>
@@ -115,7 +115,7 @@
             </select>
           </div>
           <div v-if="editForm.metodo_pago && editForm.metodo_pago !== 'efectivo'">
-            <label class="block text-xs text-ink-soft mb-1">Comprobante <span class="text-danger">*</span></label>
+            <label class="block text-sm text-ink-muted mb-1">Comprobante <span class="text-danger">*</span></label>
             <input v-model="editForm.comprobante" required
               placeholder="N° de referencia, voucher, hash..."
               class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none" />
@@ -138,7 +138,7 @@
     <Teleport to="body">
       <AppFormModal v-model="mostrarRevertirSeleccionado" title="Revertir movimiento">
         <form @submit.prevent="revertirTx" class="space-y-4">
-          <p class="text-sm text-ink-soft">¿Estás seguro de revertir este movimiento? Se ajustará el saldo de las cuentas.</p>
+          <p class="text-sm text-ink-muted">¿Estás seguro de revertir este movimiento? Se ajustará el saldo de las cuentas.</p>
           <textarea v-model="motivoRevertir" rows="3" required
             placeholder="Motivo de la reversión..."
             class="w-full px-4 py-2.5 border border-edge-strong rounded-xl focus:ring-2 focus:ring-warning outline-none resize-none"></textarea>
@@ -158,7 +158,7 @@
     <Teleport to="body">
       <AppFormModal v-model="mostrarFallarSeleccionado" title="Fallar movimiento">
         <form @submit.prevent="fallarTx" class="space-y-4">
-          <p class="text-sm text-ink-soft">Indica la razón por la que este movimiento no pudo ejecutarse.</p>
+          <p class="text-sm text-ink-muted">Indica la razón por la que este movimiento no pudo ejecutarse.</p>
           <textarea v-model="razonFallar" rows="3" required
             placeholder="Ej: saldo insuficiente, transferencia rechazada..."
             class="w-full px-4 py-2.5 border border-edge-strong rounded-xl focus:ring-2 focus:ring-danger outline-none resize-none"></textarea>
@@ -178,7 +178,7 @@
     <Teleport to="body">
       <AppFormModal v-model="mostrarCancelarSeleccionado" title="Cancelar movimiento">
         <form @submit.prevent="cancelarTx" class="space-y-4">
-          <p class="text-sm text-ink-soft">Indica por qué cancelas este movimiento.</p>
+          <p class="text-sm text-ink-muted">Indica por qué cancelas este movimiento.</p>
           <textarea v-model="razonCancelar" rows="3" required
             placeholder="Motivo de cancelación..."
             class="w-full px-4 py-2.5 border border-edge-strong rounded-xl focus:ring-2 focus:ring-warning outline-none resize-none"></textarea>

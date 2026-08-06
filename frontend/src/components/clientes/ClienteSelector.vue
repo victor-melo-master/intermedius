@@ -38,7 +38,7 @@
           :class="i === activeIndex ? 'bg-gold-soft text-gold-dark' : 'hover:bg-surface-soft'"
         >
           <div class="font-medium">{{ c.nombre }}</div>
-          <div v-if="c.alias || c.documento" class="text-xs text-ink-faint">
+          <div v-if="c.alias || c.documento" class="text-sm text-ink-muted">
             {{ [c.alias, c.documento].filter(Boolean).join(' · ') }}
           </div>
         </button>
@@ -99,23 +99,23 @@
               <button type="button" @click="addCuenta" class="text-xs bg-gold text-navy px-2 py-1 rounded-lg hover:bg-gold-dark">+ Agregar cuenta</button>
             </div>
 
-            <div v-if="newCliente.cuentas.length === 0" class="text-xs text-ink-faint py-2">Sin cuentas. Agregá al menos una.</div>
+            <div v-if="newCliente.cuentas.length === 0" class="text-sm text-ink-muted py-2">Sin cuentas. Agregá al menos una.</div>
 
             <div v-for="(cuenta, i) in newCliente.cuentas" :key="i" class="bg-surface-soft border border-edge rounded-lg p-3 space-y-2 mb-2">
               <div class="flex items-center justify-between">
-                <span class="text-xs font-medium text-ink-soft">Cuenta #{{ i + 1 }}</span>
+                <span class="text-sm font-medium text-ink-muted">Cuenta #{{ i + 1 }}</span>
                 <button type="button" @click="removeCuenta(i)" class="text-xs text-danger hover:text-danger-strong">Eliminar</button>
               </div>
               <div class="grid grid-cols-2 gap-2">
                 <div>
-                  <label class="text-[11px] text-ink-soft">Banco</label>
+                  <label class="text-sm text-ink-muted">Banco</label>
                   <select v-model="cuenta.banco_id" required class="w-full px-2 py-1.5 text-sm border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none">
                     <option value="">Seleccionar</option>
                     <option v-for="b in bancos" :key="b.id" :value="b.id">{{ b.nombre }}</option>
                   </select>
                 </div>
                 <div>
-                  <label class="text-[11px] text-ink-soft">Moneda</label>
+                  <label class="text-sm text-ink-muted">Moneda</label>
                   <select v-model="cuenta.moneda_id" required class="w-full px-2 py-1.5 text-sm border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none">
                     <option value="">Seleccionar</option>
                     <option v-for="m in monedas" :key="m.id" :value="m.id">{{ m.codigo }}</option>
@@ -124,11 +124,11 @@
               </div>
               <div class="grid grid-cols-2 gap-2">
                 <div>
-                  <label class="text-[11px] text-ink-soft">Alias *</label>
+                  <label class="text-sm text-ink-muted">Alias *</label>
                   <input v-model="cuenta.alias" type="text" required class="w-full px-2 py-1.5 text-sm border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none" />
                 </div>
                 <div>
-                  <label class="text-[11px] text-ink-soft">Tipo</label>
+                  <label class="text-sm text-ink-muted">Tipo</label>
                   <select v-model="cuenta.tipo" class="w-full px-2 py-1.5 text-sm border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none">
                     <option value="banco">Banco</option>
                     <option value="zelle">Zelle</option>
@@ -139,7 +139,7 @@
                 </div>
               </div>
               <div>
-                <label class="text-[11px] text-ink-soft">Número de cuenta</label>
+                <label class="text-sm text-ink-muted">Número de cuenta</label>
                 <input v-model="cuenta.numero_cuenta" type="text" class="w-full px-2 py-1.5 text-sm border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none" />
               </div>
             </div>

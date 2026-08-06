@@ -27,27 +27,27 @@
         <div class="flex items-center gap-2">
           <span class="text-lg">{{ iconoMoneda(grupo.baseCodigo) }}</span>
           <h3 class="font-semibold text-ink">{{ grupo.baseCodigo }}</h3>
-          <span class="text-xs text-ink-faint">{{ grupo.items.length }} {{ grupo.items.length === 1 ? 'par' : 'pares' }}</span>
+          <span class="text-sm text-ink-muted">{{ grupo.items.length }} {{ grupo.items.length === 1 ? 'par' : 'pares' }}</span>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div v-for="t in grupo.items" :key="t.id" class="bg-surface border border-edge rounded-xl p-4 shadow-sm">
             <div class="flex items-center justify-between mb-3">
               <span class="bg-info-soft text-info-strong text-xs font-bold px-3 py-1 rounded-full">{{ t.par }}</span>
-              <button v-if="auth.isAdmin" @click="openEdit(t)" class="text-sm text-ink-faint hover:text-gold-dark inline-flex items-center gap-1" title="Editar"><Iconoir name="pencil-square" class="w-4 h-4" /> Editar</button>
+              <button v-if="auth.isAdmin" @click="openEdit(t)" class="text-sm text-ink-muted hover:text-gold-dark inline-flex items-center gap-1" title="Editar"><Iconoir name="pencil-square" class="w-4 h-4" /> Editar</button>
             </div>
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <p class="text-xs text-ink-soft mb-0.5">Compra sugerida</p>
+                <p class="text-sm text-ink-muted mb-0.5">Compra sugerida</p>
                 <p class="text-xl font-bold text-teal">{{ formatRate(t.tasa_compra) }}</p>
-                <p v-if="t.tasa_compra_minima" class="text-[11px] text-ink-faint mt-0.5">Mín: {{ formatRate(t.tasa_compra_minima) }}</p>
+                <p v-if="t.tasa_compra_minima" class="text-sm text-ink-muted mt-0.5">Mín: {{ formatRate(t.tasa_compra_minima) }}</p>
               </div>
               <div>
-                <p class="text-xs text-ink-soft mb-0.5">Venta sugerida</p>
+                <p class="text-sm text-ink-muted mb-0.5">Venta sugerida</p>
                 <p class="text-xl font-bold text-gold-dark">{{ formatRate(t.tasa_venta) }}</p>
-                <p v-if="t.tasa_venta_minima" class="text-[11px] text-ink-faint mt-0.5">Mín: {{ formatRate(t.tasa_venta_minima) }}</p>
+                <p v-if="t.tasa_venta_minima" class="text-sm text-ink-muted mt-0.5">Mín: {{ formatRate(t.tasa_venta_minima) }}</p>
               </div>
             </div>
-            <p class="text-[11px] text-ink-faint mt-3 pt-2 border-t border-edge">{{ publicada(t.vigente_desde) }}</p>
+            <p class="text-sm text-ink-muted mt-3 pt-2 border-t border-edge">{{ publicada(t.vigente_desde) }}</p>
           </div>
         </div>
       </div>
@@ -77,22 +77,22 @@
             </label>
             <div v-if="pairs[ref.id]?.active" class="grid grid-cols-2 gap-2 mt-3">
               <div>
-                <label class="block text-[11px] text-ink-soft mb-1">Tasa compra *</label>
+                <label class="block text-sm text-ink-muted mb-1">Tasa compra *</label>
                 <input v-model="pairs[ref.id].tasa_compra" type="number" step="0.01" inputmode="decimal" placeholder="0.00"
                   class="w-full px-3 py-2 text-sm border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none" />
               </div>
               <div>
-                <label class="block text-[11px] text-ink-soft mb-1">Mín. compra</label>
+                <label class="block text-sm text-ink-muted mb-1">Mín. compra</label>
                 <input v-model="pairs[ref.id].tasa_compra_minima" type="number" step="0.01" inputmode="decimal" placeholder="opcional"
                   class="w-full px-3 py-2 text-sm border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none" />
               </div>
               <div>
-                <label class="block text-[11px] text-ink-soft mb-1">Tasa venta *</label>
+                <label class="block text-sm text-ink-muted mb-1">Tasa venta *</label>
                 <input v-model="pairs[ref.id].tasa_venta" type="number" step="0.01" inputmode="decimal" placeholder="0.00"
                   class="w-full px-3 py-2 text-sm border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none" />
               </div>
               <div>
-                <label class="block text-[11px] text-ink-soft mb-1">Mín. venta</label>
+                <label class="block text-sm text-ink-muted mb-1">Mín. venta</label>
                 <input v-model="pairs[ref.id].tasa_venta_minima" type="number" step="0.01" inputmode="decimal" placeholder="opcional"
                   class="w-full px-3 py-2 text-sm border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none" />
               </div>

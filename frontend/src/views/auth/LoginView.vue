@@ -3,20 +3,20 @@
     <div class="w-full max-w-sm bg-surface rounded-2xl shadow-lg p-8 border border-edge">
       <div class="text-center mb-8">
         <img :src="theme.isDark ? logoNegativo : logoPositivo" alt="Intermedius" class="h-12 w-auto mx-auto mb-4" />
-        <p class="text-sm text-ink-soft">Sistema de Casa de Cambio</p>
+        <p class="text-sm text-ink-muted">Sistema de Casa de Cambio</p>
       </div>
 
       <form @submit.prevent="submit" class="space-y-4">
         <div>
           <label class="block text-sm font-medium text-ink mb-1">Correo electrónico</label>
           <input v-model="form.email" type="email" required
-            class="w-full px-4 py-2.5 border border-edge-strong rounded-xl focus:ring-2 focus:ring-gold focus:border-gold outline-none transition bg-surface text-ink placeholder:text-ink-faint"
+            class="w-full px-4 py-2.5 border border-edge-strong rounded-xl focus:ring-2 focus:ring-gold focus:border-gold outline-none transition bg-surface text-ink placeholder:text-ink-soft"
             placeholder="admin@test.com" />
         </div>
         <div>
           <label class="block text-sm font-medium text-ink mb-1">Contraseña</label>
           <input v-model="form.password" type="password" required
-            class="w-full px-4 py-2.5 border border-edge-strong rounded-xl focus:ring-2 focus:ring-gold focus:border-gold outline-none transition bg-surface text-ink placeholder:text-ink-faint"
+            class="w-full px-4 py-2.5 border border-edge-strong rounded-xl focus:ring-2 focus:ring-gold focus:border-gold outline-none transition bg-surface text-ink placeholder:text-ink-soft"
             placeholder="password123" />
         </div>
 

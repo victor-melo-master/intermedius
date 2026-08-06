@@ -9,12 +9,12 @@
       <div class="bg-white dark:bg-surface rounded-xl border border-edge divide-y divide-edge">
         <!-- Moneda -->
         <div class="p-4 space-y-3">
-          <label class="block text-xs font-semibold text-ink-soft uppercase tracking-wider">Moneda a recibir</label>
+          <label class="block text-sm font-semibold text-ink-muted uppercase tracking-wider">Moneda a recibir</label>
           <div class="grid grid-cols-4 gap-2">
             <button type="button" v-for="m in monedasDisponibles" :key="m.codigo" @click="moneda = m.codigo"
               class="py-2.5 rounded-lg text-sm font-medium transition active:scale-[0.98] border-2"
-              :class="moneda === m.codigo ? monedaColor(m.color) : 'bg-white dark:bg-surface-muted border-edge text-ink-soft hover:border-edge-strong'">
-              <Iconoir :name="m.icono" class="w-5 h-5 mx-auto" :class="iconoColor[m.color] || 'text-ink-soft'" />
+              :class="moneda === m.codigo ? monedaColor(m.color) : 'bg-white dark:bg-surface-muted border-edge text-ink-muted hover:border-edge-strong'">
+              <Iconoir :name="m.icono" class="w-5 h-5 mx-auto" :class="iconoColor[m.color] || 'text-ink-muted'" />
               <span class="text-xs">{{ m.codigo }}</span>
             </button>
           </div>
@@ -22,7 +22,7 @@
 
         <!-- Cliente -->
         <div v-if="moneda" class="p-4">
-          <label class="block text-xs font-semibold text-ink-soft uppercase tracking-wider mb-2">Cliente</label>
+          <label class="block text-sm font-semibold text-ink-muted uppercase tracking-wider mb-2">Cliente</label>
           <ClienteSelector v-model="cliente" flat />
         </div>
 
@@ -82,7 +82,7 @@
                     <option value="otro">Otro</option>
                   </select>
                   <div class="relative">
-                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint text-sm">{{ moneda }}</span>
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted text-sm">{{ moneda }}</span>
                     <input :value="fmt(txDivisa.monto)" @input="onMontoDivisaInput($event)"
                       type="text" inputmode="decimal" :placeholder="fmt(restanteDivisa)"
                       class="w-full pl-10 pr-3 py-2 border rounded-lg text-sm focus:ring-2 outline-none"
@@ -139,7 +139,7 @@
                     <option value="transferencia">Transferencia</option>
                   </select>
                   <div class="relative">
-                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint text-sm">Bs.</span>
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted text-sm">Bs.</span>
                     <input :value="fmt(txVes.monto)" @input="onMontoVesInput($event)"
                       type="text" inputmode="decimal" :placeholder="fmt(restanteVes)"
                       class="w-full pl-9 pr-3 py-2 border rounded-lg text-sm focus:ring-2 outline-none"
@@ -170,16 +170,16 @@
         <div v-if="moneda && cliente?.id && montoDivisaNum > 0 && montoVesNum > 0" class="p-5">
           <div class="flex items-center justify-between gap-4">
             <div class="flex items-center gap-4 text-sm">
-              <div class="text-ink-soft">
-                <span class="text-ink-faint">Recibir:</span>
+              <div class="text-ink-muted">
+                <span class="text-ink-muted">Recibir:</span>
                 <span class="font-semibold text-heading ml-1">{{ fmt(montoDivisaNum) }} {{ moneda }}</span>
               </div>
-              <div class="text-ink-soft">
-                <span class="text-ink-faint">Pagar:</span>
+              <div class="text-ink-muted">
+                <span class="text-ink-muted">Pagar:</span>
                 <span class="font-semibold text-heading ml-1">Bs. {{ fmt(montoVesNum) }}</span>
               </div>
-              <div class="text-ink-soft">
-                <span class="text-ink-faint">Tasa:</span>
+              <div class="text-ink-muted">
+                <span class="text-ink-muted">Tasa:</span>
                 <span class="font-semibold text-heading ml-1">{{ tasa || '—' }}</span>
               </div>
             </div>

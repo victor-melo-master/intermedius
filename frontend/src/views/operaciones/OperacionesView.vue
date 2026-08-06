@@ -34,9 +34,9 @@
       <button @click="reintentar" class="underline ml-2">Reintentar</button>
     </div>
     <div v-else-if="ops.list.length === 0" class="text-center py-16">
-      <Iconoir name="document-text" class="w-12 h-12 block mb-4 mx-auto text-ink-faint" />
-      <p class="text-ink-soft">No hay operaciones</p>
-      <p class="text-sm text-ink-faint mt-1">Pulsa + para registrar una nueva</p>
+      <Iconoir name="document-text" class="w-12 h-12 block mb-4 mx-auto text-ink-muted" />
+      <p class="text-ink-muted">No hay operaciones</p>
+      <p class="text-sm text-ink-muted mt-1">Pulsa + para registrar una nueva</p>
     </div>
     <div v-else class="space-y-2">
       <router-link v-for="op in ops.list" :key="op.id" :to="`/operaciones/${op.id}`"
@@ -45,34 +45,34 @@
           <div class="min-w-0 space-y-1">
             <div class="flex items-center gap-2">
               <span class="text-xs font-bold px-2 py-0.5 rounded-full" :class="tipoBadge(op).class">{{ tipoBadge(op).label }}</span>
-              <span class="text-xs text-ink-faint">#{{ op.id }}</span>
+              <span class="text-sm text-ink-muted">#{{ op.id }}</span>
               <span class="text-xs font-medium px-2 py-0.5 rounded-full" :class="estatusBadge(op).class">{{ estatusBadge(op).label }}</span>
             </div>
             <div class="flex items-center gap-3 text-sm">
               <span v-if="op.cliente?.nombre" class="font-medium text-ink">{{ op.cliente.nombre }}</span>
-              <span class="text-ink-faint">{{ formatDate(op.fecha) }}</span>
-              <span class="text-ink-faint">·</span>
-              <span class="text-ink-faint">{{ op.operador?.name || '—' }}</span>
+              <span class="text-ink-muted">{{ formatDate(op.fecha) }}</span>
+              <span class="text-ink-muted">·</span>
+              <span class="text-ink-muted">{{ op.operador?.name || '—' }}</span>
             </div>
           </div>
           <div class="flex items-center gap-4 sm:text-right">
             <div>
-              <p class="text-xs text-ink-faint">Monto</p>
+              <p class="text-sm text-ink-muted">Monto</p>
               <p class="font-semibold text-sm text-heading">{{ formatMoney(montoUsd(op)) }} USD</p>
             </div>
             <div class="hidden sm:block w-px h-8 bg-surface-muted"></div>
             <div>
-              <p class="text-xs text-ink-faint">Bs.</p>
+              <p class="text-sm text-ink-muted">Bs.</p>
               <p class="text-sm text-ink-muted">Bs. {{ formatMoney(bolivares(op)) }}</p>
             </div>
             <div class="hidden sm:block w-px h-8 bg-surface-muted"></div>
             <div>
-              <p class="text-xs text-ink-faint">Tasa</p>
+              <p class="text-sm text-ink-muted">Tasa</p>
               <p class="text-sm text-ink-muted">{{ formatRate(op.tasa_aplicada) }}</p>
             </div>
             <div v-if="gananciaOp(op)" class="hidden sm:block w-px h-8 bg-surface-muted"></div>
             <div v-if="gananciaOp(op)">
-              <p class="text-xs text-ink-faint">Ganancia</p>
+              <p class="text-sm text-ink-muted">Ganancia</p>
               <p class="text-sm font-medium" :class="gananciaOp(op) >= 0 ? 'text-success' : 'text-danger'">
                 ${{ formatRate(gananciaOp(op)) }}
               </p>

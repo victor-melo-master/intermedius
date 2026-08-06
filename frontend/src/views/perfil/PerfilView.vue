@@ -37,7 +37,7 @@
             <label class="block text-sm text-ink-muted mb-1">Foto de perfil</label>
             <input ref="avatarInput" type="file" accept="image/jpeg,image/png,image/gif,image/webp,image/bmp"
               @change="onAvatarSelected"
-              class="block w-full text-sm text-ink-soft file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-gold-soft file:text-gold-dark file:font-semibold hover:file:bg-gold/20 cursor-pointer" />
+              class="block w-full text-sm text-ink-muted file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-gold-soft file:text-gold-dark file:font-semibold hover:file:bg-gold/20 cursor-pointer" />
             <p v-if="avatarError" class="text-xs text-danger mt-1">{{ avatarError }}</p>
             <button v-if="avatarFile" type="button" @click="limpiarAvatar"
               class="text-xs font-medium text-danger hover:text-danger-strong underline mt-1">
@@ -50,7 +50,7 @@
         <div>
           <label class="block text-sm text-ink-muted mb-1">Nombre de usuario</label>
           <input :value="perfil.name" type="text" disabled
-            class="w-full px-3 py-2 border border-edge rounded-lg bg-surface-muted text-ink-soft cursor-not-allowed" />
+            class="w-full px-3 py-2 border border-edge rounded-lg bg-surface-muted text-ink-muted cursor-not-allowed" />
         </div>
 
         <!-- Correo -->
@@ -69,7 +69,7 @@
         </div>
 
         <div class="flex items-center justify-end gap-3 pt-1">
-          <p class="text-xs text-ink-faint mr-auto">Cambiar el correo exige tu contraseña actual.</p>
+          <p class="text-sm text-ink-muted mr-auto">Cambiar el correo exige tu contraseña actual.</p>
           <button @click="guardarDatos" :disabled="guardando"
             class="px-5 py-2 bg-gold text-navy rounded-lg text-sm font-semibold hover:bg-gold-dark disabled:opacity-50 transition flex items-center gap-2">
             <span v-if="guardando" class="w-4 h-4 border-2 border-navy/30 border-t-navy rounded-full animate-spin"></span>
@@ -91,7 +91,7 @@
               {{ roleLabels[rol] || rol }}
             </span>
           </div>
-          <p class="text-xs text-ink-faint mt-3">El tipo de usuario lo asigna un administrador y no se modifica aquí.</p>
+          <p class="text-sm text-ink-muted mt-3">El tipo de usuario lo asigna un administrador y no se modifica aquí.</p>
         </div>
 
         <!-- Cambiar contraseña -->
@@ -102,7 +102,7 @@
             <div class="relative">
               <input v-model="pass.actual" :type="mostrarPass.actual ? 'text' : 'password'" placeholder="••••••••"
                 class="w-full px-3 py-2 pr-10 border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none" />
-              <button type="button" @click="mostrarPass.actual = !mostrarPass.actual" class="absolute right-2 top-1/2 -translate-y-1/2 text-ink-faint hover:text-ink">
+              <button type="button" @click="mostrarPass.actual = !mostrarPass.actual" class="absolute right-2 top-1/2 -translate-y-1/2 text-ink-muted hover:text-ink">
                 <Iconoir :name="mostrarPass.actual ? 'eye-slash' : 'eye'" class="w-4 h-4" />
               </button>
             </div>
@@ -112,13 +112,13 @@
             <div class="relative">
               <input v-model="pass.nueva" :type="mostrarPass.nueva ? 'text' : 'password'" placeholder="••••••••"
                 class="w-full px-3 py-2 pr-10 border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none" />
-              <button type="button" @click="mostrarPass.nueva = !mostrarPass.nueva" class="absolute right-2 top-1/2 -translate-y-1/2 text-ink-faint hover:text-ink">
+              <button type="button" @click="mostrarPass.nueva = !mostrarPass.nueva" class="absolute right-2 top-1/2 -translate-y-1/2 text-ink-muted hover:text-ink">
                 <Iconoir :name="mostrarPass.nueva ? 'eye-slash' : 'eye'" class="w-4 h-4" />
               </button>
             </div>
             <ul class="mt-2 space-y-1">
               <li v-for="req in passwordRequisitos" :key="req.label" class="text-xs"
-                :class="req.cumplido ? 'text-success' : 'text-ink-faint'">
+                :class="req.cumplido ? 'text-success' : 'text-ink-muted'">
                 {{ req.cumplido ? '✓' : '○' }} {{ req.label }}
               </li>
             </ul>
@@ -128,7 +128,7 @@
             <div class="relative">
               <input v-model="pass.confirmacion" :type="mostrarPass.confirmacion ? 'text' : 'password'" placeholder="••••••••"
                 class="w-full px-3 py-2 pr-10 border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none" />
-              <button type="button" @click="mostrarPass.confirmacion = !mostrarPass.confirmacion" class="absolute right-2 top-1/2 -translate-y-1/2 text-ink-faint hover:text-ink">
+              <button type="button" @click="mostrarPass.confirmacion = !mostrarPass.confirmacion" class="absolute right-2 top-1/2 -translate-y-1/2 text-ink-muted hover:text-ink">
                 <Iconoir :name="mostrarPass.confirmacion ? 'eye-slash' : 'eye'" class="w-4 h-4" />
               </button>
             </div>

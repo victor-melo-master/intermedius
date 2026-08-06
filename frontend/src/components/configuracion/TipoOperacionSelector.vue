@@ -4,15 +4,15 @@
     <div class="grid grid-cols-2 gap-3">
       <button type="button" @click="$emit('update:tipo', 'compra')"
         class="py-3 rounded-xl border-2 font-semibold text-sm transition"
-        :class="tipo === 'compra' ? 'border-info bg-info-soft text-info-strong' : 'border-edge text-ink-soft hover:border-edge-strong'">
+        :class="tipo === 'compra' ? 'border-info bg-info-soft text-info-strong' : 'border-edge text-ink-muted hover:border-edge-strong'">
         Compra de {{ moneda }}
-        <span class="block text-[11px] font-normal mt-0.5">La casa compra {{ moneda }}, paga {{ quoteSimbolo }}.</span>
+        <span class="block text-xs font-normal mt-0.5">La casa compra {{ moneda }}, paga {{ quoteSimbolo }}.</span>
       </button>
       <button type="button" @click="$emit('update:tipo', 'venta')"
         class="py-3 rounded-xl border-2 font-semibold text-sm transition"
-        :class="tipo === 'venta' ? 'border-success bg-success-soft text-success-strong' : 'border-edge text-ink-soft hover:border-edge-strong'">
+        :class="tipo === 'venta' ? 'border-success bg-success-soft text-success-strong' : 'border-edge text-ink-muted hover:border-edge-strong'">
         Venta de {{ moneda }}
-        <span class="block text-[11px] font-normal mt-0.5">La casa vende {{ moneda }}, recibe {{ quoteSimbolo }}.</span>
+        <span class="block text-xs font-normal mt-0.5">La casa vende {{ moneda }}, recibe {{ quoteSimbolo }}.</span>
       </button>
     </div>
     <div>

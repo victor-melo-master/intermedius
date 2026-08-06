@@ -14,13 +14,13 @@
         <div class="flex gap-3">
           <button type="button" @click="form.tipo = 'compra'"
             class="flex-1 py-3 rounded-xl text-sm font-medium transition active:scale-[0.98] border-2"
-            :class="form.tipo === 'compra' ? 'bg-info-soft border-info text-info-strong' : 'bg-white dark:bg-surface-muted border-edge text-ink-soft hover:border-edge-strong'">
+            :class="form.tipo === 'compra' ? 'bg-info-soft border-info text-info-strong' : 'bg-white dark:bg-surface-muted border-edge text-ink-muted hover:border-edge-strong'">
             {{ textoCompra }}
             <span class="block text-xs mt-1 opacity-70">El cliente entrega {{ monedaSel }}</span>
           </button>
           <button type="button" @click="form.tipo = 'venta'"
             class="flex-1 py-3 rounded-xl text-sm font-medium transition active:scale-[0.98] border-2"
-            :class="form.tipo === 'venta' ? 'bg-success-soft border-success text-success-strong' : 'bg-white dark:bg-surface-muted border-edge text-ink-soft hover:border-edge-strong'">
+            :class="form.tipo === 'venta' ? 'bg-success-soft border-success text-success-strong' : 'bg-white dark:bg-surface-muted border-edge text-ink-muted hover:border-edge-strong'">
             {{ textoVenta }}
             <span class="block text-xs mt-1 opacity-70">La casa entrega {{ monedaSel }}</span>
           </button>
@@ -70,7 +70,7 @@
       <div class="bg-surface border border-edge rounded-xl p-5 space-y-4">
         <div class="flex items-center justify-between">
           <h3 class="font-semibold text-ink">Movimientos propuestos</h3>
-          <span class="text-xs text-ink-faint">Opcional</span>
+          <span class="text-sm text-ink-muted">Opcional</span>
         </div>
 
         <!-- Lista de movimientos agregadas -->
@@ -90,7 +90,7 @@
         <!-- Formulario para agregar un movimiento local -->
         <div class="space-y-3">
           <div>
-            <label class="block text-xs text-ink-soft mb-1">Moneda</label>
+            <label class="block text-sm text-ink-muted mb-1">Moneda</label>
             <select v-model="txForm.moneda_id"
               class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white dark:bg-surface-muted focus:ring-2 focus:ring-gold outline-none">
               <option value="">Seleccionar</option>
@@ -101,8 +101,8 @@
           <template v-if="txForm.moneda_id">
             <div class="grid grid-cols-2 gap-3">
               <div>
-                <label class="block text-xs text-ink-soft mb-1">
-                  Cuenta origen <span class="text-ink-faint">({{ labelOrigen }})</span>
+                <label class="block text-sm text-ink-muted mb-1">
+                  Cuenta origen <span class="text-ink-muted">({{ labelOrigen }})</span>
                 </label>
                 <select v-model="txForm.cuenta_origen_id"
                   class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white dark:bg-surface-muted focus:ring-2 focus:ring-gold outline-none">
@@ -111,8 +111,8 @@
                 </select>
               </div>
               <div>
-                <label class="block text-xs text-ink-soft mb-1">
-                  Cuenta destino <span class="text-ink-faint">({{ labelDestino }})</span>
+                <label class="block text-sm text-ink-muted mb-1">
+                  Cuenta destino <span class="text-ink-muted">({{ labelDestino }})</span>
                 </label>
                 <select v-model="txForm.cuenta_destino_id"
                   class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white dark:bg-surface-muted focus:ring-2 focus:ring-gold outline-none">
@@ -127,13 +127,13 @@
             </div>
 
             <div>
-              <label class="block text-xs text-ink-soft mb-1">Monto</label>
+              <label class="block text-sm text-ink-muted mb-1">Monto</label>
               <input v-model="txForm.monto" type="number" step="0.01" min="0" placeholder="0.00"
                 class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none" />
             </div>
 
             <div>
-              <label class="block text-xs text-ink-soft mb-1">Método de pago</label>
+              <label class="block text-sm text-ink-muted mb-1">Método de pago</label>
               <select v-model="txForm.metodo_pago"
                 class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white dark:bg-surface-muted focus:ring-2 focus:ring-gold outline-none">
                 <option value="">Seleccionar</option>
@@ -147,7 +147,7 @@
             </div>
 
             <div v-if="txForm.metodo_pago && txForm.metodo_pago !== 'efectivo'">
-              <label class="block text-xs text-ink-soft mb-1">Comprobante</label>
+              <label class="block text-sm text-ink-muted mb-1">Comprobante</label>
               <input v-model="txForm.comprobante" placeholder="N° de referencia, voucher, hash..."
                 class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none" />
             </div>

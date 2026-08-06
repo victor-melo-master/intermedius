@@ -17,9 +17,9 @@
         <div class="relative flex-1">
           <input v-model="search" @input="onSearch" placeholder="Buscar por nombre o correo..."
             class="w-full pl-10 pr-4 py-2 bg-white dark:bg-surface-muted border border-edge-strong rounded-xl focus:ring-2 focus:ring-gold outline-none text-sm" />
-          <Iconoir name="magnifying-glass" class="absolute left-3 top-2.5 w-5 h-5 text-ink-faint" />
+          <Iconoir name="magnifying-glass" class="absolute left-3 top-2.5 w-5 h-5 text-ink-muted" />
           <button v-if="search" @click="search = ''; cargarUsuarios()"
-            class="absolute inset-y-0 right-0 flex items-center pr-3 text-ink-faint hover:text-ink-muted" title="Limpiar búsqueda">
+            class="absolute inset-y-0 right-0 flex items-center pr-3 text-ink-muted hover:text-ink-muted" title="Limpiar búsqueda">
             <Iconoir name="x-mark" class="w-5 h-5" />
           </button>
         </div>
@@ -48,8 +48,8 @@
       <button @click="usuarios.fetchAll()" class="underline ml-2">Reintentar</button>
     </div>
     <div v-else-if="usuarios.list.length === 0" class="text-center py-16">
-      <Iconoir name="users" class="w-12 h-12 mx-auto mb-4 text-ink-faint" />
-      <p class="text-ink-soft">No hay usuarios registrados</p>
+      <Iconoir name="users" class="w-12 h-12 mx-auto mb-4 text-ink-muted" />
+      <p class="text-ink-muted">No hay usuarios registrados</p>
     </div>
     <div v-else class="space-y-2">
       <div v-for="u in usuarios.list" :key="u.id"
@@ -72,9 +72,9 @@
               {{ roleLabel(rol) }}
             </span>
           </div>
-          <p class="text-xs text-ink-soft">{{ u.email }}</p>
-          <p v-if="u.titular" class="text-xs text-ink-faint">Titular: {{ u.titular.alias }}</p>
-          <p v-if="u.last_login_at" class="text-xs text-ink-faint">Último acceso: {{ formatDate(u.last_login_at) }}</p>
+          <p class="text-sm text-ink-muted">{{ u.email }}</p>
+          <p v-if="u.titular" class="text-sm text-ink-muted">Titular: {{ u.titular.alias }}</p>
+          <p v-if="u.last_login_at" class="text-sm text-ink-muted">Último acceso: {{ formatDate(u.last_login_at) }}</p>
         </div>
         <div v-if="!isSuperAdmin(u)" class="flex items-center gap-2">
           <!-- Toggle activo -->
@@ -85,7 +85,7 @@
               :class="u.activo ? 'translate-x-5' : 'translate-x-0'"></span>
           </button>
           <button type="button" @click.stop="openDetalle(u)" title="Ver detalle"
-            class="text-xs text-ink-muted hover:text-heading font-medium px-2 py-1 border border-edge rounded-lg hover:bg-surface-soft flex items-center gap-1">
+            class="text-sm text-ink-muted hover:text-heading font-medium px-2 py-1 border border-edge rounded-lg hover:bg-surface-soft flex items-center gap-1">
             <Iconoir name="eye" class="w-3.5 h-3.5" />
             Detalle
           </button>
@@ -117,9 +117,9 @@
             <label class="text-sm text-ink-muted mb-1 block">Foto de perfil</label>
             <input ref="avatarInput" type="file" accept="image/jpeg,image/png,image/gif,image/webp,image/bmp"
               @change="onAvatarSelected"
-              class="block w-full text-sm text-ink-soft file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-gold-soft file:text-gold-dark file:font-semibold hover:file:bg-gold/20 cursor-pointer" />
+              class="block w-full text-sm text-ink-muted file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-gold-soft file:text-gold-dark file:font-semibold hover:file:bg-gold/20 cursor-pointer" />
             <div class="flex items-center gap-3 mt-1">
-              <p class="text-xs text-ink-faint">JPG, PNG, GIF, WebP o BMP · máx 2MB</p>
+              <p class="text-sm text-ink-muted">JPG, PNG, GIF, WebP o BMP · máx 2MB</p>
               <button v-if="avatarPreview || avatarFile" type="button" @click="limpiarAvatar"
                 class="text-xs font-medium text-danger hover:text-danger-strong underline">
                 Quitar selección
@@ -168,16 +168,16 @@
               class="w-full px-3 py-2 pr-10 border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none" />
             <button type="button" @click="mostrarPassword = !mostrarPassword"
               :title="mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
-              class="absolute inset-y-0 right-0 flex items-center pr-3 text-ink-faint hover:text-ink-muted"
+              class="absolute inset-y-0 right-0 flex items-center pr-3 text-ink-muted hover:text-ink-muted"
               :aria-label="mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'">
               <Iconoir :name="mostrarPassword ? 'eye-slash' : 'eye'" class="w-5 h-5" />
             </button>
           </div>
-          <p v-if="editing" class="text-xs text-ink-faint mt-1">Dejar en blanco para mantener la contraseña actual.</p>
+          <p v-if="editing" class="text-sm text-ink-muted mt-1">Dejar en blanco para mantener la contraseña actual.</p>
           <ul v-if="!editing || form.password" class="mt-2 space-y-1">
             <li v-for="req in passwordRequisitos" :key="req.label"
               class="flex items-center gap-1.5 text-xs"
-              :class="req.cumplido ? 'text-success' : 'text-ink-faint'">
+              :class="req.cumplido ? 'text-success' : 'text-ink-muted'">
               <span class="w-3.5 text-center">{{ req.cumplido ? '✓' : '•' }}</span>
               {{ req.label }}
             </li>
@@ -193,8 +193,8 @@
               <Iconoir :name="roleIcon(form.rol)" class="w-4 h-4" />
               {{ roleLabel(form.rol) }}
             </span>
-            <span v-else class="text-ink-faint">Seleccionar rol</span>
-            <svg class="w-4 h-4 text-ink-faint shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <span v-else class="text-ink-muted">Seleccionar rol</span>
+            <svg class="w-4 h-4 text-ink-muted shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
             </svg>
           </button>
@@ -216,14 +216,14 @@
           <button type="button" @click="titularDropdownOpen = !titularDropdownOpen"
             class="w-full px-3 py-2 border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none flex items-center justify-between gap-2 text-left text-sm">
             <span v-if="form.titular_id" class="inline-flex items-center gap-2">
-              <Iconoir name="identification" class="w-4 h-4 text-ink-faint" />
+              <Iconoir name="identification" class="w-4 h-4 text-ink-muted" />
               {{ titularLabel(form.titular_id) }}
             </span>
-            <span v-else class="inline-flex items-center gap-2 text-ink-faint">
+            <span v-else class="inline-flex items-center gap-2 text-ink-muted">
               <Iconoir name="identification" class="w-4 h-4" />
               Sin titular
             </span>
-            <svg class="w-4 h-4 text-ink-faint shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4 text-ink-muted shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
             </svg>
           </button>
@@ -279,36 +279,36 @@
                 {{ roleLabel(rol) }}
               </span>
             </div>
-            <p class="text-xs text-ink-soft">{{ usuarioDetalle?.email }}</p>
+            <p class="text-sm text-ink-muted">{{ usuarioDetalle?.email }}</p>
           </div>
         </div>
       </template>
 
       <div v-if="usuarioDetalle" class="grid grid-cols-2 gap-3 mb-5">
         <div class="bg-surface-soft rounded-lg p-3">
-          <p class="text-[10px] uppercase tracking-wide text-ink-faint font-semibold mb-1">Estado</p>
-          <p class="text-sm font-medium" :class="usuarioDetalle.activo ? 'text-success' : 'text-ink-soft'">
+          <p class="text-sm uppercase tracking-wide text-ink-muted font-semibold mb-1">Estado</p>
+          <p class="text-sm font-medium" :class="usuarioDetalle.activo ? 'text-success' : 'text-ink-muted'">
             {{ usuarioDetalle.activo ? 'Activo' : 'Inactivo' }}
           </p>
         </div>
         <div class="bg-surface-soft rounded-lg p-3">
-          <p class="text-[10px] uppercase tracking-wide text-ink-faint font-semibold mb-1">Titular</p>
+          <p class="text-sm uppercase tracking-wide text-ink-muted font-semibold mb-1">Titular</p>
           <p class="text-sm font-medium text-ink">
             {{ usuarioDetalle.titular ? `${usuarioDetalle.titular.alias} — ${usuarioDetalle.titular.nombre}` : 'Sin titular' }}
           </p>
         </div>
         <div class="bg-surface-soft rounded-lg p-3">
-          <p class="text-[10px] uppercase tracking-wide text-ink-faint font-semibold mb-1">Último acceso</p>
+          <p class="text-sm uppercase tracking-wide text-ink-muted font-semibold mb-1">Último acceso</p>
           <p class="text-sm font-medium text-ink">{{ usuarioDetalle.last_login_at ? formatDateTime(usuarioDetalle.last_login_at) : 'Nunca' }}</p>
         </div>
         <div class="bg-surface-soft rounded-lg p-3">
-          <p class="text-[10px] uppercase tracking-wide text-ink-faint font-semibold mb-1">Creado el</p>
+          <p class="text-sm uppercase tracking-wide text-ink-muted font-semibold mb-1">Creado el</p>
           <p class="text-sm font-medium text-ink">{{ formatDateTime(usuarioDetalle.created_at) }}</p>
         </div>
       </div>
 
       <div class="flex items-center gap-2 mb-2">
-        <Iconoir name="clock" class="w-4 h-4 text-ink-soft" />
+        <Iconoir name="clock" class="w-4 h-4 text-ink-muted" />
         <h4 class="text-sm font-bold text-ink">Historial de sesiones</h4>
       </div>
 
@@ -319,12 +319,12 @@
         {{ sesionesError }}
       </div>
       <div v-else-if="sesiones.length === 0" class="text-center py-10">
-        <p class="text-ink-soft text-sm">No hay sesiones registradas para este usuario.</p>
+        <p class="text-ink-muted text-sm">No hay sesiones registradas para este usuario.</p>
       </div>
       <div v-else class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead>
-            <tr class="text-left text-xs uppercase text-ink-faint border-b border-edge">
+            <tr class="text-left text-sm uppercase text-ink-muted border-b border-edge">
               <th class="py-2 pr-3 font-semibold">Inicio</th>
               <th class="py-2 pr-3 font-semibold">IP</th>
               <th class="py-2 pr-3 font-semibold">Dispositivo</th>

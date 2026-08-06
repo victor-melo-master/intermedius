@@ -6,8 +6,8 @@
     <AppErrorState v-else-if="bancos.error" :message="bancos.error" @retry="bancos.fetchAll()" />
     <template v-else-if="bancos.list.length === 0">
       <div class="text-center py-16">
-        <Iconoir name="building-library" class="w-12 h-12 mx-auto mb-4 text-ink-faint" />
-        <p class="text-ink-soft">No hay bancos registrados</p>
+        <Iconoir name="building-library" class="w-12 h-12 mx-auto mb-4 text-ink-muted" />
+        <p class="text-ink-muted">No hay bancos registrados</p>
       </div>
     </template>
 
@@ -18,8 +18,8 @@
         </div>
         <div class="flex-1 min-w-0">
           <p class="font-semibold text-sm truncate">{{ b.nombre }}</p>
-          <p class="text-xs text-ink-soft">{{ b.codigo }}</p>
-          <p v-if="b.pais" class="text-xs text-ink-faint">País: {{ b.pais }}</p>
+          <p class="text-sm text-ink-muted">{{ b.codigo }}</p>
+          <p v-if="b.pais" class="text-sm text-ink-muted">País: {{ b.pais }}</p>
         </div>
         <div class="text-right">
           <span v-if="b.activo" class="text-[10px] bg-success-soft text-success px-2 py-0.5 rounded-full">Activo</span>

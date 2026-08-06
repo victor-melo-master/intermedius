@@ -6,8 +6,8 @@
     <AppErrorState v-else-if="error" :message="error" @retry="fetchComisiones" />
     <template v-else-if="comisiones.length === 0">
       <div class="text-center py-16">
-        <Iconoir name="currency-dollar" class="w-12 h-12 mx-auto mb-4 text-ink-faint" />
-        <p class="text-ink-soft">No hay comisiones registradas</p>
+        <Iconoir name="currency-dollar" class="w-12 h-12 mx-auto mb-4 text-ink-muted" />
+        <p class="text-ink-muted">No hay comisiones registradas</p>
       </div>
     </template>
     <div v-else class="space-y-2">
@@ -15,8 +15,8 @@
         <div class="w-10 h-10 rounded-full bg-warning-soft flex items-center justify-center text-warning-strong font-bold text-sm">%</div>
         <div class="flex-1 min-w-0">
           <p class="font-semibold text-sm truncate">{{ c.nombre_metodo }}</p>
-          <p class="text-xs text-ink-soft">{{ c.descripcion }}</p>
-          <p class="text-xs text-ink-faint">
+          <p class="text-sm text-ink-muted">{{ c.descripcion }}</p>
+          <p class="text-sm text-ink-muted">
             {{ c.tipo_calculo === 'porcentaje' ? c.valor + '%' : 'Bs. ' + c.valor }}
             · {{ c.moneda?.codigo || '—' }}
             <span v-if="c.cuenta">· {{ c.cuenta.alias }}</span>
@@ -25,7 +25,7 @@
         <div class="text-right shrink-0">
           <span v-if="c.activa" class="text-[10px] bg-success-soft text-success px-2 py-0.5 rounded-full">Activa</span>
           <span v-else class="text-[10px] bg-danger-soft text-danger px-2 py-0.5 rounded-full">Inactiva</span>
-          <p class="text-[10px] text-ink-faint mt-0.5">Desde: {{ c.vigente_desde }}</p>
+          <p class="text-sm text-ink-muted mt-0.5">Desde: {{ c.vigente_desde }}</p>
         </div>
         <div class="flex gap-1">
           <button @click="editComision(c)" class="text-xs text-gold-dark hover:text-gold-dark font-medium px-2 py-1 border border-gold/40 rounded-lg hover:bg-gold-soft">Editar</button>

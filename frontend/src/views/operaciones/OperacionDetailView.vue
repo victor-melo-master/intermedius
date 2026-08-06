@@ -52,7 +52,7 @@
                 </div>
               </div>
               <div class="text-center mt-2">
-                <span class="text-sm text-ink-soft">Tasa:</span>
+                <span class="text-sm text-ink-muted">Tasa:</span>
                 <span class="ml-1 text-lg font-bold text-gold-dark">{{ formatRate(ops.detail.tasa_aplicada) }}</span>
               </div>
             </div>
@@ -60,31 +60,31 @@
             <!-- Datos -->
             <div class="grid grid-cols-2 gap-3">
               <div class="bg-surface-soft rounded-xl px-4 py-3">
-                <p class="text-xs text-ink-soft flex items-center gap-1 mb-0.5">
+                <p class="text-sm text-ink-muted flex items-center gap-1 mb-0.5">
                   <Iconoir name="identification" class="w-3.5 h-3.5" /> Número de operación
                 </p>
                 <p class="text-lg font-bold text-heading">{{ ops.detail.id }}</p>
               </div>
               <div v-if="ops.detail.cliente?.nombre" class="bg-surface-soft rounded-xl px-4 py-3">
-                <p class="text-xs text-ink-soft flex items-center gap-1 mb-0.5">
+                <p class="text-sm text-ink-muted flex items-center gap-1 mb-0.5">
                   <Iconoir name="users" class="w-3.5 h-3.5" /> Cliente
                 </p>
                 <p class="text-lg font-bold text-heading truncate">{{ ops.detail.cliente.nombre }}</p>
               </div>
               <div class="bg-surface-soft rounded-xl px-4 py-3">
-                <p class="text-xs text-ink-soft flex items-center gap-1 mb-0.5">
+                <p class="text-sm text-ink-muted flex items-center gap-1 mb-0.5">
                   <Iconoir name="document-text" class="w-3.5 h-3.5" /> Fecha
                 </p>
                 <p class="text-lg font-bold text-heading">{{ formatDate(ops.detail.fecha) }}</p>
               </div>
               <div v-if="ops.detail.moneda_operacion" class="bg-surface-soft rounded-xl px-4 py-3">
-                <p class="text-xs text-ink-soft flex items-center gap-1 mb-0.5">
+                <p class="text-sm text-ink-muted flex items-center gap-1 mb-0.5">
                   <Iconoir name="currency-dollar" class="w-3.5 h-3.5" /> Moneda
                 </p>
                 <p class="text-lg font-bold text-heading">{{ ops.detail.moneda_operacion.codigo }}</p>
               </div>
               <div v-if="ops.detail.referencia" class="bg-surface-soft rounded-xl px-4 py-3">
-                <p class="text-xs text-ink-soft flex items-center gap-1 mb-0.5">
+                <p class="text-sm text-ink-muted flex items-center gap-1 mb-0.5">
                   <Iconoir name="link" class="w-3.5 h-3.5" /> Referencia
                 </p>
                 <p class="text-lg font-bold text-heading truncate">{{ ops.detail.referencia }}</p>
@@ -116,12 +116,12 @@
               </div>
               <div class="flex items-center gap-3">
                 <div class="flex-1 text-right">
-                  <p class="text-ink-soft text-sm">{{ tx.cuenta_origen?.alias || txLabelMetodo(tx) }}</p>
+                  <p class="text-ink-muted text-sm">{{ tx.cuenta_origen?.alias || txLabelMetodo(tx) }}</p>
                   <p class="font-semibold text-danger">{{ formatMoney(tx.monto, tx.moneda?.codigo) }}</p>
                 </div>
-                <Iconoir name="arrow-right" class="w-5 h-5 shrink-0 text-ink-faint" />
+                <Iconoir name="arrow-right" class="w-5 h-5 shrink-0 text-ink-muted" />
                 <div class="flex-1">
-                  <p class="text-ink-soft text-sm">{{ tx.cuenta_destino?.alias || `Cuenta #${tx.cuenta_destino_id}` }}</p>
+                  <p class="text-ink-muted text-sm">{{ tx.cuenta_destino?.alias || `Cuenta #${tx.cuenta_destino_id}` }}</p>
                   <p class="font-semibold text-success">{{ formatMoney(tx.monto, tx.moneda?.codigo) }}</p>
                 </div>
               </div>
@@ -142,7 +142,7 @@
               <span class="w-3 h-3 rounded-full shrink-0" :class="ev.color"></span>
               <div>
                 <p class="text-ink font-semibold">{{ ev.label }}</p>
-                <p class="text-ink-soft text-sm">{{ ev.fecha }}</p>
+                <p class="text-ink-muted text-sm">{{ ev.fecha }}</p>
               </div>
             </div>
           </div>
@@ -153,18 +153,18 @@
           <h3 class="text-base font-semibold text-ink mb-3">Ganancia</h3>
           <div class="grid grid-cols-2 gap-4 max-w-sm">
             <div>
-              <p class="text-xs text-ink-soft">Bruta</p>
+              <p class="text-sm text-ink-muted">Bruta</p>
               <p class="text-lg font-bold" :class="gananciaBrutaUsd >= 0 ? 'text-success' : 'text-danger'">
                 {{ formatMoney(gananciaBrutaUsd) }} USD
               </p>
-              <p class="text-xs text-ink-faint">{{ formatVes(gananciaBrutaVes) }}</p>
+              <p class="text-sm text-ink-muted">{{ formatVes(gananciaBrutaVes) }}</p>
             </div>
             <div>
-              <p class="text-xs text-ink-soft">Neta</p>
+              <p class="text-sm text-ink-muted">Neta</p>
               <p class="text-lg font-bold" :class="gananciaNetaUsd >= 0 ? 'text-success' : 'text-danger'">
                 {{ formatMoney(gananciaNetaUsd) }} USD
               </p>
-              <p class="text-xs text-ink-faint">{{ formatVes(gananciaNetaVes) }}</p>
+              <p class="text-sm text-ink-muted">{{ formatVes(gananciaNetaVes) }}</p>
             </div>
           </div>
         </div>
@@ -208,7 +208,7 @@
     <Teleport to="body">
       <AppFormModal v-model="mostrarRevertirOp" title="Revertir venta">
         <form @submit.prevent="confirmarRevertir" class="space-y-4">
-          <p class="text-sm text-ink-soft">¿Estás seguro de revertir esta venta? Se generarán movimientos inversos.</p>
+          <p class="text-sm text-ink-muted">¿Estás seguro de revertir esta venta? Se generarán movimientos inversos.</p>
           <textarea v-model="motivoRevertirOp" rows="3" required
             placeholder="Motivo de la reversión..."
             class="w-full px-4 py-2.5 border border-edge-strong rounded-xl focus:ring-2 focus:ring-warning outline-none resize-none"></textarea>
@@ -230,7 +230,7 @@
     <Teleport to="body">
       <AppFormModal v-model="showEditModal" :title="'Editar operación #' + (ops.detail?.id || '')">
         <form @submit.prevent="guardarEdicion" class="space-y-4">
-          <p class="text-sm text-ink-soft">Vas a modificar esta operación. ¿Cuál es el motivo del cambio?</p>
+          <p class="text-sm text-ink-muted">Vas a modificar esta operación. ¿Cuál es el motivo del cambio?</p>
           <textarea v-model="motivoEdicion" rows="3" required placeholder="Ej: El cliente cambió el monto, o no hay fondos en la cuenta A..."
             class="w-full px-4 py-2.5 border border-edge-strong rounded-xl focus:ring-2 focus:ring-gold outline-none resize-none"></textarea>
           <AppErrorState v-if="editError" :message="editError" :retry="false" />

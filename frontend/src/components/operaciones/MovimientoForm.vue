@@ -2,13 +2,13 @@
   <form @submit.prevent="guardar" class="space-y-4">
     <!-- Moneda primero para forzar dirección -->
     <div>
-      <label class="block text-xs text-ink-soft mb-1">Moneda</label>
+      <label class="block text-sm text-ink-muted mb-1">Moneda</label>
       <select v-model="form.moneda_id" required
         class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white dark:bg-surface-muted focus:ring-2 focus:ring-gold outline-none">
         <option value="">Seleccionar</option>
         <option v-for="m in monedasFiltradas" :key="m.id" :value="m.id">{{ m.codigo }} — {{ m.nombre }}</option>
       </select>
-      <p v-if="monedasFiltradas.length === 1" class="text-xs text-ink-faint mt-1">Moneda fijada por la operación</p>
+      <p v-if="monedasFiltradas.length === 1" class="text-sm text-ink-muted mt-1">Moneda fijada por la operación</p>
     </div>
 
     <div v-if="!form.moneda_id" class="bg-warning-soft border border-warning-edge text-warning-strong text-sm p-3 rounded-lg">
@@ -18,9 +18,9 @@
     <template v-else>
       <div class="grid grid-cols-2 gap-3">
         <div>
-          <label class="block text-xs text-ink-soft mb-1">
+          <label class="block text-sm text-ink-muted mb-1">
             Cuenta origen
-            <span class="text-ink-faint">({{ labelOrigen }})</span>
+            <span class="text-ink-muted">({{ labelOrigen }})</span>
           </label>
           <select v-model="form.cuenta_origen_id" required
             class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white dark:bg-surface-muted focus:ring-2 focus:ring-gold outline-none">
@@ -31,14 +31,14 @@
           </select>
           <p v-if="!cuentasOrigen.length" class="text-xs text-danger mt-1">No hay cuentas disponibles</p>
           <p v-else-if="cuentaOrigenObj && saldoOrigen !== null" class="text-xs mt-1"
-            :class="saldoOrigen < 0 ? 'text-danger' : 'text-ink-faint'">
+            :class="saldoOrigen < 0 ? 'text-danger' : 'text-ink-muted'">
             Saldo: {{ monedaSel?.simbolo || '' }}{{ formatMoney(saldoOrigen) }}
           </p>
         </div>
         <div>
-          <label class="block text-xs text-ink-soft mb-1">
+          <label class="block text-sm text-ink-muted mb-1">
             Cuenta destino
-            <span class="text-ink-faint">({{ labelDestino }})</span>
+            <span class="text-ink-muted">({{ labelDestino }})</span>
           </label>
           <select v-model="form.cuenta_destino_id" required
             class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white dark:bg-surface-muted focus:ring-2 focus:ring-gold outline-none">
@@ -49,7 +49,7 @@
           </select>
           <p v-if="!cuentasDestino.length" class="text-xs text-danger mt-1">No hay cuentas disponibles</p>
           <p v-else-if="cuentaDestinoObj && saldoDestino !== null" class="text-xs mt-1"
-            :class="saldoDestino < 0 ? 'text-danger' : 'text-ink-faint'">
+            :class="saldoDestino < 0 ? 'text-danger' : 'text-ink-muted'">
             Saldo: {{ monedaSel?.simbolo || '' }}{{ formatMoney(saldoDestino) }}
           </p>
         </div>
@@ -62,12 +62,12 @@
     </template>
 
     <div>
-      <label class="block text-xs text-ink-soft mb-1">Monto</label>
+      <label class="block text-sm text-ink-muted mb-1">Monto</label>
       <input v-model="form.monto" type="number" step="0.01" min="0" required placeholder="0.00"
         class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 outline-none"
         :class="excedeLimite ? 'border-danger focus:ring-danger' : 'border-edge-strong focus:ring-gold'" />
       <p v-if="disponible !== null && form.moneda_id" class="text-xs mt-1"
-        :class="excedeLimite ? 'text-danger font-medium' : 'text-ink-faint'">
+        :class="excedeLimite ? 'text-danger font-medium' : 'text-ink-muted'">
         {{ excedeLimite ? 'Excede el límite. ' : '' }}Disponible: {{ monedaSel?.simbolo || '' }}{{ formatMoney(disponible) }} de {{ monedaSel?.simbolo || '' }}{{ formatMoney(limiteMoneda) }}
       </p>
       <p v-if="saldoOrigen !== null && cuentaOrigenObj && !(props.esCompra && esDivisa) && !cuentaOrigenObj.titular_id && parseFloat(form.monto) > saldoOrigen" class="text-xs text-danger font-medium">
@@ -76,13 +76,13 @@
     </div>
 
     <div>
-      <label class="block text-xs text-ink-soft mb-1">Tasa aplicada</label>
+      <label class="block text-sm text-ink-muted mb-1">Tasa aplicada</label>
       <input v-model="form.tasa_aplicada" type="number" step="0.01" min="0" required
         class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none" />
     </div>
 
     <div>
-      <label class="block text-xs text-ink-soft mb-1">Método de pago <span class="text-danger">*</span></label>
+      <label class="block text-sm text-ink-muted mb-1">Método de pago <span class="text-danger">*</span></label>
       <select v-model="form.metodo_pago" required
         class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white dark:bg-surface-muted focus:ring-2 focus:ring-gold outline-none">
         <option value="">Seleccionar</option>
@@ -91,7 +91,7 @@
     </div>
 
     <div v-if="form.metodo_pago && form.metodo_pago !== 'efectivo'">
-      <label class="block text-xs text-ink-soft mb-1">Comprobante <span class="text-danger">*</span></label>
+      <label class="block text-sm text-ink-muted mb-1">Comprobante <span class="text-danger">*</span></label>
       <input v-model="form.comprobante" required
         placeholder="N° de referencia, voucher, hash..."
         class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none" />

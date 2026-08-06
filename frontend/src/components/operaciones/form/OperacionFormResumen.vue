@@ -6,7 +6,7 @@
       :key="item.label"
       class="flex items-center justify-between text-sm"
     >
-      <span class="text-ink-soft">{{ item.label }}</span>
+      <span class="text-ink-muted">{{ item.label }}</span>
       <span class="font-medium text-heading">{{ item.value }}</span>
     </div>
   </div>

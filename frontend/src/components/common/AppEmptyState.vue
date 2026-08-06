@@ -2,8 +2,8 @@
 <template>
   <div class="text-center py-16">
     <Iconoir :name="icon" class="text-5xl block mb-4" />
-    <p class="text-ink-soft">{{ message }}</p>
-    <p v-if="subtitle" class="text-sm text-ink-faint mt-1">{{ subtitle }}</p>
+    <p class="text-ink-muted">{{ message }}</p>
+    <p v-if="subtitle" class="text-sm text-ink-muted mt-1">{{ subtitle }}</p>
   </div>
 </template>
 

@@ -3,13 +3,13 @@
     <table class="min-w-full divide-y divide-edge">
       <thead class="bg-surface-soft">
         <tr>
-          <th class="px-4 py-3 text-left text-xs font-medium text-ink-soft uppercase">#</th>
-          <th class="px-4 py-3 text-left text-xs font-medium text-ink-soft uppercase">Cliente</th>
-          <th class="px-4 py-3 text-left text-xs font-medium text-ink-soft uppercase">Monto</th>
-          <th class="px-4 py-3 text-left text-xs font-medium text-ink-soft uppercase">Estado</th>
-          <th class="px-4 py-3 text-left text-xs font-medium text-ink-soft uppercase">Tiempo en espera</th>
-          <th class="px-4 py-3 text-left text-xs font-medium text-ink-soft uppercase">Transacciones</th>
-          <th class="px-4 py-3 text-left text-xs font-medium text-ink-soft uppercase">Acciones</th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-ink-muted uppercase">#</th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-ink-muted uppercase">Cliente</th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-ink-muted uppercase">Monto</th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-ink-muted uppercase">Estado</th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-ink-muted uppercase">Tiempo en espera</th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-ink-muted uppercase">Transacciones</th>
+          <th class="px-4 py-3 text-left text-sm font-medium text-ink-muted uppercase">Acciones</th>
         </tr>
       </thead>
       <tbody class="divide-y divide-edge">
@@ -38,7 +38,7 @@
               :estado="op.estado"
               :operacion-id="op.id"
             />
-            <span v-else class="text-ink-faint">—</span>
+            <span v-else class="text-ink-muted">—</span>
           </td>
           <td class="px-4 py-3 text-sm">
             <span class="text-xs bg-surface-muted px-2 py-1 rounded">
@@ -58,7 +58,7 @@
       </tbody>
     </table>
 
-    <div v-if="operaciones.length === 0" class="text-center py-12 text-ink-soft">
+    <div v-if="operaciones.length === 0" class="text-center py-12 text-ink-muted">
       <p>No hay operaciones en el pool.</p>
     </div>
   </div>

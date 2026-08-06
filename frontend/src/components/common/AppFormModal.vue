@@ -28,7 +28,7 @@
             </h2>
             <button
               @click="close"
-              class="p-1.5 hover:bg-surface-muted rounded-lg text-ink-faint hover:text-ink-muted transition"
+              class="p-1.5 hover:bg-surface-muted rounded-lg text-ink-muted hover:text-ink-muted transition"
               aria-label="Cerrar"
             >
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

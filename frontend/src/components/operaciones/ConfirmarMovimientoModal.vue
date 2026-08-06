@@ -8,19 +8,19 @@
 
         <div class="space-y-2 text-sm">
           <div class="flex justify-between">
-            <span class="text-ink-soft">Origen</span>
+            <span class="text-ink-muted">Origen</span>
             <span class="font-medium text-ink">{{ transaccion?.cuenta_origen?.alias || '—' }}</span>
           </div>
           <div class="flex justify-between">
-            <span class="text-ink-soft">Destino</span>
+            <span class="text-ink-muted">Destino</span>
             <span class="font-medium text-ink">{{ transaccion?.cuenta_destino?.alias || '—' }}</span>
           </div>
           <div class="flex justify-between">
-            <span class="text-ink-soft">Monto</span>
+            <span class="text-ink-muted">Monto</span>
             <span class="font-semibold text-heading">{{ Number(transaccion?.monto || 0).toFixed(2) }} {{ transaccion?.moneda?.codigo || '' }}</span>
           </div>
           <div class="flex justify-between">
-            <span class="text-ink-soft">Método de pago</span>
+            <span class="text-ink-muted">Método de pago</span>
             <span class="text-ink">{{ transaccion?.metodo_pago || '—' }}</span>
           </div>
         </div>
