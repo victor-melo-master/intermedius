@@ -43,9 +43,9 @@
         </div>
         <nav class="p-3 space-y-1">
           <router-link v-for="item in nav" :key="item.path" :to="item.path"
-            class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition active:scale-[0.98]"
-            :class="$route.path.startsWith(item.path) ? 'bg-gold-soft text-gold' : 'text-ink-muted hover:bg-white/10 hover:text-white'">
-                <Iconoir :name="item.icon" :class="$route.path.startsWith(item.path) ? 'text-gold' : 'text-ink-muted'" />
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-base font-medium transition active:scale-[0.98]"
+            :class="$route.path.startsWith(item.path) ? 'bg-gold-soft text-gold' : 'text-slate-400 hover:bg-white/10 hover:text-white'">
+                <Iconoir :name="item.icon" :class="$route.path.startsWith(item.path) ? 'text-gold' : 'text-slate-400'" />
             {{ item.label }}
           </router-link>
         </nav>
@@ -58,13 +58,13 @@
           <aside class="absolute left-0 top-0 bottom-0 w-64 bg-navy p-4" @click.stop>
             <div class="flex items-center justify-between mb-6">
               <img :src="logoNegativo" alt="Intermedius" class="h-7 w-auto" />
-              <button @click="drawer = false" class="p-1 hover:bg-white/10 rounded"><Iconoir name="x-mark" class="text-ink-muted" /></button>
+              <button @click="drawer = false" class="p-1 hover:bg-white/10 rounded"><Iconoir name="x-mark" class="text-slate-400" /></button>
             </div>
             <nav class="space-y-1">
               <router-link v-for="item in nav" :key="item.path" :to="item.path" @click="drawer = false"
-                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition active:scale-[0.98]"
-                :class="$route.path.startsWith(item.path) ? 'bg-gold-soft text-gold' : 'text-ink-muted hover:bg-white/10 hover:text-white'">
-            <Iconoir :name="item.icon" :class="$route.path.startsWith(item.path) ? 'text-gold' : 'text-ink-muted'" />
+                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-base font-medium transition active:scale-[0.98]"
+                :class="$route.path.startsWith(item.path) ? 'bg-gold-soft text-gold' : 'text-slate-400 hover:bg-white/10 hover:text-white'">
+            <Iconoir :name="item.icon" :class="$route.path.startsWith(item.path) ? 'text-gold' : 'text-slate-400'" />
                 {{ item.label }}
               </router-link>
             </nav>
