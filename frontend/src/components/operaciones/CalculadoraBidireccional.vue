@@ -54,14 +54,22 @@
 
     <div>
       <label class="block text-sm text-ink-muted mb-1">{{ quoteNombre }} ({{ quoteCodigo }}) a recibir</label>
-      <div class="relative">
-        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted text-sm">{{ quoteSimbolo }}</span>
-        <input
-          :value="bolivaresDisplay"
-          @input="onBolivaresInput"
-          type="text" inputmode="decimal" placeholder="0.00"
-          class="w-full pl-10 pr-4 py-2.5 border border-edge-strong rounded-xl focus:ring-2 focus:ring-gold outline-none"
-        />
+      <div class="flex gap-2 items-start">
+        <div class="relative flex-1">
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted text-sm">{{ quoteSimbolo }}</span>
+          <input
+            :value="bolivaresDisplay"
+            @input="onBolivaresInput"
+            type="text" inputmode="decimal" placeholder="0.00"
+            class="w-full pl-10 pr-4 py-2.5 border border-edge-strong rounded-xl focus:ring-2 focus:ring-gold outline-none"
+          />
+        </div>
+        <button
+          v-if="bolivares !== '' && bolivares != null"
+          type="button"
+          @click="limpiarBolivares"
+          class="shrink-0 px-2.5 h-[42px] bg-surface-muted hover:bg-danger-soft hover:text-danger text-ink-muted rounded-xl text-sm font-medium transition active:scale-[0.98] flex items-center gap-1"
+        ><Iconoir name="x-mark" class="w-3.5 h-3.5" /> Limpiar</button>
       </div>
       <p class="text-sm text-ink-muted mt-1">
         Editá dos valores y el tercero se calcula automáticamente.
@@ -146,6 +154,10 @@ function limpiarMonto() {
 
 function limpiarTasa() {
   emit('update:tasa', '')
+  emit('update:bolivares', '')
+}
+
+function limpiarBolivares() {
   emit('update:bolivares', '')
 }
 

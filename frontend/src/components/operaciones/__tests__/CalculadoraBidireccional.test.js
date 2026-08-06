@@ -81,4 +81,21 @@ describe('CalculadoraBidireccional', () => {
     expect(wrapper.props('bolivares')).toBe('3650')
     expect(wrapper.props('tasa')).toBe('36.5')
   })
+
+  it('el botón Limpiar vacía el campo de bolívares', async () => {
+    const wrapper = mountCalc()
+    await typeInto(wrapper, 'monto', '100')
+    await typeInto(wrapper, 'tasa', '36.5')
+    expect(wrapper.props('bolivares')).toBe('3650')
+
+    const btn = wrapper.findAll('button').at(-1)
+    expect(btn.exists()).toBe(true)
+    await btn.trigger('click')
+    await wrapper.setProps({ bolivares: '' })
+
+    expect(lastEmit(wrapper, 'update:bolivares')).toEqual([''])
+    expect(wrapper.props('bolivares')).toBe('')
+    expect(wrapper.props('monto')).toBe('100')
+    expect(wrapper.props('tasa')).toBe('36.5')
+  })
 })
