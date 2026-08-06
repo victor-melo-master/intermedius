@@ -49,10 +49,14 @@
     </div>
     <div v-else-if="usuarios.list.length === 0" class="text-center py-16">
       <Iconoir name="users" class="w-12 h-12 mx-auto mb-4 text-ink-muted" />
-      <p class="text-ink-muted">No hay usuarios registrados</p>
+      <p class="text-ink-muted">{{ estadoFiltro === 'en_linea' ? 'No hay usuarios en línea' : 'No hay usuarios registrados' }}</p>
+    </div>
+    <div v-else-if="listaUsuarios.length === 0" class="text-center py-16">
+      <Iconoir name="users" class="w-12 h-12 mx-auto mb-4 text-ink-muted" />
+      <p class="text-ink-muted">No hay usuarios en línea</p>
     </div>
     <div v-else class="space-y-2">
-      <div v-for="u in usuarios.list" :key="u.id"
+      <div v-for="u in listaUsuarios" :key="u.id"
         class="bg-surface border border-edge rounded-xl p-4 flex items-center gap-3 cursor-pointer hover:border-gold hover:shadow-sm transition"
         :class="{ 'opacity-60': !u.activo }" @click="openDetalle(u)">
         <div class="shrink-0">
@@ -65,6 +69,10 @@
         </div>
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2 flex-wrap">
+            <span v-if="usuarios.estaEnLinea(u.id)" class="inline-flex items-center gap-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-success-soft text-success" :title="tiempoActivo(u)">
+              <span class="w-2 h-2 rounded-full bg-success animate-pulse"></span>
+              En línea
+            </span>
             <p class="font-semibold text-sm">{{ u.name }}</p>
             <span v-for="rol in u.roles" :key="rol"
               class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full"
@@ -650,6 +658,7 @@ let debounce = null
 /** Opciones del filtro de estado */
 const estadoOpciones = [
   { value: 'todos', label: 'Todos' },
+  { value: 'en_linea', label: 'En línea' },
   { value: 'activos', label: 'Activos' },
   { value: 'inactivos', label: 'Inactivos' },
 ]
@@ -673,9 +682,34 @@ function cargarUsuarios() {
   const params = {}
   const q = search.value.trim()
   if (q) params.q = q
-  if (estadoFiltro.value !== 'todos') params.activo = estadoFiltro.value === 'activos'
+  // 'en_linea' se filtra en cliente sobre la lista ya cargada.
+  if (estadoFiltro.value === 'activos') params.activo = true
+  if (estadoFiltro.value === 'inactivos') params.activo = false
   if (rolFiltro.value) params.rol = rolFiltro.value
   usuarios.fetchAll(params)
+}
+
+/** Lista visible: aplica el filtro de usuarios en línea en el cliente */
+const listaUsuarios = computed(() => {
+  if (estadoFiltro.value !== 'en_linea') return usuarios.list
+  return usuarios.list.filter((u) => usuarios.estaEnLinea(u.id))
+})
+
+/** Texto relativo de la última actividad ("Activo hace X min") */
+function tiempoActivo(u) {
+  const ultima = usuarios.enLinea[u.id]
+  if (!ultima) return ''
+  const min = Math.max(0, Math.round((Date.now() - new Date(ultima).getTime()) / 60000))
+  if (min < 1) return 'Activo ahora'
+  if (min === 1) return 'Activo hace 1 min'
+  return `Activo hace ${min} min`
+}
+
+/** Refresca el estado de usuarios en línea (heartbeat de 60 s) */
+let pollEnLinea = null
+function iniciarPollEnLinea() {
+  usuarios.fetchEnLinea()
+  pollEnLinea = setInterval(() => usuarios.fetchEnLinea(), 60000)
 }
 
 /** Busca con debounce de 400 ms al escribir */
@@ -980,6 +1014,7 @@ async function submit() {
 /** Carga usuarios y lista de titulares al montar */
 onMounted(async () => {
   cargarUsuarios()
+  iniciarPollEnLinea()
   try {
     const { data } = await api.get('/titulares')
     titulares.value = Array.isArray(data) ? data : (data.data || [])
@@ -992,5 +1027,6 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   document.removeEventListener('click', onDocClick)
   clearTimeout(toastTimer)
+  if (pollEnLinea) clearInterval(pollEnLinea)
 })
 </script>

@@ -481,4 +481,51 @@ class UserEndpointTest extends TestCase
         $this->assertTrue($usuario->hasRole('operador'));
         $this->assertFalse($usuario->hasRole('admin'));
     }
+
+    // ── en línea ─────────────────────────────────────────────────────
+
+    public function test_en_linea_requiere_autenticacion(): void
+    {
+        $this->getJson('/api/v1/usuarios/en-linea')->assertUnauthorized();
+    }
+
+    public function test_en_linea_solo_admin_super_admin(): void
+    {
+        $this->actingAs($this->operador)
+            ->getJson('/api/v1/usuarios/en-linea')
+            ->assertForbidden();
+    }
+
+    public function test_en_linea_retorna_solo_usuarios_activos_recientes(): void
+    {
+        $reciente = User::factory()->create(['activo' => true, 'last_active_at' => now()->subMinute()]);
+        $antiguo = User::factory()->create(['activo' => true, 'last_active_at' => now()->subMinutes(10)]);
+        $inactivo = User::factory()->create(['activo' => false, 'last_active_at' => now()]);
+        $sinMarca = User::factory()->create(['activo' => true, 'last_active_at' => null]);
+
+        // El admin autenticado se marca como activo vía middleware.
+        $this->admin->update(['last_active_at' => now()]);
+
+        $this->actingAs($this->admin)
+            ->getJson('/api/v1/usuarios/en-linea')
+            ->assertOk()
+            ->assertJsonPath('total', 2)
+            ->assertJsonFragment(['id' => $reciente->id])
+            ->assertJsonFragment(['id' => $this->admin->id])
+            ->assertJsonMissing(['id' => $antiguo->id])
+            ->assertJsonMissing(['id' => $inactivo->id])
+            ->assertJsonMissing(['id' => $sinMarca->id]);
+    }
+
+    public function test_middleware_marca_la_actividad_del_usuario_autenticado(): void
+    {
+        $usuario = User::factory()->create(['activo' => true, 'last_active_at' => null]);
+
+        $this->actingAs($usuario)
+            ->getJson('/api/v1/auth/me')
+            ->assertOk();
+
+        $this->assertNotNull($usuario->fresh()->last_active_at);
+        $this->assertTrue($usuario->fresh()->last_active_at->gte(now()->subSeconds(10)));
+    }
 }

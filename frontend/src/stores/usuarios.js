@@ -13,6 +13,10 @@ export const useUsuariosStore = defineStore('usuarios', () => {
   const loading = ref(false)
   /** @type {import('vue').Ref<string>} Mensaje de error de la última operación */
   const error = ref('')
+  /** @type {import('vue').Ref<Object>} Mapa id → last_active_at de usuarios en línea */
+  const enLinea = ref({})
+  /** @type {import('vue').Ref<number>} Total de usuarios en línea */
+  const enLineaTotal = ref(0)
 
   /**
    * Obtiene todos los usuarios del sistema con filtros opcionales.
@@ -70,5 +74,32 @@ export const useUsuariosStore = defineStore('usuarios', () => {
     return data
   }
 
-  return { list, loading, error, fetchAll, create, update, toggleActivo }
+  /**
+   * Obtiene los usuarios en línea (con actividad reciente) y guarda un mapa id → last_active_at.
+   * @returns {Promise<void>}
+   */
+  async function fetchEnLinea() {
+    try {
+      const { data } = await api.get('/usuarios/en-linea')
+      const mapa = {}
+      for (const u of data.usuarios) {
+        mapa[u.id] = u.last_active_at
+      }
+      enLinea.value = mapa
+      enLineaTotal.value = data.total
+    } catch {
+      // Silencioso: el listado principal sigue funcionando sin el estado en línea.
+    }
+  }
+
+  /**
+   * Indica si un usuario está en línea.
+   * @param {number|string} id - ID del usuario
+   * @returns {boolean}
+   */
+  function estaEnLinea(id) {
+    return id in enLinea.value
+  }
+
+  return { list, loading, error, enLinea, enLineaTotal, fetchAll, create, update, toggleActivo, fetchEnLinea, estaEnLinea }
 })

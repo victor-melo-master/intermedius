@@ -25,6 +25,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string|null $avatar_path
  * @property string|null $telefono
  * @property \Illuminate\Support\Carbon|null $last_login_at
+ * @property \Illuminate\Support\Carbon|null $last_active_at
  * @property \Illuminate\Support\Carbon|null $email_verified_at
  * @property string|null $remember_token
  * @property \Illuminate\Support\Carbon|null $created_at
@@ -44,6 +45,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'titular_id',
         'activo',
         'last_login_at',
+        'last_active_at',
         'avatar_path',
         'telefono',
     ];
@@ -60,6 +62,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'password'          => 'hashed',
             'activo'            => 'boolean',
             'last_login_at'     => 'datetime',
+            'last_active_at'    => 'datetime',
         ];
     }
 

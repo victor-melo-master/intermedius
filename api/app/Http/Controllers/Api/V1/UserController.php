@@ -286,6 +286,30 @@ class UserController extends Controller
         return response()->json($sesiones);
     }
 
+    /**
+     * Usuarios en línea: con actividad dentro de los últimos N minutos.
+     *
+     * @param Request $request
+     * @return JsonResponse {total, usuarios}
+     */
+    public function enLinea(Request $request): JsonResponse
+    {
+        $umbral = now()->subMinutes(5);
+
+        $usuarios = User::query()
+            ->with('titular')
+            ->where('activo', true)
+            ->where('last_active_at', '>=', $umbral)
+            ->orderByDesc('last_active_at')
+            ->get()
+            ->map(fn (User $u) => $this->formatUser($u));
+
+        return response()->json([
+            'total'    => $usuarios->count(),
+            'usuarios' => $usuarios,
+        ]);
+    }
+
     private function formatUser(User $u): array
     {
         return [
@@ -299,6 +323,7 @@ class UserController extends Controller
             'avatar_path'   => $u->avatar_path,
             'telefono'      => $u->telefono,
             'last_login_at' => $u->last_login_at,
+            'last_active_at' => $u->last_active_at,
             'created_at'    => $u->created_at,
         ];
     }

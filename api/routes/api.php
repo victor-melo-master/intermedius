@@ -59,7 +59,7 @@ Route::prefix('v1')->group(function () {
     // ─────────────────────────────────────────────────────────────────
     // Rutas protegidas con Sanctum
     // ─────────────────────────────────────────────────────────────────
-    Route::middleware('auth:sanctum')->group(function () {
+    Route::middleware(['auth:sanctum', 'marcar-actividad'])->group(function () {
 
         Route::post('auth/logout', [AuthController::class, 'logout'])
             ->middleware('throttle:10,1');
@@ -199,6 +199,9 @@ Route::prefix('v1')->group(function () {
                 ->middleware('throttle:60,1');
             // Historial de sesiones (login/logout) de un usuario
             Route::get('usuarios/{usuario}/sesiones', [UserController::class, 'sesiones'])
+                ->middleware('throttle:60,1');
+            // Usuarios en línea (actividad reciente)
+            Route::get('usuarios/en-linea', [UserController::class, 'enLinea'])
                 ->middleware('throttle:60,1');
             Route::apiResource('usuarios', UserController::class)
                 ->middleware('throttle:60,1');
