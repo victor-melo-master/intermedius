@@ -8,7 +8,7 @@
     <AppErrorState v-else-if="ops.error" :message="ops.error" @retry="ops.fetchOne(route.params.id)" />
 
     <div v-else-if="ops.detail">
-      <div class="bg-white dark:bg-surface-alt rounded-xl border border-edge divide-y divide-edge">
+      <div class="bg-white dark:bg-surface rounded-xl border border-edge divide-y divide-edge">
 
         <!-- Header: resumen + datos -->
         <div class="p-5">

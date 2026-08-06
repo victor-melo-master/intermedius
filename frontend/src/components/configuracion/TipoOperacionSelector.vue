@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-white border border-edge rounded-xl p-5 space-y-4">
+  <div class="bg-surface border border-edge rounded-xl p-5 space-y-4">
     <h3 class="font-semibold text-ink">Tipo de operación *</h3>
     <div class="grid grid-cols-2 gap-3">
       <button type="button" @click="$emit('update:tipo', 'compra')"

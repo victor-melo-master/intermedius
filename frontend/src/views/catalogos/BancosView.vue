@@ -12,7 +12,7 @@
     </template>
 
     <div v-else class="space-y-2">
-      <div v-for="b in bancos.list" :key="b.id" class="bg-white border border-edge rounded-xl p-4 flex items-center gap-3">
+      <div v-for="b in bancos.list" :key="b.id" class="bg-surface border border-edge rounded-xl p-4 flex items-center gap-3">
         <div class="w-10 h-10 rounded-full bg-gold-soft flex items-center justify-center text-gold-dark font-bold text-sm">
           {{ b.codigo?.charAt(0) || b.nombre?.charAt(0) || 'B' }}
         </div>

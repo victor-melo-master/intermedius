@@ -6,7 +6,7 @@
         class="fixed inset-0 z-50 flex items-center justify-center"
       >
         <div class="absolute inset-0 bg-black/40"></div>
-        <div class="relative bg-white rounded-2xl shadow-xl max-w-md w-full p-6 mx-4">
+        <div class="relative bg-surface rounded-2xl shadow-xl max-w-md w-full p-6 mx-4">
         <div class="flex items-center gap-4 mb-4">
           <div class="w-12 h-12 bg-danger-soft rounded-full flex items-center justify-center">
             <Iconoir name="bell" class="w-6 h-6 text-danger" />

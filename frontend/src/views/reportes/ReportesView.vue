@@ -2,7 +2,7 @@
   <div class="space-y-4">
     <h2 class="text-xl font-bold text-heading">Reportes</h2>
 
-    <div class="bg-white border border-edge rounded-xl p-5 space-y-4">
+    <div class="bg-surface border border-edge rounded-xl p-5 space-y-4">
       <h3 class="font-semibold text-ink">Comisiones por operador</h3>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
@@ -36,7 +36,7 @@
     </div>
 
     <div v-if="data.length" class="space-y-2">
-      <div v-for="item in data" :key="item.operador || item.nombre" class="bg-white border border-edge rounded-xl p-4 flex items-center gap-3">
+      <div v-for="item in data" :key="item.operador || item.nombre" class="bg-surface border border-edge rounded-xl p-4 flex items-center gap-3">
         <div class="w-10 h-10 rounded-full bg-gold-soft flex items-center justify-center text-gold-dark font-bold text-sm">
           {{ (item.operador || item.nombre || 'O').charAt(0).toUpperCase() }}
         </div>

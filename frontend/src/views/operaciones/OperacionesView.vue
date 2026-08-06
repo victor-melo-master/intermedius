@@ -2,7 +2,7 @@
   <div class="max-w-7xl mx-auto space-y-4">
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
       <h2 class="text-xl font-bold text-heading">Operaciones</h2>
-      <button @click="showFilter = true" class="self-start sm:self-auto px-3 py-2 bg-white border border-edge-strong rounded-lg text-sm hover:bg-surface-soft flex items-center gap-1">
+      <button @click="showFilter = true" class="self-start sm:self-auto px-3 py-2 bg-white dark:bg-surface-muted border border-edge-strong rounded-lg text-sm hover:bg-surface-soft flex items-center gap-1">
         <Iconoir name="magnifying-glass" class="w-4 h-4" /> Filtrar
         <span v-if="activeFilterCount" class="ml-1 bg-gold text-navy text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">{{ activeFilterCount }}</span>
       </button>
@@ -11,17 +11,17 @@
     <div class="flex gap-2">
       <button @click="setTipoFiltro('compra')"
         class="px-4 py-2 rounded-lg text-sm font-medium transition"
-        :class="operacionTipo === 'compra' ? 'bg-gold text-navy shadow-sm' : 'bg-white border border-edge-strong text-ink hover:bg-surface-soft'">
+        :class="operacionTipo === 'compra' ? 'bg-gold text-navy shadow-sm' : 'bg-white dark:bg-surface-muted border border-edge-strong text-ink hover:bg-surface-soft'">
         Compras
       </button>
       <button @click="setTipoFiltro('venta')"
         class="px-4 py-2 rounded-lg text-sm font-medium transition"
-        :class="operacionTipo === 'venta' ? 'bg-gold text-navy shadow-sm' : 'bg-white border border-edge-strong text-ink hover:bg-surface-soft'">
+        :class="operacionTipo === 'venta' ? 'bg-gold text-navy shadow-sm' : 'bg-white dark:bg-surface-muted border border-edge-strong text-ink hover:bg-surface-soft'">
         Ventas
       </button>
       <button @click="setTipoFiltro(null)"
         class="px-4 py-2 rounded-lg text-sm font-medium transition"
-        :class="operacionTipo === null ? 'bg-gold text-navy shadow-sm' : 'bg-white border border-edge-strong text-ink hover:bg-surface-soft'">
+        :class="operacionTipo === null ? 'bg-gold text-navy shadow-sm' : 'bg-white dark:bg-surface-muted border border-edge-strong text-ink hover:bg-surface-soft'">
         Todos
       </button>
     </div>
@@ -40,7 +40,7 @@
     </div>
     <div v-else class="space-y-2">
       <router-link v-for="op in ops.list" :key="op.id" :to="`/operaciones/${op.id}`"
-        class="block bg-white border border-edge rounded-xl hover:shadow-md transition">
+        class="block bg-surface border border-edge rounded-xl hover:shadow-md transition">
         <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2 p-4">
           <div class="min-w-0 space-y-1">
             <div class="flex items-center gap-2">
@@ -87,7 +87,7 @@
         <!-- Tipo -->
         <div>
           <label class="block text-sm font-medium text-ink-muted mb-1">Tipo</label>
-          <select v-model="filters.tipo_codigo" class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white">
+          <select v-model="filters.tipo_codigo" class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white dark:bg-surface-muted">
             <option value="">Todos</option>
             <option value="compra_usd">Compra de USD</option>
             <option value="venta_usd">Venta de USD</option>
@@ -97,7 +97,7 @@
         <!-- Estatus (legacy) -->
         <div>
           <label class="block text-sm font-medium text-ink-muted mb-1">Estatus</label>
-          <select v-model="filters.estatus" class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white">
+          <select v-model="filters.estatus" class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white dark:bg-surface-muted">
             <option value="">Todos</option>
             <option value="sin_verificar">Sin verificar</option>
             <option value="en_revision">En revisión</option>
@@ -107,7 +107,7 @@
         <!-- Estado (flujo multi-paso) -->
         <div>
           <label class="block text-sm font-medium text-ink-muted mb-1">Estado</label>
-          <select v-model="filters.estado" class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white">
+          <select v-model="filters.estado" class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white dark:bg-surface-muted">
             <option value="">Todos</option>
             <option value="solicitud">Solicitud</option>
             <option value="en_progreso">En Progreso</option>
@@ -129,7 +129,7 @@
         <!-- Moneda -->
         <div>
           <label class="block text-sm font-medium text-ink-muted mb-1">Moneda</label>
-          <select v-model="filters.moneda" class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white">
+          <select v-model="filters.moneda" class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white dark:bg-surface-muted">
             <option value="">Todas</option>
             <option value="USD">USD</option>
             <option value="USDT">USDT</option>
@@ -148,7 +148,7 @@
             <input v-model="clienteSearch" @input="onClienteSearch" type="text" placeholder="Buscar cliente..."
               class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm" />
             <div v-if="clienteSearch && clienteResults.length"
-              class="absolute z-20 left-0 right-0 mt-1 bg-white border border-edge rounded-lg shadow-lg max-h-40 overflow-y-auto">
+              class="absolute z-20 left-0 right-0 mt-1 bg-surface border border-edge rounded-lg shadow-lg max-h-40 overflow-y-auto">
               <button v-for="c in clienteResults" :key="c.id" @click="selectClienteFilter(c)"
                 class="w-full text-left px-3 py-2 text-sm hover:bg-surface-soft border-b border-edge last:border-0">
                 {{ c.nombre }}

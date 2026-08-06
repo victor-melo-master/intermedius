@@ -18,14 +18,14 @@
         <h2 class="text-xl font-bold text-heading">Resumen operativo</h2>
         <p class="text-sm text-ink-soft">Hola, {{ auth.user?.name }} · {{ hoy }}</p>
       </div>
-      <router-link to="/bancos" class="flex items-center gap-2 bg-white border border-edge hover:border-gold text-ink hover:text-gold-dark text-sm font-medium px-4 py-2 rounded-xl shadow-sm transition">
+      <router-link to="/bancos" class="flex items-center gap-2 bg-white dark:bg-surface-muted border border-edge hover:border-gold text-ink hover:text-gold-dark text-sm font-medium px-4 py-2 rounded-xl shadow-sm transition">
         <Iconoir name="building-library" class="w-5 h-5 text-ink-soft" />
         Gestionar bancos
       </router-link>
     </div>
 
     <!-- ── Filtros ──────────────────────────────────────────────────────── -->
-    <div class="bg-white border border-edge rounded-xl p-4 shadow-sm">
+    <div class="bg-surface border border-edge rounded-xl p-4 shadow-sm">
       <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 items-end">
         <div>
           <label class="block text-[11px] text-ink-soft mb-1">Desde</label>
@@ -66,17 +66,17 @@
     <!-- ── Loading (skeleton) ───────────────────────────────────────────── -->
     <div v-if="loadingResumen" class="space-y-4">
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div v-for="n in 4" :key="n" class="bg-white border border-edge rounded-xl p-4 h-28 animate-pulse">
+        <div v-for="n in 4" :key="n" class="bg-surface border border-edge rounded-xl p-4 h-28 animate-pulse">
           <div class="h-3 w-20 bg-surface-muted rounded mb-3"></div>
           <div class="h-6 w-16 bg-surface-muted rounded"></div>
         </div>
       </div>
-      <div class="bg-white border border-edge rounded-xl p-4 h-32 animate-pulse"></div>
+      <div class="bg-surface border border-edge rounded-xl p-4 h-32 animate-pulse"></div>
     </div>
 
     <!-- ── Sin operaciones ──────────────────────────────────────────────── -->
     <div v-else-if="resumen && resumen.operaciones && resumen.operaciones.total === 0"
-      class="bg-white border border-edge rounded-xl p-10 text-center">
+      class="bg-surface border border-edge rounded-xl p-10 text-center">
       <Iconoir name="chart-bar" class="w-10 h-10 mx-auto mb-3 text-ink-faint" />
       <p class="text-ink-soft">Sin operaciones para este período</p>
     </div>
@@ -85,23 +85,23 @@
     <template v-else-if="resumen && resumen.operaciones">
       <!-- Tarjetas -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div class="bg-white border border-edge rounded-xl p-4 shadow-sm">
+        <div class="bg-surface border border-edge rounded-xl p-4 shadow-sm">
           <p class="text-xs text-ink-soft">Total operaciones</p>
           <p class="text-3xl font-bold text-heading mt-1">{{ resumen.operaciones.total ?? 0 }}</p>
         </div>
-        <div class="bg-white border border-edge rounded-xl p-4 shadow-sm space-y-1">
+        <div class="bg-surface border border-edge rounded-xl p-4 shadow-sm space-y-1">
           <p class="text-xs text-ink-soft mb-1">Desglose</p>
           <p class="text-sm flex justify-between"><span class="text-ink-soft">Compras</span><span class="font-semibold text-teal">{{ resumen.operaciones.compras ?? 0 }}</span></p>
           <p class="text-sm flex justify-between"><span class="text-ink-soft">Ventas</span><span class="font-semibold text-gold-dark">{{ resumen.operaciones.ventas ?? 0 }}</span></p>
           <p class="text-sm flex justify-between"><span class="text-ink-soft">Intermediadas</span><span class="font-semibold text-violet">{{ resumen.operaciones.intermediadas ?? 0 }}</span></p>
         </div>
-        <div class="bg-white border border-edge rounded-xl p-4 shadow-sm">
+        <div class="bg-surface border border-edge rounded-xl p-4 shadow-sm">
           <p class="text-xs text-ink-soft">Ganancia bruta</p>
           <p class="text-xl font-bold text-success">{{ formatUsd(resumen.ganancias?.bruta_usd) }}</p>
           <p class="text-xs text-ink-soft mt-2">Ganancia neta</p>
           <p class="text-lg font-bold text-success-strong">{{ formatUsd(resumen.ganancias?.neta_usd) }}</p>
         </div>
-        <div class="bg-white border border-edge rounded-xl p-4 shadow-sm">
+        <div class="bg-surface border border-edge rounded-xl p-4 shadow-sm">
           <p class="text-xs text-ink-soft">Efectivo pendiente</p>
           <p class="text-3xl font-bold text-warning mt-1">{{ resumen.efectivo_pendiente?.count ?? 0 }}</p>
           <p class="text-sm font-semibold text-warning-strong mt-1">{{ formatUsd(resumen.efectivo_pendiente?.monto_usd) }}</p>
@@ -111,7 +111,7 @@
       <!-- Tablas -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <!-- Volúmenes por moneda -->
-        <div class="bg-white border border-edge rounded-xl p-4 shadow-sm">
+        <div class="bg-surface border border-edge rounded-xl p-4 shadow-sm">
           <h3 class="font-semibold text-ink text-sm mb-3">Volúmenes por moneda</h3>
           <div v-if="!resumen.volumenes || resumen.volumenes.length === 0" class="text-xs text-ink-faint py-2">Sin volúmenes</div>
           <table v-else class="w-full text-sm">
@@ -133,7 +133,7 @@
         </div>
 
         <!-- Actividad por operador -->
-        <div class="bg-white border border-edge rounded-xl p-4 shadow-sm">
+        <div class="bg-surface border border-edge rounded-xl p-4 shadow-sm">
           <h3 class="font-semibold text-ink text-sm mb-3">Actividad por operador</h3>
           <div v-if="!resumen.por_operador || resumen.por_operador.length === 0" class="text-xs text-ink-faint py-2">Sin actividad</div>
           <table v-else class="w-full text-sm">

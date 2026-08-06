@@ -19,7 +19,7 @@
       <p class="text-ink-soft">No hay titulares registrados</p>
     </div>
     <div v-else class="space-y-2">
-      <div v-for="t in titulares.list" :key="t.id" class="bg-white border border-edge rounded-xl p-4 flex items-center gap-3">
+      <div v-for="t in titulares.list" :key="t.id" class="bg-surface border border-edge rounded-xl p-4 flex items-center gap-3">
         <div class="w-10 h-10 rounded-full bg-gold-soft flex items-center justify-center text-gold-dark font-bold text-sm">
           {{ t.alias?.charAt(0).toUpperCase() || t.nombre?.charAt(0).toUpperCase() || '?' }}
         </div>

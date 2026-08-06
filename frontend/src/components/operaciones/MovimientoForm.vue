@@ -4,7 +4,7 @@
     <div>
       <label class="block text-xs text-ink-soft mb-1">Moneda</label>
       <select v-model="form.moneda_id" required
-        class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white focus:ring-2 focus:ring-gold outline-none">
+        class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white dark:bg-surface-muted focus:ring-2 focus:ring-gold outline-none">
         <option value="">Seleccionar</option>
         <option v-for="m in monedasFiltradas" :key="m.id" :value="m.id">{{ m.codigo }} — {{ m.nombre }}</option>
       </select>
@@ -23,7 +23,7 @@
             <span class="text-ink-faint">({{ labelOrigen }})</span>
           </label>
           <select v-model="form.cuenta_origen_id" required
-            class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white focus:ring-2 focus:ring-gold outline-none">
+            class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white dark:bg-surface-muted focus:ring-2 focus:ring-gold outline-none">
             <option value="">Seleccionar</option>
             <option v-for="c in cuentasOrigen" :key="c.id" :value="c.id">
               {{ labelCuenta(c) }}
@@ -41,7 +41,7 @@
             <span class="text-ink-faint">({{ labelDestino }})</span>
           </label>
           <select v-model="form.cuenta_destino_id" required
-            class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white focus:ring-2 focus:ring-gold outline-none">
+            class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white dark:bg-surface-muted focus:ring-2 focus:ring-gold outline-none">
             <option value="">Seleccionar</option>
             <option v-for="c in cuentasDestino" :key="c.id" :value="c.id">
               {{ labelCuenta(c) }}
@@ -84,7 +84,7 @@
     <div>
       <label class="block text-xs text-ink-soft mb-1">Método de pago <span class="text-danger">*</span></label>
       <select v-model="form.metodo_pago" required
-        class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white focus:ring-2 focus:ring-gold outline-none">
+        class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white dark:bg-surface-muted focus:ring-2 focus:ring-gold outline-none">
         <option value="">Seleccionar</option>
         <option v-for="op in opcionesMetodoPago" :key="op.value" :value="op.value">{{ op.label }}</option>
       </select>

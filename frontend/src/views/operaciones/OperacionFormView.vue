@@ -9,18 +9,18 @@
 
     <form @submit.prevent="submit" class="space-y-4">
       <!-- Tipo operación -->
-      <div class="bg-white border border-edge rounded-xl p-5 space-y-3">
+      <div class="bg-surface border border-edge rounded-xl p-5 space-y-3">
         <label class="block text-sm font-medium text-ink-muted">Tipo</label>
         <div class="flex gap-3">
           <button type="button" @click="form.tipo = 'compra'"
             class="flex-1 py-3 rounded-xl text-sm font-medium transition active:scale-[0.98] border-2"
-            :class="form.tipo === 'compra' ? 'bg-info-soft border-info text-info-strong' : 'bg-white border-edge text-ink-soft hover:border-edge-strong'">
+            :class="form.tipo === 'compra' ? 'bg-info-soft border-info text-info-strong' : 'bg-white dark:bg-surface-muted border-edge text-ink-soft hover:border-edge-strong'">
             {{ textoCompra }}
             <span class="block text-xs mt-1 opacity-70">El cliente entrega {{ monedaSel }}</span>
           </button>
           <button type="button" @click="form.tipo = 'venta'"
             class="flex-1 py-3 rounded-xl text-sm font-medium transition active:scale-[0.98] border-2"
-            :class="form.tipo === 'venta' ? 'bg-success-soft border-success text-success-strong' : 'bg-white border-edge text-ink-soft hover:border-edge-strong'">
+            :class="form.tipo === 'venta' ? 'bg-success-soft border-success text-success-strong' : 'bg-white dark:bg-surface-muted border-edge text-ink-soft hover:border-edge-strong'">
             {{ textoVenta }}
             <span class="block text-xs mt-1 opacity-70">La casa entrega {{ monedaSel }}</span>
           </button>
@@ -28,7 +28,7 @@
       </div>
 
       <!-- Fecha -->
-      <div class="bg-white border border-edge rounded-xl p-5 space-y-3">
+      <div class="bg-surface border border-edge rounded-xl p-5 space-y-3">
         <label class="block text-sm font-medium text-ink-muted">Fecha</label>
         <input v-model="form.fecha" type="date" :max="today" required
           class="w-full px-4 py-2.5 border border-edge-strong rounded-xl focus:ring-2 focus:ring-gold outline-none" />
@@ -56,7 +56,7 @@
       />
 
       <!-- Descripción -->
-      <div class="bg-white border border-edge rounded-xl p-5 space-y-3">
+      <div class="bg-surface border border-edge rounded-xl p-5 space-y-3">
         <label class="block text-sm text-ink-muted mb-1">Descripción</label>
         <textarea
           v-model="form.descripcion"
@@ -67,7 +67,7 @@
       </div>
 
       <!-- Movimientos propuestos (locales) -->
-      <div class="bg-white border border-edge rounded-xl p-5 space-y-4">
+      <div class="bg-surface border border-edge rounded-xl p-5 space-y-4">
         <div class="flex items-center justify-between">
           <h3 class="font-semibold text-ink">Movimientos propuestos</h3>
           <span class="text-xs text-ink-faint">Opcional</span>
@@ -92,7 +92,7 @@
           <div>
             <label class="block text-xs text-ink-soft mb-1">Moneda</label>
             <select v-model="txForm.moneda_id"
-              class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white focus:ring-2 focus:ring-gold outline-none">
+              class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white dark:bg-surface-muted focus:ring-2 focus:ring-gold outline-none">
               <option value="">Seleccionar</option>
               <option v-for="m in monedasFiltradas" :key="m.id" :value="m.id">{{ m.codigo }} — {{ m.nombre }}</option>
             </select>
@@ -105,7 +105,7 @@
                   Cuenta origen <span class="text-ink-faint">({{ labelOrigen }})</span>
                 </label>
                 <select v-model="txForm.cuenta_origen_id"
-                  class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white focus:ring-2 focus:ring-gold outline-none">
+                  class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white dark:bg-surface-muted focus:ring-2 focus:ring-gold outline-none">
                   <option value="">Seleccionar</option>
                   <option v-for="c in cuentasOrigen" :key="c.id" :value="c.id">{{ labelCuenta(c) }}</option>
                 </select>
@@ -115,7 +115,7 @@
                   Cuenta destino <span class="text-ink-faint">({{ labelDestino }})</span>
                 </label>
                 <select v-model="txForm.cuenta_destino_id"
-                  class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white focus:ring-2 focus:ring-gold outline-none">
+                  class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white dark:bg-surface-muted focus:ring-2 focus:ring-gold outline-none">
                   <option value="">Seleccionar</option>
                   <option v-for="c in cuentasDestino" :key="c.id" :value="c.id">{{ labelCuenta(c) }}</option>
                 </select>
@@ -135,7 +135,7 @@
             <div>
               <label class="block text-xs text-ink-soft mb-1">Método de pago</label>
               <select v-model="txForm.metodo_pago"
-                class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white focus:ring-2 focus:ring-gold outline-none">
+                class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white dark:bg-surface-muted focus:ring-2 focus:ring-gold outline-none">
                 <option value="">Seleccionar</option>
                 <option value="efectivo">Efectivo</option>
                 <option value="pago_movil">Pago móvil</option>

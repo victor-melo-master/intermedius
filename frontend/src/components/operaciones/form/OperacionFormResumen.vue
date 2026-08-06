@@ -1,5 +1,5 @@
 <template>
-  <div v-if="items.length" class="bg-white border border-edge rounded-xl p-5 space-y-3">
+  <div v-if="items.length" class="bg-surface border border-edge rounded-xl p-5 space-y-3">
     <h3 class="font-semibold text-ink">Resumen</h3>
     <div
       v-for="item in items"

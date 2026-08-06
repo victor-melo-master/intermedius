@@ -3,7 +3,7 @@
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
       <h2 class="text-xl font-bold text-heading">Tasas del día</h2>
       <div class="flex gap-2">
-        <button @click="tasas.fetchVigentes()" class="px-3 py-2 bg-white border border-edge-strong rounded-lg text-sm hover:bg-surface-soft inline-flex items-center gap-1"><Iconoir name="arrow-path" class="w-4 h-4" /> Actualizar</button>
+        <button @click="tasas.fetchVigentes()" class="px-3 py-2 bg-white dark:bg-surface-muted border border-edge-strong rounded-lg text-sm hover:bg-surface-soft inline-flex items-center gap-1"><Iconoir name="arrow-path" class="w-4 h-4" /> Actualizar</button>
         <button v-if="auth.isAdmin" @click="openNew" class="px-4 py-2 bg-gold text-navy rounded-lg text-sm font-medium hover:bg-gold-dark">+ Publicar tasa</button>
       </div>
     </div>
@@ -30,7 +30,7 @@
           <span class="text-xs text-ink-faint">{{ grupo.items.length }} {{ grupo.items.length === 1 ? 'par' : 'pares' }}</span>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div v-for="t in grupo.items" :key="t.id" class="bg-white border border-edge rounded-xl p-4 shadow-sm">
+          <div v-for="t in grupo.items" :key="t.id" class="bg-surface border border-edge rounded-xl p-4 shadow-sm">
             <div class="flex items-center justify-between mb-3">
               <span class="bg-info-soft text-info-strong text-xs font-bold px-3 py-1 rounded-full">{{ t.par }}</span>
               <button v-if="auth.isAdmin" @click="openEdit(t)" class="text-sm text-ink-faint hover:text-gold-dark inline-flex items-center gap-1" title="Editar"><Iconoir name="pencil-square" class="w-4 h-4" /> Editar</button>
@@ -70,7 +70,7 @@
         <p class="text-sm font-medium text-ink-muted mb-2">2. Configurar pares</p>
         <div class="space-y-3">
           <div v-for="ref in referenceMonedas" :key="ref.id" class="border border-edge rounded-xl p-3"
-            :class="pairs[ref.id]?.active ? 'bg-white' : 'bg-surface-soft'">
+            :class="pairs[ref.id]?.active ? 'bg-white dark:bg-surface-muted' : 'bg-surface-soft'">
             <label class="flex items-center justify-between cursor-pointer">
               <span class="font-semibold text-sm text-ink">{{ baseCodigo }} / {{ ref.codigo }}</span>
               <input type="checkbox" v-model="pairs[ref.id].active" class="accent-gold w-5 h-5" />

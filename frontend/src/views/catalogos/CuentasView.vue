@@ -11,7 +11,7 @@
       </div>
     </template>
     <div v-else class="space-y-2">
-      <div v-for="c in cuentas" :key="c.id" class="bg-white border border-edge rounded-xl p-4 flex items-center gap-3">
+      <div v-for="c in cuentas" :key="c.id" class="bg-surface border border-edge rounded-xl p-4 flex items-center gap-3">
         <div class="w-10 h-10 rounded-full bg-gold-soft flex items-center justify-center"><Iconoir name="building-library" class="w-5 h-5" /></div>
         <div class="flex-1 min-w-0">
           <p class="font-semibold text-sm truncate">{{ c.alias || `Cuenta #${c.id}` }}</p>

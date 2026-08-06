@@ -9,7 +9,7 @@
     <AppErrorState v-else-if="store.error" :message="store.error" @retry="cargarOperacion" />
     <template v-else-if="store.detail">
       <!-- ════════ RESUMEN MONTO ════════ -->
-      <div class="bg-white border border-edge rounded-xl p-5">
+      <div class="bg-surface border border-edge rounded-xl p-5">
         <div class="grid grid-cols-3 gap-4 text-center">
           <div>
             <p class="text-xs text-ink-faint mb-1">Monto divisa</p>
@@ -33,7 +33,7 @@
       </div>
 
       <!-- ════════ CABECERA ════════ -->
-      <div class="bg-white border border-edge rounded-xl p-5 space-y-3">
+      <div class="bg-surface border border-edge rounded-xl p-5 space-y-3">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
             <span class="text-sm text-ink-soft">#{{ store.detail.id }}</span>
@@ -48,12 +48,12 @@
       </div>
 
       <!-- ════════ FLUJO PROGRESS ════════ -->
-      <div class="bg-white border border-edge rounded-xl p-5">
+      <div class="bg-surface border border-edge rounded-xl p-5">
         <FlujoProgress :estado="store.detail.estado" :revertida="store.detail.estado === 'revertida'" />
       </div>
 
       <!-- ════════ GANANCIA ESTIMADA ════════ -->
-      <div v-if="gananciaPreview && store.detail.estado === 'en_progreso'" class="bg-white border border-edge rounded-xl p-5 space-y-3">
+      <div v-if="gananciaPreview && store.detail.estado === 'en_progreso'" class="bg-surface border border-edge rounded-xl p-5 space-y-3">
         <h3 class="font-semibold text-ink">Ganancia estimada</h3>
         <div class="grid grid-cols-2 gap-4">
           <div>
@@ -74,7 +74,7 @@
       </div>
 
       <!-- ════════ MOVIMIENTOS ════════ -->
-      <div class="bg-white border border-edge rounded-xl p-5 space-y-3">
+      <div class="bg-surface border border-edge rounded-xl p-5 space-y-3">
         <h3 class="font-semibold text-ink">Movimientos</h3>
         <MovimientoList
           :transacciones="store.detail.transacciones || []"

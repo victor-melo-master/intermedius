@@ -16,7 +16,7 @@
       <div class="flex flex-col sm:flex-row sm:items-center gap-3">
         <div class="relative flex-1">
           <input v-model="search" @input="onSearch" placeholder="Buscar por nombre o correo..."
-            class="w-full pl-10 pr-4 py-2 bg-white border border-edge-strong rounded-xl focus:ring-2 focus:ring-gold outline-none text-sm" />
+            class="w-full pl-10 pr-4 py-2 bg-white dark:bg-surface-muted border border-edge-strong rounded-xl focus:ring-2 focus:ring-gold outline-none text-sm" />
           <Iconoir name="magnifying-glass" class="absolute left-3 top-2.5 w-5 h-5 text-ink-faint" />
           <button v-if="search" @click="search = ''; cargarUsuarios()"
             class="absolute inset-y-0 right-0 flex items-center pr-3 text-ink-faint hover:text-ink-muted" title="Limpiar búsqueda">
@@ -26,7 +26,7 @@
         <div class="flex gap-2 overflow-x-auto pb-1">
           <button v-for="estado in estadoOpciones" :key="estado.value" @click="cambiarEstado(estado.value)"
             class="px-3 py-1.5 rounded-full text-xs font-medium border whitespace-nowrap transition-colors"
-            :class="estadoFiltro === estado.value ? 'bg-gold text-navy border-gold' : 'bg-white text-ink-muted border-edge-strong hover:bg-surface-soft'">
+            :class="estadoFiltro === estado.value ? 'bg-gold text-navy border-gold' : 'bg-white dark:bg-surface-muted text-ink-muted border-edge-strong hover:bg-surface-soft'">
             {{ estado.label }}
           </button>
         </div>
@@ -34,7 +34,7 @@
       <div class="flex gap-2 overflow-x-auto pb-1">
         <button v-for="rol in rolOpciones" :key="rol.value" @click="cambiarRol(rol.value)"
           class="px-3 py-1.5 rounded-full text-xs font-medium border whitespace-nowrap transition-colors"
-          :class="rolFiltro === rol.value ? 'bg-gold text-navy border-gold' : 'bg-white text-ink-muted border-edge-strong hover:bg-surface-soft'">
+          :class="rolFiltro === rol.value ? 'bg-gold text-navy border-gold' : 'bg-white dark:bg-surface-muted text-ink-muted border-edge-strong hover:bg-surface-soft'">
           {{ rol.label }}
         </button>
       </div>
@@ -53,7 +53,7 @@
     </div>
     <div v-else class="space-y-2">
       <div v-for="u in usuarios.list" :key="u.id"
-        class="bg-white border border-edge rounded-xl p-4 flex items-center gap-3 cursor-pointer hover:border-gold hover:shadow-sm transition"
+        class="bg-surface border border-edge rounded-xl p-4 flex items-center gap-3 cursor-pointer hover:border-gold hover:shadow-sm transition"
         :class="{ 'opacity-60': !u.activo }" @click="openDetalle(u)">
         <div class="shrink-0">
           <img v-if="avatarUrl(u)" :src="avatarUrl(u)" alt="Avatar de {{ u.name }}"
@@ -199,7 +199,7 @@
             </svg>
           </button>
           <div v-if="rolDropdownOpen"
-            class="absolute z-10 mt-1 w-full bg-white border border-edge rounded-xl shadow-lg max-h-56 overflow-y-auto">
+            class="absolute z-10 mt-1 w-full bg-surface border border-edge rounded-xl shadow-lg max-h-56 overflow-y-auto">
             <button v-for="op in rolOptions" :key="op.value" type="button"
               @click="selectRol(op.value)"
               class="w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-gold-soft"
@@ -228,7 +228,7 @@
             </svg>
           </button>
           <div v-if="titularDropdownOpen"
-            class="absolute z-10 mt-1 w-full bg-white border border-edge rounded-xl shadow-lg max-h-56 overflow-y-auto">
+            class="absolute z-10 mt-1 w-full bg-surface border border-edge rounded-xl shadow-lg max-h-56 overflow-y-auto">
             <button type="button" @click="selectTitular(null)"
               class="w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-gold-soft text-ink"
               :class="!form.titular_id ? 'bg-gold-soft text-gold-dark font-medium' : ''">

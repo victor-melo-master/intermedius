@@ -21,19 +21,19 @@
     </div>
 
     <div class="grid grid-cols-4 gap-4 mb-6">
-      <div class="bg-white p-4 rounded-lg shadow border-l-4 border-warning">
+      <div class="bg-surface p-4 rounded-lg shadow border-l-4 border-warning">
         <div class="text-sm text-ink-soft">En Espera</div>
         <div class="text-2xl font-bold">{{ store.enEspera.length }}</div>
       </div>
-      <div class="bg-white p-4 rounded-lg shadow border-l-4 border-info">
+      <div class="bg-surface p-4 rounded-lg shadow border-l-4 border-info">
         <div class="text-sm text-ink-soft">En Proceso</div>
         <div class="text-2xl font-bold">{{ store.enProceso.length }}</div>
       </div>
-      <div class="bg-white p-4 rounded-lg shadow border-l-4 border-success">
+      <div class="bg-surface p-4 rounded-lg shadow border-l-4 border-success">
         <div class="text-sm text-ink-soft">Concluidas</div>
         <div class="text-2xl font-bold">{{ store.concluidas.length }}</div>
       </div>
-      <div class="bg-white p-4 rounded-lg shadow border-l-4 border-edge-strong">
+      <div class="bg-surface p-4 rounded-lg shadow border-l-4 border-edge-strong">
         <div class="text-sm text-ink-soft">Total</div>
         <div class="text-2xl font-bold">{{ store.operaciones.length }}</div>
       </div>

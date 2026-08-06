@@ -6,14 +6,14 @@
     </div>
 
     <form @submit.prevent="registrarVenta">
-      <div class="bg-white dark:bg-surface-alt rounded-xl border border-edge divide-y divide-edge">
+      <div class="bg-white dark:bg-surface rounded-xl border border-edge divide-y divide-edge">
         <!-- Moneda -->
         <div class="p-4 space-y-3">
           <label class="block text-xs font-semibold text-ink-soft uppercase tracking-wider">Moneda a vender</label>
           <div class="grid grid-cols-4 gap-2">
             <button type="button" v-for="m in monedasDisponibles" :key="m.codigo" @click="moneda = m.codigo"
               class="py-2.5 rounded-lg text-sm font-medium transition active:scale-[0.98] border-2"
-              :class="moneda === m.codigo ? monedaColor(m.color) : 'bg-white border-edge text-ink-soft hover:border-edge-strong'">
+              :class="moneda === m.codigo ? monedaColor(m.color) : 'bg-white dark:bg-surface-muted border-edge text-ink-soft hover:border-edge-strong'">
               <Iconoir :name="m.icono" class="w-5 h-5 mx-auto" :class="iconoColor[m.color] || 'text-ink-soft'" />
               <span class="text-xs">{{ m.codigo }}</span>
             </button>
@@ -73,7 +73,7 @@
               <div v-if="restanteVes > 0 || movVesEditandoIdx !== null" class="space-y-3 pt-3 border-t border-edge">
                 <div class="grid grid-cols-2 gap-3">
                   <select v-model="txVes.metodo_pago" required
-                    class="px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white focus:ring-2 focus:ring-gold outline-none">
+                    class="px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white dark:bg-surface-muted focus:ring-2 focus:ring-gold outline-none">
                     <option value="">Método</option>
                     <option value="efectivo">Efectivo</option>
                     <option value="pagomovil">Pago móvil</option>
@@ -129,12 +129,12 @@
 
               <div v-if="restanteDivisa > 0 || movDivEditandoIdx !== null" class="space-y-3 pt-3 border-t border-edge">
                 <select v-model="txDiv.cuenta_origen_id" required
-                  class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white focus:ring-2 focus:ring-gold outline-none">
+                  class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white dark:bg-surface-muted focus:ring-2 focus:ring-gold outline-none">
                   <option value="">Cuenta origen (Intermedius)</option>
                   <option v-for="c in cuentasDivisaIntermedius" :key="c.id" :value="c.id">{{ labelCuenta(c) }}</option>
                 </select>
                 <select v-model="txDiv.cuenta_destino_id" required :disabled="!txDiv.cuenta_origen_id"
-                  class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white focus:ring-2 focus:ring-gold outline-none disabled:bg-surface-muted disabled:text-ink-faint">
+                  class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white dark:bg-surface-muted focus:ring-2 focus:ring-gold outline-none disabled:bg-surface-muted disabled:text-ink-faint">
                   <option value="">{{ txDiv.cuenta_origen_id ? 'Cuenta destino (Cliente)' : 'Elegí origen primero' }}</option>
                   <option v-for="c in cuentasDivisaDestinoFiltradas" :key="c.id" :value="c.id">{{ labelCuenta(c) }}</option>
                 </select>
@@ -147,7 +147,7 @@
                       :class="parseFloat(txDiv.monto) > restanteDivisa + 0.01 ? 'border-danger-edge focus:ring-danger' : 'border-edge-strong focus:ring-gold'" />
                   </div>
                   <select v-model="txDiv.metodo_pago" required :disabled="!txDiv.cuenta_origen_id"
-                    class="px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white focus:ring-2 focus:ring-gold outline-none disabled:bg-surface-muted disabled:text-ink-faint">
+                    class="px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white dark:bg-surface-muted focus:ring-2 focus:ring-gold outline-none disabled:bg-surface-muted disabled:text-ink-faint">
                     <option value="">{{ txDiv.cuenta_origen_id ? 'Método' : '—' }}</option>
                     <option v-for="m in metodosDivDisponibles" :key="m.value" :value="m.value">{{ m.label }}</option>
                   </select>

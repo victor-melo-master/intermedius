@@ -13,33 +13,33 @@
 
     <form v-else @submit.prevent="submit" class="space-y-4">
       <!-- Cliente Emisor (vende) -->
-      <div class="bg-white border border-edge rounded-xl p-5 space-y-3">
+      <div class="bg-surface border border-edge rounded-xl p-5 space-y-3">
         <h3 class="font-semibold text-ink">Cliente Emisor (vende {{ moneda }})</h3>
         <ClienteSelector v-model="clienteEmisor" />
       </div>
 
       <!-- Cuentas Emisor -->
-      <div class="bg-white border border-edge rounded-xl p-5 space-y-4">
+      <div class="bg-surface border border-edge rounded-xl p-5 space-y-4">
         <h3 class="font-semibold text-ink">Cuentas Emisor</h3>
         <CuentaSelector v-model="cuentaEmisorDivisa" :label="'Cuenta ' + moneda + ' del emisor (recibe divisa)'" :placeholder="'Seleccionar cuenta ' + moneda" :cuentas="cuentasDivisa" :empty-message="'No hay cuentas en ' + moneda" :cuenta-label="cuentaLabel" :bancos="bancos" />
         <CuentaSelector v-model="cuentaEmisorVes" label="Cuenta VES del emisor (paga al cliente)" placeholder="Seleccionar cuenta VES" :cuentas="cuentasVes" empty-message="No hay cuentas en VES" :cuenta-label="cuentaLabel" :bancos="bancos" />
       </div>
 
       <!-- Cliente Receptor (compra) -->
-      <div class="bg-white border border-edge rounded-xl p-5 space-y-3">
+      <div class="bg-surface border border-edge rounded-xl p-5 space-y-3">
         <h3 class="font-semibold text-ink">Cliente Receptor (compra {{ moneda }})</h3>
         <ClienteSelector v-model="clienteReceptor" />
       </div>
 
       <!-- Cuentas Receptor -->
-      <div class="bg-white border border-edge rounded-xl p-5 space-y-4">
+      <div class="bg-surface border border-edge rounded-xl p-5 space-y-4">
         <h3 class="font-semibold text-ink">Cuentas Receptor</h3>
         <CuentaSelector v-model="cuentaReceptorDivisa" :label="'Cuenta ' + moneda + ' del receptor (entrega divisa)'" :placeholder="'Seleccionar cuenta ' + moneda" :cuentas="cuentasDivisa" :empty-message="'No hay cuentas en ' + moneda" :cuenta-label="cuentaLabel" :bancos="bancos" />
         <CuentaSelector v-model="cuentaReceptorVes" label="Cuenta VES del receptor (recibe del cliente)" placeholder="Seleccionar cuenta VES" :cuentas="cuentasVes" empty-message="No hay cuentas en VES" :cuenta-label="cuentaLabel" :bancos="bancos" />
       </div>
 
       <!-- Monto -->
-      <div class="bg-white border border-edge rounded-xl p-5 space-y-4">
+      <div class="bg-surface border border-edge rounded-xl p-5 space-y-4">
         <h3 class="font-semibold text-ink">Monto</h3>
         <div>
           <label class="block text-sm text-ink-muted mb-1">Monto {{ moneda }} *</label>
@@ -49,7 +49,7 @@
       </div>
 
       <!-- Tasas -->
-      <div class="bg-white border border-edge rounded-xl p-5 space-y-4">
+      <div class="bg-surface border border-edge rounded-xl p-5 space-y-4">
         <h3 class="font-semibold text-ink">Tasas</h3>
         <div class="grid grid-cols-2 gap-4">
           <div>
@@ -72,7 +72,7 @@
       </div>
 
       <!-- Descripción -->
-      <div class="bg-white border border-edge rounded-xl p-5 space-y-3">
+      <div class="bg-surface border border-edge rounded-xl p-5 space-y-3">
         <label class="block text-sm text-ink-muted mb-1">Descripción</label>
         <textarea v-model="form.descripcion" rows="2" placeholder="Notas opcionales"
           class="w-full px-4 py-2.5 border border-edge-strong rounded-xl focus:ring-2 focus:ring-gold outline-none resize-none"></textarea>

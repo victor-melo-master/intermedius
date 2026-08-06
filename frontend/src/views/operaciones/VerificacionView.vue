@@ -44,7 +44,7 @@
       </div>
 
       <!-- Detalles de la operación -->
-      <div class="bg-white border border-edge rounded-xl p-4 space-y-2 text-sm">
+      <div class="bg-surface border border-edge rounded-xl p-4 space-y-2 text-sm">
         <div v-if="operacion.cliente" class="flex justify-between">
           <span class="text-ink-faint">Cliente</span>
           <span class="text-ink font-medium">{{ operacion.cliente.nombre }}</span>
@@ -68,7 +68,7 @@
       </div>
 
       <!-- Barra de progreso -->
-      <div class="bg-white border border-edge rounded-xl p-4">
+      <div class="bg-surface border border-edge rounded-xl p-4">
         <div class="flex items-center justify-between mb-2">
           <span class="text-sm font-medium text-ink">Progreso de verificación</span>
           <span class="text-sm text-ink-soft">{{ movimientosValidados }}/{{ totalMovimientos }}</span>
@@ -80,7 +80,7 @@
       </div>
 
       <!-- Saldos de cuentas -->
-      <div v-if="tieneSaldos" class="bg-white border border-edge rounded-xl p-4 space-y-2">
+      <div v-if="tieneSaldos" class="bg-surface border border-edge rounded-xl p-4 space-y-2">
         <h3 class="font-semibold text-ink text-sm">Saldos de cuentas</h3>
         <div class="grid grid-cols-2 gap-2">
           <div v-for="(saldo, cuentaId) in saldos" :key="cuentaId"
@@ -95,12 +95,12 @@
       <div class="space-y-3">
         <h3 class="font-semibold text-ink">Movimientos</h3>
 
-        <div v-if="movimientos.length === 0" class="bg-white border border-edge rounded-xl p-6 text-center text-ink-faint">
+        <div v-if="movimientos.length === 0" class="bg-surface border border-edge rounded-xl p-6 text-center text-ink-faint">
           No hay movimientos en esta operación
         </div>
 
         <div v-for="mov in movimientos" :key="mov.id"
-          class="bg-white border rounded-xl p-4 space-y-3"
+          class="bg-surface border rounded-xl p-4 space-y-3"
           :class="mov.estado === 'validada' ? 'border-success-edge bg-success-soft/30' :
                    mov.estado === 'rechazada' ? 'border-danger-edge bg-danger-soft/30' :
                    'border-edge'">

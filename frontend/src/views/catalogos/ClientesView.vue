@@ -8,7 +8,7 @@
 
     <div class="relative">
       <input v-model="search" @input="debounceSearch" placeholder="Buscar por nombre o alias..."
-        class="w-full pl-10 pr-4 py-2.5 bg-white border border-edge-strong rounded-xl focus:ring-2 focus:ring-gold outline-none" />
+        class="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-surface-muted border border-edge-strong rounded-xl focus:ring-2 focus:ring-gold outline-none" />
       <Iconoir name="magnifying-glass" class="absolute left-3 top-2.5 w-5 h-5 text-ink-faint" />
       <button v-if="search" @click="search = ''; clientes.fetchAll()" class="absolute right-3 top-2.5 text-ink-faint hover:text-ink-muted"><Iconoir name="x-mark" class="w-5 h-5" /></button>
     </div>
@@ -28,7 +28,7 @@
       </div>
     </template>
     <div v-else class="space-y-2">
-      <div v-for="c in clientes.list" :key="c.id" @click="openDetail(c)" class="bg-white border border-edge rounded-xl p-4 flex items-center gap-3 cursor-pointer hover:shadow-md transition" :class="c.deleted_at ? 'opacity-70 border-danger-edge' : ''">
+      <div v-for="c in clientes.list" :key="c.id" @click="openDetail(c)" class="bg-surface border border-edge rounded-xl p-4 flex items-center gap-3 cursor-pointer hover:shadow-md transition" :class="c.deleted_at ? 'opacity-70 border-danger-edge' : ''">
         <div class="w-10 h-10 rounded-full bg-gold-soft flex items-center justify-center text-gold-dark font-bold text-sm">{{ c.nombre.charAt(0).toUpperCase() }}</div>
         <div class="flex-1 min-w-0">
           <p class="font-semibold text-sm truncate">{{ c.nombre }}</p>
@@ -67,7 +67,7 @@
     <!-- Modal detalle del cliente -->
     <div v-if="showDetail" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center" @click.self="showDetail = false">
       <div class="absolute inset-0 bg-black/40"></div>
-      <div class="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-md p-6 relative z-10 max-h-[90vh] overflow-y-auto flex flex-col">
+      <div class="bg-surface rounded-t-2xl sm:rounded-2xl w-full max-w-md p-6 relative z-10 max-h-[90vh] overflow-y-auto flex flex-col">
         <div class="flex items-center justify-between mb-4">
           <h3 class="font-bold text-lg">{{ detailCliente?.nombre }}</h3>
           <div class="flex gap-2">
@@ -266,7 +266,7 @@
     <!-- Modal de previsualización de documento -->
 <div v-if="showDocumentoModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="showDocumentoModal = false">
   <div class="absolute inset-0 bg-black/60"></div>
-  <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 relative z-10">
+  <div class="bg-surface rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 relative z-10">
     <div class="flex items-center justify-between mb-4">
       <h3 class="font-bold text-lg">{{ documentoPreview?.nombre_archivo }}</h3>
       <button @click="showDocumentoModal = false" class="text-ink-faint hover:text-ink-muted"><Iconoir name="x-mark" class="w-5 h-5" /></button>

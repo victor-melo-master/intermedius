@@ -11,7 +11,7 @@
       </div>
     </template>
     <div v-else class="space-y-2">
-      <div v-for="c in comisiones" :key="c.id" class="bg-white border border-edge rounded-xl p-4 flex items-center gap-3">
+      <div v-for="c in comisiones" :key="c.id" class="bg-surface border border-edge rounded-xl p-4 flex items-center gap-3">
         <div class="w-10 h-10 rounded-full bg-warning-soft flex items-center justify-center text-warning-strong font-bold text-sm">%</div>
         <div class="flex-1 min-w-0">
           <p class="font-semibold text-sm truncate">{{ c.nombre_metodo }}</p>

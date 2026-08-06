@@ -15,7 +15,7 @@
         ></div>
 
         <div
-          class="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden"
+          class="relative bg-surface rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden"
           role="dialog"
           aria-modal="true"
         >

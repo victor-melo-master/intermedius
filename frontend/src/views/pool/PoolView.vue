@@ -5,7 +5,7 @@
         <Iconoir name="banknotes" class="w-6 h-6 text-success" /> Pool de pagos
       </h2>
       <button v-if="tab === 'pool'" @click="refrescarPool" :disabled="store.loadingPool"
-        class="px-3 py-2 bg-white border border-edge-strong rounded-lg text-sm hover:bg-surface-soft flex items-center gap-1 active:scale-95 transition">
+        class="px-3 py-2 bg-white dark:bg-surface-muted border border-edge-strong rounded-lg text-sm hover:bg-surface-soft flex items-center gap-1 active:scale-95 transition">
         <Iconoir name="arrow-path" class="w-4 h-4" :class="store.loadingPool ? 'animate-spin' : ''" /> Refrescar
       </button>
     </div>
@@ -14,12 +14,12 @@
     <div class="flex bg-surface-muted rounded-xl p-1">
       <button @click="tab = 'pool'"
         class="flex-1 py-2.5 text-sm font-semibold rounded-lg transition active:scale-[0.98]"
-        :class="tab === 'pool' ? 'bg-white text-gold-dark shadow' : 'text-ink-soft'">
+        :class="tab === 'pool' ? 'bg-white dark:bg-surface-muted text-gold-dark shadow' : 'text-ink-soft'">
         Pool <span v-if="store.pool.length" class="ml-1 text-xs">({{ store.pool.length }})</span>
       </button>
       <button @click="tab = 'mias'"
         class="flex-1 py-2.5 text-sm font-semibold rounded-lg transition active:scale-[0.98]"
-        :class="tab === 'mias' ? 'bg-white text-gold-dark shadow' : 'text-ink-soft'">
+        :class="tab === 'mias' ? 'bg-white dark:bg-surface-muted text-gold-dark shadow' : 'text-ink-soft'">
         Mis órdenes <span v-if="store.misOrdenes.length" class="ml-1 text-xs">({{ store.misOrdenes.length }})</span>
       </button>
     </div>
@@ -44,7 +44,7 @@
       </div>
       <div v-else class="space-y-3">
         <div v-for="op in store.pool" :key="op.id"
-          class="bg-white border border-edge rounded-2xl p-4 shadow-sm">
+          class="bg-surface border border-edge rounded-2xl p-4 shadow-sm">
           <div class="flex items-center justify-between gap-2 mb-3">
             <div class="flex items-center gap-2">
               <span class="text-xs font-bold px-2.5 py-1 rounded-full" :class="tipoBadge(op).class">{{ tipoBadge(op).label }}</span>
@@ -92,7 +92,7 @@
       </div>
       <div v-else class="space-y-3">
         <div v-for="op in store.misOrdenes" :key="op.id"
-          class="bg-white border border-edge rounded-2xl p-4 shadow-sm">
+          class="bg-surface border border-edge rounded-2xl p-4 shadow-sm">
           <div class="flex items-center justify-between gap-2 mb-3">
             <span class="text-xs font-bold px-2.5 py-1 rounded-full" :class="tipoBadge(op).class">{{ tipoBadge(op).label }}</span>
             <span class="text-xs text-ink-faint">Tomada {{ formatHora(op.asignada_at) }}</span>
@@ -117,7 +117,7 @@
           <!-- Copiar datos -->
           <button @click="copiar(op)"
             class="w-full mb-2 border-2 font-semibold py-3 rounded-xl transition active:scale-[0.98] flex items-center justify-center gap-2"
-            :class="copiedId === op.id ? 'border-success bg-success-soft text-success-strong' : 'border-edge-strong bg-white text-ink hover:bg-surface-soft'">
+            :class="copiedId === op.id ? 'border-success bg-success-soft text-success-strong' : 'border-edge-strong bg-white dark:bg-surface-muted text-ink hover:bg-surface-soft'">
             <Iconoir v-if="copiedId === op.id" name="check" class="w-5 h-5" />
             <Iconoir v-else name="clipboard" class="w-5 h-5" />
             {{ copiedId === op.id ? '¡Copiado!' : 'Copiar datos' }}
@@ -125,7 +125,7 @@
 
           <div class="grid grid-cols-2 gap-2">
             <button @click="soltar(op)" :disabled="acting === op.id"
-              class="border border-edge-strong bg-white hover:bg-surface-soft disabled:opacity-50 text-ink font-semibold py-3 rounded-xl transition active:scale-[0.98]">
+              class="border border-edge-strong bg-white dark:bg-surface-muted hover:bg-surface-soft disabled:opacity-50 text-ink font-semibold py-3 rounded-xl transition active:scale-[0.98]">
               Soltar
             </button>
             <button @click="pagar(op)" :disabled="acting === op.id"

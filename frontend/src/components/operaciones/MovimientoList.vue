@@ -104,7 +104,7 @@
           <div>
             <label class="block text-xs text-ink-soft mb-1">Método de pago</label>
             <select v-model="editForm.metodo_pago" required
-              class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white focus:ring-2 focus:ring-gold outline-none">
+              class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm bg-white dark:bg-surface-muted focus:ring-2 focus:ring-gold outline-none">
               <option value="">Seleccionar</option>
               <option value="efectivo">Efectivo</option>
               <option value="pagomovil">Pago móvil</option>

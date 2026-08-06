@@ -3,13 +3,13 @@
     <label class="block text-sm text-ink-muted mb-1">{{ label }} *</label>
 
     <!-- Filtro por banco (opcional) -->
-    <select v-if="bancos && bancos.length" v-model="bancoFiltro" class="w-full px-4 py-2.5 border border-edge-strong rounded-xl focus:ring-2 focus:ring-gold outline-none bg-white mb-2 text-sm">
+    <select v-if="bancos && bancos.length" v-model="bancoFiltro" class="w-full px-4 py-2.5 border border-edge-strong rounded-xl focus:ring-2 focus:ring-gold outline-none bg-white dark:bg-surface-muted mb-2 text-sm">
       <option value="">Todos los bancos</option>
       <option v-for="b in bancos" :key="b.id" :value="b.id">{{ b.nombre }}</option>
     </select>
 
     <select :value="modelValue" @change="$emit('update:modelValue', $event.target.value)" required
-      class="w-full px-4 py-2.5 border border-edge-strong rounded-xl focus:ring-2 focus:ring-gold outline-none bg-white">
+      class="w-full px-4 py-2.5 border border-edge-strong rounded-xl focus:ring-2 focus:ring-gold outline-none bg-white dark:bg-surface-muted">
       <option value="">{{ placeholder }}</option>
       <option v-for="c in cuentasFiltradas" :key="c.id" :value="c.id">
         {{ cuentaLabel(c) }} — Saldo: {{ formatSaldo(c.saldo_cache) }}

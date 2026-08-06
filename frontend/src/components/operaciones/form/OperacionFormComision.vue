@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-white border border-edge rounded-xl p-5 space-y-4">
+  <div class="bg-surface border border-edge rounded-xl p-5 space-y-4">
     <div class="flex items-center gap-3">
       <input
         :checked="activa"
@@ -16,7 +16,7 @@
           <label class="block text-sm text-ink-muted mb-1">Tipo de comisión</label>
           <select
             :value="tipo"
-            class="w-full px-4 py-2.5 border border-edge-strong rounded-xl focus:ring-2 focus:ring-gold outline-none bg-white"
+            class="w-full px-4 py-2.5 border border-edge-strong rounded-xl focus:ring-2 focus:ring-gold outline-none bg-white dark:bg-surface-muted"
             @change="$emit('update:tipo', $event.target.value)"
           >
             <option value="pago_movil">Pago móvil</option>

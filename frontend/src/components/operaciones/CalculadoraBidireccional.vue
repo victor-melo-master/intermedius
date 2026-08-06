@@ -1,5 +1,5 @@
 <template>
-  <div :class="flat ? 'space-y-4' : 'bg-white border border-edge rounded-xl p-5 space-y-4'">
+  <div :class="flat ? 'space-y-4' : 'bg-surface border border-edge rounded-xl p-5 space-y-4'">
     <h3 class="font-semibold text-ink">Monto y tasa</h3>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">

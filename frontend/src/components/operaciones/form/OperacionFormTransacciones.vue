@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-white border border-edge rounded-xl p-5 space-y-4">
+  <div class="bg-surface border border-edge rounded-xl p-5 space-y-4">
     <div class="flex items-center justify-between">
       <h3 class="font-semibold text-ink">Transacciones</h3>
       <button type="button" @click="$emit('agregar')" class="text-sm text-gold-dark hover:text-gold-dark font-medium">

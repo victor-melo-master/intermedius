@@ -3,7 +3,7 @@
     <Transition name="modal">
       <div v-if="visible" class="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div class="fixed inset-0 bg-black/40" @click="$emit('cancel')"></div>
-        <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4">
+        <div class="relative bg-surface rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4">
         <h3 class="text-lg font-bold text-heading">Confirmar movimiento</h3>
 
         <div class="space-y-2 text-sm">

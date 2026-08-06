@@ -9,7 +9,7 @@
 
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <button v-for="m in monedas" :key="m.codigo" @click="seleccionar(m.codigo)"
-        class="bg-white border-2 border-edge rounded-2xl p-6 text-left hover:border-info hover:shadow-md transition active:scale-[0.98]">
+        class="bg-surface border-2 border-edge rounded-2xl p-6 text-left hover:border-info hover:shadow-md transition active:scale-[0.98]">
         <div class="flex items-center gap-3 mb-2">
           <span class="text-3xl">{{ m.icono }}</span>
           <span class="text-2xl font-bold text-heading">{{ m.codigo }}</span>
@@ -19,7 +19,7 @@
 
       <!-- Botón Intermediada -->
       <router-link to="/operaciones/intermediada/nueva"
-        class="bg-white border-2 border-violet-edge rounded-2xl p-6 text-left hover:border-violet hover:shadow-md transition active:scale-[0.98] bg-violet-soft">
+        class="bg-surface border-2 border-violet-edge rounded-2xl p-6 text-left hover:border-violet hover:shadow-md transition active:scale-[0.98] bg-violet-soft">
         <div class="flex items-center gap-3 mb-2">
           <Iconoir name="link" class="w-8 h-8" />
           <span class="text-2xl font-bold text-violet-strong">Intermediada</span>

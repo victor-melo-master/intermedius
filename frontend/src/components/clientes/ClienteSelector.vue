@@ -1,5 +1,5 @@
 <template>
-  <div :class="flat ? '' : 'bg-white border border-edge rounded-xl p-5 space-y-3'">
+  <div :class="flat ? '' : 'bg-surface border border-edge rounded-xl p-5 space-y-3'">
     <h3 v-if="!flat" class="font-semibold text-ink">Cliente</h3>
 
     <!-- Cliente seleccionado -->
@@ -27,7 +27,7 @@
       />
       <div
         v-if="search && (results.length || !searching)"
-        class="absolute z-20 left-0 right-0 mt-1 bg-white border border-edge rounded-xl shadow-lg max-h-56 overflow-y-auto"
+        class="absolute z-20 left-0 right-0 mt-1 bg-surface border border-edge rounded-xl shadow-lg max-h-56 overflow-y-auto"
       >
         <button
           v-for="(c, i) in results"

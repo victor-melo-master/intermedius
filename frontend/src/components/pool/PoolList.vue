@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-white rounded-lg shadow overflow-hidden">
+  <div class="bg-surface rounded-lg shadow overflow-hidden">
     <table class="min-w-full divide-y divide-edge">
       <thead class="bg-surface-soft">
         <tr>

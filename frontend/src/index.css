@@ -62,17 +62,17 @@
     --c-navy: #0A192F;
     --c-navy-dark: #0B132B;
 
-    --c-gold: #E6C24A;
-    --c-gold-dark: #D4AF37;
-    --c-gold-soft: rgba(230, 194, 74, 0.14);
+    --c-gold: #D4AF37;
+    --c-gold-dark: #E6C24A;
+    --c-gold-soft: rgba(212, 175, 55, 0.14);
 
-    --c-surface: #0F1D33;
-    --c-surface-alt: #0B132B;
-    --c-surface-muted: rgba(255, 255, 255, 0.06);
-    --c-surface-soft: rgba(255, 255, 255, 0.04);
+    --c-surface: #0A192F;
+    --c-surface-alt: #050D1A;
+    --c-surface-muted: #112240;
+    --c-surface-soft: #0E1E34;
 
-    --c-edge: rgba(255, 255, 255, 0.12);
-    --c-edge-strong: rgba(255, 255, 255, 0.22);
+    --c-edge: #1E293B;
+    --c-edge-strong: #334155;
 
     --c-ink: #CBD5E1;
     --c-ink-muted: #94A3B8;
