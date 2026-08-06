@@ -3,7 +3,7 @@
     <button
       v-if="operacion.estado === 'en_espera'"
       @click="$emit('tomar')"
-      class="px-3 py-1 text-xs bg-gold hover:bg-gold-dark text-navy rounded"
+      class="px-3 py-1 text-xs bg-gold hover:bg-gold-dark text-white rounded"
     >
       Tomar
     </button>

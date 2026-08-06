@@ -88,7 +88,7 @@
       <div class="space-y-2">
         <button v-if="store.detail.estado === 'solicitud'"
           @click="iniciarOperacion" :disabled="acting"
-          class="w-full bg-gold hover:bg-gold-dark disabled:opacity-50 text-navy font-semibold py-3 rounded-xl transition active:scale-[0.98] flex items-center justify-center gap-2">
+          class="w-full bg-gold hover:bg-gold-dark disabled:opacity-50 text-white font-semibold py-3 rounded-xl transition active:scale-[0.98] flex items-center justify-center gap-2">
           <span v-if="acting" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
           <Iconoir v-if="!acting" name="rocket-launch" class="w-5 h-5" />
           {{ acting ? 'Iniciando...' : 'Iniciar operación' }}
@@ -100,7 +100,7 @@
           </div>
           <button v-else
             @click="mostrarAgregarTx = true"
-            class="w-full bg-gold hover:bg-gold-dark text-navy font-semibold py-3 rounded-xl transition active:scale-[0.98] flex items-center justify-center gap-2">
+            class="w-full bg-gold hover:bg-gold-dark text-white font-semibold py-3 rounded-xl transition active:scale-[0.98] flex items-center justify-center gap-2">
             + Agregar movimiento
           </button>
 

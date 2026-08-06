@@ -6,7 +6,7 @@
     </div>
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
       <h2 class="text-xl font-bold text-heading">Usuarios</h2>
-      <button @click="openForm()" class="px-4 py-2 bg-gold text-navy rounded-lg text-sm font-medium hover:bg-gold-dark flex items-center gap-1">
+      <button @click="openForm()" class="px-4 py-2 bg-gold text-white rounded-lg text-sm font-medium hover:bg-gold-dark flex items-center gap-1">
         <span>+</span> Nuevo usuario
       </button>
     </div>
@@ -26,7 +26,7 @@
         <div class="flex gap-2 overflow-x-auto pb-1">
           <button v-for="estado in estadoOpciones" :key="estado.value" @click="cambiarEstado(estado.value)"
             class="px-3 py-1.5 rounded-full text-xs font-medium border whitespace-nowrap transition-colors"
-            :class="estadoFiltro === estado.value ? 'bg-gold text-navy border-gold' : 'bg-white dark:bg-surface-muted text-ink-muted border-edge-strong hover:bg-surface-soft'">
+            :class="estadoFiltro === estado.value ? 'bg-gold text-white border-gold' : 'bg-white dark:bg-surface-muted text-ink-muted border-edge-strong hover:bg-surface-soft'">
             {{ estado.label }}
           </button>
         </div>
@@ -34,7 +34,7 @@
       <div class="flex gap-2 overflow-x-auto pb-1">
         <button v-for="rol in rolOpciones" :key="rol.value" @click="cambiarRol(rol.value)"
           class="px-3 py-1.5 rounded-full text-xs font-medium border whitespace-nowrap transition-colors"
-          :class="rolFiltro === rol.value ? 'bg-gold text-navy border-gold' : 'bg-white dark:bg-surface-muted text-ink-muted border-edge-strong hover:bg-surface-soft'">
+          :class="rolFiltro === rol.value ? 'bg-gold text-white border-gold' : 'bg-white dark:bg-surface-muted text-ink-muted border-edge-strong hover:bg-surface-soft'">
           {{ rol.label }}
         </button>
       </div>
@@ -111,7 +111,7 @@
                 class="w-full h-full object-cover" />
             </div>
             <div v-else
-              class="w-16 h-16 rounded-full bg-gold text-navy flex items-center justify-center text-2xl font-semibold">
+              class="w-16 h-16 rounded-full bg-gold text-white flex items-center justify-center text-2xl font-semibold">
               {{ (form.name || '?').charAt(0).toUpperCase() }}
             </div>
           </div>
@@ -255,7 +255,7 @@
       </form>
       <template #footer>
         <button @click="submit" :disabled="!formValido || saving"
-          class="w-full bg-gold text-navy font-semibold py-2.5 rounded-lg hover:bg-gold-dark disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center gap-2">
+          class="w-full bg-gold text-white font-semibold py-2.5 rounded-lg hover:bg-gold-dark disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center gap-2">
           <span v-if="saving" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
           {{ saving ? 'Guardando...' : (editing ? 'Guardar cambios' : 'Crear usuario') }}
         </button>
@@ -358,7 +358,7 @@
       <template #footer>
         <div class="flex gap-2">
           <button v-if="auth.isAdmin && !isSuperAdmin(usuarioDetalle)" @click="editarDesdeDetalle"
-            class="flex-1 bg-gold text-navy font-semibold py-2.5 rounded-lg hover:bg-gold-dark transition">
+            class="flex-1 bg-gold text-white font-semibold py-2.5 rounded-lg hover:bg-gold-dark transition">
             Editar usuario
           </button>
           <button @click="mostrarDetalle = false"

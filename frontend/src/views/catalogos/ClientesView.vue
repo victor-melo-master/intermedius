@@ -15,7 +15,7 @@
 
     <AppLoadingSpinner v-if="clientes.loading" />
     <div class="flex gap-2" v-if="auth.canConfig">
-      <button @click="mostrarPapelera = false; cargarLista()" class="text-sm px-3 py-1.5 rounded-lg transition active:scale-[0.98]" :class="mostrarPapelera ? 'bg-surface-muted text-ink-muted' : 'bg-gold text-navy'">Activos</button>
+      <button @click="mostrarPapelera = false; cargarLista()" class="text-sm px-3 py-1.5 rounded-lg transition active:scale-[0.98]" :class="mostrarPapelera ? 'bg-surface-muted text-ink-muted' : 'bg-gold text-white'">Activos</button>
       <button @click="mostrarPapelera = true; cargarLista()" class="text-sm px-3 py-1.5 rounded-lg transition active:scale-[0.98] inline-flex items-center gap-1" :class="mostrarPapelera ? 'bg-danger text-white dark:text-navy' : 'bg-surface-muted text-ink-muted'"><Iconoir name="trash" class="w-4 h-4" /> Papelera</button>
     </div>
 
@@ -60,7 +60,7 @@
         <AppErrorState v-if="formError" :message="formError" :retry="false" />
       </form>
       <template #footer>
-        <button @click="submit" :disabled="saving" class="w-full bg-gold text-navy font-semibold py-2.5 rounded-lg hover:bg-gold-dark disabled:opacity-50 transition active:scale-[0.98] flex items-center justify-center gap-2">
+        <button @click="submit" :disabled="saving" class="w-full bg-gold text-white font-semibold py-2.5 rounded-lg hover:bg-gold-dark disabled:opacity-50 transition active:scale-[0.98] flex items-center justify-center gap-2">
           <span v-if="saving" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
           {{ saving ? 'Guardando...' : (editingId ? 'Guardar cambios' : 'Crear cliente') }}
         </button>
@@ -78,7 +78,7 @@
                 <img v-if="clienteAvatarUrl" :src="clienteAvatarUrl" alt="" class="w-full h-full object-cover" />
                 <template v-else>{{ (detailCliente?.nombre || '?').charAt(0).toUpperCase() }}</template>
               </div>
-              <label v-if="auth.canWrite && !detailCliente?.deleted_at" class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-gold text-navy flex items-center justify-center cursor-pointer hover:bg-gold-dark shadow transition" title="Cambiar foto">
+              <label v-if="auth.canWrite && !detailCliente?.deleted_at" class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-gold text-white flex items-center justify-center cursor-pointer hover:bg-gold-dark shadow transition" title="Cambiar foto">
                 <Iconoir name="camera" class="w-3 h-3" />
                 <input type="file" accept="image/jpeg,image/png,image/gif,image/webp,image/bmp" class="hidden" @change="onClienteAvatarSelected" :disabled="subiendoAvatar" />
               </label>
@@ -118,7 +118,7 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-2 border-t-2 border-edge-strong pt-4 mb-2">
-          <button v-if="!detailCliente?.deleted_at && (auth.canWrite)" @click="openEdit(detailCliente)" class="text-xs bg-gold text-navy px-2 py-1 rounded-lg hover:bg-gold-dark inline-flex items-center gap-1"><Iconoir name="pencil-square" class="w-3 h-3" /> Editar</button>
+          <button v-if="!detailCliente?.deleted_at && (auth.canWrite)" @click="openEdit(detailCliente)" class="text-xs bg-gold text-white px-2 py-1 rounded-lg hover:bg-gold-dark inline-flex items-center gap-1"><Iconoir name="pencil-square" class="w-3 h-3" /> Editar</button>
           <button v-if="auth.canWrite && detailCliente?.avatar_path && !detailCliente?.deleted_at" @click="quitarAvatar" :disabled="subiendoAvatar" class="text-xs text-ink-muted hover:text-danger-strong inline-flex items-center gap-1 disabled:opacity-50">
             <Iconoir name="trash" class="w-3 h-3" /> Quitar foto
           </button>
@@ -128,7 +128,7 @@
         <!-- Cuentas bancarias -->
         <AccordionSection title="Cuentas bancarias" :count="clienteCuentas.length" :default-open="false" :key="'cuentas-' + detailKey">
           <template #header-actions>
-            <button v-if="auth.canWrite" @click="openCuentaForm" class="text-xs bg-gold text-navy px-2 py-1 rounded-lg hover:bg-gold-dark">+ Agregar cuenta</button>
+            <button v-if="auth.canWrite" @click="openCuentaForm" class="text-xs bg-gold text-white px-2 py-1 rounded-lg hover:bg-gold-dark">+ Agregar cuenta</button>
           </template>
 
           <AppLoadingSpinner v-if="loadingCuentas" />
@@ -150,7 +150,7 @@
         <!-- Documentos -->
         <AccordionSection title="Documentos" :count="documentosCargados ? documentos.length : null" :default-open="false" :key="'documentos-' + detailKey" @toggle-open="onDocumentosToggle">
           <template #header-actions>
-            <label class="text-xs bg-gold text-navy px-2 py-1 rounded-lg hover:bg-gold-dark cursor-pointer">
+            <label class="text-xs bg-gold text-white px-2 py-1 rounded-lg hover:bg-gold-dark cursor-pointer">
               + Subir documento
               <input type="file" accept="image/*,.pdf" class="hidden" @change="subirDocumento" />
             </label>
@@ -211,7 +211,7 @@
               </select>
             </div>
           </div>
-          <button @click="cargarHistorial(1)" :disabled="loadingHistorial" class="w-full text-xs bg-gold text-navy py-1.5 rounded hover:bg-gold-dark mb-3">
+          <button @click="cargarHistorial(1)" :disabled="loadingHistorial" class="w-full text-xs bg-gold text-white py-1.5 rounded hover:bg-gold-dark mb-3">
             {{ loadingHistorial ? 'Cargando...' : 'Buscar' }}
           </button>
 
@@ -292,7 +292,7 @@
         <AppErrorState v-if="cuentaFormError" :message="cuentaFormError" :retry="false" />
       </form>
       <template #footer>
-        <button @click="submitCuenta" :disabled="savingCuenta" class="w-full bg-gold text-navy font-semibold py-2.5 rounded-lg hover:bg-gold-dark disabled:opacity-50 transition active:scale-[0.98] flex items-center justify-center gap-2">
+        <button @click="submitCuenta" :disabled="savingCuenta" class="w-full bg-gold text-white font-semibold py-2.5 rounded-lg hover:bg-gold-dark disabled:opacity-50 transition active:scale-[0.98] flex items-center justify-center gap-2">
           <span v-if="savingCuenta" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
           {{ savingCuenta ? 'Guardando...' : 'Crear cuenta' }}
         </button>
@@ -327,7 +327,7 @@
       <!-- Botón de descarga -->
       <a v-if="documentoDownloadUrl"
          :href="documentoDownloadUrl"
-         class="mt-4 inline-block px-4 py-2 bg-gold text-navy rounded-lg text-sm hover:bg-gold-dark">
+         class="mt-4 inline-block px-4 py-2 bg-gold text-white rounded-lg text-sm hover:bg-gold-dark">
         Descargar archivo
       </a>
     </div>

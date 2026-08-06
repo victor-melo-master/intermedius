@@ -44,8 +44,8 @@
         <nav class="p-3 space-y-1">
           <router-link v-for="item in nav" :key="item.path" :to="item.path"
             class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-base font-medium transition active:scale-[0.98]"
-            :class="$route.path.startsWith(item.path) ? 'bg-[rgba(212,175,55,0.14)] text-gold' : 'text-slate-400 hover:bg-white/10 hover:text-white'">
-                <Iconoir :name="item.icon" :class="$route.path.startsWith(item.path) ? 'text-gold' : 'text-slate-400'" />
+            :class="$route.path.startsWith(item.path) ? 'bg-gold-soft text-white' : 'text-white/50 hover:bg-white/10 hover:text-white'">
+                <Iconoir :name="item.icon" :class="$route.path.startsWith(item.path) ? 'text-white' : 'text-white/50'" />
             {{ item.label }}
           </router-link>
         </nav>
@@ -63,8 +63,8 @@
             <nav class="space-y-1">
               <router-link v-for="item in nav" :key="item.path" :to="item.path" @click="drawer = false"
                 class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-base font-medium transition active:scale-[0.98]"
-                :class="$route.path.startsWith(item.path) ? 'bg-[rgba(212,175,55,0.14)] text-gold' : 'text-slate-400 hover:bg-white/10 hover:text-white'">
-            <Iconoir :name="item.icon" :class="$route.path.startsWith(item.path) ? 'text-gold' : 'text-slate-400'" />
+                :class="$route.path.startsWith(item.path) ? 'bg-gold-soft text-white' : 'text-white/50 hover:bg-white/10 hover:text-white'">
+            <Iconoir :name="item.icon" :class="$route.path.startsWith(item.path) ? 'text-white' : 'text-white/50'" />
                 {{ item.label }}
               </router-link>
             </nav>

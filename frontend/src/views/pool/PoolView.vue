@@ -72,7 +72,7 @@
           </div>
 
           <button @click="tomar(op)" :disabled="acting === op.id"
-            class="w-full bg-gold hover:bg-gold-dark disabled:opacity-50 text-navy font-semibold py-3 rounded-xl transition active:scale-[0.98] flex items-center justify-center gap-2">
+            class="w-full bg-gold hover:bg-gold-dark disabled:opacity-50 text-white font-semibold py-3 rounded-xl transition active:scale-[0.98] flex items-center justify-center gap-2">
             <span v-if="acting === op.id" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
             {{ acting === op.id ? 'Tomando...' : 'Tomar orden' }}
           </button>

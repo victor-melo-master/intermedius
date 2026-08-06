@@ -70,7 +70,7 @@
         <AppErrorState v-if="formError" :message="formError" :retry="false" />
       </form>
       <template #footer>
-        <button @click="submit" :disabled="saving" class="w-full bg-gold text-navy font-semibold py-2.5 rounded-lg hover:bg-gold-dark disabled:opacity-50 transition flex items-center justify-center gap-2">
+        <button @click="submit" :disabled="saving" class="w-full bg-gold text-white font-semibold py-2.5 rounded-lg hover:bg-gold-dark disabled:opacity-50 transition flex items-center justify-center gap-2">
           <span v-if="saving" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
           {{ saving ? 'Guardando...' : (editing ? 'Guardar cambios' : 'Crear banco') }}
         </button>

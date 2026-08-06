@@ -5,7 +5,7 @@
     <button
       v-if="actionLabel"
       @click="$emit('action')"
-      class="px-4 py-2 bg-gold text-navy rounded-lg text-sm font-medium hover:bg-gold-dark flex items-center gap-1 self-start sm:self-auto"
+      class="px-4 py-2 bg-gold text-white rounded-lg text-sm font-medium hover:bg-gold-dark flex items-center gap-1 self-start sm:self-auto"
     >
       <span>+</span> {{ actionLabel }}
     </button>

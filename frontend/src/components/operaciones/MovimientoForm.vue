@@ -105,7 +105,7 @@
         Cancelar
       </button>
       <button type="submit" :disabled="saving || !valido"
-        class="flex-1 py-2.5 bg-gold text-navy text-sm font-medium rounded-xl hover:bg-gold-dark disabled:opacity-50 transition flex items-center justify-center gap-2">
+        class="flex-1 py-2.5 bg-gold text-white text-sm font-medium rounded-xl hover:bg-gold-dark disabled:opacity-50 transition flex items-center justify-center gap-2">
         <span v-if="saving" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
         {{ saving ? 'Guardando...' : 'Guardar movimiento' }}
       </button>

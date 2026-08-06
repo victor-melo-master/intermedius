@@ -39,7 +39,7 @@
             Cancelar
           </button>
           <button @click="confirmar" :disabled="confirmando || !comprobanteValido"
-            class="flex-1 py-2.5 bg-gold text-navy text-sm font-medium rounded-xl hover:bg-gold-dark disabled:opacity-50 transition active:scale-[0.98] flex items-center justify-center gap-2">
+            class="flex-1 py-2.5 bg-gold text-white text-sm font-medium rounded-xl hover:bg-gold-dark disabled:opacity-50 transition active:scale-[0.98] flex items-center justify-center gap-2">
             <span v-if="confirmando" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
             {{ confirmando ? 'Confirmando...' : 'Confirmar movimiento' }}
           </button>

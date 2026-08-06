@@ -96,7 +96,7 @@
           <div class="border-t border-edge pt-4">
             <div class="flex items-center justify-between mb-3">
               <h4 class="font-semibold text-ink text-sm">Cuentas bancarias</h4>
-              <button type="button" @click="addCuenta" class="text-xs bg-gold text-navy px-2 py-1 rounded-lg hover:bg-gold-dark">+ Agregar cuenta</button>
+              <button type="button" @click="addCuenta" class="text-xs bg-gold text-white px-2 py-1 rounded-lg hover:bg-gold-dark">+ Agregar cuenta</button>
             </div>
 
             <div v-if="newCliente.cuentas.length === 0" class="text-sm text-ink-muted py-2">Sin cuentas. Agregá al menos una.</div>
@@ -154,7 +154,7 @@
               Cancelar
             </button>
             <button @click="createCliente" :disabled="creating"
-              class="flex-1 py-2.5 bg-gold text-navy text-sm font-medium rounded-xl hover:bg-gold-dark transition flex items-center justify-center gap-2">
+              class="flex-1 py-2.5 bg-gold text-white text-sm font-medium rounded-xl hover:bg-gold-dark transition flex items-center justify-center gap-2">
               <span v-if="creating" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
               {{ creating ? 'Creando...' : 'Crear cliente' }}
             </button>
@@ -202,7 +202,7 @@
           <AppErrorState v-if="cuentaError" :message="cuentaError" :retry="false" />
         </form>
         <template #footer>
-          <button @click="addCuentaToCliente" :disabled="savingCuenta" class="w-full bg-gold text-navy font-semibold py-2.5 rounded-lg hover:bg-gold-dark disabled:opacity-50 transition">
+          <button @click="addCuentaToCliente" :disabled="savingCuenta" class="w-full bg-gold text-white font-semibold py-2.5 rounded-lg hover:bg-gold-dark disabled:opacity-50 transition">
             {{ savingCuenta ? 'Guardando...' : 'Agregar cuenta' }}
           </button>
         </template>

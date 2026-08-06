@@ -1,5 +1,12 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-navy to-navy-dark dark:from-surface dark:to-surface-alt flex items-center justify-center p-4 relative">
+  <div class="min-h-screen bg-gradient-to-br from-navy to-navy-dark dark:from-surface dark:to-surface-alt flex items-center justify-center p-4 relative overflow-hidden">
+    <div class="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+      <svg viewBox="0 0 792 612" fill="currentColor" class="text-white/30 absolute -bottom-20 -right-16 w-[36rem] h-auto rotate-[-8deg]">
+        <polygon points="216.2,169.28 375.68,443.19 460.48,443.19 302.23,169.2" />
+        <polygon points="153.62,313.22 233.97,443.19 318.77,443.19 239.65,313.14" />
+        <polygon points="368.03,169.28 527.51,443.19 612.31,443.19 454.06,169.2" />
+      </svg>
+    </div>
     <button @click="theme.toggle()" :title="theme.isDark ? 'Modo claro' : 'Modo oscuro'"
       class="absolute top-4 right-4 p-2 rounded-lg text-white/70 dark:text-ink-muted hover:bg-white/10 dark:hover:bg-surface-muted hover:text-white dark:hover:text-heading transition"
       aria-label="Cambiar tema">
@@ -31,8 +38,8 @@
         </div>
 
         <button type="submit" :disabled="auth.loading"
-          class="w-full bg-gold hover:bg-gold-dark disabled:opacity-50 text-navy font-semibold py-2.5 rounded-xl transition flex items-center justify-center gap-2">
-          <span v-if="auth.loading" class="w-5 h-5 border-2 border-navy/30 border-t-navy rounded-full animate-spin"></span>
+          class="w-full bg-gold hover:bg-gold-dark disabled:opacity-50 text-white font-semibold py-2.5 rounded-xl transition flex items-center justify-center gap-2">
+          <span v-if="auth.loading" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
           {{ auth.loading ? 'Entrando...' : 'Iniciar sesión' }}
         </button>
       </form>

@@ -71,8 +71,8 @@
         <div class="flex items-center justify-end gap-3 pt-1">
           <p class="text-sm text-ink-muted mr-auto">Cambiar el correo exige tu contraseña actual.</p>
           <button @click="guardarDatos" :disabled="guardando"
-            class="px-5 py-2 bg-gold text-navy rounded-lg text-sm font-semibold hover:bg-gold-dark disabled:opacity-50 transition flex items-center gap-2">
-            <span v-if="guardando" class="w-4 h-4 border-2 border-navy/30 border-t-navy rounded-full animate-spin"></span>
+            class="px-5 py-2 bg-gold text-white rounded-lg text-sm font-semibold hover:bg-gold-dark disabled:opacity-50 transition flex items-center gap-2">
+            <span v-if="guardando" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
             Guardar datos
           </button>
         </div>
@@ -134,7 +134,7 @@
             </div>
           </div>
           <button @click="cambiarPassword" :disabled="cambiandoPass || !passValido"
-            class="w-full py-2 bg-navy text-white dark:text-navy dark:bg-gold rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 transition flex items-center justify-center gap-2">
+            class="w-full py-2 bg-navy text-white dark:text-white dark:bg-gold rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-50 transition flex items-center justify-center gap-2">
             <span v-if="cambiandoPass" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
             Cambiar contraseña
           </button>

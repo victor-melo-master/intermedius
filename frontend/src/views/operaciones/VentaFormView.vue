@@ -95,7 +95,7 @@
                     class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none" />
                 </div>
                 <button type="button" @click="confirmarMovVes" :disabled="!txVesValido"
-                  class="w-full py-2 bg-gold hover:bg-gold-dark disabled:opacity-50 text-navy text-sm font-semibold rounded-lg transition active:scale-[0.98]">
+                  class="w-full py-2 bg-gold hover:bg-gold-dark disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition active:scale-[0.98]">
                   {{ movVesEditandoIdx !== null ? 'Actualizar' : 'Confirmar pago' }}
                 </button>
               </div>
@@ -160,7 +160,7 @@
                     class="w-full px-3 py-2 border border-edge-strong rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none" />
                 </div>
                 <button type="button" @click="confirmarMovDiv" :disabled="!txDivValido"
-                  class="w-full py-2 bg-gold hover:bg-gold-dark disabled:opacity-50 text-navy text-sm font-semibold rounded-lg transition active:scale-[0.98]">
+                  class="w-full py-2 bg-gold hover:bg-gold-dark disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition active:scale-[0.98]">
                   {{ movDivEditandoIdx !== null ? 'Actualizar' : 'Confirmar entrega' }}
                 </button>
               </div>

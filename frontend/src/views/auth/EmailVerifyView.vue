@@ -7,7 +7,7 @@
         <div class="text-4xl mb-4"><Iconoir name="check" class="w-10 h-10 text-success" /></div>
         <p class="font-bold text-lg text-heading">¡Correo verificado!</p>
         <p class="text-sm text-ink-muted mt-2">Ya puedes iniciar sesión.</p>
-        <router-link to="/login" class="mt-4 inline-block px-4 py-2 bg-gold text-navy hover:bg-gold-dark rounded-lg font-medium">Iniciar sesión</router-link>
+        <router-link to="/login" class="mt-4 inline-block px-4 py-2 bg-gold text-white hover:bg-gold-dark rounded-lg font-medium">Iniciar sesión</router-link>
       </div>
       <div v-else class="text-danger">
         <div class="text-4xl mb-4"><Iconoir name="x-mark" class="w-10 h-10 text-danger" /></div>

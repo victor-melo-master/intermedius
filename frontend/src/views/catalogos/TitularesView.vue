@@ -2,7 +2,7 @@
   <div class="space-y-4">
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
       <h2 class="text-xl font-bold text-heading">Titulares</h2>
-      <button v-if="auth.canWrite" @click="openForm" class="px-4 py-2 bg-gold text-navy rounded-lg text-sm font-medium hover:bg-gold-dark flex items-center gap-1">
+      <button v-if="auth.canWrite" @click="openForm" class="px-4 py-2 bg-gold text-white rounded-lg text-sm font-medium hover:bg-gold-dark flex items-center gap-1">
         <span>+</span> Nuevo titular
       </button>
     </div>
@@ -50,7 +50,7 @@
         <div v-if="formError" class="bg-danger-soft text-danger text-sm p-3 rounded-lg">{{ formError }}</div>
       </form>
       <template #footer>
-        <button @click="submit" :disabled="saving" class="w-full bg-gold text-navy font-semibold py-2.5 rounded-lg hover:bg-gold-dark disabled:opacity-50 transition flex items-center justify-center gap-2">
+        <button @click="submit" :disabled="saving" class="w-full bg-gold text-white font-semibold py-2.5 rounded-lg hover:bg-gold-dark disabled:opacity-50 transition flex items-center justify-center gap-2">
           <span v-if="saving" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
           {{ saving ? 'Guardando...' : (editing ? 'Guardar cambios' : 'Crear titular') }}
         </button>

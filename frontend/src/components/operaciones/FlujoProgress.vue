@@ -66,7 +66,7 @@ function estadoClase(key) {
   if (key === 'cancelada') return 'bg-danger-soft0 text-white'
   if (key === 'revertida') return 'bg-warning-soft0 text-white'
   if (estadoIndex.value > idx) return 'bg-success-soft0 text-white'
-  if (estadoIndex.value === idx) return 'bg-gold text-navy ring-2 ring-gold-soft'
+  if (estadoIndex.value === idx) return 'bg-gold text-white ring-2 ring-gold-soft'
   return 'bg-surface-muted text-ink-muted'
 }
 </script>

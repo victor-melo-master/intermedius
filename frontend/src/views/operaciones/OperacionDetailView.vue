@@ -175,7 +175,7 @@
       <div class="mt-4 space-y-2">
         <router-link v-if="ops.detail.estado && ['solicitud', 'en_progreso'].includes(ops.detail.estado)"
           :to="`/operaciones/${ops.detail.id}/gestionar`"
-          class="block w-full bg-gold hover:bg-gold-dark text-navy font-semibold py-3 rounded-xl transition text-center">
+          class="block w-full bg-gold hover:bg-gold-dark text-white font-semibold py-3 rounded-xl transition text-center">
           Gestionar movimientos
         </router-link>
 
@@ -185,13 +185,13 @@
         </button>
 
         <button v-if="puedeEditar" @click="abrirEdicion"
-          class="w-full bg-gold hover:bg-gold-dark text-navy font-semibold py-3 rounded-xl transition active:scale-[0.98] flex items-center justify-center gap-2">
+          class="w-full bg-gold hover:bg-gold-dark text-white font-semibold py-3 rounded-xl transition active:scale-[0.98] flex items-center justify-center gap-2">
           <Iconoir name="pencil-square" class="w-5 h-5" /> Editar operación
         </button>
 
         <button v-if="auth.isAdmin && !esFlujoMultipaso && ops.detail.estatus === 'sin_verificar'"
           @click="iniciarVerificacion" :disabled="verifying"
-          class="w-full bg-gold hover:bg-gold-dark disabled:opacity-50 text-navy font-semibold py-3 rounded-xl transition active:scale-[0.98] flex items-center justify-center gap-2">
+          class="w-full bg-gold hover:bg-gold-dark disabled:opacity-50 text-white font-semibold py-3 rounded-xl transition active:scale-[0.98] flex items-center justify-center gap-2">
           <span v-if="verifying" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
           {{ verifying ? 'Iniciando...' : 'Verificar transacciones' }}
         </button>

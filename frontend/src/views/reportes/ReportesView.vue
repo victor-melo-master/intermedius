@@ -16,7 +16,7 @@
       </div>
       <div class="flex gap-2">
         <button @click="buscar" :disabled="loading"
-          class="flex-1 bg-gold hover:bg-gold-dark disabled:opacity-50 text-navy font-semibold py-2.5 rounded-lg transition flex items-center justify-center gap-2">
+          class="flex-1 bg-gold hover:bg-gold-dark disabled:opacity-50 text-white font-semibold py-2.5 rounded-lg transition flex items-center justify-center gap-2">
           <span v-if="loading" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
           {{ loading ? 'Consultando...' : 'Consultar' }}
         </button>

@@ -74,7 +74,7 @@
                 <input v-model="titularForm.nombre" placeholder="Nombre completo" class="w-full px-3 py-2 border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none text-sm" />
                 <input v-model="titularForm.alias" placeholder="Alias" class="w-full px-3 py-2 border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none text-sm" />
                 <div class="flex gap-2">
-                  <button type="button" @click="submitTitularInline" :disabled="savingInline" class="flex-1 bg-gold text-navy text-sm font-medium py-1.5 rounded-lg hover:bg-gold-dark disabled:opacity-50">Crear</button>
+                  <button type="button" @click="submitTitularInline" :disabled="savingInline" class="flex-1 bg-gold text-white text-sm font-medium py-1.5 rounded-lg hover:bg-gold-dark disabled:opacity-50">Crear</button>
                   <button type="button" @click="showTitularInline = false" class="flex-1 bg-surface-muted text-ink text-sm font-medium py-1.5 rounded-lg hover:bg-surface-muted">Cancelar</button>
                 </div>
                 <AppErrorState v-if="titularInlineError" :message="titularInlineError" :retry="false" />
@@ -98,7 +98,7 @@
                 <input v-model="bancoForm.codigo" placeholder="Código (ej: BANESCO)" class="w-full px-3 py-2 border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none text-sm" />
                 <input v-model="bancoForm.pais" placeholder="País (default: VE)" class="w-full px-3 py-2 border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none text-sm" />
                 <div class="flex gap-2">
-                  <button type="button" @click="submitBancoInline" :disabled="savingInline" class="flex-1 bg-gold text-navy text-sm font-medium py-1.5 rounded-lg hover:bg-gold-dark disabled:opacity-50">Crear</button>
+                  <button type="button" @click="submitBancoInline" :disabled="savingInline" class="flex-1 bg-gold text-white text-sm font-medium py-1.5 rounded-lg hover:bg-gold-dark disabled:opacity-50">Crear</button>
                   <button type="button" @click="showBancoInline = false" class="flex-1 bg-surface-muted text-ink text-sm font-medium py-1.5 rounded-lg hover:bg-surface-muted">Cancelar</button>
                 </div>
                 <AppErrorState v-if="bancoInlineError" :message="bancoInlineError" :retry="false" />
@@ -125,7 +125,7 @@
                 <input v-model="bancoForm.codigo" placeholder="Código (ej: BANESCO)" class="w-full px-3 py-2 border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none text-sm" />
                 <input v-model="bancoForm.pais" placeholder="País (default: VE)" class="w-full px-3 py-2 border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none text-sm" />
                 <div class="flex gap-2">
-                  <button type="button" @click="submitBancoInline" :disabled="savingInline" class="flex-1 bg-gold text-navy text-sm font-medium py-1.5 rounded-lg hover:bg-gold-dark disabled:opacity-50">Crear</button>
+                  <button type="button" @click="submitBancoInline" :disabled="savingInline" class="flex-1 bg-gold text-white text-sm font-medium py-1.5 rounded-lg hover:bg-gold-dark disabled:opacity-50">Crear</button>
                   <button type="button" @click="showBancoInline = false" class="flex-1 bg-surface-muted text-ink text-sm font-medium py-1.5 rounded-lg hover:bg-surface-muted">Cancelar</button>
                 </div>
                 <AppErrorState v-if="bancoInlineError" :message="bancoInlineError" :retry="false" />
@@ -156,7 +156,7 @@
         <AppErrorState v-if="formError" :message="formError" :retry="false" />
       </form>
       <template #footer>
-        <button @click="submit" :disabled="saving" class="w-full bg-gold text-navy font-semibold py-2.5 rounded-lg hover:bg-gold-dark disabled:opacity-50 transition active:scale-[0.98] flex items-center justify-center gap-2">
+        <button @click="submit" :disabled="saving" class="w-full bg-gold text-white font-semibold py-2.5 rounded-lg hover:bg-gold-dark disabled:opacity-50 transition active:scale-[0.98] flex items-center justify-center gap-2">
           <span v-if="saving" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
           {{ saving ? 'Guardando...' : 'Crear cuenta' }}
         </button>
@@ -176,7 +176,7 @@
         </form>
         <template #footer>
           <button @click="submitSaldo" :disabled="savingSaldo"
-            class="w-full bg-gold text-navy font-semibold py-2.5 rounded-lg hover:bg-gold-dark disabled:opacity-50 transition active:scale-[0.98]">
+            class="w-full bg-gold text-white font-semibold py-2.5 rounded-lg hover:bg-gold-dark disabled:opacity-50 transition active:scale-[0.98]">
             {{ savingSaldo ? 'Guardando...' : 'Guardar saldo' }}
           </button>
         </template>

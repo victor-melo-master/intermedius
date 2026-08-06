@@ -8,7 +8,7 @@
     <div v-if="successRef" class="bg-success-soft border border-success-edge rounded-2xl p-6 text-center space-y-4">
       <Iconoir name="check" class="w-12 h-12 text-success" />
       <p class="text-success-strong font-semibold">Operación registrada {{ successRef }}</p>
-      <button @click="$router.push('/operaciones')" class="px-4 py-2 bg-gold text-navy rounded-xl text-sm">Ver operaciones</button>
+      <button @click="$router.push('/operaciones')" class="px-4 py-2 bg-gold text-white rounded-xl text-sm">Ver operaciones</button>
     </div>
 
     <form v-else @submit.prevent="submit" class="space-y-4">
@@ -81,7 +81,7 @@
       <AppErrorState v-if="error" :message="error" :retry="false" />
 
       <button type="submit" :disabled="saving || !formularioValido"
-        class="w-full bg-gold hover:bg-gold-dark disabled:opacity-50 text-navy font-semibold py-3 rounded-xl transition active:scale-[0.98]">
+        class="w-full bg-gold hover:bg-gold-dark disabled:opacity-50 text-white font-semibold py-3 rounded-xl transition active:scale-[0.98]">
         {{ saving ? 'Registrando...' : 'Registrar intermediada' }}
       </button>
     </form>

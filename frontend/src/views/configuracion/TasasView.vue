@@ -4,7 +4,7 @@
       <h2 class="text-xl font-bold text-heading">Tasas del día</h2>
       <div class="flex gap-2">
         <button @click="tasas.fetchVigentes()" class="px-3 py-2 bg-white dark:bg-surface-muted border border-edge-strong rounded-lg text-sm hover:bg-surface-soft inline-flex items-center gap-1"><Iconoir name="arrow-path" class="w-4 h-4" /> Actualizar</button>
-        <button v-if="auth.isAdmin" @click="openNew" class="px-4 py-2 bg-gold text-navy rounded-lg text-sm font-medium hover:bg-gold-dark">+ Publicar tasa</button>
+        <button v-if="auth.isAdmin" @click="openNew" class="px-4 py-2 bg-gold text-white rounded-lg text-sm font-medium hover:bg-gold-dark">+ Publicar tasa</button>
       </div>
     </div>
 
@@ -104,7 +104,7 @@
       <div v-if="formError" class="bg-danger-soft text-danger text-sm p-3 rounded-lg mt-4 whitespace-pre-line">{{ formError }}</div>
 
       <button type="button" @click="submit" :disabled="saving || !puedeGuardar"
-        class="w-full mt-5 bg-gold text-navy font-semibold py-2.5 rounded-lg hover:bg-gold-dark disabled:opacity-50 transition active:scale-[0.98] flex items-center justify-center gap-2">
+        class="w-full mt-5 bg-gold text-white font-semibold py-2.5 rounded-lg hover:bg-gold-dark disabled:opacity-50 transition active:scale-[0.98] flex items-center justify-center gap-2">
         <span v-if="saving" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
         {{ saving ? 'Guardando...' : (isEdit ? 'Actualizar' : 'Publicar') }}
       </button>

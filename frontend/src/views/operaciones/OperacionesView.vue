@@ -4,24 +4,24 @@
       <h2 class="text-xl font-bold text-heading">Operaciones</h2>
       <button @click="showFilter = true" class="self-start sm:self-auto px-3 py-2 bg-white dark:bg-surface-muted border border-edge-strong rounded-lg text-sm hover:bg-surface-soft flex items-center gap-1">
         <Iconoir name="magnifying-glass" class="w-4 h-4" /> Filtrar
-        <span v-if="activeFilterCount" class="ml-1 bg-gold text-navy text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">{{ activeFilterCount }}</span>
+        <span v-if="activeFilterCount" class="ml-1 bg-gold text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">{{ activeFilterCount }}</span>
       </button>
     </div>
 
     <div class="flex gap-2">
       <button @click="setTipoFiltro('compra')"
         class="px-4 py-2 rounded-lg text-sm font-medium transition"
-        :class="operacionTipo === 'compra' ? 'bg-gold text-navy shadow-sm' : 'bg-white dark:bg-surface-muted border border-edge-strong text-ink hover:bg-surface-soft'">
+        :class="operacionTipo === 'compra' ? 'bg-gold text-white shadow-sm' : 'bg-white dark:bg-surface-muted border border-edge-strong text-ink hover:bg-surface-soft'">
         Compras
       </button>
       <button @click="setTipoFiltro('venta')"
         class="px-4 py-2 rounded-lg text-sm font-medium transition"
-        :class="operacionTipo === 'venta' ? 'bg-gold text-navy shadow-sm' : 'bg-white dark:bg-surface-muted border border-edge-strong text-ink hover:bg-surface-soft'">
+        :class="operacionTipo === 'venta' ? 'bg-gold text-white shadow-sm' : 'bg-white dark:bg-surface-muted border border-edge-strong text-ink hover:bg-surface-soft'">
         Ventas
       </button>
       <button @click="setTipoFiltro(null)"
         class="px-4 py-2 rounded-lg text-sm font-medium transition"
-        :class="operacionTipo === null ? 'bg-gold text-navy shadow-sm' : 'bg-white dark:bg-surface-muted border border-edge-strong text-ink hover:bg-surface-soft'">
+        :class="operacionTipo === null ? 'bg-gold text-white shadow-sm' : 'bg-white dark:bg-surface-muted border border-edge-strong text-ink hover:bg-surface-soft'">
         Todos
       </button>
     </div>
@@ -160,7 +160,7 @@
       <template #footer>
         <div class="flex gap-3">
           <button @click="clearFilters" class="flex-1 py-2.5 text-sm text-ink-muted hover:bg-surface-muted rounded-xl transition">Limpiar</button>
-          <button @click="applyFilters" class="flex-1 py-2.5 bg-gold text-navy text-sm font-medium rounded-xl hover:bg-gold-dark transition">Aplicar</button>
+          <button @click="applyFilters" class="flex-1 py-2.5 bg-gold text-white text-sm font-medium rounded-xl hover:bg-gold-dark transition">Aplicar</button>
         </div>
       </template>
     </AppFormModal>
