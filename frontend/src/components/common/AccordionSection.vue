@@ -28,6 +28,7 @@ function toggle() {
         :aria-expanded="open"
       >
         <div class="flex items-center gap-2">
+          <slot name="title-icon" />
           <h4 class="font-semibold text-heading text-base">{{ title }}</h4>
           <span v-if="count !== null && count !== undefined" class="text-xs bg-surface-soft border border-edge-strong text-ink-muted px-2 py-0.5 rounded-full">{{ count }}</span>
         </div>
