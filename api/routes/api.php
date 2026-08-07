@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\V1\PoolController;
 use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\ReporteComisionesController;
+use App\Http\Controllers\Api\V1\ReporteOperativoController;
 use App\Http\Controllers\Api\V1\Configuracion\TasaDiariaController;
 use App\Http\Controllers\Api\V1\Configuracion\ComisionCuentaController;
 use App\Http\Controllers\Api\V1\Configuracion\ComisionOperadorController;
@@ -191,6 +192,14 @@ Route::prefix('v1')->group(function () {
             Route::get('reportes/comisiones-operadores',              [ReporteComisionesController::class, 'index']);
             Route::post('reportes/comisiones-operadores/exportar',    [ReporteComisionesController::class, 'exportar']);
             Route::get('reportes/comisiones-operadores/historico',    [ReporteComisionesController::class, 'historico']);
+
+            // ── Reporte operativo (Resumen del período) ─────────────
+            Route::get('reportes/resumen',                           [ReporteOperativoController::class, 'index']);
+            Route::post('reportes/resumen/exportar',                 [ReporteOperativoController::class, 'exportar']);
+
+            // ── Histórico unificado y descarga de reportes ──────────
+            Route::get('reportes/historico',                         [ReporteComisionesController::class, 'historico']);
+            Route::get('reportes/descargar',                         [ReporteComisionesController::class, 'descargar']);
         });
 
         // ── Gestión de usuarios (solo admin|super_admin, con rate limiting) ──

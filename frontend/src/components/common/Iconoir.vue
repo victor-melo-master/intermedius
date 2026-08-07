@@ -22,6 +22,7 @@ import HeroiconsPencilSquare from '~icons/heroicons/pencil-square'
 import HeroiconsClipboard from '~icons/heroicons/clipboard'
 import HeroiconsArrowLeft from '~icons/heroicons/arrow-left'
 import HeroiconsArrowRight from '~icons/heroicons/arrow-right'
+import HeroiconsArrowDown from '~icons/heroicons/arrow-down'
 import HeroiconsArrowUturnLeft from '~icons/heroicons/arrow-uturn-left'
 import HeroiconsArrowPath from '~icons/heroicons/arrow-path'
 import HeroiconsExclamationTriangle from '~icons/heroicons/exclamation-triangle'
@@ -70,6 +71,7 @@ const map = {
   'clipboard': HeroiconsClipboard,
   'arrow-left': HeroiconsArrowLeft,
   'arrow-right': HeroiconsArrowRight,
+  'arrow-down': HeroiconsArrowDown,
   'arrow-uturn-left': HeroiconsArrowUturnLeft,
   'arrow-path': HeroiconsArrowPath,
   'exclamation-triangle': HeroiconsExclamationTriangle,
