@@ -6,13 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Services\Reportes\ReporteComisionesOperadoresService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-use Illuminate\Support\Carbon;
 
 /**
  * Controlador de reportes de comisiones de operadores.
- * Genera, exporta y lista el histórico de comisiones calculadas.
+ * Genera, exporta, descarga y lista el histórico de reportes generados.
  */
 class ReporteComisionesController extends Controller
 {
@@ -73,23 +74,61 @@ class ReporteComisionesController extends Controller
 
     /**
      * Lista el histórico de reportes exportados con sus metadatos.
+     * Escanea las bases de comisiones y de resumen operativo.
      *
      * @return JsonResponse Lista de archivos ordenados por fecha de modificación
      */
     public function historico(): JsonResponse
     {
-        $base  = config('reportes.comisiones_operadores.storage_path');
-        $files = collect(Storage::files($base))
-            ->map(fn ($f) => [
-                'path'          => $f,
-                'url'           => Storage::url($f),
-                'nombre'        => basename($f),
-                'tamano_bytes'  => Storage::size($f),
-                'modificado_en' => Carbon::createFromTimestamp(Storage::lastModified($f))->toIso8601String(),
-            ])
-            ->sortByDesc('modificado_en')
-            ->values();
+        $bases = [
+            'comisiones' => config('reportes.comisiones_operadores.storage_path', 'reportes/comisiones'),
+            'resumen'    => config('reportes.resumen.storage_path', 'reportes/resumen'),
+        ];
+
+        $files = new Collection();
+
+        foreach ($bases as $tipo => $base) {
+            foreach (Storage::files($base) as $f) {
+                $files->push([
+                    'path'          => $f,
+                    'url'           => null,
+                    'nombre'        => basename($f),
+                    'tipo'          => $tipo,
+                    'formato'       => strtolower(pathinfo($f, PATHINFO_EXTENSION)),
+                    'tamano_bytes'  => Storage::size($f),
+                    'modificado_en' => Carbon::createFromTimestamp(Storage::lastModified($f))->toIso8601String(),
+                ]);
+            }
+        }
+
+        $files = $files->sortByDesc('modificado_en')->values();
 
         return response()->json(['data' => $files]);
+    }
+
+    /**
+     * Descarga un archivo de reporte desde el storage protegido.
+     * Valida el path contra un whitelist de bases y extensiones (bloquea traversal).
+     *
+     * @param Request $request Parámetro 'path' (ruta relativa en storage)
+     * @return StreamedResponse Archivo descargado
+     */
+    public function descargar(Request $request): StreamedResponse
+    {
+        $request->validate([
+            'path' => ['required', 'string', 'max:255'],
+        ]);
+
+        $path = str_replace('\\', '/', (string) $request->input('path'));
+
+        $pathPermitido = ! str_starts_with($path, '/')
+            && ! str_contains($path, '..')
+            && preg_match('#^reportes/(comisiones|resumen)/[A-Za-z0-9_\-\.]+\.(pdf|xlsx)$#', $path) === 1;
+
+        if (! $pathPermitido || ! Storage::exists($path)) {
+            abort(404, 'Reporte no encontrado.');
+        }
+
+        return Storage::download($path, basename($path));
     }
 }

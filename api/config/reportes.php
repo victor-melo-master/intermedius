@@ -20,4 +20,16 @@ return [
         */
         'storage_path'   => 'reportes/comisiones',
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Reporte Resumen del Período (operativo)
+    |--------------------------------------------------------------------------
+    */
+    'resumen' => [
+        /*
+        | Directorio base en storage/app/ donde se guardan los reportes.
+        */
+        'storage_path'   => 'reportes/resumen',
+    ],
 ];

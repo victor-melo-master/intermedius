@@ -60,8 +60,7 @@ class ReporteComisionesOperadoresService
 
         Excel::store(
             new \App\Exports\ComisionesOperadoresExport($datos, $desde, $hasta),
-            $path,
-            'local'
+            $path
         );
 
         return $path;
