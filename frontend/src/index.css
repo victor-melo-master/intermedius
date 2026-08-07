@@ -119,5 +119,6 @@
 
   body {
     @apply bg-surface-alt text-ink antialiased;
+    font-family: 'Montserrat', system-ui, -apple-system, sans-serif;
   }
 }

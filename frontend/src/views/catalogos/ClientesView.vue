@@ -185,25 +185,28 @@
 
         <!-- Historial de transacciones -->
         <AccordionSection title="Historial de transacciones" :default-open="false" :key="'historial-' + detailKey" @toggle-open="onHistorialToggle">
+          <template #title-icon>
+            <IntermediusSymbol :size="18" class="text-navy dark:text-gold" />
+          </template>
           <template #header-actions>
-            <button @click="exportarPDF" :disabled="exportando" class="text-xs bg-danger text-white dark:text-navy px-2 py-1 rounded-lg hover:bg-danger-strong inline-flex items-center gap-1">
+            <button @click="exportarPDF" :disabled="exportando" class="text-xs bg-danger text-white dark:text-navy px-2.5 py-1 rounded-lg hover:bg-danger-strong inline-flex items-center gap-1.5 disabled:opacity-50 transition">
               <Iconoir v-if="!exportando" name="document-text" class="w-4 h-4" />
               {{ exportando ? 'Generando...' : 'PDF' }}
             </button>
           </template>
 
-          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3 p-3 bg-surface-soft border border-edge rounded-lg">
             <div>
-              <label class="text-sm text-ink-muted">Desde</label>
-              <input v-model="historialFiltros.fecha_desde" type="date" class="w-full px-2 py-1 text-xs border border-edge-strong rounded" />
+              <label class="text-xs font-semibold text-ink-muted uppercase tracking-wider mb-1 block">Desde</label>
+              <input v-model="historialFiltros.fecha_desde" type="date" class="w-full px-2 py-1.5 text-xs border border-edge-strong rounded-md bg-surface focus:ring-2 focus:ring-gold outline-none" />
             </div>
             <div>
-              <label class="text-sm text-ink-muted">Hasta</label>
-              <input v-model="historialFiltros.fecha_hasta" type="date" class="w-full px-2 py-1 text-xs border border-edge-strong rounded" />
+              <label class="text-xs font-semibold text-ink-muted uppercase tracking-wider mb-1 block">Hasta</label>
+              <input v-model="historialFiltros.fecha_hasta" type="date" class="w-full px-2 py-1.5 text-xs border border-edge-strong rounded-md bg-surface focus:ring-2 focus:ring-gold outline-none" />
             </div>
             <div class="col-span-2 sm:col-span-1">
-              <label class="text-sm text-ink-muted">Tipo</label>
-              <select v-model="historialFiltros.tipo_codigo" class="w-full px-2 py-1 text-xs border border-edge-strong rounded">
+              <label class="text-xs font-semibold text-ink-muted uppercase tracking-wider mb-1 block">Tipo</label>
+              <select v-model="historialFiltros.tipo_codigo" class="w-full px-2 py-1.5 text-xs border border-edge-strong rounded-md bg-surface focus:ring-2 focus:ring-gold outline-none">
                 <option value="">Todos</option>
                 <option value="compra_usd">Compra USD</option>
                 <option value="venta_usd">Venta USD</option>
@@ -211,40 +214,45 @@
               </select>
             </div>
           </div>
-          <button @click="cargarHistorial(1)" :disabled="loadingHistorial" class="w-full text-xs bg-gold text-white py-1.5 rounded hover:bg-gold-dark mb-3">
+          <button @click="cargarHistorial(1)" :disabled="loadingHistorial" class="w-full text-xs font-semibold bg-gold text-white py-2 rounded-md hover:bg-gold-dark mb-4 transition active:scale-[0.99] disabled:opacity-50">
             {{ loadingHistorial ? 'Cargando...' : 'Buscar' }}
           </button>
 
           <div v-if="historial.length > 0" class="overflow-x-auto pb-4">
             <table class="w-full text-xs">
               <thead>
-                <tr class="text-left text-ink-muted border-b">
-                  <th class="py-1">ID</th>
-                  <th class="py-1">Fecha</th>
-                  <th class="py-1">Tipo</th>
-                  <th class="py-1 text-right">USD</th>
-                  <th class="py-1 text-right">VES</th>
-                  <th class="py-1 text-right">Tasa</th>
+                <tr class="text-left text-white bg-navy dark:bg-navy-dark">
+                  <th class="py-2 px-3 font-semibold uppercase tracking-wider rounded-l-md">ID</th>
+                  <th class="py-2 px-3 font-semibold uppercase tracking-wider">Fecha</th>
+                  <th class="py-2 px-3 font-semibold uppercase tracking-wider">Tipo</th>
+                  <th class="py-2 px-3 font-semibold uppercase tracking-wider text-right">USD</th>
+                  <th class="py-2 px-3 font-semibold uppercase tracking-wider text-right">VES</th>
+                  <th class="py-2 px-3 font-semibold uppercase tracking-wider text-right rounded-r-md">Tasa</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="op in historial" :key="op.id" class="border-b border-edge">
-                  <td class="py-1">#{{ op.id }}</td>
-                  <td class="py-1">{{ formatFecha(op.fecha) }}</td>
-                  <td class="py-1">{{ op.tipo_operacion?.nombre || '—' }}</td>
-                  <td class="py-1 text-right">{{ formatMonto(op, 'USD') }}</td>
-                  <td class="py-1 text-right">{{ formatMonto(op, 'VES') }}</td>
-                  <td class="py-1 text-right">{{ op.tasa_aplicada ? parseFloat(op.tasa_aplicada).toFixed(2) : '—' }}</td>
+                <tr v-for="op in historial" :key="op.id" class="border-b border-edge hover:bg-surface-muted/60 transition-colors">
+                  <td class="py-2 px-3 text-ink-muted tabular-nums">#{{ op.id }}</td>
+                  <td class="py-2 px-3 tabular-nums">{{ formatFecha(op.fecha) }}</td>
+                  <td class="py-2 px-3">
+                    <span :class="clasesBadgeTipo(op)" class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold whitespace-nowrap">{{ op.tipo_operacion?.nombre || '—' }}</span>
+                  </td>
+                  <td class="py-2 px-3 text-right font-semibold text-gold dark:text-gold-dark tabular-nums">{{ formatMonto(op, 'USD') }}</td>
+                  <td class="py-2 px-3 text-right text-navy dark:text-ink-muted tabular-nums">{{ formatMonto(op, 'VES') }}</td>
+                  <td class="py-2 px-3 text-right text-ink-muted tabular-nums">{{ op.tasa_aplicada ? parseFloat(op.tasa_aplicada).toFixed(2) : '—' }}</td>
                 </tr>
               </tbody>
             </table>
-            <div v-if="historialPaginacion.last_page > 1" class="flex justify-between items-center mt-2 text-xs">
-              <button @click="cargarHistorial(historialPaginacion.current_page - 1)" :disabled="!historialPaginacion.prev_page_url" class="text-gold-dark disabled:text-ink-muted">&lt; Anterior</button>
-              <span class="text-ink-muted">Pág {{ historialPaginacion.current_page }} / {{ historialPaginacion.last_page }}</span>
-              <button @click="cargarHistorial(historialPaginacion.current_page + 1)" :disabled="!historialPaginacion.next_page_url" class="text-gold-dark disabled:text-ink-muted">Siguiente &gt;</button>
+            <div v-if="historialPaginacion.last_page > 1" class="flex justify-between items-center mt-3 text-xs">
+              <button @click="cargarHistorial(historialPaginacion.current_page - 1)" :disabled="!historialPaginacion.prev_page_url" class="px-2.5 py-1 rounded-md border border-edge-strong text-gold-dark dark:text-gold hover:bg-gold-soft disabled:text-ink-muted disabled:hover:bg-transparent disabled:border-edge disabled:cursor-not-allowed transition">Anterior</button>
+              <span class="text-ink-muted">Pág <span class="font-semibold text-navy dark:text-ink">{{ historialPaginacion.current_page }}</span> / {{ historialPaginacion.last_page }}</span>
+              <button @click="cargarHistorial(historialPaginacion.current_page + 1)" :disabled="!historialPaginacion.next_page_url" class="px-2.5 py-1 rounded-md border border-edge-strong text-gold-dark dark:text-gold hover:bg-gold-soft disabled:text-ink-muted disabled:hover:bg-transparent disabled:border-edge disabled:cursor-not-allowed transition">Siguiente</button>
             </div>
           </div>
-          <div v-else-if="!loadingHistorial && historialCargado" class="text-sm text-ink-muted py-2">Sin operaciones.</div>
+          <div v-else-if="!loadingHistorial && historialCargado" class="flex flex-col items-center py-8">
+            <IntermediusSymbol :size="44" class="text-[#93A1A5] mb-3" />
+            <p class="text-sm text-ink-muted">Sin operaciones.</p>
+          </div>
         </AccordionSection>
       </div>
     </div>
@@ -358,6 +366,7 @@ import AppEmptyState from '../../components/common/AppEmptyState.vue'
 import AppFormModal from '@/components/common/AppFormModal.vue'
 import AccordionSection from '@/components/common/AccordionSection.vue'
 import Iconoir from '../../components/common/Iconoir.vue'
+import IntermediusSymbol from '@/components/common/IntermediusSymbol.vue'
 
 /** Store de clientes */
 const clientes = useClientesStore()
@@ -746,6 +755,27 @@ function formatMonto(op, moneda) {
   const mov = op.movimientos?.find(m => m.moneda?.codigo === moneda)
   if (!mov) return '—'
   return formatMoney(Math.abs(parseFloat(mov.monto)))
+}
+
+/**
+ * Clases de badge según el tipo de operación, alineadas con la paleta corporativa.
+ * @param {Object} op - Operación con tipo_operacion
+ * @returns {string}
+ */
+function clasesBadgeTipo(op) {
+  const codigo = op?.tipo_operacion?.codigo
+  switch (codigo) {
+    case 'compra_usd':
+      return 'bg-gold-soft text-gold dark:text-gold-dark'
+    case 'venta_usd':
+      return 'bg-danger-soft text-danger'
+    case 'intermediada':
+      return 'bg-[#93A1A5]/20 text-navy dark:text-[#93A1A5]'
+    case 'comision':
+      return 'bg-[#D9C79E]/30 text-[#6b5d36] dark:text-[#D9C79E]'
+    default:
+      return 'bg-surface-muted text-ink-muted'
+  }
 }
 
 /**
