@@ -109,6 +109,7 @@ views/
 
 ### CuentasView (`/cuentas`)
 - CRUD de cuentas bancarias
+- Filtros por cliente y moneda (selects + botón Limpiar) → re-consulta `GET /cuentas` con `cliente_id`/`moneda_id`
 - Selector de tipo al inicio (efectivo oculta banco/número de cuenta)
 - Selectores: ClienteSelector, banco, titular, moneda
 - Modal de saldo: carga manual de saldo

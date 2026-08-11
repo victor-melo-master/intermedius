@@ -2,6 +2,27 @@
   <div class="space-y-4">
     <AppPageHeader title="Cuentas" :action-label="auth.canWrite ? 'Nueva cuenta' : ''" @action="openForm" />
 
+    <div class="bg-surface border border-edge rounded-xl p-3 flex flex-wrap items-end gap-3">
+      <div class="min-w-[200px] flex-1">
+        <label class="block text-xs text-ink-muted mb-1">Cliente</label>
+        <select v-model="filtroCliente" class="w-full px-3 py-2 border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none bg-surface text-sm">
+          <option value="">Todos los clientes</option>
+          <option v-for="c in clientes.list" :key="c.id" :value="c.id">{{ c.nombre }}</option>
+        </select>
+      </div>
+      <div class="min-w-[200px] flex-1">
+        <label class="block text-xs text-ink-muted mb-1">Moneda</label>
+        <select v-model="filtroMoneda" class="w-full px-3 py-2 border border-edge-strong rounded-lg focus:ring-2 focus:ring-gold outline-none bg-surface text-sm">
+          <option value="">Todas las monedas</option>
+          <option v-for="m in tasas.monedas" :key="m.id" :value="m.id">{{ m.codigo }} — {{ m.nombre }}</option>
+        </select>
+      </div>
+      <button type="button" @click="limpiarFiltros"
+        class="px-3 py-2 text-sm text-ink-muted hover:text-ink inline-flex items-center gap-1" :disabled="!filtroCliente && !filtroMoneda">
+        <Iconoir name="x-mark" class="w-4 h-4" /> Limpiar
+      </button>
+    </div>
+
     <AppLoadingSpinner v-if="loading" />
     <AppErrorState v-else-if="error" :message="error" @retry="fetchCuentas" />
     <template v-else-if="cuentas.length === 0">
@@ -191,10 +212,12 @@
  * Permite seleccionar tipo de cuenta primero, ocultar campos de banco/número para efectivo,
  * crear titulares y bancos inline, y cargar saldo a cuentas.
  */
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, watch } from 'vue'
 import { useApiError } from '@/composables/useApiError'
+import { useFormatting } from '@/composables/useFormatting'
 import api from '../../api/axios.js'
 import { useAuthStore } from '../../stores/auth.js'
+import { useClientesStore } from '../../stores/clientes.js'
 import { useTitularesStore } from '../../stores/titulares.js'
 import { useBancosStore } from '../../stores/bancos.js'
 import { useTasasStore } from '../../stores/tasas.js'
@@ -210,6 +233,8 @@ import Iconoir from '../../components/common/Iconoir.vue'
 const auth = useAuthStore()
 const { parseError } = useApiError()
 const { roundTo } = useFormatting()
+/** Store de clientes */
+const clientes = useClientesStore()
 /** Store de titulares */
 const titulares = useTitularesStore()
 /** Store de bancos */
@@ -223,6 +248,14 @@ const cuentas = ref([])
 const loading = ref(false)
 /** Mensaje de error general */
 const error = ref('')
+
+/** Filtro por cliente */
+const filtroCliente = ref('')
+/** Filtro por moneda */
+const filtroMoneda = ref('')
+
+/** Re-filtra cuando cambian los criterios */
+watch([filtroCliente, filtroMoneda], () => fetchCuentas())
 
 /** Controla visibilidad del modal de formulario */
 const showForm = ref(false)
@@ -281,13 +314,22 @@ async function fetchCuentas() {
   loading.value = true
   error.value = ''
   try {
-    const { data } = await api.get('/cuentas')
+    const params = {}
+    if (filtroCliente.value) params.cliente_id = filtroCliente.value
+    if (filtroMoneda.value) params.moneda_id = filtroMoneda.value
+    const { data } = await api.get('/cuentas', { params })
     cuentas.value = Array.isArray(data) ? data : (data.data || [])
   } catch (err) {
     error.value = parseError(err)
   } finally {
     loading.value = false
   }
+}
+
+/** Limpia los filtros activos. */
+function limpiarFiltros() {
+  filtroCliente.value = ''
+  filtroMoneda.value = ''
 }
 
 /** Abre el modal de formulario preparando catálogos y reseteando valores */
@@ -427,6 +469,10 @@ async function submitSaldo() {
   }
 }
 
-/** Carga la lista de cuentas al montar el componente */
-onMounted(fetchCuentas)
+/** Carga la lista de cuentas, clientes y monedas al montar el componente */
+onMounted(() => {
+  fetchCuentas()
+  clientes.fetchAll()
+  tasas.fetchMonedas()
+})
 </script>
