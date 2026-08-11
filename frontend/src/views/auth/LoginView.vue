@@ -28,9 +28,17 @@
         </div>
         <div>
           <label class="block text-sm font-medium text-ink mb-1">Contraseña</label>
-          <input v-model="form.password" type="password" required autocomplete="current-password"
-            class="w-full px-4 py-2.5 border border-edge-strong rounded-xl focus:ring-2 focus:ring-gold focus:border-gold outline-none transition bg-surface text-ink placeholder:text-ink-soft"
-            placeholder="••••••••" />
+          <div class="relative">
+            <input v-model="form.password" :type="mostrarPassword ? 'text' : 'password'" required autocomplete="current-password"
+              class="w-full px-4 py-2.5 pr-11 border border-edge-strong rounded-xl focus:ring-2 focus:ring-gold focus:border-gold outline-none transition bg-surface text-ink placeholder:text-ink-soft"
+              placeholder="••••••••" />
+            <button type="button" @click="mostrarPassword = !mostrarPassword"
+              :title="mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+              :aria-label="mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-ink-muted hover:text-ink transition">
+              <Iconoir :name="mostrarPassword ? 'eye-slash' : 'eye'" class="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         <div v-if="auth.error" class="bg-danger-soft text-danger text-sm p-3 rounded-lg">
@@ -54,7 +62,7 @@
  * el store de autenticación y redirige al dashboard en caso de éxito.
  * Incluye toggle de tema claro/oscuro.
  */
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth.js'
 import { useThemeStore } from '../../stores/theme.js'
@@ -70,6 +78,8 @@ const auth = useAuthStore()
 const theme = useThemeStore()
 /** Datos del formulario de login */
 const form = reactive({ login: '', password: '' })
+/** Controla la visibilidad de la contraseña */
+const mostrarPassword = ref(false)
 
 /**
  * Envía las credenciales al store de autenticación.

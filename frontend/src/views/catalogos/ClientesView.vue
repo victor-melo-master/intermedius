@@ -30,7 +30,7 @@
     <div v-else class="space-y-2">
       <div v-for="c in clientes.list" :key="c.id" @click="openDetail(c)" class="bg-surface border border-edge rounded-xl p-4 flex items-center gap-3 cursor-pointer hover:shadow-md transition" :class="c.deleted_at ? 'opacity-70 border-danger-edge' : ''">
         <div class="w-10 h-10 rounded-full bg-gold-soft flex items-center justify-center text-gold-dark font-bold text-sm overflow-hidden">
-          <img v-if="avatarUrl(c)" :src="avatarUrl(c)" alt="" class="w-full h-full object-cover" />
+          <img v-if="avatarUrl(c)" :src="avatarUrl(c)" alt="" class="w-full h-full object-cover cursor-pointer hover:opacity-80 transition" title="Ampliar foto" @click.stop="zoomAvatar(avatarUrl(c))" />
           <template v-else>{{ c.nombre.charAt(0).toUpperCase() }}</template>
         </div>
         <div class="flex-1 min-w-0">
@@ -39,7 +39,7 @@
           <p v-if="c.telefono" class="text-sm text-ink-muted">{{ c.telefono }}</p>
         </div>
         <div class="text-right shrink-0">
-          <p class="text-sm font-bold" :class="(c.saldo_cache_usd || 0) >= 0 ? 'text-success' : 'text-danger'">${{ formatMoney(c.saldo_cache_usd) }}</p>
+          <p class="text-sm font-bold" :class="(c.saldo_cache_usd || 0) >= 0 ? 'text-success' : 'text-danger'">{{ formatMoney(c.saldo_cache_usd) }}</p>
           <span v-if="c.deleted_at" class="text-[10px] bg-danger-soft text-danger px-2 py-0.5 rounded-full">Eliminado</span>
           <span v-else-if="!c.activo" class="text-[10px] bg-danger-soft text-danger px-2 py-0.5 rounded-full">Inactivo</span>
           <div class="mt-1 flex gap-2 justify-end">
@@ -75,7 +75,7 @@
           <div class="flex items-center gap-3 min-w-0">
             <div class="relative shrink-0">
               <div class="w-12 h-12 rounded-full bg-gold-soft flex items-center justify-center text-gold-dark font-bold text-lg overflow-hidden border-2 border-edge-strong">
-                <img v-if="clienteAvatarUrl" :src="clienteAvatarUrl" alt="" class="w-full h-full object-cover" />
+                <img v-if="clienteAvatarUrl" :src="clienteAvatarUrl" alt="" class="w-full h-full object-cover cursor-pointer hover:opacity-80 transition" title="Ampliar foto" @click="zoomAvatar(clienteAvatarUrl)" />
                 <template v-else>{{ (detailCliente?.nombre || '?').charAt(0).toUpperCase() }}</template>
               </div>
               <label v-if="auth.canWrite && !detailCliente?.deleted_at" class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-gold text-white flex items-center justify-center cursor-pointer hover:bg-gold-dark shadow transition" title="Cambiar foto">
@@ -89,7 +89,7 @@
             </div>
           </div>
           <div class="flex items-center gap-2 shrink-0">
-            <span v-if="!detailCliente?.deleted_at" class="text-sm font-semibold px-2.5 py-1 rounded-lg bg-surface-soft border border-edge-strong" :class="clienteSaldo >= 0 ? 'text-success' : 'text-danger'">${{ formatMoney(detailCliente?.saldo_cache_usd) }}</span>
+            <span v-if="!detailCliente?.deleted_at" class="text-sm font-semibold px-2.5 py-1 rounded-lg bg-surface-soft border border-edge-strong" :class="clienteSaldo >= 0 ? 'text-success' : 'text-danger'">{{ formatMoney(detailCliente?.saldo_cache_usd) }}</span>
             <button v-if="detailCliente?.deleted_at && (auth.canConfig)" @click="restaurarCliente(detailCliente)" class="text-xs bg-success hover:bg-success-strong text-white dark:text-navy px-2 py-1 rounded-lg inline-flex items-center gap-1"><Iconoir name="arrow-uturn-left" class="w-3 h-3" /> Recuperar</button>
             <button @click="showDetail = false" class="text-ink-muted hover:text-ink-muted"><Iconoir name="x-mark" class="w-5 h-5" /></button>
           </div>
@@ -341,6 +341,17 @@
     </div>
   </div>
 </div>
+
+    <!-- Lightbox: foto del cliente ampliada -->
+    <div v-if="avatarZoom" class="fixed inset-0 z-[80] bg-black/70 flex items-center justify-center p-4"
+      @click.self="avatarZoom = null">
+      <button type="button" @click="avatarZoom = null" aria-label="Cerrar"
+        class="absolute top-4 right-4 p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition">
+        <Iconoir name="x-mark" class="w-6 h-6" />
+      </button>
+      <img :src="avatarZoom" alt="Foto del cliente ampliada"
+        class="max-h-[80vh] max-w-full rounded-2xl border border-white/20 shadow-2xl object-contain" />
+    </div>
   </div>
 </template>
 
@@ -416,6 +427,8 @@ const clienteSaldo = computed(() => parseFloat(detailCliente.value?.saldo_cache_
 const subiendoAvatar = ref(false)
 /** Error de validación de la foto del cliente */
 const avatarError = ref('')
+/** URL del avatar ampliada en el lightbox (null = cerrado) */
+const avatarZoom = ref(null)
 /** Tipos de imagen aceptados para el avatar (se convierten a WebP en el backend) */
 const avatarTiposAceptados = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp']
 
@@ -427,11 +440,16 @@ const avatarTiposAceptados = ['image/jpeg', 'image/png', 'image/gif', 'image/web
 function avatarUrl(c) {
   if (!c?.avatar_path) return null
   const token = localStorage.getItem('token')
-  return `${import.meta.env.VITE_API_URL}/clientes/${c.id}/avatar?token=${token}`
+  return `${import.meta.env.VITE_API_URL}/clientes/${c.id}/avatar?token=${token}&v=${encodeURIComponent(c.avatar_path)}`
 }
 
 /** URL del avatar del cliente visible en el detalle */
 const clienteAvatarUrl = computed(() => avatarUrl(detailCliente.value))
+
+/** Abre el lightbox con la foto del cliente ampliada. */
+function zoomAvatar(url) {
+  if (url) avatarZoom.value = url
+}
 
 /**
  * Maneja la selección de una foto de cliente: valida tipo y tamaño y sube automáticamente.

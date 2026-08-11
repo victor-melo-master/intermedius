@@ -422,7 +422,7 @@ const { parseError } = useApiError()
 function avatarUrl(u) {
   if (!u?.avatar_path) return null
   const token = localStorage.getItem('token')
-  return `${import.meta.env.VITE_API_URL}/usuarios/${u.id}/avatar?token=${token}`
+  return `${import.meta.env.VITE_API_URL}/usuarios/${u.id}/avatar?token=${token}&v=${encodeURIComponent(u.avatar_path)}`
 }
 /** Lista de titulares para el selector del formulario */
 const titulares = ref([])

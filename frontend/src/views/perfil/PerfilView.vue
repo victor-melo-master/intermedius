@@ -200,7 +200,7 @@ const emailError = ref('')
 function avatarUrl(u) {
   if (!u?.avatar_path) return null
   const token = localStorage.getItem('token')
-  return `${import.meta.env.VITE_API_URL}/usuarios/${u.id}/avatar?token=${token}`
+  return `${import.meta.env.VITE_API_URL}/usuarios/${u.id}/avatar?token=${token}&v=${encodeURIComponent(u.avatar_path)}`
 }
 
 /** Tipos de imagen aceptados para el avatar (se convierten a WebP en el backend) */
